@@ -1,0 +1,249 @@
+@import "tailwindcss";
+
+@theme {
+  --font-sans: var(--font-quicksand), ui-sans-serif, system-ui, sans-serif;
+  --font-poppins: var(--font-poppins), ui-sans-serif, system-ui, sans-serif;
+  --font-raleway: var(--font-raleway), ui-sans-serif, system-ui, sans-serif;
+
+  /* Type Scale */
+  --text-h1: 64px;
+  --text-h2: 48px; 
+  --text-h3: 40px;
+  --text-h4: 32px;
+  --text-h5: 24px;
+  --text-h6: 20px;
+
+  --text-body-xl: 20px;
+  --text-body-l: 18px;
+  --text-body-m: 16px;
+  --text-body-s: 14px;
+  --text-body-xs: 12px;
+  --text-body-xxs: 10px;
+
+  --leading-xl: 32px;
+  --leading-l: 32pz;
+  --leading-m: 24px;
+  --leading-s: 24px;
+  --leading-xs: 16px;
+  --leading-xxs: 16px;
+
+  /* Primary - Coral/Orange-Red brand color */
+  --color-primary-50: #FEEFEC;
+  --color-primary-100: #FCDFD9;
+  --color-primary-200: #FABCAE;
+  --color-primary-300: #F79C87;
+  --color-primary-400: #F57C61;
+  --color-primary-500: #F25B38;
+  --color-primary-600: #E1350F;
+  --color-primary-700: #A8280B;
+  --color-primary-800: #6E1A07;
+  --color-primary-900: #390E04;
+
+  /* Secondary - Teal */
+  --color-secondary-50: #F5FAFA;
+  --color-secondary-100: #E7F3F3;
+  --color-secondary-200: #CFE7E8;
+  --color-secondary-300: #BADDDE;
+  --color-secondary-400: #A2D1D2;
+  --color-secondary-500: #8AC5C7;
+  --color-secondary-600: #5DAFB1;
+  --color-secondary-700: #42888A;
+  --color-secondary-800: #2B585A;
+  --color-secondary-900: #152C2D;
+
+  /* Gray */
+  --color-gray-50: #E6E8EB;
+  --color-gray-100: #D2D5DA;
+  --color-gray-200: #A5ABB6;
+  --color-gray-300: #788191;
+  --color-gray-400: #525965;
+  --color-gray-500: #2F333A;
+  --color-gray-600: #25282D;
+  --color-gray-700: #1B1E22;
+  --color-gray-800: #121417;
+  --color-gray-900: #090A0B;
+
+  /* Info */
+  --color-info-50: #E9F5FB;
+  --color-info-100: #D0E6F4;
+  --color-info-200: #ACD8F1;
+  --color-info-300: #81C3E9;
+  --color-info-400: #55AEE2;
+  --color-info-500: #2D9CDB;
+  --color-info-600: #1F7CB2;
+  --color-info-700: #175E87;
+  --color-info-800: #10405B;
+  --color-info-900: #071E2C;
+
+  /* Successful */
+  --color-successful-50: #EDF7EE;
+  --color-successful-100: #DBF0DC;
+  --color-successful-200: #B8E0B9;
+  --color-successful-300: #94D196;
+  --color-successful-400: #6DC070;
+  --color-successful-500: #4CAF50;
+  --color-successful-600: #3C8B3F;
+  --color-successful-700: #2E6B30;
+  --color-successful-800: #1F4720;
+  --color-successful-900: #0F2410;
+
+  /* Warning */
+  --color-warning-50: #FFF5E5;
+  --color-warning-100: #FFEBCC;
+  --color-warning-200: #FFD699;
+  --color-warning-300: #FFC266;
+  --color-warning-400: #FFAD33;
+  --color-warning-500: #FF9800;
+  --color-warning-600: #CC7A00;
+  --color-warning-700: #995C00;
+  --color-warning-800: #663D00;
+  --color-warning-900: #331F00;
+
+  /* Error */
+  --color-error-50: #FEEDEC;
+  --color-error-100: #FDDBD8;
+  --color-error-200: #FAB2AD;
+  --color-error-300: #F88E86;
+  --color-error-400: #F66A5F;
+  --color-error-500: #F44336;
+  --color-error-600: #E31B0C;
+  --color-error-700: #A91409;
+  --color-error-800: #6F0D06;
+  --color-error-900: #3A0703;
+
+  /* Semantic aliases */
+  --color-background: #FAFAFA;
+  --color-heading: #2F333A;
+  --color-body: #525965;
+  --color-action: #F25B38;
+  --color-action-2: #8AC5C7;
+  --color-action-hover: #E1350F;
+  --color-on-action: #FFFFFF;
+  --color-border: #E6E8EB;
+  --color-border-subtle: #F0F1F3;
+  --color-text: #525965;
+  --color-text-alt-grey: #A5ABB6;
+  --color-text-on-disabled: #2F333A;
+  --color-text-disabled: #788191;
+
+  /* Spacing scale extensions */
+  --spacing-18: 4.5rem;
+  --spacing-22: 5.5rem;
+  --spacing-26: 6.5rem;
+  --spacing-30: 7.5rem;
+
+  /* Border radius */
+  --radius-xxs: 2px;
+  --radius-xs: 4px;
+  --radius-s: 8px;
+  --radius-m: 16px;
+  --radius-l: 24px;
+  --radius-xl: 24px;
+  --radius-2xl: 32px;
+  --radius-3xl: 48px;
+  --radius-2xl: 64px;
+  --radius-full: 9999px;
+
+  /* Shadows */
+  --shadow-xs: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+  --shadow-sm: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
+  --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+  --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+  --shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
+  --shadow-card: 0 2px 8px 0 rgb(0 0 0 / 0.06), 0 1px 2px 0 rgb(0 0 0 / 0.04);
+  --shadow-modal: 0 25px 50px -12px rgb(0 0 0 / 0.25);
+
+  /* Animation durations */
+  --duration-fast: 150ms;
+  --duration-base: 200ms;
+  --duration-slow: 300ms;
+  --duration-slower: 500ms;
+}
+
+ /* ── Font family switches ───────────────────────────────────────────────── */
+  .font-quicksand { font-family: var(--font-quicksand), ui-sans-serif, system-ui, sans-serif; }
+  .font-poppins { font-family: var(--font-poppins), ui-sans-serif, system-ui, sans-serif; }
+  .font-raleway { font-family: var(--font-raleway), ui-sans-serif, system-ui, sans-serif; }
+
+@layer base {
+  *, *::before, *::after {
+    box-sizing: border-box;
+  }
+
+  html {
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+  }
+
+  body {
+    background-color: var(--color-background);
+    color: var(--color-text);
+    font-family: var(--font-sans);
+    font-size: 1rem;
+    line-height: 1.6;
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--color-primary-500);
+    outline-offset: 2px;
+    border-radius: 4px;
+  }
+
+  ::selection {
+    background-color: var(--color-primary-100);
+    color: var(--color-primary-900);
+  }
+
+  /* Scrollbar */
+  ::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    background: var(--color-neutral-200);
+    border-radius: 9999px;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    background: var(--color-neutral-300);
+  }
+}
+
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
+  }
+
+  .scrollbar-hide {
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
+
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
+
+  .focus-ring {
+    @apply focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary-500;
+  }
+
+  .truncate-2 {
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+
+  .truncate-3 {
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+}
