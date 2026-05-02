@@ -111,7 +111,7 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>(
 
           {/* Right slot (Combined logic) */}
           <div className="absolute right-5 top-1/2 -translate-y-1/2 flex items-center gap-2">
-             {showStatusErr && <AlertCircle className="h-5 w-5 text-red-500" />}
+             {showStatusErr && <AlertCircle className="h-5 w-5 text-error-500" />}
              {isPassword && (
                <button type="button" onClick={() => setShowPassword(!showPassword)} className="text-neutral-400 hover:text-neutral-600 cursor-pointer">
                  {showPassword ? <Eye className="h-5 w-5" /> : <EyeOff className="h-5 w-5" />}
@@ -122,7 +122,7 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>(
 
         {/* Automatically render the error text if it exists */}
         {error && (
-          <p className="text-xs font-semibold text-red-500 pl-4 animate-in fade-in slide-in-from-top-1">
+          <p className="text-xs font-semibold text-error-500 pl-4 animate-in fade-in slide-in-from-top-1">
             {error}
           </p>
         )}

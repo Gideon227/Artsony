@@ -10,13 +10,15 @@ import { ArrowLeft, Loader2 } from "lucide-react";
 
 import { forgotPasswordSchema, type ForgotPasswordInput } from "@/features/auth/schemas/forgot-password.schema";
 import { cn } from "@/lib/utils";
-import { Input } from "@/components/ui/input"; // Adjust path to your Input component
+import { Input } from "@/components/ui/input";
 import { ForgotPasswordArtworkGrid } from "@/features/auth/components/forgot-password-artwork-grid";
+import { useForgotPassword } from "@/hooks/use-auth-mutations";
 
 export default function ForgotPasswordPage() {
   const router = useRouter();
   const [step, setStep] = useState<1 | 2>(1);
   const [submittedEmail, setSubmittedEmail] = useState<string>("");
+  const { mutate: sendReset, isPending } = useForgotPassword()
 
   const {
     register,
@@ -28,10 +30,10 @@ export default function ForgotPasswordPage() {
   });
 
   const onSubmit = async (data: ForgotPasswordInput) => {
-    // Simulated API call for password reset
-    await new Promise((resolve) => setTimeout(resolve, 1500));
-    setSubmittedEmail(data.email);
-    setStep(2);
+    setSubmittedEmail(data.email)
+    sendReset(data, {
+      onSuccess: () => setStep(2),
+    })
   };
 
   return (
@@ -110,20 +112,19 @@ export default function ForgotPasswordPage() {
                             variant={errors.email ? "error" : "default"}
                             className="h-14 rounded-full px-6 text-base focus-visible:ring-[#F15A2B]/20 focus-visible:border-[#F15A2B]"
                         />
-                        {errors.email && <span className="text-sm text-red-500 pl-4">{errors.email.message}</span>}
+                        {errors.email && <span className="text-sm text-error-500 pl-4">{errors.email.message}</span>}
                     </div>
 
                     {/* Submit Button */}
                     <button
-                        type="submit"
-                        disabled={isSubmitting}
-                        className="w-full h-14 mt-2 cursor-pointer bg-[#F15A2B] hover:bg-[#d94f24] active:scale-[0.98] text-white rounded-full font-medium text-lg transition-all flex items-center justify-center disabled:opacity-70 disabled:pointer-events-none shadow-sm"
+                      type="submit"
+                      disabled={isPending}
+                      className="w-full h-14 cursor-pointer bg-primary-500 hover:bg-primary-600 active:scale-[0.98] text-white rounded-full font-medium text-lg transition-all flex items-center justify-center disabled:opacity-70 disabled:pointer-events-none shadow-sm"
                     >
-                        {isSubmitting ? (
-                          <Loader2 className="animate-spin h-6 w-6" />
-                        ) : (
-                          "Reset Password"
-                        )}
+                      {isPending
+                        ? <span className="flex items-center gap-2"><span className="animate-spin h-5 w-5 border-2 border-white border-t-transparent rounded-full inline-block" />Sending…</span>
+                        : 'Reset Password'
+                      }
                     </button>
                   </form>
                 </div>

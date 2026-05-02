@@ -19,11 +19,25 @@ import { useState } from 'react'
 const MOCK_DATA = {
   image: "/images/image-avatar.svg",
   title: "Placeholder",
-  artist: {
-    name: "Ivan Kovačević",
-    avatar: "/images/image-avatar.svg"
-  },
-  stats: { likes: "55.5k", views: "108k" }
+  artist: [
+    {
+      id: '0',
+      name: "Ivan Kovačević",
+      avatarUrl: "/images/image-avatar.svg"
+    },
+    {
+      id: '1',
+      name: "Ivan Kovačević",
+      avatarUrl: "/images/image-avatar.svg"
+    },
+    {
+      id: '2',
+      name: "Ivan Kovačević",
+      avatarUrl: "/images/image-avatar.svg"
+    },
+  ],
+  stats: { likes: "55.5k", views: "108k" },
+  alternate: true
 }
 
 const accountOptions: DropdownOption[] = [

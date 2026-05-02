@@ -44,6 +44,7 @@ export type User = Timestamp & {
   followingCount: number
   artworksCount: number
   isVerified: boolean
+  onboarded: boolean
 }
 
 export type ArtworkCategory =

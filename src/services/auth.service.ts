@@ -1,29 +1,32 @@
 import { apiClient } from '@/lib/api-client'
 import type { User, ApiResponse } from '@/types'
-import type { LoginInput, RegisterInput, ForgotPasswordInput, ResetPasswordInput } from '@/schemas'
 
-type AuthResponse = {
-  user: User
-  accessToken: string
-}
+type AuthResponse = { user: User; accessToken: string }
 
 export const authService = {
-  login: (body: Omit<LoginInput, 'rememberMe'>) =>
+  login: (body: { email: string; password: string }) =>
     apiClient.post<ApiResponse<AuthResponse>>('/api/auth/login', body),
 
-  register: (body: Omit<RegisterInput, 'confirmPassword' | 'agreeToTerms'>) =>
+  register: (body: { email: string; password: string; username: string; displayName: string }) =>
     apiClient.post<ApiResponse<AuthResponse>>('/api/auth/register', body),
 
-  forgotPassword: (body: ForgotPasswordInput) =>
+  logout: () =>
+    apiClient.post<void>('/api/auth/logout'),
+
+  forgotPassword: (body: { email: string }) =>
     apiClient.post<ApiResponse<{ message: string }>>('/api/auth/forgot-password', body),
 
-  resetPassword: (body: ResetPasswordInput & { token: string }) =>
+  resetPassword: (body: { token: string; email: string; newPassword: string }) =>
     apiClient.post<ApiResponse<{ message: string }>>('/api/auth/reset-password', body),
 
-  logout: () => apiClient.post('/api/auth/logout'),
+  me: () =>
+    apiClient.get<ApiResponse<User>>('/api/auth/me'),
 
-  me: () => apiClient.get<ApiResponse<User>>('/api/auth/me'),
-
-  refreshToken: () =>
+  // Called on app boot — uses the httpOnly RT cookie to silently get a
+  // fresh access token. Returns null if no session exists (guest).
+  refresh: () =>
     apiClient.post<ApiResponse<{ accessToken: string }>>('/api/auth/refresh'),
+
+  completeOnboarding: (interests: string[]) =>
+    apiClient.post<ApiResponse<User>>('/api/auth/onboarding', { interests }),
 }

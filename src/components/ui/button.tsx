@@ -8,8 +8,8 @@ import { cn } from '@/utils'
 
 const buttonVariants = cva(
   [
-    'inline-flex items-center justify-center gap-2 whitespace-nowrap',
-    'font-semibold transition-all duration-200 select-none',
+    'inline-flex items-center justify-center gap-2 whitespace-nowrap cursor-pointer',
+    'font-medium font-poppins transition-all duration-200 select-none',
     'focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary-500',
     'disabled:pointer-events-none disabled:opacity-50',
     'active:scale-[0.98]',
@@ -18,7 +18,7 @@ const buttonVariants = cva(
     variants: {
       variant: {
         primary: [
-          'bg-primary-500 text-white',
+          'bg-primary-500 text-white rounded-[32px] disabled:bg-gray-50 ',
           'hover:bg-primary-600',
           'active:bg-primary-700',
           'shadow-sm hover:shadow-md',
@@ -53,7 +53,7 @@ const buttonVariants = cva(
       },
       size: {
         sm: 'h-8 px-3 text-xs rounded-[var(--radius-sm)]',
-        md: 'h-10 px-4 text-sm rounded-[var(--radius-md)]',
+        md: 'h-10 px-6 text-[14px] rounded-[var(--radius-2xl)]',
         lg: 'h-12 px-6 text-base rounded-[var(--radius-lg)]',
         icon: 'h-10 w-10 rounded-[var(--radius-md)]',
         'icon-sm': 'h-8 w-8 rounded-[var(--radius-sm)]',

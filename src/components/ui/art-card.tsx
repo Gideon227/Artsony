@@ -3,20 +3,32 @@ import Image from 'next/image'
 import { Heart, ShoppingCart, Play, Trash2, FolderPlus, Eye } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { cn } from '@/utils'
+import Link from 'next/link'
+import { AvatarGroup } from './avatar-group'
+
+interface Artist {
+  id: string
+  name: string
+  avatarUrl: string
+}
 
 interface ArtCardProps {
   image: string
   title: string
-  artist: {
-    name: string
-    avatar: string
-  }
+  artist: Artist[]
   stats?: {
     likes: string
     views: string
   }
+  cardLink?: string
+  showCart?: boolean;
+  showHeart?: boolean;
+  showVideo?: boolean;
+  showTrash?: boolean
+  showCat?: boolean
   variant?: 'standard' | 'discover'
   onAction?: (action: string) => void
+  alternate?: boolean;
 }
 
 export function ArtCard({ 
@@ -24,13 +36,23 @@ export function ArtCard({
   title, 
   artist, 
   stats, 
+  cardLink,
+  showCart = false,
+  showHeart = false,
+  showVideo = false,
+  showTrash = false,
+  showCat = true,
   variant = 'standard',
-  onAction 
+  onAction, 
+  alternate= false
 }: ArtCardProps) {
+  const primaryArtist = artist[0]
+  const artistImages = artist?.map((a) => a.avatarUrl)
+
   return (
-    <div className="group relative h-[304px] w-[332px]">
+    <Link href={cardLink ?? '/404'} className=" relative max-h-[376px] max-w-[332px] gap-y-4 cursor-pointer">
       {/* --- Image Container --- */}
-      <div className="relative aspect-square overflow-hidden rounded-[40px] bg-neutral-100">
+      <div className="relative group aspect-square overflow-hidden rounded-[40px] bg-neutral-100">
         <Image
           src={image}
           alt={title}
@@ -39,77 +61,103 @@ export function ArtCard({
         />
 
         {/* --- Hover/Active Overlay --- */}
-        <div className="absolute inset-0 bg-black/20 opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
+        <div className="absolute inset-0 bg-black/40 opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
 
         {/* Top Actions (Visible on Hover) */}
-        <div className="absolute left-4 top-4 flex gap-2 opacity-0 transition-all duration-300 group-hover:opacity-100">
-          <IconButton icon={<FolderPlus size={18} />} onClick={() => onAction?.('collect')} />
-          <IconButton icon={<Heart size={18} />} onClick={() => onAction?.('like')} />
-          <IconButton icon={<ShoppingCart size={18} />} onClick={() => onAction?.('cart')} />
-          <IconButton icon={<Play size={18} />} onClick={() => onAction?.('play')} />
-          <IconButton icon={<Trash2 size={18} />} onClick={() => onAction?.('delete')} />
+        <div className="absolute left-6 top-6 flex gap-2 opacity-0 transition-all duration-300 group-hover:opacity-100">
+          <IconButton icon='/icons/folder.svg' onClick={() => onAction?.('collect')} />
+          <IconButton icon='/icons/heart.svg' onClick={() => onAction?.('like')} />
+          <IconButton icon='/icons/cart.svg' onClick={() => onAction?.('cart')} />
+          <IconButton icon='/icons/play-icon.svg' onClick={() => onAction?.('play')} />
+          <IconButton icon='/icons/trash.svg' onClick={() => onAction?.('delete')} />
         </div>
 
         {/* Sale Badge (For Discover Variant) */}
         {variant === 'discover' && (
-          <button className="absolute right-4 top-4 rounded-full border border-white/40 bg-black/20 px-5 py-2 text-sm font-medium text-white backdrop-blur-md">
+          <button className="absolute left-6 top-6 rounded-full border border-white px-4 py-2 text-[14px] font-medium text-white backdrop-blur-md">
             Sale
           </button>
         )}
 
         {/* Bottom Title/Overlay Info */}
-        <div className="absolute bottom-6 left-6 right-6 flex items-end justify-between">
+        <div className="absolute bottom-6 left-6 right-6 opacity-0 group-hover:opacity-100">
           <div className="space-y-2">
-            <h3 className="text-xl font-semibold text-white drop-shadow-md">{title}</h3>
+            <div className='flex items-center justify-between '>
+              <h3 className="text-[14px] font-medium font-poppins tracking-wide leading-6 text-white ">{title}</h3>
+
+              <IconButton 
+                icon='/icons/heart.svg'
+                onClick={() => onAction?.('like')}
+              />
+            </div>
+
+            {alternate && (
+              <div className='flex items-center justify-between w-full'>
+                <div className='flex gap-2 items-center min-w-0 flex-1 mr-1'>
+                  <div className="shrink-0">
+                    <AvatarGroup images={artistImages} />
+                  </div>
+                  <span className="text-[12px] truncate leading-4 tracking-wide font-poppins font-medium text-white">{primaryArtist?.name} {artist.length > 1 && `+ ${artist.length - 1}`}</span>
+                </div>
+
+                <div className='flex gap-x-2'>
+                  <div className='flex gap-x-1'>
+                    <Image src='/icons/heart-red.svg' alt='heart icon' width={16} height={16} className="object-contain" />
+                    <span className="text-[12px] leading-4 tracking-wide font-poppins font-medium text-white">{stats?.likes}</span>
+                  </div>
+
+                  <div className='flex gap-x-1'>
+                    <Image src='/icons/eye-red.svg' alt='heart icon' width={16} height={16} className="object-contain" />
+                    <span className="text-[12px] leading-4 tracking-wide font-poppins font-medium text-white">{stats?.views}</span>
+                  </div>
+                </div>
+              </div>
+
+            )}
             
             {/* Inline Artist (Discover Variant Only) */}
             {variant === 'discover' && (
               <div className="flex items-center gap-2">
                 <div className="relative h-8 w-8 overflow-hidden rounded-full border border-white/20">
-                  <Image src={artist.avatar} alt={artist.name} fill className="object-cover" />
+                  <AvatarGroup images={artistImages}  />
                 </div>
-                <span className="text-sm font-medium text-white">{artist.name}</span>
+                  <span className="text-[12px] truncate leading-4 tracking-wide font-poppins font-medium text-white">{primaryArtist?.name} {artist.length > 1 && `+ ${artist.length - 1}`}</span>
               </div>
             )}
           </div>
 
-          <IconButton 
-            icon={<Heart size={20} fill="currentColor" />} 
-            className="bg-white text-black hover:bg-neutral-200"
-            onClick={() => onAction?.('like')}
-          />
+          
         </div>
       </div>
 
       {/* --- External Footer (Standard Variant & Mobile) --- */}
       {variant === 'standard' && (
-        <div className="mt-4 flex items-center justify-between px-2">
-          <div className="flex items-center gap-3">
-            <div className="relative h-10 w-10 overflow-hidden rounded-full bg-primary-100">
-              <Image src={artist.avatar} alt={artist.name} fill className="object-cover" />
-            </div>
-            <span className="font-medium text-neutral-700">{artist.name}</span>
+        <div className="mt-4 flex items-center justify-between w-full overflow-hidden py-2 pl-2 pr-4 bg-white gap-x-4 border border-gray-50 rounded-full">
+          <div className="flex items-center gap-2 flex-1 min-w-0">
+            <AvatarGroup images={artistImages} width={40} height={40} />
+            <span className="text-[12px] truncate leading-4 tracking-wide font-poppins font-medium text-gray-400">{primaryArtist?.name} {artist.length > 1 && `+ ${artist.length - 1}`}</span>
           </div>
 
           {stats && (
-            <div className="flex items-center gap-4">
-              <div className="flex items-center gap-1 text-neutral-500">
-                <Heart size={16} className="text-primary-500" fill="currentColor" />
-                <span className="text-sm font-semibold">{stats.likes}</span>
+            <div className='flex gap-x-2'>
+              <div className='flex gap-x-1'>
+                <Image src='/icons/heart-red.svg' alt='heart icon' width={16} height={16} className="object-contain" />
+                <span className="text-[12px] leading-4 tracking-wide font-poppins font-medium text-gray-400">{stats?.likes}</span>
               </div>
-              <div className="flex items-center gap-1 text-neutral-500">
-                <Eye size={16} className="text-orange-500" />
-                <span className="text-sm font-semibold">{stats.views}</span>
+
+              <div className='flex gap-x-1'>
+                <Image src='/icons/eye-red.svg' alt='heart icon' width={16} height={16} className="object-contain" />
+                <span className="text-[12px] leading-4 tracking-wide font-poppins font-medium text-gray-400">{stats?.views}</span>
               </div>
             </div>
           )}
         </div>
       )}
-    </div>
+    </Link>
   )
 }
 
-function IconButton({ icon, onClick, className }: { icon: React.ReactNode; onClick?: () => void; className?: string }) {
+function IconButton({ icon, onClick, className }: { icon: string; onClick?: () => void; className?: string }) {
   return (
     <button
       onClick={(e) => {
@@ -117,11 +165,11 @@ function IconButton({ icon, onClick, className }: { icon: React.ReactNode; onCli
         onClick?.()
       }}
       className={cn(
-        "flex h-10 w-10 items-center justify-center rounded-full border border-white/40 bg-black/20 text-white backdrop-blur-md transition-all hover:scale-110 hover:bg-white hover:text-black active:scale-95",
+        "flex h-10 w-10 relative rounded-full border border-white bg-transparent backdrop-blur-md transition-all hover:scale-110 active:scale-95 cursor-pointer",
         className
       )}
     >
-      {icon}
+      <Image src={icon} width={18} height={18} alt='icon' className='absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 ' />
     </button>
   )
 }

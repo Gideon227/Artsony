@@ -11,9 +11,12 @@ import { Eye, EyeOff, MoveLeft, Loader2 } from "lucide-react";
 import { loginSchema, type LoginInput } from "@/features/auth/schemas/login.schema";
 import { cn } from "@/lib/utils";
 import { LoginArtworkGrid } from "@/features/auth/components/login-artwork-grid";
+import { useLogin } from '@/hooks/use-auth-mutations'
+import { Button, Input } from "@/components";
 
 export default function LoginPage() {
   const router = useRouter();
+  const { mutate: login, isPending } = useLogin()
   const [showPassword, setShowPassword] = useState(false);
 
   const {
@@ -28,29 +31,17 @@ export default function LoginPage() {
     },
   });
 
-  const onSubmit = async (data: LoginInput) => {
-    try {
-      await new Promise((resolve) => setTimeout(resolve, 1500)); 
-      console.log("Login Payload:", data);
-      // router.push("/feed");
-    } catch (error) {
-      console.error(error);
-    }
-  };
+  const onSubmit = (data: LoginInput) => login(data)
 
   return (
     <main className="min-h-screen gap-x-[132px] w-full bg-white flex flex-col lg:flex-row overflow-x-hidden p-16">
       
-      {/* =====================================================================
-        LEFT: Artwork Grid (Desktop Only)
-        ===================================================================== */}
+      {/* Artwork Grid (Desktop Only) */}
       <section className="hidden lg:block w-1/2 h-screen sticky top-16">
         <LoginArtworkGrid />
       </section>
 
-      {/* =====================================================================
-        MOBILE BACKGROUND & HEADER (Hidden on Desktop)
-        ===================================================================== */}
+      {/*  MOBILE BACKGROUND & HEADER (Hidden on Desktop) */}
       <div className="lg:hidden absolute inset-0 h-[40vh] w-full z-0">
         <Image
           src="/images/mobile-login-bg.jpg"
@@ -97,35 +88,31 @@ export default function LoginPage() {
               
               {/* Email Input */}
               <div className="flex flex-col gap-1.5">
-                <input
+                <Input
                   {...register("email")}
                   type="email"
                   placeholder="forexample@gmail.com"
-                  disabled={isSubmitting}
-                  className={cn(
-                    "w-full h-[52px] px-6 rounded-full border border-neutral-200 bg-white text-base outline-none transition-all placeholder:text-neutral-400",
-                    "focus:border-[#F15A2B] focus:ring-1 focus:ring-[#F15A2B]/20 disabled:bg-neutral-50 disabled:opacity-70",
-                    errors.email && "border-red-500 focus:border-red-500 focus:ring-red-500/20"
-                  )}
+                  disabled={isPending}
+                  variant={errors.email ? 'error' : 'default'}
+                  autoComplete="email"
+                  className="h-13 rounded-full px-6 text-base"
                 />
-                {errors.email && <span className="text-sm text-red-500 pl-4">{errors.email.message}</span>}
+                {errors.email && <span className="text-sm text-error-500 pl-4">{errors.email.message}</span>}
               </div>
 
               {/* Password Input */}
               <div className="flex flex-col gap-1.5">
-                <div className="relative">
-                  <input
-                    {...register("password")}
-                    type={showPassword ? "text" : "password"}
-                    placeholder="Password"
-                    disabled={isSubmitting}
-                    className={cn(
-                      "w-full h-[52px] pl-6 pr-14 rounded-full border border-neutral-200 bg-white text-base outline-none transition-all placeholder:text-neutral-400",
-                      "focus:border-[#F15A2B] focus:ring-1 focus:ring-[#F15A2B]/20 disabled:bg-neutral-50 disabled:opacity-70",
-                      errors.password && "border-red-500 focus:border-red-500 focus:ring-red-500/20"
-                    )}
-                  />
-                  <button
+                <Input
+                  {...register("password")}
+                  type="password"
+                  placeholder="Password"
+                  disabled={isPending}
+                  variant={errors.password ? 'error' : 'default'}
+                  autoComplete="current-password"
+                  className="h-[52px] rounded-full px-6 text-base"
+                />
+
+                  {/* <button
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
                     tabIndex={-1}
@@ -133,23 +120,30 @@ export default function LoginPage() {
                     aria-label={showPassword ? "Hide password" : "Show password"}
                   >
                     {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
-                  </button>
-                </div>
-                {errors.password && <span className="text-sm text-red-500 pl-4">{errors.password.message}</span>}
+                  </button> */}
+                {errors.password && <span className="text-sm text-error-500 pl-4">{errors.password.message}</span>}
               </div>
 
               {/* Submit Button */}
-              <button
+              {/* <button
                 type="submit"
-                disabled={isSubmitting}
-                className="w-full h-[52px] mt-4 bg-[#F15A2B] hover:bg-[#E04D20] active:scale-[0.98] text-white rounded-full font-medium text-[15px] transition-all flex items-center justify-center disabled:opacity-70 disabled:pointer-events-none"
+                disabled={isPending}
+                className="w-full h-[52px] mt-4 bg-primary-500 hover:bg-primary-600 active:scale-[0.98] text-white rounded-full font-medium text-[15px] transition-all flex items-center justify-center disabled:opacity-70 disabled:pointer-events-none"
               >
                 {isSubmitting ? (
                   <Loader2 className="animate-spin h-5 w-5" />
                 ) : (
                   "Step Into the Studio"
                 )}
-              </button>
+              </button> */}
+
+              <Button 
+                type="submit"
+                isLoading={isPending}
+                loadingText="Signing in..."
+              >
+                Step Into the studio
+              </Button>
             </form>
 
             <div className="mt-4 flex justify-center items-center gap-x-1">

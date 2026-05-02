@@ -1,27 +1,32 @@
 "use client";
-import React from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { MoveLeft, Loader2 } from "lucide-react";
+import { MoveLeft } from "lucide-react";
 
 import { signUpSchema, type SignUpInput } from "@/features/auth/schemas/signup.schema";
-import { cn } from "@/lib/utils";
 import { Input } from "@/components/ui/input";
 import { ArtworkGrid } from "@/features/auth/components/artwork-grid";
 import { Button, Checkbox } from "@/components";
+import { useRegister } from '@/hooks/use-auth-mutations'
 
 export default function SignUpPage() {
   const router = useRouter();
-  const { register, handleSubmit, formState: { errors, isSubmitting } } = useForm<SignUpInput>({
+  const { mutate: register, isPending } = useRegister()
+
+  const { register: field, handleSubmit, formState: { errors, isSubmitting, touchedFields } } = useForm<SignUpInput>({
     resolver: zodResolver(signUpSchema),
   });
 
   const onSubmit = async (data: SignUpInput) => {
-    await new Promise((resolve) => setTimeout(resolve, 1500));
-    console.log(data);
+    register({
+      displayName: data.username ?? data.email,
+      username: data.username,
+      email: data.email,
+      password: data.password,
+    })
   };
 
   return (
@@ -51,7 +56,7 @@ export default function SignUpPage() {
 
       {/* RIGHT: Form Section */}
       <section className="relative z-10 flex-1 flex flex-col items-center">
-        <div className="w-full bg-white rounded-t-[40px] lg:rounded-none flex flex-col justify-between">
+        <div className="w-full h-full flex-1 bg-white rounded-t-[40px] lg:rounded-none flex flex-col justify-between">
           
           {/* Logo Section */}
           <div className="flex justify-center mb-auto">
@@ -61,23 +66,44 @@ export default function SignUpPage() {
           <div className="w-full space-y-8">
             <h4 className="font-raleway font-medium text-gray-500 text-[32px] tracking-wide leading-10">Hello</h4>
 
-            <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-              <Input
-                {...register("username")}
-                placeholder="Leggyman"
-                error={errors.username?.message}
-              />
-              <Input
-                {...register("email")}
-                placeholder="forexample@gmail.com"
-                error={errors.email?.message}
-              />
-              <Input
-                {...register("password")}
-                type="password"
-                placeholder="Password"
-                error={errors.password?.message}
-              />
+            <form onSubmit={handleSubmit(onSubmit)} noValidate className="space-y-4">
+              <div>
+                <Input
+                  {...field('username')}
+                  placeholder="Leggyman"
+                  disabled={isPending}
+                  variant={touchedFields.username && errors.username ? 'error' : 'default'}
+                />
+                {touchedFields.username && errors.username && (
+                  <p className="mt-1 pl-4 text-[12px] text-error-500 font-poppins">{errors.username?.message}</p>
+                )}
+              </div>
+
+              <div>
+                <Input
+                  {...field("email")}
+                  placeholder="forexample@gmail.com"
+                  disabled={isPending}
+                  variant={touchedFields.email && errors.email ? 'error' : 'default'}
+                />
+
+                {touchedFields.email && errors.email && (
+                  <p className="mt-1 pl-4 text-[12px] text-error-500 font-poppins">{errors.email?.message}</p>
+                )}
+              </div>
+
+              <div>
+                <Input
+                  {...field("password")}
+                  type="password"
+                  placeholder="Password"
+                  variant={touchedFields.password && errors.password ? 'error' : 'default'}
+                />
+
+                {touchedFields.password && errors.password && (
+                  <p className="mt-1 pl-4 text-[12px] text-error-500 font-poppins">{errors.password?.message}</p>
+                )}
+              </div>
 
               <div className="flex items-center gap-3 pt-2">
                 <Checkbox />
@@ -85,19 +111,39 @@ export default function SignUpPage() {
                   I hereby agree to Artsony&apos;s <Link href='/terms' className="font-semibold text-neutral-700">terms and conditions</Link>.
                 </label>
               </div>
+
+              <div className="flex items-start gap-3 pt-2">
+                <Checkbox
+                  id="termsAccepted"
+                  disabled={isPending}
+                  {...field('termsAccepted')}
+                />
+                <div>
+                  <label htmlFor="termsAccepted" className="text-sm text-gray-500 cursor-pointer">
+                    I hereby agree to Artsony&apos;s{' '}
+                    <Link href="/terms" className="font-semibold text-gray-700 hover:underline">
+                      terms and conditions
+                    </Link>
+                    .
+                  </label>
+                  {errors.termsAccepted && (
+                    <p className="mt-0.5 text-xs text-error-600">{errors.termsAccepted.message}</p>
+                  )}
+                </div>
+              </div>
+
+              <Button
+                type="submit"
+                isLoading={isSubmitting}
+                loadingText="Setting up your account..."
+                fullWidth
+                className="cursor-pointer font-poppins font-medium mt-4 text-[14px] leading-6 tracking-wide"
+              >
+                Let's have fun!
+              </Button>
             </form>
 
-            <Button
-              isLoading={isSubmitting}
-              loadingText="Setting up your account"
-              fullWidth
-              className="cursor-pointer font-poppins font-medium text-[14px] leading-6 tracking-wide"
-            >
-              Let's have fun!
-            </Button>
-            
             <p className="text-[14px] text-center font-poppins text-gray-500 tracking-wide">Have an account? <Link href='/login' className="text-primary-500">Log in now</Link></p>
-
           </div>
 
           {/* Social Logins */}
@@ -115,7 +161,7 @@ export default function SignUpPage() {
             </Link>
           </div>
           {/* Desktop Footer */}
-          <footer className="hidden font-poppins lg:flex mt-10 gap-6 text-[14px] font-medium tracking-wide text-gray-400">
+          <footer className="hidden font-poppins lg:flex lg:justify-center lg:items-center w-full mt-10 gap-6 text-[14px] font-medium tracking-wide text-gray-400">
             <Link href='/' className="p-2 text-nowrap">Privacy</Link>
             <Link href='/terms' className="p-2 text-nowrap">Terms & Conditions</Link>
             <Link href='/' className="p-2 text-nowrap">FAQ</Link>
