@@ -45,6 +45,7 @@ export type User = Timestamp & {
   artworksCount: number
   isVerified: boolean
   onboarded: boolean
+  interests: string[]
 }
 
 export type ArtworkCategory =

@@ -3,6 +3,7 @@
 import * as React from "react";
 import { ChevronDown, Lock, User } from "lucide-react";
 import { cn } from "@/lib/utils";
+import Image from "next/image";
 
 export type DropdownVariant = "default" | "error" | "success";
 
@@ -10,8 +11,8 @@ export interface DropdownOption {
   id: string | number;
   label: string;
   description?: string;
-  icon?: React.ReactNode;
-  rightIcon?: React.ReactNode;
+  icon?: string;
+  rightIcon?: string;
   disabled?: boolean;
 }
 
@@ -22,7 +23,7 @@ interface DropdownProps {
   placeholder?: string;
   variant?: DropdownVariant;
   disabled?: boolean;
-  leftIcon?: React.ReactNode;
+  leftIcon?: string;
   className?: string;
 }
 
@@ -75,7 +76,10 @@ const Dropdown = ({
         )}
       >
         {/* Left Icon Slot */}
-        {leftIcon && <span className="mr-3 text-neutral-500 shrink-0">{leftIcon}</span>}
+        {leftIcon && 
+          <span className="mr-3 shrink-0">
+            <Image width={20} height={20} src={leftIcon} alt="icon" className="w-auto h-auto"/>
+          </span>}
         
         {/* Selected Value / Placeholder */}
         <span className={cn("flex-1 text-left truncate", !value && "text-neutral-400")}>
@@ -88,7 +92,7 @@ const Dropdown = ({
         />
       </button>
 
-      {/* DROPDOWN MENU (Matches Image 13) */}
+      {/* DROPDOWN MENU */}
       {isOpen && !disabled && (
         <div className="absolute top-[calc(100%+8px)] left-0 w-full z-50 bg-white border border-neutral-200 rounded-b-4xl shadow-xl overflow-hidden animate-in fade-in zoom-in-95 duration-100">
           <ul className="max-h-[320px] overflow-y-auto py-2 custom-scrollbar">
@@ -116,7 +120,8 @@ const Dropdown = ({
                       "flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-neutral-100",
                       isSelected && "bg-white/20"
                     )}>
-                      {option.icon || <User className={cn("h-5 w-5 text-neutral-500", isSelected && "text-white")} />}
+                      {/* {option.icon || <User className={cn("h-5 w-5 text-neutral-500", isSelected && "text-white")} />} */}
+                      <Image width={20} height={20} src={option.icon as string} alt="icon" className="w-auto h-auto" />
                     </div>
 
                     {/* Label & Description */}
@@ -136,7 +141,8 @@ const Dropdown = ({
 
                     {/* Right Icon (Lock in screenshot) */}
                     <div className="ml-2 shrink-0">
-                      {option.rightIcon || <Lock className={cn("h-4 w-4 opacity-70", isSelected && "opacity-100")} />}
+                      {/* {option.rightIcon || <Lock className={cn("h-4 w-4 opacity-70", isSelected && "opacity-100")} />} */}
+                      <Image width={20} height={20} src={option.rightIcon as string} alt="icon" className="w-auto h-auto" />
                     </div>
                   </button>
                   {/* Subtle Divider between items */}

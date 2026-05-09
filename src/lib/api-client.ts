@@ -120,7 +120,11 @@ async function request<T>(path: string, options: RequestOptions = {}): Promise<T
       // Import dynamically to avoid circular dep with store
       const { useAuthStore } = await import('@/store/auth.store')
       useAuthStore.getState().clearAuth()
-      if (typeof window !== 'undefined') {
+      // Only hard-redirect to /login if the user was previously authenticated
+      // (they had an access token that expired). Do NOT redirect guests — they
+      // have no token and the middleware already handles routing them to /signup
+      // or /login. Redirecting guests here causes an infinite reload loop.
+      if (typeof window !== 'undefined' && token) {
         window.location.href = '/login'
       }
       throw err
@@ -134,6 +138,19 @@ async function request<T>(path: string, options: RequestOptions = {}): Promise<T
     try {
       errorBody = (await response.json()) as Partial<ApiError>
     } catch { /* non-JSON */ }
+
+    // Redirect to onboarding if the server says the user hasn't completed it.
+    // Uses window.location (not Next router) because api-client has no React context.
+    if (
+      response.status === 403 &&
+      errorBody.code === 'ONBOARDING_REQUIRED' &&
+      typeof window !== 'undefined'
+    ) {
+      window.location.href = '/auth/interests'
+      // Throw anyway so the calling mutation's onError doesn't also fire
+      throw new HttpError(403, errorBody.code, 'Onboarding required')
+    }
+
     throw new HttpError(
       response.status,
       errorBody.code,

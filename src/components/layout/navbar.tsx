@@ -39,7 +39,7 @@ const IconButton = ({
   </button>
 );
 
-export function Navbar() {
+export function Navbar({ hideSearchBar }: { hideSearchBar?: boolean }) {
   return (
     <header className="w-full bg-white border-b-2 border-gray-50 sticky top-0 z-50">
       <div className="max-w-[1440px] mx-auto px-4 md:px-6 lg:px-8 h-[72px] flex items-center justify-between">
@@ -47,7 +47,6 @@ export function Navbar() {
         {/* LEFT SECTION: Logo & Navigation Links */}
         <div className="flex items-center gap-8 shrink-0">
           <Link href="/" className="shrink-0 flex items-center pt-1">
-            {/* Replace with your actual Artsony logo SVG */}
             <Image 
               src="/home/logo-text.svg" 
               alt="Artsony Logo" 
@@ -59,7 +58,7 @@ export function Navbar() {
           </Link>
 
           {/* Desktop Nav Links */}
-          <nav className="hidden md:flex items-center gap-2 font-medium font-poppins leading-6 text-[16px]">
+          <nav className="hidden lg:flex items-center gap-2 font-medium font-poppins leading-6 text-[16px]">
             <Link href="/discover" className="text-gray-400 hover:text-primary-500 transition-colors p-2 tracking-wide">
               Discover
             </Link>
@@ -71,7 +70,10 @@ export function Navbar() {
 
         {/* 2. MIDDLE SECTION: Search Bar (Desktop Only) */}
         <div className="hidden md:flex flex-1 max-w-[600px]">
-          <SearchInput placeholder="Find your next visual obsession..." leftIconPath='/home/magnifier.svg'/>
+          {hideSearchBar 
+            ? <div className="bg-white"/> 
+            : <SearchInput placeholder="Find your next visual obsession..." leftIconPath='/home/magnifier.svg'/>
+          }
         </div>
 
         {/* 3. RIGHT SECTION: Actions & Profile */}

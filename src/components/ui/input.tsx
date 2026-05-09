@@ -26,11 +26,11 @@ const variantBase: Record<InputVariant, { wrapper: string; input: string }> = {
   },
   error: {
     wrapper: '',
-    input: 'border-red-500 bg-white focus-visible:ring-2 focus-visible:ring-red-500/20 focus-visible:border-red-500',
+    input: 'border-red-500 bg-white focus-visible:ring-2 focus-visible:ring-white focus-visible:border-red-500',
   },
   success: {
     wrapper: '',
-    input: 'border-emerald-500 bg-white focus-visible:ring-2 focus-visible:ring-emerald-500/20 focus-visible:border-emerald-500',
+    input: 'border-emerald-500 bg-white focus-visible:ring-2 focus-visible:ring-white focus-visible:border-emerald-500',
   },
   disabled: {
     wrapper: '',

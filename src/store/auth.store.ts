@@ -65,3 +65,7 @@ export const useAuthStore = create<AuthState & AuthActions>()(
 
 export const selectUser = (s: AuthState & AuthActions) => s.user
 export const selectIsAuthenticated = (s: AuthState & AuthActions) => s.user !== null
+// The access token lives in memory (api-client), not in Zustand state.
+// This selector always returns null from the store — use the in-memory token
+// via getMemoryToken() in api-client for actual API calls.
+export const selectAccessToken = (_s: AuthState & AuthActions): string | null => null

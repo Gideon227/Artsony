@@ -7,7 +7,7 @@ export const authService = {
   login: (body: { email: string; password: string }) =>
     apiClient.post<ApiResponse<AuthResponse>>('/api/auth/login', body),
 
-  register: (body: { email: string; password: string; username: string; displayName: string }) =>
+  register: (body: { email: string; password: string; username: string; }) =>
     apiClient.post<ApiResponse<AuthResponse>>('/api/auth/register', body),
 
   logout: () =>
@@ -28,5 +28,5 @@ export const authService = {
     apiClient.post<ApiResponse<{ accessToken: string }>>('/api/auth/refresh'),
 
   completeOnboarding: (interests: string[]) =>
-    apiClient.post<ApiResponse<User>>('/api/auth/onboarding', { interests }),
+    apiClient.post<ApiResponse<User>>('/api/users/onboarding', { interests }),
 }

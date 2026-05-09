@@ -15,32 +15,36 @@ export type CheckboxProps = React.ComponentPropsWithoutRef<typeof CheckboxPrimit
 const Checkbox = React.forwardRef<
   React.ElementRef<typeof CheckboxPrimitive.Root>,
   CheckboxProps
->(({ className, label, description, error, indeterminate, id, ...props }, ref) => {
+>(({ className, label, description, error, indeterminate, id, value, onChange, ...props }, ref) => {
   const checkboxId = id ?? React.useId()
 
   return (
-    <div className="flex items-start gap-3">
+    <div className="flex items-start gap-3 cursor-pointer">
       <CheckboxPrimitive.Root
+        {...props}
         ref={ref}
         id={checkboxId}
+        checked={!!value}
+        onCheckedChange={(checked) => {
+          onChange?.({
+            target: {
+              name: props.name,
+              value: checked,
+            },
+          } as any)
+        }}
         className={cn(
-          // Base: Circular shape as per design
           'peer shrink-0 h-5 w-5 rounded-full border border-neutral-300 bg-white',
           'transition-all duration-200 ease-in-out',
-          // Focus state: Matches the double-ring design
           'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#F15A2B] focus-visible:ring-offset-2',
-          // Disabled state
           'disabled:cursor-not-allowed disabled:opacity-40 disabled:bg-neutral-100',
-          // Checked state: Brand orange
           'data-[state=checked]:bg-[#F15A2B] data-[state=checked]:border-[#F15A2B]',
           'data-[state=indeterminate]:bg-[#F15A2B] data-[state=indeterminate]:border-[#F15A2B]',
-          // Hover state
           'hover:border-[#F15A2B]/60',
-          // Error state
           error && 'border-red-500 data-[state=checked]:bg-red-500 data-[state=checked]:border-red-500',
           className
         )}
-        {...props}
+        
       >
         <CheckboxPrimitive.Indicator className="flex items-center justify-center text-white">
           {indeterminate ? (

@@ -1,40 +1,12 @@
 'use client'
 
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { authService } from '@/services/auth.service'
 import { useAuthStore } from '@/store/auth.store'
 import { useToast } from '@/components/ui/toaster'
 import { HttpError } from '@/lib/api-client'
 import { QUERY_KEYS, STALE_TIMES } from '@/constants'
-
-// ─── Bootstrap: called once on app load to restore session from RT cookie ─────
-
-export function useSessionBootstrap() {
-  const setUser = useAuthStore((s) => s.setUser)
-  const setAccessToken = useAuthStore((s) => s.setAccessToken)
-  const clearAuth = useAuthStore((s) => s.clearAuth)
-
-  return useQuery({
-    queryKey: ['session-bootstrap'],
-    queryFn: async () => {
-      try {
-        const res = await authService.refresh()
-        setAccessToken(res.data.accessToken)
-        const meRes = await authService.me()
-        setUser(meRes.data)
-        return meRes.data
-      } catch {
-        clearAuth()
-        return null
-      }
-    },
-    staleTime: Infinity,     // only run once per mount
-    retry: false,
-    refetchOnWindowFocus: false,
-    refetchOnMount: true,
-  })
-}
 
 // ─── /me ─────────────────────────────────────────────────────────────────────
 
@@ -42,8 +14,8 @@ export function useMe() {
   const isAuthenticated = useAuthStore((s) => s.user !== null)
   return useQuery({
     queryKey: QUERY_KEYS.me,
-    queryFn: () => authService.me().then((r) => r.data),
-    enabled: isAuthenticated,
+    queryFn:  () => authService.me().then((r) => r.data),
+    enabled:  isAuthenticated,
     staleTime: STALE_TIMES.slow,
   })
 }
@@ -51,32 +23,40 @@ export function useMe() {
 // ─── Login ────────────────────────────────────────────────────────────────────
 
 export function useLogin() {
-  const setUser = useAuthStore((s) => s.setUser)
-  const setAccessToken = useAuthStore((s) => s.setAccessToken)
+  const { setUser, setAccessToken } = useAuthStore()
   const router = useRouter()
+  const searchParams = useSearchParams()
   const { success, error } = useToast()
 
   return useMutation({
     mutationFn: (body: { email: string; password: string }) =>
       authService.login(body),
+
     onSuccess: ({ data }) => {
       setAccessToken(data.accessToken)
       setUser(data.user)
-      success('Welcome back!', `Good to see you, ${data.user.displayName ?? data.user.email}`)
-      // Onboarding redirect enforced server-side via middleware,
-      // but we mirror it client-side for instant UX.
+      success('Welcome back!', data.user.username
+        ? `Good to see you, ${data.user.username}`
+        : 'You are now signed in.')
+
       if (!data.user.onboarded) {
         router.push('/onboarding')
-      } else {
-        router.push('/')
+        return
       }
+
+      // Honour the ?next= param so deep links work after login
+      const next = searchParams.get('next')
+      router.push(next && next.startsWith('/') ? next : '/home')
     },
+
     onError: (err: Error) => {
       if (err instanceof HttpError) {
         if (err.statusCode === 423) {
           error('Account locked', 'Too many failed attempts. Try again later.')
         } else if (err.statusCode === 401) {
           error('Invalid credentials', 'Check your email and password.')
+        } else if (err.statusCode === 429) {
+          error('Too many attempts', 'Slow down and try again in a moment.')
         } else {
           error('Sign in failed', err.message)
         }
@@ -90,8 +70,7 @@ export function useLogin() {
 // ─── Register ─────────────────────────────────────────────────────────────────
 
 export function useRegister() {
-  const setUser = useAuthStore((s) => s.setUser)
-  const setAccessToken = useAuthStore((s) => s.setAccessToken)
+  const { setUser, setAccessToken } = useAuthStore()
   const router = useRouter()
   const { success, error } = useToast()
 
@@ -100,19 +79,26 @@ export function useRegister() {
       email: string
       password: string
       username: string
-      displayName: string
     }) => authService.register(body),
+
     onSuccess: ({ data }) => {
       setAccessToken(data.accessToken)
       setUser(data.user)
-      success('Account created!', `Welcome to Artsony!`)
+      success('Account created!', 'Welcome to Artsony!')
       router.push('/onboarding')
     },
+
     onError: (err: Error) => {
-      if (err instanceof HttpError && err.statusCode === 409) {
-        error('Account exists', 'An account with this email or username already exists.')
-      } else if (err instanceof HttpError && err.statusCode === 422) {
-        error('Invalid details', err.message)
+      if (err instanceof HttpError) {
+        if (err.statusCode === 409) {
+          error('Account exists', 'An account with this email or username already exists.')
+        } else if (err.statusCode === 422) {
+          error('Invalid details', err.message)
+        } else if (err.statusCode === 429) {
+          error('Too many attempts', 'Please wait before trying again.')
+        } else {
+          error('Sign up failed', err.message)
+        }
       } else {
         error('Sign up failed', 'Something went wrong. Please try again.')
       }
@@ -126,15 +112,30 @@ export function useLogout() {
   const clearAuth = useAuthStore((s) => s.clearAuth)
   const router = useRouter()
   const queryClient = useQueryClient()
-  const { success } = useToast()
+  const { success, error } = useToast()
 
   return useMutation({
     mutationFn: () => authService.logout(),
+
+    onSuccess: () => {
+      success('Signed out', 'See you next time!')
+    },
+
+    onError: () => {
+      // Still sign out locally even if the server call fails
+      error('Session ended', 'You have been signed out.')
+    },
+
     onSettled: () => {
-      // Always clear client state even if the server call fails
+      // Always clear regardless of server response
       clearAuth()
       queryClient.clear()
-      success('Signed out', 'See you next time!')
+
+      // Clear the onboarded cookie so middleware re-evaluates on next visit.
+      // The artsony_visited cookie is intentionally kept — returning users
+      // should still go to /login rather than /signup.
+      document.cookie = 'artsony_onboarded=; Max-Age=0; path=/'
+
       router.push('/login')
     },
   })
@@ -147,13 +148,19 @@ export function useForgotPassword() {
 
   return useMutation({
     mutationFn: (body: { email: string }) => authService.forgotPassword(body),
-    onSuccess: () =>
-      success('Email sent', 'If an account exists, a reset link has been sent.'),
+
+    onSuccess: () => {
+      success(
+        'Reset link sent',
+        'If an account with that email exists, a reset link is on its way.'
+      )
+    },
+
     onError: (err: Error) => {
       if (err instanceof HttpError && err.statusCode === 429) {
-        error('Too many requests', 'Please wait before requesting another reset link.')
+        error('Too many requests', 'Wait a moment before requesting another reset link.')
       } else {
-        error('Request failed', 'Please try again.')
+        error('Request failed', 'Something went wrong. Please try again.')
       }
     },
   })
@@ -168,13 +175,21 @@ export function useResetPassword() {
   return useMutation({
     mutationFn: (body: { token: string; email: string; newPassword: string }) =>
       authService.resetPassword(body),
+
     onSuccess: () => {
       success('Password updated', 'You can now sign in with your new password.')
       router.push('/login')
     },
+
     onError: (err: Error) => {
-      if (err instanceof HttpError && err.statusCode === 401) {
-        error('Link expired', 'This reset link is invalid or has expired. Request a new one.')
+      if (err instanceof HttpError) {
+        if (err.statusCode === 401) {
+          error('Link expired', 'This reset link is invalid or has expired. Request a new one.')
+        } else if (err.statusCode === 429) {
+          error('Too many attempts', 'Too many failed attempts on this link.')
+        } else {
+          error('Reset failed', err.message)
+        }
       } else {
         error('Reset failed', 'Something went wrong. Please try again.')
       }
@@ -185,21 +200,22 @@ export function useResetPassword() {
 // ─── Complete onboarding ──────────────────────────────────────────────────────
 
 export function useCompleteOnboarding() {
-  const updateUser = useAuthStore((s) => s.updateUser)
-  const queryClient = useQueryClient()
-  const router = useRouter()
-  const { error } = useToast()
+  const updateUser   = useAuthStore((s) => s.updateUser)
+  const queryClient  = useQueryClient()
+  const router       = useRouter()
+  const { error }    = useToast()
 
   return useMutation({
-    mutationFn: (interests: string[]) =>
-      authService.completeOnboarding(interests),
+    mutationFn: (interests: string[]) => authService.completeOnboarding(interests),
+
     onSuccess: () => {
-      // Mark user as onboarded in local state immediately
       updateUser({ onboarded: true } as never)
-      // Invalidate /me so any refetch gets the fresh DB state
       queryClient.invalidateQueries({ queryKey: QUERY_KEYS.me })
-      router.push('/')
+      // Set the cookie client-side so middleware immediately allows /home
+      document.cookie = 'artsony_onboarded=1; Max-Age=31536000; path=/; SameSite=Strict'
+      router.push('/home')
     },
+
     onError: () => {
       error('Failed to save', 'Your interests could not be saved. Please try again.')
     },
