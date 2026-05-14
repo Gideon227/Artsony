@@ -5,6 +5,7 @@ import { Slot } from '@radix-ui/react-slot'
 import { cva, type VariantProps } from 'class-variance-authority'
 import { Loader2 } from 'lucide-react'
 import { cn } from '@/utils'
+import Image from 'next/image'
 
 const buttonVariants = cva(
   [
@@ -30,9 +31,9 @@ const buttonVariants = cva(
           'shadow-sm',
         ],
         outline: [
-          'border border-neutral-200 bg-white text-neutral-700',
-          'hover:bg-neutral-50 hover:border-neutral-300',
-          'active:bg-neutral-100',
+          'border border-primary-500 bg-white text-primary-500',
+          'hover:bg-primary-50',
+          'active:bg-primary-50 active:ring-2 active:ring-primary-50 active:border-primary-500',
         ],
         ghost: [
           'bg-transparent text-neutral-700',
@@ -53,8 +54,8 @@ const buttonVariants = cva(
       },
       size: {
         sm: 'h-8 px-3 text-xs rounded-[var(--radius-sm)]',
-        md: 'h-10 px-6 text-[14px] rounded-[var(--radius-2xl)]',
-        lg: 'h-12 px-6 text-base rounded-[var(--radius-lg)]',
+        md: 'h-12 w-42 px-12 text-[14px] rounded-[var(--radius-2xl)]',
+        lg: 'h-12 px-6 text-base rounded-[var(--radius-2xl)]',
         icon: 'h-10 w-10 rounded-[var(--radius-md)]',
         'icon-sm': 'h-8 w-8 rounded-[var(--radius-sm)]',
         'icon-lg': 'h-12 w-12 rounded-[var(--radius-lg)]',
@@ -76,8 +77,8 @@ export type ButtonProps = React.ButtonHTMLAttributes<HTMLButtonElement> &
   ButtonVariantProps & {
     isLoading?: boolean
     loadingText?: string
-    leftIcon?: React.ReactNode
-    rightIcon?: React.ReactNode
+    leftIcon?: string
+    rightIcon?: string
     asChild?: boolean
   }
 
@@ -120,13 +121,13 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
           <>
             {leftIcon && (
               <span className="shrink-0" aria-hidden="true">
-                {leftIcon}
+                <Image src={leftIcon} width={20} height={20} alt='icon' />
               </span>
             )}
             {children}
             {rightIcon && (
               <span className="shrink-0" aria-hidden="true">
-                {rightIcon}
+                <Image src={rightIcon} width={20} height={20} alt='icon' />
               </span>
             )}
           </>

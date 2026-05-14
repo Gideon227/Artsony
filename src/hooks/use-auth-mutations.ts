@@ -208,8 +208,8 @@ export function useCompleteOnboarding() {
   return useMutation({
     mutationFn: (interests: string[]) => authService.completeOnboarding(interests),
 
-    onSuccess: () => {
-      updateUser({ onboarded: true } as never)
+    onSuccess: (res) => {
+      updateUser({ onboarded: true, } as never)
       queryClient.invalidateQueries({ queryKey: QUERY_KEYS.me })
       // Set the cookie client-side so middleware immediately allows /home
       document.cookie = 'artsony_onboarded=1; Max-Age=31536000; path=/; SameSite=Strict'

@@ -74,11 +74,25 @@ export function useDeleteArtwork() {
   })
 }
 
-export function useSearchArtworks(query: string) {
-  return useQuery({
-    queryKey: QUERY_KEYS.artworks({ q: query }),
-    queryFn: () => artworkService.search(query),
-    enabled: query.length >= 2,
+type SearchFilters = {
+  q: string
+  category?: string
+  price?: string
+  color?: string
+  size?: string
+  location?: string
+  sort?: 'newest' | 'trending' | 'recommended'
+}
+
+export function useSearchArtworks(filters: SearchFilters) {
+  return useInfiniteQuery({
+    queryKey: QUERY_KEYS.artworks(filters as Record<string, unknown>),
+    queryFn: ({ pageParam = 1 }) =>
+      artworkService.search({ ...filters, page: pageParam as number, perPage: 12 }),
+    getNextPageParam: (last: PaginatedResponse<Artwork>) =>
+      last.hasNextPage ? last.page + 1 : undefined,
+    initialPageParam: 1,
     staleTime: STALE_TIMES.medium,
+    enabled: filters.q.trim().length >= 1,
   })
 }

@@ -9,6 +9,18 @@ type FeedParams = {
   sort?: 'newest' | 'trending' | 'recommended'
 }
 
+type SearchParams = {
+  q: string
+  page?: number
+  perPage?: number
+  category?: string
+  price?: string        // e.g. "0-500", "500-1000"
+  color?: string
+  size?: string
+  location?: string
+  sort?: 'newest' | 'trending' | 'recommended'
+}
+
 export const artworkService = {
   getFeed: (params: FeedParams = {}) =>
     apiClient.get<PaginatedResponse<Artwork>>('/api/artworks/feed', { params }),
@@ -37,8 +49,8 @@ export const artworkService = {
   unsave: (id: string) =>
     apiClient.delete(`/api/artworks/${id}/save`),
 
-  search: (query: string, params: FeedParams = {}) =>
-    apiClient.get<PaginatedResponse<Artwork>>('/api/artworks/search', { params: { q: query, ...params } }),
+  search: (params: SearchParams) =>
+    apiClient.get<PaginatedResponse<Artwork>>('/api/artworks/search', { params }),
 
   uploadImage: async (file: File): Promise<{ url: string; thumbnailUrl: string }> => {
     const form = new FormData()

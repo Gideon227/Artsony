@@ -3,16 +3,7 @@
 import React from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { 
-  Search, 
-  Upload, 
-  Package, 
-  Bell, 
-  ShoppingCart, 
-  Mail, 
-  ChevronDown, 
-  Menu 
-} from "lucide-react";
+import { useRouter } from "next/navigation";
 import { cn } from "@/lib/utils"; 
 import { SearchInput } from "../ui/search-input";
 
@@ -39,7 +30,19 @@ const IconButton = ({
   </button>
 );
 
-export function Navbar({ hideSearchBar }: { hideSearchBar?: boolean }) {
+type NavbarProps = {
+  hideSearchBar?: boolean
+}
+
+export function Navbar({ hideSearchBar = false }: NavbarProps) {
+  const router = useRouter()
+
+  const handleSearch = (query: string) => {
+    const trimmed = query.trim()
+    if (!trimmed) return
+    router.push(`/search?q=${encodeURIComponent(trimmed)}`)
+  }
+
   return (
     <header className="w-full bg-white border-b-2 border-gray-50 sticky top-0 z-50">
       <div className="max-w-[1440px] mx-auto px-4 md:px-6 lg:px-8 h-[72px] flex items-center justify-between">
@@ -58,7 +61,7 @@ export function Navbar({ hideSearchBar }: { hideSearchBar?: boolean }) {
           </Link>
 
           {/* Desktop Nav Links */}
-          <nav className="hidden lg:flex items-center gap-2 font-medium font-poppins leading-6 text-[16px]">
+          <nav className="hidden md:flex items-center gap-2 font-medium font-poppins leading-6 text-[16px]">
             <Link href="/discover" className="text-gray-400 hover:text-primary-500 transition-colors p-2 tracking-wide">
               Discover
             </Link>
@@ -68,25 +71,27 @@ export function Navbar({ hideSearchBar }: { hideSearchBar?: boolean }) {
           </nav>
         </div>
 
-        {/* 2. MIDDLE SECTION: Search Bar (Desktop Only) */}
-        <div className="hidden md:flex flex-1 max-w-[600px]">
-          {hideSearchBar 
-            ? <div className="bg-white"/> 
-            : <SearchInput placeholder="Find your next visual obsession..." leftIconPath='/home/magnifier.svg'/>
-          }
-        </div>
+        {/* MIDDLE SECTION: Search Bar — hidden on search page itself */}
+        {!hideSearchBar && (
+          <div className="hidden md:flex flex-1 max-w-[600px] mx-8">
+            <SearchInput
+              placeholder="Find your next visual obsession..."
+              leftIconPath='/home/magnifier.svg'
+              onSearch={handleSearch}
+            />
+          </div>
+        )}
 
-        {/* 3. RIGHT SECTION: Actions & Profile */}
+        {/* RIGHT SECTION: Actions & Profile */}
         <div className="flex items-center gap-3 md:gap-4 shrink-0">
           
           {/* Action Icons Group */}
           <div className="flex items-center gap-2 md:gap-3">
             <IconButton icon='/home/upload-square.svg' hideOnMobile />
             <IconButton icon='/home/delivery.svg' hideOnMobile />
-            
-            {/* Bell is visible on both Mobile and Desktop */}
-            <IconButton icon='/home/notification-bell.svg' />
-            
+            <Link href="/notifications">
+              <IconButton icon='/home/notification-bell.svg' />
+            </Link>
             <IconButton icon='/home/cart.svg' hideOnMobile />
             <IconButton icon='/home/message.svg' hideOnMobile />
           </div>
@@ -104,7 +109,7 @@ export function Navbar({ hideSearchBar }: { hideSearchBar?: boolean }) {
             <Image src='/icons/arrow-down.svg' width={14} height={8} alt="arrow down" />
           </button>
 
-          {/* Mobile Menu Toggle (Mobile Only) */}
+          {/* Mobile Menu Toggle */}
           <IconButton icon='/home/hamburger.svg' className="md:hidden" />
           
         </div>

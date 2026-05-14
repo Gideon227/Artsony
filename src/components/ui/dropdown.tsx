@@ -66,7 +66,7 @@ const Dropdown = ({
         disabled={disabled}
         onClick={() => setIsOpen(!isOpen)}
         className={cn(
-          "flex items-center w-full h-12 px-6 rounded-full border bg-white transition-all outline-none",
+          "cursor-pointer flex items-center w-full h-12 px-6 rounded-full border bg-white transition-all outline-none",
           "text-sm font-medium text-neutral-800",
           "hover:border-neutral-300",
           "focus:ring-2 focus:ring-offset-2 focus:ring-offset-white",
@@ -140,10 +140,10 @@ const Dropdown = ({
                     </div>
 
                     {/* Right Icon (Lock in screenshot) */}
-                    <div className="ml-2 shrink-0">
+                    {option.rightIcon && <div className="ml-2 shrink-0">
                       {/* {option.rightIcon || <Lock className={cn("h-4 w-4 opacity-70", isSelected && "opacity-100")} />} */}
                       <Image width={20} height={20} src={option.rightIcon as string} alt="icon" className="w-auto h-auto" />
-                    </div>
+                    </div>}
                   </button>
                   {/* Subtle Divider between items */}
                   <div className="mx-5 h-[1px] bg-neutral-100 last:hidden" />

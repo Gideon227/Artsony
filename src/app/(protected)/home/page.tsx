@@ -49,10 +49,56 @@ import { FeaturedSection } from '@/features/home/components/featured-section'
 import { FeedSection } from '@/features/home/components/feed-section'
 import { CreatorCTASection } from '@/features/home/components/creator-cta-section'
 import { useAuthStore } from '@/store'
-import FilterComponent from '@/features/home/components/filter'
+import FilterComponent, { FilterDropdownConfig } from '@/features/home/components/filter'
+import { useState } from 'react'
+import { DropdownOption } from '@/components/ui/dropdown'
+import { INTERESTS } from '@/features/onboarding/data/interests'
 
 const HomePage = () => {
   const isHydrated = useAuthStore((s) => s.isHydrated)
+
+  const [selectedCategory, setSelectedCategory] = useState<any>(null);
+  const [selectedColor, setSelectedColor] = useState<any>(null);
+  const [selectedLocation, setSelectedLocation] = useState<any>(null);
+
+  const categoriesOption: DropdownOption[] = INTERESTS.map((item) => ({
+    id: item.id,
+    icon: item.image,
+    label: item.label
+  }))
+
+  const handleClearFilters = () => {
+    setSelectedCategory(null);
+    setSelectedColor(null);
+    setSelectedLocation(null);
+  }
+
+  const filterDropdowns: FilterDropdownConfig[] = [
+    {
+      id: 'category',
+      options: categoriesOption,
+      value: selectedCategory,
+      onChange: (val) => setSelectedCategory(val),
+      placeholder: 'Categories',
+      leftIcon: '/icons/widget.svg'
+    },
+    {
+      id: 'color',
+      options: categoriesOption, // Replace with actual color options later
+      value: selectedColor,
+      onChange: (val) => setSelectedColor(val),
+      placeholder: 'Color',
+      leftIcon: '/icons/palette.svg'
+    },
+    {
+      id: 'location',
+      options: categoriesOption, // Replace with actual location options later
+      value: selectedLocation,
+      onChange: (val) => setSelectedLocation(val),
+      placeholder: 'Location',
+      leftIcon: '/icons/map-point.svg'
+    },
+  ]
 
   // Block render until SessionBootstrap completes so the feed
   // always has an access token ready when it first fetches.
@@ -74,7 +120,10 @@ const HomePage = () => {
 
       {/* ── Featured Today (teal strip) ─────────────────────────── */}
       <FeaturedSection />
-      <FilterComponent />
+      <FilterComponent
+        dropdowns={filterDropdowns} 
+        onClear={handleClearFilters}
+      />
 
       {/* ── Main feed ───────────────────────────────────────────── */}
       <FeedSection />

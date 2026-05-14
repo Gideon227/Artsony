@@ -1,5 +1,7 @@
+
 // UI primitives
 export { Button, buttonVariants } from './ui/button'
+export { Switch } from './ui/switch'
 export type { ButtonProps, ButtonVariantProps } from './ui/button'
 export { Input } from './ui/input'
 export type { InputProps } from './ui/input'
