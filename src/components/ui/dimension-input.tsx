@@ -13,7 +13,7 @@ const DimensionInput = React.forwardRef<HTMLInputElement, DimensionFieldProps>(
       <label className="text-sm font-medium text-slate-500 pl-1">{label}</label>
       <input
         ref={ref}
-        type="text"
+        type="number"
         inputMode="numeric"
         placeholder="00"
         className={cn(
@@ -27,14 +27,35 @@ const DimensionInput = React.forwardRef<HTMLInputElement, DimensionFieldProps>(
 );
 DimensionInput.displayName = "DimensionInput";
 
-// Group Component
-export default function DimensionsRow() {
+// ADDED PROPS HERE
+interface DimensionsRowProps {
+  values: { length?: number; breadth?: number; height?: number; weight?: number };
+  onChange: (key: string, value: number) => void;
+}
+
+export default function DimensionsRow({ values, onChange }: DimensionsRowProps) {
   return (
     <div className="flex items-center gap-4 w-full max-w-md">
-      <DimensionInput label="Length" />
-      <DimensionInput label="Breadth" />
-      <DimensionInput label="Height" />
-      <DimensionInput label="Weight" />
+      <DimensionInput 
+        label="Length" 
+        value={values?.length || ""} 
+        onChange={(e) => onChange("length", Number(e.target.value))} 
+      />
+      <DimensionInput 
+        label="Breadth" 
+        value={values?.breadth || ""} 
+        onChange={(e) => onChange("breadth", Number(e.target.value))} 
+      />
+      <DimensionInput 
+        label="Height" 
+        value={values?.height || ""} 
+        onChange={(e) => onChange("height", Number(e.target.value))} 
+      />
+      <DimensionInput 
+        label="Weight" 
+        value={values?.weight || ""} 
+        onChange={(e) => onChange("weight", Number(e.target.value))} 
+      />
     </div>
   );
 }

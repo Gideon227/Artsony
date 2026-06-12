@@ -73,7 +73,7 @@ const Footer = () => {
 
             <div className="flex flex-col space-y-3 max-w-sm mt-14">
               <Input 
-                leftIcon={<Mail width={20} height={16} />}
+                leftIcon='/icons/message-white.svg'
                 type='email'
                 placeholder='Enter Email'
               />
@@ -122,7 +122,7 @@ const Footer = () => {
           <div className="lg:col-span-2 flex flex-col justify-start">
             <div className="flex items-center gap-3 group cursor-pointer w-fit mb-6">
               <div className="w-12 h-12 rounded-full overflow-hidden border-2 border-white/20">
-                <Image src="/images/image-avatar.png" alt="Ivan" width={40} height={40} className="object-cover" />
+                <Image src="/images/image-avatar.svg" alt="Ivan" width={40} height={40} className="object-cover" />
               </div>
               <div className="flex items-center gap-2">
                 <span className="text-white text-[12px] font-poppins font-medium tracking-tight">

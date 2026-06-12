@@ -78,12 +78,19 @@ async function request<T>(path: string, options: RequestOptions = {}): Promise<T
     ? { Authorization: `Bearer ${token}` }
     : {}
 
+  // NEW: Check if the body is FormData so we don't force JSON headers
+  const isFormData = init.body instanceof FormData
+  const defaultHeaders: Record<string, string> = { ...authHeaders }
+  
+  if (!isFormData) {
+    defaultHeaders['Content-Type'] = 'application/json'
+  }
+
   const response = await fetch(buildUrl(path, params), {
     ...init,
-    credentials: 'include', // always send cookies for refresh token
+    credentials: 'include',
     headers: {
-      'Content-Type': 'application/json',
-      ...authHeaders,
+      ...defaultHeaders,
       ...headers,
     },
   })
@@ -162,18 +169,44 @@ async function request<T>(path: string, options: RequestOptions = {}): Promise<T
   return response.json() as Promise<T>
 }
 
+// export const apiClient = {
+//   get:    <T>(path: string, options?: RequestOptions) =>
+//             request<T>(path, { ...options, method: 'GET' }),
+//   post:   <T>(path: string, body?: unknown, options?: RequestOptions) =>
+//             request<T>(path, { ...options, method: 'POST',
+//               body: body != null ? JSON.stringify(body) : undefined }),
+//   put:    <T>(path: string, body?: unknown, options?: RequestOptions) =>
+//             request<T>(path, { ...options, method: 'PUT',
+//               body: body != null ? JSON.stringify(body) : undefined }),
+//   patch:  <T>(path: string, body?: unknown, options?: RequestOptions) =>
+//             request<T>(path, { ...options, method: 'PATCH',
+//               body: body != null ? JSON.stringify(body) : undefined }),
+//   delete: <T>(path: string, options?: RequestOptions) =>
+//             request<T>(path, { ...options, method: 'DELETE' }),
+// }
+
 export const apiClient = {
   get:    <T>(path: string, options?: RequestOptions) =>
             request<T>(path, { ...options, method: 'GET' }),
-  post:   <T>(path: string, body?: unknown, options?: RequestOptions) =>
-            request<T>(path, { ...options, method: 'POST',
-              body: body != null ? JSON.stringify(body) : undefined }),
-  put:    <T>(path: string, body?: unknown, options?: RequestOptions) =>
-            request<T>(path, { ...options, method: 'PUT',
-              body: body != null ? JSON.stringify(body) : undefined }),
-  patch:  <T>(path: string, body?: unknown, options?: RequestOptions) =>
-            request<T>(path, { ...options, method: 'PATCH',
-              body: body != null ? JSON.stringify(body) : undefined }),
+            
+  post:   <T>(path: string, body?: unknown, options?: RequestOptions) => {
+            const isForm = body instanceof FormData
+            return request<T>(path, { ...options, method: 'POST',
+              body: isForm ? (body as FormData) : (body != null ? JSON.stringify(body) : undefined) })
+          },
+          
+  put:    <T>(path: string, body?: unknown, options?: RequestOptions) => {
+            const isForm = body instanceof FormData
+            return request<T>(path, { ...options, method: 'PUT',
+              body: isForm ? (body as FormData) : (body != null ? JSON.stringify(body) : undefined) })
+          },
+          
+  patch:  <T>(path: string, body?: unknown, options?: RequestOptions) => {
+            const isForm = body instanceof FormData
+            return request<T>(path, { ...options, method: 'PATCH',
+              body: isForm ? (body as FormData) : (body != null ? JSON.stringify(body) : undefined) })
+          },
+          
   delete: <T>(path: string, options?: RequestOptions) =>
             request<T>(path, { ...options, method: 'DELETE' }),
 }

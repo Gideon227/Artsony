@@ -4,32 +4,37 @@ import React from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { useForm } from 'react-hook-form'
+import { useForm, Controller } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { MoveLeft } from 'lucide-react'
-import { z } from 'zod'
 
 import { Input } from '@/components/ui/input'
 import { Button, Checkbox } from '@/components'
 import { ArtworkGrid } from '@/features/auth/components/artwork-grid'
 import { useRegister } from '@/hooks/use-auth-mutations'
-import { signUpSchema, type SignUpInput } from "@/features/auth/schemas/signup.schema";
+import { signUpSchema, type SignUpInput } from '@/features/auth/schemas/signup.schema'
 
 export default function SignUpPage() {
   const router = useRouter()
-  const { mutate: register, isPending } = useRegister()
+  const { mutate: registerUser, isPending } = useRegister()
 
   const {
-    register: field,
+    register,
     handleSubmit,
+    control,
     formState: { errors, touchedFields },
   } = useForm<SignUpInput>({
     resolver: zodResolver(signUpSchema),
+    defaultValues: {
+      username: '',
+      email: '',
+      password: '',
+      termsAccepted: false,
+    },
   })
 
   const onSubmit = (data: SignUpInput) => {
-    console.log(data)
-    register({
+    registerUser({
       username: data.username,
       email: data.email,
       password: data.password,
@@ -81,7 +86,7 @@ export default function SignUpPage() {
 
               <div>
                 <Input
-                  {...field('username')}
+                  {...register('username')}
                   placeholder="Username (e.g. leggyman)"
                   disabled={isPending}
                   autoCapitalize="none"
@@ -94,7 +99,7 @@ export default function SignUpPage() {
 
               <div>
                 <Input
-                  {...field('email')}
+                  {...register('email')}
                   type="email"
                   placeholder="example@gmail.com"
                   disabled={isPending}
@@ -107,7 +112,7 @@ export default function SignUpPage() {
 
               <div>
                 <Input
-                  {...field('password')}
+                  {...register('password')}
                   type="password"
                   placeholder="Password"
                   disabled={isPending}
@@ -118,14 +123,25 @@ export default function SignUpPage() {
                 )}
               </div>
 
-              <div className="flex items-center cursor-pointer gap-3 pt-1">
-                <Checkbox
-                  id="termsAccepted"
-                  disabled={isPending}
-                  {...field('termsAccepted')}
+              {/* Checkbox via Controller so RHF gets the boolean value correctly */}
+              <div className="flex items-start gap-3 pt-1">
+                <Controller
+                  name="termsAccepted"
+                  control={control}
+                  render={({ field }) => (
+                    <Checkbox
+                      id="termsAccepted"
+                      disabled={isPending}
+                      checked={field.value}
+                      onChange={field.onChange}
+                    />
+                  )}
                 />
                 <div>
-                  <label htmlFor="termsAccepted" className="text-sm text-neutral-500 cursor-pointer">
+                  <label
+                    htmlFor="termsAccepted"
+                    className="text-sm text-neutral-500 cursor-pointer"
+                  >
                     I hereby agree to Artsony&apos;s{' '}
                     <Link href="/terms" className="font-semibold text-neutral-700 hover:underline">
                       terms and conditions
@@ -151,12 +167,16 @@ export default function SignUpPage() {
 
             <p className="text-[14px] text-center font-poppins text-gray-500 tracking-wide">
               Have an account?{' '}
-              <Link href="/login" className="text-primary-500 hover:underline">Log in now</Link>
+              <Link href="/login" className="text-primary-500 hover:underline">
+                Log in now
+              </Link>
             </p>
           </div>
 
           <div className="mt-10 text-center space-y-4">
-            <p className="text-sm font-poppins font-medium text-black tracking-wide leading-6">Or signup with</p>
+            <p className="text-sm font-poppins font-medium text-black tracking-wide leading-6">
+              Or signup with
+            </p>
             <div className="flex justify-center gap-6">
               {(['google', 'apple', 'facebook'] as const).map((provider) => (
                 <a
@@ -169,18 +189,30 @@ export default function SignUpPage() {
                 </a>
               ))}
             </div>
-            <Link href="/forgot-password" className="inline-block text-primary-500 font-medium text-sm hover:underline">
+            <Link
+              href="/forgot-password"
+              className="inline-block text-primary-500 font-medium text-sm hover:underline"
+            >
               Forgot Password? Reset
             </Link>
           </div>
 
           <footer className="hidden font-poppins lg:flex lg:justify-center mt-10 gap-6 text-[14px] font-medium tracking-wide text-gray-400">
             {['Privacy', 'Terms & Conditions', 'FAQ', 'About'].map((label) => (
-              <Link key={label} href={`/${label.toLowerCase().replace(/ & /g, '-').replace(/ /g, '-')}`} className="p-2 text-nowrap hover:text-neutral-700 transition-colors">
+              <Link
+                key={label}
+                href={`/${label.toLowerCase().replace(/ & /g, '-').replace(/ /g, '-')}`}
+                className="p-2 text-nowrap hover:text-neutral-700 transition-colors"
+              >
                 {label}
               </Link>
             ))}
-            <button type="button" className="p-2 text-nowrap hover:text-neutral-700 transition-colors">Language</button>
+            <button
+              type="button"
+              className="p-2 text-nowrap hover:text-neutral-700 transition-colors"
+            >
+              Language
+            </button>
           </footer>
         </div>
       </section>

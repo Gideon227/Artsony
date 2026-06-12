@@ -4,17 +4,21 @@ import * as React from "react";
 import { Plus, Minus } from "lucide-react";
 import { cn } from "@/lib/utils";
 
-const StepperInput = React.forwardRef<HTMLInputElement, React.InputHTMLAttributes<HTMLInputElement>>(
-  ({ className, defaultValue, ...props }, ref) => {
-    const [value, setValue] = React.useState<number>(Number(defaultValue) || 0);
+interface StepperInputProps extends Omit<React.InputHTMLAttributes<HTMLInputElement>, 'value' | 'onChange'> {
+  value?: number;
+  onValueChange?: (value: number) => void;
+}
 
-    const handleIncrement = () => setValue((prev) => prev + 1);
-    const handleDecrement = () => setValue((prev) => (prev > 0 ? prev - 1 : 0));
+const StepperInput = React.forwardRef<HTMLInputElement, StepperInputProps>(
+  ({ className, value = 0, onValueChange, ...props }, ref) => {
+    
+    const handleIncrement = () => onValueChange?.(value + 1);
+    const handleDecrement = () => onValueChange?.(value > 0 ? value - 1 : 0);
 
     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
       const val = e.target.value;
       if (val === "" || /^\d+$/.test(val)) {
-        setValue(val === "" ? 0 : parseInt(val, 10));
+        onValueChange?.(val === "" ? 0 : parseInt(val, 10));
       }
     };
 
@@ -35,10 +39,9 @@ const StepperInput = React.forwardRef<HTMLInputElement, React.InputHTMLAttribute
         <input
           ref={ref}
           type="text"
-          value={value}
+          value={value === 0 && props.placeholder ? "" : value} // Show placeholder if 0
           onChange={handleInputChange}
           className="h-12 flex-1 rounded-full border border-neutral-200 bg-white text-center text-sm font-semibold text-neutral-800 outline-none transition-all focus:border-primary-600 focus:ring-2 focus:ring-primary-600/20"
-          placeholder="0"
           {...props}
         />
 

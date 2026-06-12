@@ -53,9 +53,45 @@ import FilterComponent, { FilterDropdownConfig } from '@/features/home/component
 import { useState } from 'react'
 import { DropdownOption } from '@/components/ui/dropdown'
 import { INTERESTS } from '@/features/onboarding/data/interests'
+import { GalleryPulseSection } from '@/features/home/components/gallery-pulse-section'
+import { ArtCard } from '@/components/ui/art-card'
+import { MoodboardCard, MoodboardItem } from '@/components/ui/moodboard'
+
+interface MoodboardGridProps {
+  items: MoodboardItem[];
+  onCreateNew: () => void;
+  onCardClick: (id: string) => void;
+}
+
+const MOCK_DATA = {
+  image: "/images/image-avatar.svg",
+  title: "Placeholder",
+  artist: [
+    {
+      id: '0',
+      name: "Ivan Kovačević",
+      avatarUrl: "/images/image-avatar.svg"
+    },
+    {
+      id: '1',
+      name: "Ivan Kovačević",
+      avatarUrl: "/images/image-avatar.svg"
+    },
+    {
+      id: '2',
+      name: "Ivan Kovačević",
+      avatarUrl: "/images/image-avatar.svg"
+    },
+  ],
+  stats: { likes: "55.5k", views: "108k" },
+  alternate: true
+}
 
 const HomePage = () => {
   const isHydrated = useAuthStore((s) => s.isHydrated)
+  const { user } = useAuthStore()
+
+  console.log("User data: ", user)
 
   const [selectedCategory, setSelectedCategory] = useState<any>(null);
   const [selectedColor, setSelectedColor] = useState<any>(null);
@@ -118,8 +154,26 @@ const HomePage = () => {
       {/* ── Hero ────────────────────────────────────────────────── */}
       <HeroSection />
 
-      {/* ── Featured Today (teal strip) ─────────────────────────── */}
-      <FeaturedSection />
+      <GalleryPulseSection />
+
+      <div className='w-1/4'>
+        <ArtCard 
+          {...MOCK_DATA}
+        />
+      </div>
+      <div className='w-1/4'>
+        <MoodboardCard 
+          variant='populated'
+          // data={{
+          //   id: 'mood-board',
+          //   title: 'Moodboard custom',
+          //   // artworks: MOCK_DATA.stats
+          // }}
+        />
+      </div>
+
+      {/* ── Featured Today (teal strip) ───────────────────────────
+      <FeaturedSection /> */}
       <FilterComponent
         dropdowns={filterDropdowns} 
         onClear={handleClearFilters}
@@ -130,6 +184,8 @@ const HomePage = () => {
 
       {/* ── Creator / Artist spotlight CTA ──────────────────────── */}
       <CreatorCTASection />
+
+      <FeedSection />
 
       {/* ── Footer ──────────────────────────────────────────────── */}
       <Footer />

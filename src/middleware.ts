@@ -1,99 +1,103 @@
 import { NextResponse, type NextRequest } from 'next/server'
 
-// ─── Route maps ───────────────────────────────────────────────────────────────
+// ─── Architecture note ────────────────────────────────────────────────────────
+// The httpOnly RT cookie is NOT reliably readable in all middleware edge cases —
+// specifically after a client-side login where the Set-Cookie response from the
+// login API hasn't been committed before the next navigation fires in middleware.
+//
+// Solution: backend sets TWO cookies on login/refresh/logout:
+//   1. artsony_rt       → httpOnly, secure — the actual refresh token (API use only)
+//   2. artsony_session  → NOT httpOnly, SameSite=Strict — plain "session exists" flag
+//
+// Middleware reads artsony_session (no sensitive data in it).
+// The client also sets artsony_session after a successful login mutation so the
+// flag is available immediately on the next navigation without waiting on backend.
+// ─────────────────────────────────────────────────────────────────────────────
 
-const PUBLIC_PATHS  = ['/login', '/signup', '/forgot-password', '/reset-password']
-const ONBOARDING    = '/onboarding'
+const SESSION_COOKIE  = 'artsony_session'   // non-httpOnly, set by backend + client
+const ONBOARDED_COOKIE = 'artsony_onboarded' // non-httpOnly, set by backend + client
+const VISITED_COOKIE  = 'artsony_visited'   // set by this middleware
 
-function isPublic(p: string) { return PUBLIC_PATHS.some((r) => p === r || p.startsWith(r + '/')) }
-function isOnboarding(p: string) { return p === ONBOARDING || p.startsWith(ONBOARDING + '/') }
-function isStatic(p: string) {
+const PUBLIC_AUTH_PATHS = ['/login', '/signup', '/forgot-password', '/reset-password']
+
+function isPublicAuth(p: string) {
+  return PUBLIC_AUTH_PATHS.some((r) => p === r || p.startsWith(r + '/'))
+}
+
+function isOnboardingPath(p: string) {
+  return p === '/onboarding' || p.startsWith('/onboarding/')
+}
+
+function isStaticOrApi(p: string) {
   return (
     p.startsWith('/_next') ||
-    p.startsWith('/api')   ||
+    p.startsWith('/api') ||
     p.startsWith('/icons') ||
-    p.startsWith('/images')||
-    /\.(ico|svg|png|jpg|jpeg|webp|woff2?|ttf|otf|map)$/.test(p)
+    p.startsWith('/images') ||
+    p.startsWith('/socials') ||
+    /\.(ico|svg|png|jpg|jpeg|webp|woff2?|ttf|otf|map|css|js)$/.test(p)
   )
 }
 
-// ─── Cookie names ──────────────────────────────────────────────────────────────
-// artsony_rt        → httpOnly RT set by backend — presence = active session
-// artsony_onboarded → non-httpOnly boolean set by backend — '1' = onboarded
-// artsony_visited   → we set this — '1' = user has logged in before on this device
-
-const RT_COOKIE = 'artsony_rt'
-const ONBOARDED_COOKIE  = 'artsony_onboarded'
-const VISITED_COOKIE = 'artsony_visited'
-
-const COOKIE_OPTS = {
-  httpOnly: true,
-  sameSite: 'strict' as const,
-  secure: process.env.NODE_ENV === 'production',
-  path: '/',
-}
-
-// ─── Middleware ───────────────────────────────────────────────────────────────
-
 export function middleware(request: NextRequest) {
-//   const { pathname } = request.nextUrl
+  const { pathname } = request.nextUrl
 
-//   if (isStatic(pathname)) return NextResponse.next()
+  if (isStaticOrApi(pathname)) return NextResponse.next()
 
-//   const hasSession   = Boolean(request.cookies.get(RT_COOKIE)?.value)
-//   const isOnboarded  = request.cookies.get(ONBOARDED_COOKIE)?.value === '1'
-//   const hasVisited   = Boolean(request.cookies.get(VISITED_COOKIE)?.value)
+  const hasSession  = Boolean(request.cookies.get(SESSION_COOKIE)?.value)
+  const isOnboarded = request.cookies.get(ONBOARDED_COOKIE)?.value === '1'
+  const hasVisited  = Boolean(request.cookies.get(VISITED_COOKIE)?.value)
 
-//   const redirect = (to: string) => {
-//     const url = request.nextUrl.clone()
-//     url.pathname = to
-//     url.search = ''
-//     // Carry the intended destination so post-auth can redirect back
-//     if (pathname !== '/' && !isPublic(pathname)) {
-//       url.searchParams.set('next', pathname)
-//     }
-//     return NextResponse.redirect(url)
-//   }
+  const redirect = (to: string, preserveNext = false) => {
+    const url = request.nextUrl.clone()
+    url.pathname = to
+    url.search = ''
+    if (preserveNext && !isPublicAuth(pathname) && pathname !== '/') {
+      url.searchParams.set('next', pathname)
+    }
+    return NextResponse.redirect(url)
+  }
 
-//   // ── 1. No session ──────────────────────────────────────────────────────────
-//   if (!hasSession) {
-//     // Already on a public auth page → let them through
-//     if (isPublic(pathname)) return NextResponse.next()
+  // ── Root ───────────────────────────────────────────────────────────────────
+  if (pathname === '/') {
+    if (!hasSession) return redirect(hasVisited ? '/login' : '/signup')
+    if (!isOnboarded) return redirect('/onboarding')
+    return redirect('/home')
+  }
 
-//     // First-time visitor → /signup
-//     // Returning visitor (has logged in before) → /login
-//     return redirect(hasVisited ? '/login' : '/signup')
-//   }
+  // ── No session ─────────────────────────────────────────────────────────────
+  if (!hasSession) {
+    if (isPublicAuth(pathname)) return NextResponse.next()
+    return redirect(hasVisited ? '/login' : '/signup', true)
+  }
 
-//   // ── 2. Has session, on a public auth page → bounce to app ─────────────────
-//   if (hasSession && isPublic(pathname)) {
-//     return redirect(isOnboarded ? '/home' : ONBOARDING)
-//   }
+  // ── Has session on an auth page → redirect into app ───────────────────────
+  if (isPublicAuth(pathname)) {
+    return redirect(isOnboarded ? '/home' : '/onboarding')
+  }
 
-//   // ── 3. Has session, not yet onboarded → force to /onboarding ──────────────
-//   if (hasSession && !isOnboarded && !isOnboarding(pathname)) {
-//     return redirect(ONBOARDING)
-//   }
+  // ── Not onboarded yet ──────────────────────────────────────────────────────
+  if (!isOnboarded && !isOnboardingPath(pathname)) {
+    return redirect('/onboarding')
+  }
 
-//   // ── 4. Has session, already onboarded, trying to re-do onboarding → /home ──
-//   if (hasSession && isOnboarded && isOnboarding(pathname)) {
-//     return redirect('/home')
-//   }
+  // ── Already onboarded, revisiting onboarding ──────────────────────────────
+  if (isOnboarded && isOnboardingPath(pathname)) {
+    return redirect('/home')
+  }
 
-//   // ── 5. Root / → /home ─────────────────────────────────────────────────────
-//   if (pathname === '/') {
-//     return redirect(hasSession && isOnboarded ? '/home' : (isOnboarding(pathname) ? ONBOARDING : (hasVisited ? '/login' : '/signup')))
-//   }
-
-//   // ── 6. All good — mark device as visited and proceed ──────────────────────
-//   const res = NextResponse.next()
-//   if (!hasVisited) {
-//     res.cookies.set(VISITED_COOKIE, '1', {
-//       ...COOKIE_OPTS,
-//       maxAge: 365 * 24 * 60 * 60,
-//     })
-//   }
-//   return res
+  // ── Authenticated and on a valid route ────────────────────────────────────
+  const res = NextResponse.next()
+  if (!hasVisited) {
+    res.cookies.set(VISITED_COOKIE, '1', {
+      httpOnly: false,
+      sameSite: 'strict',
+      secure: process.env.NODE_ENV === 'production',
+      path: '/',
+      maxAge: 365 * 24 * 60 * 60,
+    })
+  }
+  return res
 }
 
 export const config = {

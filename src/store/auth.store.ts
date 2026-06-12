@@ -6,16 +6,12 @@ import type { User, Nullable } from '@/types'
 
 type AuthState = {
   user: Nullable<User>
-  // accessToken lives in memory only (via api-client), NOT in this store.
-  // Persisting the token in localStorage is an XSS vector.
-  // We persist only the user object for UI hydration; the actual token
-  // is re-issued silently via the httpOnly refresh cookie on page load.
   isHydrated: boolean
 }
 
 type AuthActions = {
   setUser: (user: User) => void
-  setAccessToken: (token: string) => void  // writes to memory, not store
+  setAccessToken: (token: string) => void
   clearAuth: () => void
   setHydrated: () => void
   updateUser: (partial: Partial<User>) => void
@@ -34,16 +30,22 @@ export const useAuthStore = create<AuthState & AuthActions>()(
 
         setUser: (user) => set((state) => { state.user = user }),
 
-        // Writes token to the in-memory store in api-client, not Zustand.
-        // This keeps the token out of localStorage entirely.
         setAccessToken: (token) => setMemoryToken(token),
 
         clearAuth: () => {
           setMemoryToken(null)
-          set((state) => { state.user = null })
+          set((state) => {
+            state.user = null
+          })
         },
 
-        setHydrated: () => set((state) => { state.isHydrated = true }),
+        // Called exactly once — by SessionBootstrap.finally — after the
+        // refresh attempt settles. Never set this from onRehydrateStorage
+        // because the persisted user may have an expired session.
+        setHydrated: () =>
+          set((state) => {
+            state.isHydrated = true
+          }),
 
         updateUser: (partial) =>
           set((state) => {
@@ -52,11 +54,9 @@ export const useAuthStore = create<AuthState & AuthActions>()(
       })),
       {
         name: 'artsony-auth',
-        // Only persist the user object — never the token
         partialize: (state) => ({ user: state.user }),
-        onRehydrateStorage: () => (state) => {
-          state?.setHydrated()
-        },
+        // Do NOT call setHydrated here. The persisted user may be stale.
+        // SessionBootstrap owns hydration timing.
       }
     ),
     { name: 'AuthStore', enabled: process.env.NODE_ENV === 'development' }
@@ -65,7 +65,4 @@ export const useAuthStore = create<AuthState & AuthActions>()(
 
 export const selectUser = (s: AuthState & AuthActions) => s.user
 export const selectIsAuthenticated = (s: AuthState & AuthActions) => s.user !== null
-// The access token lives in memory (api-client), not in Zustand state.
-// This selector always returns null from the store — use the in-memory token
-// via getMemoryToken() in api-client for actual API calls.
-export const selectAccessToken = (_s: AuthState & AuthActions): string | null => null
+export const selectIsHydrated = (s: AuthState & AuthActions) => s.isHydrated

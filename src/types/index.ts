@@ -1,3 +1,22 @@
+import { Artwork } from './artwork'
+export type {
+  Artwork,
+  ArtworkAsset,
+  ArtworkFilters,
+  ArtworkFormat,
+  ArtworkMediaType,
+  ArtworkStatus,
+  ArtworkVisibility,
+  CreateArtworkPayload,
+  ListingType,
+  ModerationStatus,
+  PaginatedArtworksResponse,
+  PhysicalDetails,
+  UpdateArtworkPayload,
+  Variant,
+  VariantOption,
+} from './artwork'
+
 export type Nullable<T> = T | null
 export type Optional<T> = T | undefined
 export type AsyncState<T> = {
@@ -39,13 +58,23 @@ export type User = Timestamp & {
   displayName: string
   avatarUrl: Nullable<string>
   bio: Nullable<string>
+  artworks: Artwork
   website: Nullable<string>
+  instagramLink: Nullable<string>
+  facebookLink: Nullable<string>
+  twitterLink: Nullable<string>
+  behanceLink: Nullable<string>
   followersCount: number
   followingCount: number
+  likesCount: number
+  viewsCount: number
   artworksCount: number
   isVerified: boolean
   onboarded: boolean
   interests: string[]
+  created_at: string
+  state?: string;
+  country?: string;
 }
 
 export type ArtworkCategory =
@@ -57,28 +86,28 @@ export type ArtworkCategory =
   | 'mixed-media'
   | 'other'
 
-export type ArtworkStatus = 'draft' | 'published' | 'archived'
+// export type ArtworkStatus = 'draft' | 'published' | 'archived'
 export type ArtworkAvailability = 'for-sale' | 'not-for-sale' | 'sold'
 
-export type Artwork = Timestamp & {
-  id: ID
-  title: string
-  description: Nullable<string>
-  imageUrl: string
-  thumbnailUrl: string
-  category: ArtworkCategory
-  tags: string[]
-  price: Nullable<number>
-  currency: string
-  availability: ArtworkAvailability
-  status: ArtworkStatus
-  likesCount: number
-  commentsCount: number
-  viewsCount: number
-  isLiked: boolean
-  isSaved: boolean
-  artist: Pick<User, 'id' | 'username' | 'displayName' | 'avatarUrl' | 'isVerified'>
-}
+// export type Artwork = Timestamp & {
+//   id: ID
+//   title: string
+//   description: Nullable<string>
+//   imageUrl: string
+//   thumbnailUrl: string
+//   category: ArtworkCategory
+//   tags: string[]
+//   price: Nullable<number>
+//   currency: string
+//   availability: ArtworkAvailability
+//   status: ArtworkStatus
+//   likesCount: number
+//   commentsCount: number
+//   viewsCount: number
+//   isLiked: boolean
+//   isSaved: boolean
+//   artist: Pick<User, 'id' | 'username' | 'displayName' | 'avatarUrl' | 'isVerified'>
+// }
 
 export type Comment = Timestamp & {
   id: ID
@@ -103,7 +132,7 @@ export type Notification = Timestamp & {
 
 export type CartItem = {
   id: ID
-  artwork: Pick<Artwork, 'id' | 'title' | 'imageUrl' | 'thumbnailUrl' | 'price' | 'currency' | 'artist'>
+  artwork: Pick<Artwork, 'id' | 'title' | 'assets' | 'price' | 'currency' | 'creator_id'>
   quantity: number
   addedAt: string
 }

@@ -1,10 +1,12 @@
 'use client'
 
+import React, { useState } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
-import { motion } from 'framer-motion'
-import { ChevronsRight } from 'lucide-react'
+import { motion, AnimatePresence } from 'framer-motion'
+import { ChevronsRight, ChevronLeft, ChevronRight } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import { ArtCard } from '@/components/ui/art-card'
 
 // Mocked featured artist — replace with /api/users/spotlight hook when ready
 const SPOTLIGHT = {
@@ -17,122 +19,131 @@ const SPOTLIGHT = {
   profileHref: '/@ivan',
 }
 
+// Mocked items for the Artsony Shop Carousel matching the design
+const SHOP_ARTWORKS = [
+  {
+    id: '1',
+    image: '/images/artwork-1.jpg',
+    title: 'Neon Predator',
+    artist: [{ id: 'art1', name: 'Kemi Oladele', avatarUrl: '/images/avatar-1.svg' }],
+    stats: { likes: '2.4K', views: '12K' }
+  },
+  {
+    id: '2',
+    image: '/images/artwork-2.jpg',
+    title: 'The Silent Companion',
+    artist: [{ id: 'art2', name: 'Username', avatarUrl: '/images/avatar-2.svg' }],
+    stats: { likes: '456', views: '1.9K' }
+  },
+  {
+    id: '3',
+    image: '/images/artwork-3.jpg',
+    title: 'Summer Shoreline',
+    artist: [{ id: 'art3', name: 'Oliver Bennett', avatarUrl: '/images/avatar-3.svg' }],
+    stats: { likes: '130', views: '890' }
+  },
+  {
+    id: '4',
+    image: '/images/artwork-4.jpg',
+    title: 'Gilded Elephant',
+    artist: [{ id: 'art4', name: 'Sofia Martínez', avatarUrl: '/images/avatar-4.svg' }],
+    stats: { likes: '3.1K', views: '15.4K' }
+  },
+  {
+    id: '5',
+    image: '/images/artwork-5.jpg',
+    title: 'Abstract Harmony',
+    artist: [{ id: 'art5', name: 'Gabriel Banega', avatarUrl: '/images/avatar-5.svg' }],
+    stats: { likes: '892', views: '4.2K' }
+  },
+]
+
 export function CreatorCTASection() {
+  const [currentIndex, setCurrentIndex] = useState(0)
+
+  const nextSlide = () => {
+    if (currentIndex < SHOP_ARTWORKS.length - 1) {
+      setCurrentIndex((prev) => prev + 1)
+    }
+  }
+
+  const prevSlide = () => {
+    if (currentIndex > 0) {
+      setCurrentIndex((prev) => prev - 1)
+    }
+  }
+
   return (
-    <section className="w-full bg-secondary-100 py-12 md:py-16 overflow-hidden">
-      <div className="max-w-[1440px] mx-auto px-4 md:px-8">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-10 md:gap-16 items-center">
+    <section className="w-full bg-secondary-100 py-12 px-8 overflow-hidden flex flex-col gap-y-14">
+      <div className='flex items-center justify-center gap-x-12 w-full'>
+        <div className='flex flex-col gap-6 flex-1 w-full'>
+          <div className='flex gap-2 items-center'>
+            <h1 className='font-raleway font-semibold text-h4 leading-10 text-primary-500'>Artsony Shop</h1>
+            <Image src='/icons/shop.svg' width={48} height={48} alt='shop icon' />
+          </div>
 
-          {/* ── Left: Artist spotlight ──────────────────────────────── */}
-          <motion.div
-            initial={{ opacity: 0, x: -24 }}
-            whileInView={{ opacity: 1, x: 0 }}
-            viewport={{ once: true, margin: '-80px' }}
-            transition={{ duration: 0.6, ease: [0.4, 0, 0.2, 1] }}
-            className="flex flex-col gap-6"
+          <p className='font-poppins font-medium text-body-m text-gray-400 leading-6 tracking-wide max-w-141'>
+            A glimpse into what our artists are creating — discover original works waiting to find a home.
+          </p>
+        </div>
+
+        <div className='self-end items-end justify-end flex'>
+          <Button
+            variant='outline'
           >
-            <div className="flex items-center gap-3">
-              <span className="w-1 h-6 rounded-full bg-primary-500 shrink-0" />
-              <p className="font-poppins text-[12px] font-semibold text-primary-500 uppercase tracking-[0.08em]">
-                Artist Spotlight
-              </p>
-            </div>
-
-            {/* Artist card */}
-            <Link
-              href={SPOTLIGHT.profileHref}
-              className="flex items-center gap-4 group w-fit"
-            >
-              <div className="relative w-14 h-14 rounded-full overflow-hidden border-2 border-white/60 shadow-sm">
-                <Image
-                  src={SPOTLIGHT.avatarUrl}
-                  alt={SPOTLIGHT.name}
-                  fill
-                  className="object-cover"
-                />
-              </div>
-              <div>
-                <p className="font-raleway font-semibold text-[18px] text-neutral-700 group-hover:text-primary-500 transition-colors leading-tight">
-                  {SPOTLIGHT.name}
-                </p>
-                <div className="flex items-center gap-3 mt-1">
-                  <span className="font-poppins text-[12px] text-neutral-400">
-                    {SPOTLIGHT.artworksCount} works
-                  </span>
-                  <span className="w-1 h-1 rounded-full bg-neutral-300" />
-                  <span className="font-poppins text-[12px] text-neutral-400">
-                    {SPOTLIGHT.followersCount} followers
-                  </span>
-                </div>
-              </div>
-              <ChevronsRight className="w-4 h-4 text-neutral-400 group-hover:text-primary-500 transition-all group-hover:translate-x-0.5 ml-2" />
-            </Link>
-
-            {/* Quote */}
-            <blockquote className="border-l-2 border-primary-500 pl-4">
-              <p className="font-poppins text-[14px] italic leading-7 text-neutral-500">
-                "{SPOTLIGHT.quote}"
-              </p>
-            </blockquote>
-
-            {/* Stats row */}
-            <div className="flex items-center gap-6">
-              <Stat label="Works" value={String(SPOTLIGHT.artworksCount)} />
-              <Stat label="Followers" value={SPOTLIGHT.followersCount} />
-              <Stat label="Collections" value="12" />
-            </div>
-          </motion.div>
-
-          {/* ── Right: Artwork image + Upload CTA ──────────────────── */}
-          <motion.div
-            initial={{ opacity: 0, x: 24 }}
-            whileInView={{ opacity: 1, x: 0 }}
-            viewport={{ once: true, margin: '-80px' }}
-            transition={{ duration: 0.6, delay: 0.1, ease: [0.4, 0, 0.2, 1] }}
-            className="flex flex-col gap-6"
-          >
-            <div className="relative rounded-[32px] overflow-hidden aspect-video md:aspect-[4/3]">
-              <Image
-                src={SPOTLIGHT.artworkUrl}
-                alt="Featured artwork"
-                fill
-                className="object-cover"
-                sizes="(max-width: 768px) 100vw, 50vw"
-              />
-              <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent" />
-            </div>
-
-            {/* CTA */}
-            <div className="flex flex-col gap-3">
-              <p className="font-raleway font-semibold text-[20px] md:text-[24px] text-neutral-700 leading-tight">
-                Ready to share your art with the world?
-              </p>
-              <p className="font-poppins text-[13px] text-neutral-400 leading-6">
-                Join thousands of creators and collectors on Artsony. Upload your first piece in minutes.
-              </p>
-              <div className="flex items-center gap-3 mt-1">
-                <Button
-                  variant="primary"
-                  size="md"
-                  className="font-poppins"
-                  asChild
-                >
-                  <Link href="/upload">Start Uploading</Link>
-                </Button>
-                <Button
-                  variant="outline"
-                  size="md"
-                  className="font-poppins"
-                  asChild
-                >
-                  <Link href="/discover">Explore Art</Link>
-                </Button>
-              </div>
-            </div>
-          </motion.div>
-
+            Visit Shop
+          </Button>
         </div>
       </div>
+
+      {/* CAROUSEL - NEW IMPLEMENTATION */}
+      <div className="relative w-full overflow-visible px-2">
+        <div className="overflow-hidden w-full class-carousel-viewport">
+          <motion.div 
+            className="flex gap-6 w-max"
+            animate={{ x: -(currentIndex * 356) }}
+            transition={{
+              type: "spring",
+              stiffness: 45,
+              damping: 15,
+              mass: 1.2
+            }}
+          >
+            {SHOP_ARTWORKS.map((artwork) => (
+              <div key={artwork.id} className="w-[332px] shrink-0">
+                <ArtCard
+                  image={artwork.image}
+                  title={artwork.title}
+                  artist={artwork.artist}
+                  stats={artwork.stats}
+                  variant="standard"
+                  alternate={false}
+                />
+              </div>
+            ))}
+          </motion.div>
+        </div>
+
+        {/* Navigation Overlays */}
+        {currentIndex > 0 && (
+          <button 
+            onClick={prevSlide}
+            className="absolute left-6 top-[166px] -translate-y-1/2 w-12 h-12 rounded-full border border-white/30 bg-black/20 backdrop-blur-md flex items-center justify-center text-white hover:bg-black/40 transition-all z-20"
+          >
+            <ChevronLeft size={24} />
+          </button>
+        )}
+
+        {currentIndex < SHOP_ARTWORKS.length - 1 && (
+          <button 
+            onClick={nextSlide}
+            className="absolute right-6 top-[166px] -translate-y-1/2 w-12 h-12 rounded-full bg-[#FF6B44] flex items-center justify-center text-white shadow-lg hover:scale-105 active:scale-95 transition-all z-20"
+          >
+            <ChevronRight size={24} />
+          </button>
+        )}
+      </div>
+
     </section>
   )
 }

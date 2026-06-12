@@ -1,4 +1,6 @@
-import { useAuthStore, selectUser, selectIsAuthenticated, selectAccessToken } from '@/store'
+'use client'
+
+import { useAuthStore, selectUser, selectIsAuthenticated, selectIsHydrated } from '@/store'
 import { useToast } from '@/components/ui/toaster'
 import { useRouter } from 'next/navigation'
 import { ROUTES } from '@/constants'
@@ -6,8 +8,7 @@ import { ROUTES } from '@/constants'
 export function useAuth() {
   const user = useAuthStore(selectUser)
   const isAuthenticated = useAuthStore(selectIsAuthenticated)
-  const accessToken = useAuthStore(selectAccessToken)
-  const isHydrated = useAuthStore((s) => s.isHydrated)
+  const isHydrated = useAuthStore(selectIsHydrated)
   const clearAuth = useAuthStore((s) => s.clearAuth)
   const router = useRouter()
   const { success } = useToast()
@@ -18,7 +19,8 @@ export function useAuth() {
     router.push(ROUTES.auth.login)
   }
 
-  const requireAuth = () => {
+  const requireAuth = (): boolean => {
+    if (!isHydrated) return false
     if (!isAuthenticated) {
       router.push(ROUTES.auth.login)
       return false
@@ -26,5 +28,5 @@ export function useAuth() {
     return true
   }
 
-  return { user, isAuthenticated, accessToken, isHydrated, logout, requireAuth }
+  return { user, isAuthenticated, isHydrated, logout, requireAuth }
 }

@@ -3,6 +3,7 @@
 import * as React from 'react'
 import { Eye, EyeOff, Loader2, CheckCircle, AlertCircle } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import Image from 'next/image'
 
 export type InputVariant = 'default' | 'error' | 'success' | 'disabled'
 
@@ -10,11 +11,10 @@ export type InputProps = Omit<React.InputHTMLAttributes<HTMLInputElement>, 'pref
   variant?: InputVariant
   isFilled?: boolean
   isLoading?: boolean
-  leftIcon?: React.ReactNode
+  leftIcon?: string
   rightIcon?: React.ReactNode
   rightElement?: React.ReactNode
   showStatusIcon?: boolean
-  // Add this line to fix the TS error
   error?: string 
 }
 
@@ -88,7 +88,7 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>(
           {/* Left icon */}
           {leftIcon && (
             <div className={cn('pointer-events-none absolute left-6 top-1/2 -translate-y-1/2 text-neutral-400')}>
-              {leftIcon}
+              <Image src={leftIcon} width={20} height={20} alt='left icon'/>
             </div>
           )}
 

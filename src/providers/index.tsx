@@ -1,4 +1,5 @@
 'use client'
+
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { useState, useEffect, useRef } from 'react'
 import { Toaster } from '@/components/ui/toaster'
@@ -13,7 +14,7 @@ function makeQueryClient() {
     defaultOptions: {
       queries: {
         staleTime: 1000 * 60 * 2,
-        gcTime:    1000 * 60 * 10,
+        gcTime: 1000 * 60 * 10,
         retry: (failureCount, error) => {
           if (error instanceof Error && 'statusCode' in error) {
             const code = (error as { statusCode: number }).statusCode
@@ -36,50 +37,47 @@ function getQueryClient() {
   return browserQueryClient
 }
 
-// ─── Session bootstrap ────────────────────────────────────────────────────────
-// Runs once per page mount. Tries to silently refresh the access token using
-// the httpOnly RT cookie the browser sends automatically. On success, the user
-// store is populated and the access token sits in memory only. On failure the
-// store is cleared — middleware already sent them to /login or /signup.
-
 function SessionBootstrap() {
-  const setUser      = useAuthStore((s) => s.setUser)
+  const setUser       = useAuthStore((s) => s.setUser)
   const setAccessToken = useAuthStore((s) => s.setAccessToken)
-  const clearAuth    = useAuthStore((s) => s.clearAuth)
-  const setHydrated  = useAuthStore((s) => s.setHydrated)
-  const done         = useRef(false)
+  const clearAuth     = useAuthStore((s) => s.clearAuth)
+  const setHydrated   = useAuthStore((s) => s.setHydrated)
+  const isHydrated    = useAuthStore((s) => s.isHydrated)
+  const done          = useRef(false)
 
   useEffect(() => {
-    if (done.current) return
+    if (done.current || isHydrated) return
     done.current = true
 
     ;(async () => {
       try {
-        // Use raw fetch — NOT apiClient — so the 401 interceptor never fires
-        // for this call. The refresh endpoint doesn't need a Bearer token, it
-        // uses the httpOnly RT cookie. Routing it through apiClient would cause
-        // the interceptor to call refresh AGAIN on a 401, creating an infinite
-        // loop and hard-redirecting the user to /login on every page load.
         const res = await fetch(`${API_BASE}/api/auth/refresh`, {
           method: 'POST',
           credentials: 'include',
         })
 
         if (!res.ok) {
-          // No session — this is normal for guests. Don't redirect, just clear.
+          // No active session — clear any stale Zustand-persisted user
           clearAuth()
+          // Also clear the session indicator so middleware agrees
+          document.cookie = 'artsony_session=; max-age=0; path=/; SameSite=Strict'
           return
         }
 
         const body = (await res.json()) as { data: { accessToken: string } }
         const accessToken = body.data.accessToken
+
         setMemoryToken(accessToken)
         setAccessToken(accessToken)
 
         const meRes = await authService.me()
         setUser(meRes.data)
+
+        // Ensure session indicator is present for middleware on any subsequent navigation
+        document.cookie = `artsony_session=1; path=/; SameSite=Strict; max-age=${365 * 24 * 60 * 60}`
       } catch {
         clearAuth()
+        document.cookie = 'artsony_session=; max-age=0; path=/; SameSite=Strict'
       } finally {
         setHydrated()
       }

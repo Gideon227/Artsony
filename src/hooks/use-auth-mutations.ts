@@ -8,14 +8,29 @@ import { useToast } from '@/components/ui/toaster'
 import { HttpError } from '@/lib/api-client'
 import { QUERY_KEYS, STALE_TIMES } from '@/constants'
 
+// ─── Cookie helpers ───────────────────────────────────────────────────────────
+// These mirror what the backend sets so middleware sees the flags immediately
+// after a client-side login — without waiting for a page reload.
+
+const COOKIE_BASE = `path=/; SameSite=Strict${process.env.NODE_ENV === 'production' ? '; Secure' : ''}`
+const ONE_YEAR    = 365 * 24 * 60 * 60
+
+function setClientCookie(name: string, value: string, maxAge = ONE_YEAR) {
+  document.cookie = `${name}=${value}; max-age=${maxAge}; ${COOKIE_BASE}`
+}
+
+function clearClientCookie(name: string) {
+  document.cookie = `${name}=; max-age=0; ${COOKIE_BASE}`
+}
+
 // ─── /me ─────────────────────────────────────────────────────────────────────
 
 export function useMe() {
   const isAuthenticated = useAuthStore((s) => s.user !== null)
   return useQuery({
     queryKey: QUERY_KEYS.me,
-    queryFn:  () => authService.me().then((r) => r.data),
-    enabled:  isAuthenticated,
+    queryFn: () => authService.me().then((r) => r.data),
+    enabled: isAuthenticated,
     staleTime: STALE_TIMES.slow,
   })
 }
@@ -35,18 +50,27 @@ export function useLogin() {
     onSuccess: ({ data }) => {
       setAccessToken(data.accessToken)
       setUser(data.user)
-      success('Welcome back!', data.user.username
-        ? `Good to see you, ${data.user.username}`
-        : 'You are now signed in.')
 
-      if (!data.user.onboarded) {
-        router.push('/onboarding')
-        return
+      // Set the session indicator cookie immediately so middleware sees it
+      // on the very next navigation — no race condition with the RT cookie.
+      setClientCookie('artsony_session', '1')
+      setClientCookie('artsony_visited', '1')
+
+      if (data.user.onboarded) {
+        setClientCookie('artsony_onboarded', '1')
       }
 
-      // Honour the ?next= param so deep links work after login
+      success(
+        'Welcome back!',
+        data.user.username ? `Good to see you, ${data.user.username}` : 'You are now signed in.'
+      )
+
       const next = searchParams.get('next')
-      router.push(next && next.startsWith('/') ? next : '/home')
+      const destination = data.user.onboarded
+        ? (next && next.startsWith('/') ? next : '/home')
+        : '/onboarding'
+
+      router.replace(destination)
     },
 
     onError: (err: Error) => {
@@ -75,17 +99,20 @@ export function useRegister() {
   const { success, error } = useToast()
 
   return useMutation({
-    mutationFn: (body: {
-      email: string
-      password: string
-      username: string
-    }) => authService.register(body),
+    mutationFn: (body: { email: string; password: string; username: string }) =>
+      authService.register(body),
 
     onSuccess: ({ data }) => {
       setAccessToken(data.accessToken)
       setUser(data.user)
+
+      // Same immediate cookie stamping as login
+      setClientCookie('artsony_session', '1')
+      setClientCookie('artsony_visited', '1')
+      // New users are never onboarded yet — don't set artsony_onboarded
+
       success('Account created!', 'Welcome to Artsony!')
-      router.push('/onboarding')
+      router.replace('/onboarding')
     },
 
     onError: (err: Error) => {
@@ -122,21 +149,19 @@ export function useLogout() {
     },
 
     onError: () => {
-      // Still sign out locally even if the server call fails
       error('Session ended', 'You have been signed out.')
     },
 
     onSettled: () => {
-      // Always clear regardless of server response
       clearAuth()
       queryClient.clear()
 
-      // Clear the onboarded cookie so middleware re-evaluates on next visit.
-      // The artsony_visited cookie is intentionally kept — returning users
-      // should still go to /login rather than /signup.
-      document.cookie = 'artsony_onboarded=; Max-Age=0; path=/'
+      // Clear all session indicator cookies
+      clearClientCookie('artsony_session')
+      clearClientCookie('artsony_onboarded')
+      // Keep artsony_visited — returning user should go to /login not /signup
 
-      router.push('/login')
+      router.replace('/login')
     },
   })
 }
@@ -178,7 +203,7 @@ export function useResetPassword() {
 
     onSuccess: () => {
       success('Password updated', 'You can now sign in with your new password.')
-      router.push('/login')
+      router.replace('/login')
     },
 
     onError: (err: Error) => {
@@ -200,20 +225,22 @@ export function useResetPassword() {
 // ─── Complete onboarding ──────────────────────────────────────────────────────
 
 export function useCompleteOnboarding() {
-  const updateUser   = useAuthStore((s) => s.updateUser)
-  const queryClient  = useQueryClient()
-  const router       = useRouter()
-  const { error }    = useToast()
+  const updateUser = useAuthStore((s) => s.updateUser)
+  const queryClient = useQueryClient()
+  const router = useRouter()
+  const { error } = useToast()
 
   return useMutation({
     mutationFn: (interests: string[]) => authService.completeOnboarding(interests),
 
-    onSuccess: (res) => {
-      updateUser({ onboarded: true, } as never)
+    onSuccess: () => {
+      updateUser({ onboarded: true } as never)
       queryClient.invalidateQueries({ queryKey: QUERY_KEYS.me })
-      // Set the cookie client-side so middleware immediately allows /home
-      document.cookie = 'artsony_onboarded=1; Max-Age=31536000; path=/; SameSite=Strict'
-      router.push('/home')
+
+      // Stamp the onboarded cookie so middleware allows /home immediately
+      setClientCookie('artsony_onboarded', '1')
+
+      router.replace('/home')
     },
 
     onError: () => {

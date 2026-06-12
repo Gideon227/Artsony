@@ -31,7 +31,7 @@ const buttonVariants = cva(
           'shadow-sm',
         ],
         outline: [
-          'border border-primary-500 bg-white text-primary-500',
+          'border border-primary-500 bg-transparent text-primary-500 cursor-pointer',
           'hover:bg-primary-50',
           'active:bg-primary-50 active:ring-2 active:ring-primary-50 active:border-primary-500',
         ],
@@ -55,7 +55,7 @@ const buttonVariants = cva(
       size: {
         sm: 'h-8 px-3 text-xs rounded-[var(--radius-sm)]',
         md: 'h-12 w-42 px-12 text-[14px] rounded-[var(--radius-2xl)]',
-        lg: 'h-12 px-6 text-base rounded-[var(--radius-2xl)]',
+        lg: 'h-16 px-8 py-4 leading-8 text-[20px] rounded-2xl ',
         icon: 'h-10 w-10 rounded-[var(--radius-md)]',
         'icon-sm': 'h-8 w-8 rounded-[var(--radius-sm)]',
         'icon-lg': 'h-12 w-12 rounded-[var(--radius-lg)]',

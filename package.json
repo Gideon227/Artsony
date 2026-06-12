@@ -24,11 +24,13 @@
     "immer": "^11.1.4",
     "lucide-react": "^1.11.0",
     "next": "16.2.4",
+    "next-video": "^2.8.0",
     "react": "19.2.4",
     "react-dom": "19.2.4",
     "react-hook-form": "^7.73.1",
     "styled-components": "^6.4.1",
     "tailwind-merge": "^3.5.0",
+    "uuid": "^14.0.0",
     "zod": "^4.3.6",
     "zustand": "^5.0.12"
   },
