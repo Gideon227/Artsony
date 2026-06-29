@@ -6,7 +6,8 @@ export class HttpError extends Error {
   constructor(
     public readonly statusCode: number,
     public readonly code: string | undefined,
-    message: string
+    message: string,
+    public readonly fields?: Record<string, string> | any[]
   ) {
     super(message)
     this.name = 'HttpError'
@@ -141,27 +142,25 @@ async function request<T>(path: string, options: RequestOptions = {}): Promise<T
   }
 
   if (!response.ok) {
-    let errorBody: Partial<ApiError> = {}
+    let errorBody: Partial<ApiError & { fields?: any }> = {}
     try {
-      errorBody = (await response.json()) as Partial<ApiError>
+      errorBody = (await response.json()) as Partial<ApiError & { fields?: any }>
     } catch { /* non-JSON */ }
 
-    // Redirect to onboarding if the server says the user hasn't completed it.
-    // Uses window.location (not Next router) because api-client has no React context.
     if (
       response.status === 403 &&
       errorBody.code === 'ONBOARDING_REQUIRED' &&
       typeof window !== 'undefined'
     ) {
       window.location.href = '/auth/interests'
-      // Throw anyway so the calling mutation's onError doesn't also fire
       throw new HttpError(403, errorBody.code, 'Onboarding required')
     }
 
     throw new HttpError(
       response.status,
       errorBody.code,
-      errorBody.message ?? `Request failed with status ${response.status}`
+      errorBody.message ?? `Request failed with status ${response.status}`,
+      errorBody.fields
     )
   }
 

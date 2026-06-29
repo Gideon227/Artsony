@@ -71,8 +71,12 @@ export function Navbar({ hideSearchBar = false }: { hideSearchBar?: boolean }) {
               <IconButton icon='/home/upload-square.svg' hideOnMobile />
               <IconButton icon='/home/delivery.svg' hideOnMobile />
               <Link href="/notifications"><IconButton icon='/home/notification-bell.svg' /></Link>
-              <IconButton icon='/home/cart.svg' hideOnMobile />
-              <IconButton icon='/home/message.svg' hideOnMobile />
+              <Link href='/cart'>
+                <IconButton icon='/home/cart.svg' hideOnMobile />
+              </Link>
+              <Link href='/messages'>
+                <IconButton icon='/home/message.svg' hideOnMobile />
+              </Link>
             </div>
 
             {/* User Profile Button - CLICK TRIGGERS MENU */}

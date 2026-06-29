@@ -180,11 +180,11 @@ const SearchPage = () => {
 
   // ── Data fetching ─────────────────────────────────────────────────────────
   const searchFilters = useMemo(() => ({
-    q:        urlQuery,
+    q: urlQuery,
     category: filters.category ?? undefined,
-    price:    filters.price    ?? undefined,
-    color:    filters.color    ?? undefined,
-    size:     filters.size     ?? undefined,
+    price: filters.price ?? undefined,
+    color: filters.color ?? undefined,
+    size: filters.size ?? undefined,
     location: filters.location ?? undefined,
   }), [urlQuery, filters])
 

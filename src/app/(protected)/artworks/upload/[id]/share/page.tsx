@@ -27,12 +27,15 @@ export default function ShareArtworkWizardPage() {
 
     if (!draft) return null
 
-    /**
-     * Cleans the draft and injects the URL ID.
-     * We cast to `any` on the return type specifically to inject `status`, 
-     * which your backend controller expects but isn't in `CreateArtworkPayload`.
-     */
-    const preparePayload = (rawDraft: typeof draft, targetStatus: ArtworkStatus): CreateArtworkPayload & { status: ArtworkStatus } => {
+    // ── HELPER TO INFER MEDIA TYPE FOR BACKEND VALIDATION 
+    function inferMediaType(mimeType: string): 'IMAGE' | 'VIDEO' | 'THREE_D' | 'EXTERNAL_LINK' {
+        if (!mimeType) return 'IMAGE'
+        if (mimeType.startsWith('video/')) return 'VIDEO'
+        if (mimeType.includes('3d') || mimeType.includes('model/')) return 'THREE_D'
+        return 'IMAGE'
+    }
+
+    const preparePayload = (rawDraft: typeof draft, targetStatus: ArtworkStatus): any => {
         const {
             id,
             slug,
@@ -43,38 +46,80 @@ export default function ShareArtworkWizardPage() {
             created_at,
             updated_at,
             deleted_at,
+            view_count,
+            like_count,
+            save_count,
+            comment_count,
             ...formFields
         } = rawDraft as any
         
+        // Validate if the URL param contains a real UUID, otherwise fall back to draft id or omit
+        const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+        const verifiedId = isUUID.test(urlArtworkId) ? urlArtworkId : (isUUID.test(id) ? id : undefined);
+
+        // Map and sanitize assets to guarantee required media_type exists
+        // const sanitizedAssets = (formFields.assets || []).map((asset: any, index: number) => ({
+        //     original_url: asset.original_url,
+        //     optimized_url: asset.optimized_url || asset.original_url,
+        //     thumbnail_url: asset.thumbnail_url || asset.original_url,
+        //     mime_type: asset.mime_type || 'image/jpeg',
+        //     file_size_bytes: Number(asset.file_size_bytes) || 0,
+        //     width: asset.width ? Number(asset.width) : null,
+        //     height: asset.height ? Number(asset.height) : null,
+        //     ordering_index: index,
+        //     media_type: asset.media_type || inferMediaType(asset.mime_type),
+        //     duration_secs: asset.duration_secs ? Number(asset.duration_secs) : null,
+        // }));
+
+        const sanitizedAssets = (draft.assets || []).map((asset: any, index: number) => {
+            const isHttps = asset.original_url?.startsWith('https://');
+            const safeUrl = isHttps ? asset.original_url : 'https://placehold.co/600x400.jpg';
+
+            const mediaType = ['IMAGE', 'VIDEO', 'THREE_D', 'EXTERNAL_LINK'].includes(asset.media_type) 
+                ? asset.media_type 
+                : 'IMAGE';
+
+            const cleanAsset: any = {
+                original_url: asset.original_url,
+                media_type: mediaType,
+                mime_type: asset.mime_type || 'image/jpeg',
+                file_size_bytes: Math.max(1, parseInt(asset.file_size_bytes) || 1024),
+                ordering_index: index,
+            };
+
+            if (asset.width) cleanAsset.width = parseInt(asset.width);
+            if (asset.height) cleanAsset.height = parseInt(asset.height);
+
+            if (mediaType === 'VIDEO' && asset.duration_secs !== null && asset.duration_secs !== undefined) {
+                cleanAsset.duration_secs = parseInt(asset.duration_secs);
+            }
+
+            return cleanAsset;
+        });
+
         return {
-            id: urlArtworkId, // Enforce the ID from the routing parameters
-            title: formFields.title?.trim() ?? '',
+            // Only include ID if it's a validated sequence
+            ...(verifiedId ? { id: verifiedId } : {}),
+            title: formFields.title?.trim() ?? 'Untitled Artwork',
             description: formFields.description?.trim() ?? '',
-            listing_type: formFields.listing_type ?? 'PORTFOLIO',
-            artwork_format: formFields.artwork_format ?? 'DIGITAL',
-            visibility: formFields.visibility ?? 'PUBLIC',
+            listing_type: formFields.listing_type || 'PORTFOLIO',
+            artwork_format: formFields.artwork_format || 'DIGITAL',
+            visibility: formFields.visibility || 'PUBLIC',
             has_variants: formFields.has_variants ?? false,
-            assets: formFields.assets ?? [],
-            variants: formFields.variants ?? [],
-            categories: formFields.categories ?? [],
-            keywords: formFields.keywords ?? [],
-            tools_used: formFields.tools_used ?? [],
-            collaborator_ids: formFields.collaborator_ids ?? [],
+            assets: sanitizedAssets,
+            variants: formFields.variants || [],
+            categories: formFields.categories || [],
+            keywords: formFields.keywords || [],
+            tools_used: formFields.tools_used || [],
+            collaborator_ids: formFields.collaborator_ids || [],
             allow_moodboard_save: formFields.allow_moodboard_save ?? true,
             allow_comments: formFields.allow_comments ?? true,
             allow_likes: formFields.allow_likes ?? true,
             show_engagement_stats: formFields.show_engagement_stats ?? true,
-            
-            // Default metrics
-            view_count: 0,
-            like_count: 0,
-            save_count: 0,
-            comment_count: 0,
-            
-            // The critical backend flag determining if this is live or just a draft
             status: targetStatus, 
 
-            ...(formFields.price !== undefined ? { price: Number(formFields.price) } : {}),
+            // Commerce optionals explicitly typed/casted
+            ...(formFields.price !== undefined && formFields.price !== null ? { price: Number(formFields.price) } : {}),
             ...(formFields.currency ? { currency: String(formFields.currency) } : {}),
             ...(formFields.max_purchase_quantity ? { max_purchase_quantity: Number(formFields.max_purchase_quantity) } : {}),
             ...(formFields.physical_details ? { physical_details: formFields.physical_details } : {}),
@@ -83,16 +128,18 @@ export default function ShareArtworkWizardPage() {
 
     const handleFinishUpload = async () => {
         setIsSubmitting(true)
+        console.log("Draft: ", draft)
         try {
             // Create the record in the backend, explicitly flagging it as PUBLISHED
             const finalizedPayload = preparePayload(draft, 'PUBLISHED')
-            await artworkService.create(finalizedPayload)
+            const data = await artworkService.create(finalizedPayload)
 
             // Wipe local progress and redirect to main gallery
+            console.log("NEW ART CREATED: ", data )
             clearDraft()
             router.push('/profile')
-        } catch (error) {
-            console.error('[Workflow Execution Failure]:', error)
+        } catch (error: any) {
+            console.error('[Workflow Execution Failure]:', error, error.field)
             alert(error instanceof Error ? error.message : 'An unexpected error occurred.')
         } finally {
             setIsSubmitting(false)
@@ -187,6 +234,7 @@ export default function ShareArtworkWizardPage() {
                     onNext={handleFinishUpload}
                     steps="4"
                     number="4"
+                    loading={isSubmitting}
                 />
             }
         />,

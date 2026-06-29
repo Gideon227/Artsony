@@ -167,7 +167,7 @@ export default function PhysicalArtVariable({
       v.uid === uid ? { ...v, [field]: value } : v
     )
     setVariations(updated)
-    // ✅ Now syncs ALL fields including dimensions (via sku encoding above)
+    // . Now syncs ALL fields including dimensions (via sku encoding above)
     if (field !== 'isExpanded') {
       syncToStore(updated, variantType)
     }
@@ -343,7 +343,7 @@ function VariationCard({ item, onDelete, onToggle, onChange }: VariationCardProp
           </div>
 
           {/* 
-            Dimensions — ✅ now uses 'width' to match DimensionsRow key output.
+            Dimensions — . now uses 'width' to match DimensionsRow key output.
             Persisted to store via sku JSON encoding in syncToStore. 
           */}
           <div className="space-y-2">

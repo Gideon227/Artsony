@@ -25,7 +25,7 @@ import { Dropdown, DropdownOption } from '@/components/ui/dropdown'
 const CAROUSEL_BGS = ['bg-[#353738]', 'bg-[#C4924A]', 'bg-[#5A422B]', 'bg-[#B84A1A]']
 const DEFAULT_TITLES = ['MOON', 'VENUS', 'JUPITER', 'MARS']
 
-export default function PreviewPhysicalArt(user : User) {
+export default function PreviewPhysicalArt({ user } : { user: User | null}) {
   const draft = useArtworkStore(selectDraft)
   
   // draft.assets is typed as Omit<ArtworkAsset, 'id'>[]
@@ -159,7 +159,7 @@ export default function PreviewPhysicalArt(user : User) {
                 <div className="flex items-center gap-x-8">
                     <div className='flex items-center gap-2'>
                         <div className="relative rounded-full overflow-hidden w-14 h-14 bg-gray-200">
-                            <Image src={user.avatarUrl!} alt="Avatar" fill className="object-cover" />
+                            <Image src={user?.avatarUrl as string} alt="Avatar" fill className="object-cover" />
                         </div>
 
                         <div className="flex flex-col">

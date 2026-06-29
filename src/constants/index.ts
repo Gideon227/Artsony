@@ -138,6 +138,10 @@ export const QUERY_KEYS = {
   cart: ['cart'] as const,
   orders: ['orders'] as const,
   comments: (artworkId: string) => ['comments', artworkId] as const,
+  conversations: (params?: Record<string, unknown>) => ['conversations', params] as const,
+  messages: (conversationId: string, params?: Record<string, unknown>) =>
+    ['messages', conversationId, params] as const,
+  userSearch: (q: string) => ['userSearch', q] as const,
 } as const
 
 export const STALE_TIMES = {

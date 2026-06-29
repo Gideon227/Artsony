@@ -18,6 +18,7 @@ const nextConfig: NextConfig = {
         pathname: '/uploads/**',
       },
     ],
+    dangerouslyAllowLocalIP: process.env.NODE_ENV === 'development',
   },
 };
 

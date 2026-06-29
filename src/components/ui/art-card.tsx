@@ -29,13 +29,14 @@ interface ArtCardProps {
     likes: string
     views: string
   }
-  cardLink?: string
+  cardLink?: string;
+  onCardClick?: () => void;
   showCart?: boolean;
   showHeart?: boolean;
   showVideo?: boolean;
   showTrash?: boolean
   showCat?: boolean
-  variant?: 'standard' | 'discover' | 'bland'
+  variant?: 'standard' | 'discover' | 'bland' | 'shop'
   onAction?: (action: string) => void
   alternate?: boolean;
 }
@@ -134,6 +135,7 @@ export function ArtCard({
   artist, 
   stats, 
   cardLink,
+  onCardClick,
   showCart = false,
   showHeart = false,
   showVideo = false,
@@ -163,8 +165,23 @@ export function ArtCard({
     }, 150)
   }
 
+  const CardWrapper = onCardClick
+  ? ({ children }: { children: React.ReactNode }) => (
+      <div
+        onClick={onCardClick}
+        className="relative max-h-[376px] max-w-[332px] gap-y-4 cursor-pointer block"
+      >
+        {children}
+      </div>
+    )
+  : ({ children }: { children: React.ReactNode }) => (
+      <Link href={cardLink ?? '/404'} className="relative max-h-[376px] max-w-[332px] gap-y-4 cursor-pointer block">
+        {children}
+      </Link>
+    )
+
   return (
-    <Link href={cardLink ?? '/404'} className=" relative max-h-[376px] max-w-[332px] gap-y-4 cursor-pointer block">
+    <CardWrapper>
       {/* --- Image Container --- */}
       <div className="relative group aspect-square overflow-hidden rounded-[40px] bg-neutral-100">
         <Image
@@ -294,7 +311,7 @@ export function ArtCard({
           </div>
         )}
       </AnimatePresence>
-    </Link>
+    </CardWrapper>
   )
 }
 

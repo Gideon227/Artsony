@@ -89,26 +89,6 @@ export type ArtworkCategory =
 // export type ArtworkStatus = 'draft' | 'published' | 'archived'
 export type ArtworkAvailability = 'for-sale' | 'not-for-sale' | 'sold'
 
-// export type Artwork = Timestamp & {
-//   id: ID
-//   title: string
-//   description: Nullable<string>
-//   imageUrl: string
-//   thumbnailUrl: string
-//   category: ArtworkCategory
-//   tags: string[]
-//   price: Nullable<number>
-//   currency: string
-//   availability: ArtworkAvailability
-//   status: ArtworkStatus
-//   likesCount: number
-//   commentsCount: number
-//   viewsCount: number
-//   isLiked: boolean
-//   isSaved: boolean
-//   artist: Pick<User, 'id' | 'username' | 'displayName' | 'avatarUrl' | 'isVerified'>
-// }
-
 export type Comment = Timestamp & {
   id: ID
   body: string
@@ -150,3 +130,116 @@ export type Order = Timestamp & {
 export type ButtonVariant = 'primary' | 'secondary' | 'outline' | 'ghost' | 'danger'
 export type ButtonSize = 'sm' | 'md' | 'lg'
 export type InputVariant = 'default' | 'error' | 'success'
+
+// ─────────────────────────────────────────────────────────────────────────────
+// MESSAGING DOMAIN TYPES
+// ─────────────────────────────────────────────────────────────────────────────
+
+export type ConversationType  = 'direct' | 'broadcast'
+export type MessageType       = 'text' | 'image' | 'system'
+export type ParticipantRole   = 'owner' | 'member'
+
+export type ParticipantProfile = {
+  user_id: string
+  role: ParticipantRole
+  last_read_at: string
+  is_muted: boolean
+  joined_at: string
+  left_at: string | null
+  email: string
+  display_name:  string | null
+  avatar_url: string | null
+}
+
+export type MessagePreview = {
+  id:         string
+  sender_id:  string
+  body:       string
+  type:       MessageType
+  created_at: string
+  deleted_at: string | null
+}
+
+export type ConversationSummary = {
+  id:                string
+  type:              ConversationType
+  title:             string | null
+  last_activity_at:  string
+  last_message_id:   string | null
+  unread_count:      number
+  last_message?:     MessagePreview | null
+  other_user?:       ParticipantProfile | null
+}
+
+export type SenderProfile = {
+  id:           string
+  email:        string
+  display_name: string | null
+  avatar_url:   string | null
+}
+
+export type TextMessageMetadata = Record<string, never>
+
+export type ImageMessageMetadata = {
+  url:          string
+  thumbnailUrl: string
+  width:        number
+  height:       number
+  size:         number
+  mimeType:     string
+}
+
+export type SystemMessageEvent =
+  | 'user_joined'
+  | 'user_left'
+  | 'title_changed'
+  | 'conversation_created'
+
+export type SystemMessageMetadata = {
+  event:   SystemMessageEvent
+  payload: Record<string, unknown>
+}
+
+export type MessageMetadata =
+  | TextMessageMetadata
+  | ImageMessageMetadata
+  | SystemMessageMetadata
+
+export type MessageWithSender = {
+  id:                 string
+  conversation_id:    string
+  sender_id:          string
+  body:               string
+  type:               MessageType
+  reply_to_id:        string | null
+  metadata:           MessageMetadata
+  is_broadcast_root:  boolean
+  created_at:         string
+  edited_at:          string | null
+  deleted_at:         string | null
+  sender:             SenderProfile
+  reply_to?:          MessagePreview | null
+  read_by?:           string[]
+}
+
+export type CursorPage<T> = {
+  items:       T[]
+  next_cursor: string | null
+  has_more:    boolean
+}
+
+export type SendMessageInput = {
+  conversation_id:   string
+  sender_id:         string
+  body:              string
+  type?:             MessageType
+  reply_to_id?:      string | null
+  metadata?:         MessageMetadata
+  client_message_id: string
+}
+
+export type MarkReadInput = {
+  conversation_id:   string
+  user_id:           string
+  up_to_message_id:  string
+}

@@ -16,10 +16,11 @@ interface UploadPreviewProps {
   onSaveAndExit: () => void;
   steps: string;
   number: string;
-  previewFunction: () => void
+  previewFunction?: () => void
+  loading?: boolean
 }
 
-const UploadPreview = ({ onNext, onBack, onSaveAndExit, steps, number, previewFunction }: UploadPreviewProps) => {
+const UploadPreview = ({ onNext, onBack, onSaveAndExit, steps, number, previewFunction, loading }: UploadPreviewProps) => {
   const draft = useArtworkStore(selectDraft)
   const { user } = useAuthStore()
   
@@ -127,6 +128,7 @@ const UploadPreview = ({ onNext, onBack, onSaveAndExit, steps, number, previewFu
         <Button
           fullWidth
           onClick={onNext}
+          isLoading={loading}
         >
           Upload
         </Button>

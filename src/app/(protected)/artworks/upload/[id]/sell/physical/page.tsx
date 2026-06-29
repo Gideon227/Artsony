@@ -49,15 +49,55 @@ export default function PhysicalSellWizardPage() {
             ...formFields
         } = rawDraft as any
         
+        const sanitizedAssets = (formFields.assets || []).map((asset: any, index: number) => {
+            const mediaType = ['IMAGE', 'VIDEO', 'THREE_D', 'EXTERNAL_LINK'].includes(asset.media_type) 
+                ? asset.media_type 
+                : 'IMAGE';
+
+            const cleanAsset: any = {
+                original_url: asset.original_url,
+                media_type: mediaType,
+                mime_type: asset.mime_type || 'image/jpeg',
+                file_size_bytes: Math.max(1, parseInt(asset.file_size_bytes) || 1024),
+                ordering_index: index,
+            };
+
+            if (asset.width) cleanAsset.width = parseInt(asset.width);
+            if (asset.height) cleanAsset.height = parseInt(asset.height);
+
+            if (mediaType === 'VIDEO' && asset.duration_secs !== null && asset.duration_secs !== undefined) {
+                cleanAsset.duration_secs = parseInt(asset.duration_secs);
+            }
+
+            return cleanAsset;
+        });
+
+        let safePhysicalDetails = undefined;
+        if (formFields.physical_details) {
+            safePhysicalDetails = {
+                length: Math.max(0.01, parseFloat(formFields.physical_details.length) || 1),
+                width: Math.max(0.01, parseFloat(formFields.physical_details.width) || 1),
+                height: Math.max(0.01, parseFloat(formFields.physical_details.height) || 1),
+                unit: ['cm', 'in'].includes(formFields.physical_details.unit) ? formFields.physical_details.unit : 'cm',
+                available_quantity: Math.max(0, parseInt(formFields.physical_details.available_quantity) || 0),
+                
+                // Add the missing shipping fields here:
+                ships_worldwide: formFields.physical_details.ships_worldwide ?? false,
+                shipping_regions: formFields.physical_details.shipping_regions ?? [],
+            };
+        }
+        
         return {
             id: urlArtworkId,
             title: formFields.title?.trim() ?? '',
             description: formFields.description?.trim() ?? '',
-            listing_type: formFields.listing_type ?? 'COMMERCE',
-            artwork_format: formFields.artwork_format ?? 'PHYSICAL',
+            listing_type: formFields.listing_type ?? 'MARKETPLACE',
+            artwork_format: 'PHYSICAL', 
             visibility: formFields.visibility ?? 'PUBLIC',
             has_variants: formFields.has_variants ?? false,
-            assets: formFields.assets ?? [],
+            
+            assets: sanitizedAssets, 
+            
             variants: formFields.variants ?? [],
             categories: formFields.categories ?? [],
             keywords: formFields.keywords ?? [],
@@ -75,10 +115,10 @@ export default function PhysicalSellWizardPage() {
             
             status: targetStatus, 
 
-            ...(formFields.price !== undefined ? { price: Number(formFields.price) } : {}),
+            ...(formFields.price !== undefined && formFields.price !== null ? { price: Math.max(0, parseFloat(formFields.price) || 0) } : {}),
             ...(formFields.currency ? { currency: String(formFields.currency) } : {}),
-            ...(formFields.max_purchase_quantity ? { max_purchase_quantity: Number(formFields.max_purchase_quantity) } : {}),
-            ...(formFields.physical_details ? { physical_details: formFields.physical_details } : {}),
+            ...(formFields.max_purchase_quantity ? { max_purchase_quantity: Math.max(1, parseInt(formFields.max_purchase_quantity) || 1) } : {}),
+            ...(safePhysicalDetails ? { physical_details: safePhysicalDetails } : {}),
         }
     }
 
@@ -87,9 +127,10 @@ export default function PhysicalSellWizardPage() {
         try {
             const finalizedPayload = preparePayload(draft, 'PUBLISHED')
             await artworkService.create(finalizedPayload)
+            console.log("Draft: ", draft)
 
             clearDraft()
-            router.push('/artworks')
+            router.push('/profile')
         } catch (error) {
             console.error('[Workflow Execution Failure]:', error)
             alert(error instanceof Error ? error.message : 'An unexpected error occurred.')
@@ -112,8 +153,8 @@ export default function PhysicalSellWizardPage() {
 
             clearDraft()
             router.push('/profile')
-        } catch (error) {
-            console.error('[Save Progress Background Attempt Blocked]:', error)
+        } catch (error: any) {
+            console.error('[Save Progress Background Attempt Blocked]:', error, error.field)
             alert('Something went wrong while saving your draft.')
         } finally {
             setIsSubmitting(false)

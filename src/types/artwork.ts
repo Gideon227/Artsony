@@ -62,7 +62,21 @@ export type Artwork = {
   categories: string[]
   keywords: string[]
   creator_id: string
-  creator: Partial<User>
+  is_liked?: boolean
+  creator?: {
+    id: string
+    username: string
+    role: string
+    is_following?: boolean
+    profile?: {
+      display_name: string | null
+      avatar_url: string | null
+      followers_count: number
+      following_count: number
+      artworks_count: number
+      sales_count: number
+    }
+  }
   collaborator_ids: string[]
   tools_used: string[]
   assets: ArtworkAsset[]
