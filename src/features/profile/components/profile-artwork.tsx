@@ -114,7 +114,7 @@ const ProfileArtwork = ({ userId, tabType }: ProfileArtworkProps) => {
                     <Button 
                         leftIcon='/home/profile-ring.svg'
                         variant='outline'
-                        size='lg'
+                        size='xl'
                         onClick={handleLoadMore}
                         disabled={isLoading}
                         loadingText='Loading...'

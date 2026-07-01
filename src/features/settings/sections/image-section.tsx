@@ -7,12 +7,12 @@ const ImageSection = ({ user }: { user: User }) => {
         <div className='flex flex-col gap-y-6'>
             <p className='font-poppins font-semibold text-body-m text-primary-500 leading-8 tracking-wide'>Images</p>
 
-            <div className='bg-secondary-50 p-6 gap-y-4 border rounded-xl'>
+            <div className='bg-secondary-50 p-6 gap-y-4 rounded-xl'>
                 <div className='gap-y-2 flex flex-col w-full'>
                     <p className='font-poppins font-medium text-body-s text-heading leading-6 tracking-wide'>Profile Images</p>
                     <div className='flex items-center justify-center mx-auto w-full'>
                         <div className='relative w-36 h-58'>
-                            <Image src={user.avatarUrl as string} width={144} height={144} alt='profile image' className='border border-grqay-50' />
+                            <Image src={user?.avatarUrl as string || '/images/image-avatar.svg'} width={144} height={144} alt='profile image' className='border border-grqay-50' />
                             <button onClick={() => {}} className='absolute cursor-pointer w-14 h-14 bg-primary-500 rounded-full' style={{ bottom: 10, left: '50%' }}>
                                 <Image src='/icons/camera-white.svg' width={32} height={32} alt='camera icon' />
                             </button>

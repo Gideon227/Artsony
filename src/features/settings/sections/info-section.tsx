@@ -9,7 +9,7 @@ const InfoSection = ({ user }: { user: User }) => {
     return (
         <div className='flex flex-col gap-y-6'>
             <p className='font-poppins font-semibold text-body-m text-primary-500 leading-8 tracking-wide'>Personal Info</p>
-            <form className=' bg-secondary-50 p-6 gap-y-4 border rounded-xl'>
+            <form className='bg-secondary-50 p-6 gap-y-4 flex flex-col rounded-xl'>
                 <div className='gap-y-2 flex flex-col w-full'>
                     <label className='font-poppins font-medium text-body-s text-heading leading-6 tracking-wide'>Username</label>
                     <Input 

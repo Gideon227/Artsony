@@ -56,6 +56,11 @@ export type Order = {
   subtotal: number
   currency: string
   shipping_address: string | null
+  shipping_cost?: string
+  courier_service?: string
+  tracking_id?: string
+  refund_status?: string
+  refund_amount?: string 
   idempotency_key: string
   notes: string | null
   items: OrderItem[]
