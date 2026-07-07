@@ -51,11 +51,14 @@ export type Timestamp = {
   updatedAt: string
 }
 
+export type UserRole = 'USER' | 'ARTIST' | 'MODERATOR' | 'ADMIN'
+
 export type User = Timestamp & {
   id: ID
   email: string
   username: string
   displayName: string
+  role: UserRole
   avatarUrl: Nullable<string>
   bio: Nullable<string>
   artworks: Artwork

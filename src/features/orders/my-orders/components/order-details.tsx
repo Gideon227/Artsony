@@ -103,11 +103,12 @@ const OrderDetails = ({ status, orderId, artworkType, pickupDate, deliveryDate, 
                 </div>
             </div>
 
+            {/* Shipping Details */}
             {status === 'canceled' && (
                 <div className='px-4 flex flex-col gap-y-6'>
                     <p className='font-poppins font-medium text-body-m leading-6 tracking-white text-body'>Refund Details</p>
 
-                    <div className='grid col-span-2 gap-y-2 gap-x-8'>
+                    <div className='grid grid-cols-2 gap-y-2 gap-x-8'>
                         <div className='flex flex-col gap-y-2'>
                             <label className='font-poppins text-body-xxs text-body tracking-wide'>Courier</label>
                             <Input value={order.courier_service} disabled />

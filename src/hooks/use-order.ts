@@ -1,6 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { useRouter } from 'next/navigation'
-import { orderService } from '@/services/order.service'
+import { orderService } from '@/services/order/order.service'
 import { useOrderStore } from '@/store/order.store'
 import { useToast } from '@/components/ui/toaster'
 import { STALE_TIMES } from '@/constants'
