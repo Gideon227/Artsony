@@ -169,13 +169,13 @@ export function ArtCard({
   ? ({ children }: { children: React.ReactNode }) => (
       <div
         onClick={onCardClick}
-        className="relative max-h-[376px] max-w-[332px] gap-y-4 cursor-pointer block"
+        className="relative max-h-[376px] max-w-[600px] w-full gap-y-4 cursor-pointer block"
       >
         {children}
       </div>
     )
   : ({ children }: { children: React.ReactNode }) => (
-      <Link href={cardLink ?? '/404'} className="relative max-h-[376px] max-w-[332px] gap-y-4 cursor-pointer block">
+      <Link href={cardLink ?? '/404'} className="relative max-h-[376px] max-w-[600px] w-full gap-y-4 cursor-pointer block">
         {children}
       </Link>
     )
@@ -183,7 +183,7 @@ export function ArtCard({
   return (
     <CardWrapper>
       {/* --- Image Container --- */}
-      <div className="relative group aspect-square overflow-hidden rounded-[40px] bg-neutral-100">
+      <div className="relative group aspect-square overflow-hidden rounded-2xl bg-neutral-100">
         <Image
           src={image}
           alt={title}

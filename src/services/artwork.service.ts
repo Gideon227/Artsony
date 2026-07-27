@@ -6,8 +6,10 @@ import type {
   UpdateArtworkPayload,
   PaginatedArtworksResponse,
   ModerationStatus,
+  ListingType,
 } from '@/types/artwork'
 import type { ApiResponse } from '@/types'
+import { HeroArtwork } from '@/features/home/types'
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -48,6 +50,9 @@ export const artworkService = {
   getById: (id: string): Promise<ApiResponse<Artwork>> =>
     apiClient.get<ApiResponse<Artwork>>(`/api/artworks/${id}`),
 
+  getFeatured: (limit = 5) =>
+    apiClient.get<ApiResponse<HeroArtwork[]>>('/api/artworks/featured', { params: { limit } }),
+
   getBySlug: (slug: string): Promise<ApiResponse<Artwork>> =>
     apiClient.get<ApiResponse<Artwork>>(`/api/artworks/by-slug/${slug}`),
 
@@ -56,29 +61,41 @@ export const artworkService = {
   getFeed: (params: {
     page?: number
     perPage?: number
-    category?: string
-    sort?: 'newest' | 'trending' | 'recommended'
+    categories?: string[]
+    location?: string
+    size_label?: string
+    sort?: 'for_you' | 'following' | 'new' | 'trending' | 'newbies'
   } = {}): Promise<PaginatedArtworksResponse> => {
-    const sortMap: Record<string, ArtworkFilters['sort_by']> = {
-      newest:      'created_at',
-      trending:    'like_count',
-      recommended: 'like_count',  // placeholder until recommendation engine ships
-    }
+    const searchParams = new URLSearchParams()
+    searchParams.set('mode', params.sort ?? 'new')
+    searchParams.set('page', String(params.page ?? 1))
+    searchParams.set('limit', String(params.perPage ?? 12))
+    params.categories?.forEach((c) => searchParams.append('categories', c))
+    if (params.location)   searchParams.set('location', params.location)
+    if (params.size_label) searchParams.set('size_label', params.size_label)
 
-    return artworkService.list({
-      page:       params.page ?? 1,
-      limit:      params.perPage ?? 12,
-      sort_by:    params.sort ? sortMap[params.sort] : 'created_at',
-      sort_order: 'desc',
-      categories: params.category ? [params.category] : undefined,
-      visibility: 'PUBLIC',
-      status:     'PUBLISHED',
-    })
+    return apiClient.get<PaginatedArtworksResponse>(`/artworks/feed?${searchParams.toString()}`)
   },
 
   search: (query: string, filters?: Omit<ArtworkFilters, 'search'>):
     Promise<PaginatedArtworksResponse> =>
       artworkService.list({ ...filters, search: query }),
+
+  getTopPicks: (
+    limit = 8,
+    period: 'all' | 'week' = 'all',
+    listingType?: ListingType,
+  ): Promise<ApiResponse<Artwork[]>> => {
+    const params = new URLSearchParams({ limit: String(limit), period })
+    if (listingType) params.set('listingType', listingType)
+    return apiClient.get(`/artworks/top-picks?${params.toString()}`)
+  },
+
+  getLocations: (): Promise<ApiResponse<{ label: string; artwork_count: number }[]>> =>
+    apiClient.get('/artworks/locations'),
+
+  getSizeLabels: (): Promise<ApiResponse<{ label: string; artwork_count: number }[]>> =>
+    apiClient.get('/artworks/size-labels'),
 
   // ── Writes ──────────────────────────────────────────────────────────────────
 
@@ -215,6 +232,4 @@ export const artworkService = {
 
     // return res.json()
   },
-
-  
 }

@@ -152,7 +152,7 @@ async function request<T>(path: string, options: RequestOptions = {}): Promise<T
       errorBody.code === 'ONBOARDING_REQUIRED' &&
       typeof window !== 'undefined'
     ) {
-      window.location.href = '/auth/interests'
+      window.location.href = '/onboarding'
       throw new HttpError(403, errorBody.code, 'Onboarding required')
     }
 

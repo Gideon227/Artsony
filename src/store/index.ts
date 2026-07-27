@@ -3,6 +3,7 @@ export {
   selectUser,
   selectIsAuthenticated,
   selectIsHydrated,
+  selectHasSellerAccount 
 } from './auth.store'
 
 export { useUIStore, selectToasts, selectIsModalOpen } from './ui.store'

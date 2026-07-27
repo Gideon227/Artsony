@@ -1,6 +1,8 @@
 import { cva, type VariantProps } from 'class-variance-authority'
 import { cn } from '@/utils'
 
+export type BadgeVariant = 'primary' | 'secondary' | 'outline' | 'info' | 'success' | 'warning' | 'error' | 'neutral'
+
 const badgeVariants = cva(
   'inline-flex items-center gap-1 font-medium transition-colors',
   {

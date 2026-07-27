@@ -1,15 +1,25 @@
 import { apiClient } from '@/lib/api-client'
 import type { ApiResponse } from '@/types'
-
-// NOTE: Backend endpoints (POST/DELETE /api/users/:id/follow, and a way to
-// know current follow state) do not exist yet. These calls will 404 until
-// that's built. The UI uses optimistic local state in the meantime —
-// swap this stub for real calls once the routes exist.
+import type { FollowUser, PaginatedResponse } from '@/types/social'
 
 export const followService = {
-  follow: (userId: string): Promise<ApiResponse<{ following: boolean }>> =>
-    apiClient.post<ApiResponse<{ following: boolean }>>(`/api/users/${userId}/follow`),
+  toggle: (userId: string): Promise<ApiResponse<{ is_following: boolean }>> =>
+    apiClient.post(`/follows/${userId}/toggle`, {}),
 
-  unfollow: (userId: string): Promise<ApiResponse<{ following: boolean }>> =>
-    apiClient.delete<ApiResponse<{ following: boolean }>>(`/api/users/${userId}/follow`),
+  isFollowing: (userId: string): Promise<ApiResponse<{ is_following: boolean }>> =>
+    apiClient.get(`/follows/${userId}/is-following`),
+
+  listFollowers: (userId: string, params: { page?: number; limit?: number } = {}): Promise<PaginatedResponse<FollowUser>> => {
+    const q = new URLSearchParams()
+    if (params.page)  q.set('page', String(params.page))
+    if (params.limit) q.set('limit', String(params.limit))
+    return apiClient.get(`/follows/${userId}/followers?${q.toString()}`)
+  },
+
+  listFollowing: (userId: string, params: { page?: number; limit?: number } = {}): Promise<PaginatedResponse<FollowUser>> => {
+    const q = new URLSearchParams()
+    if (params.page)  q.set('page', String(params.page))
+    if (params.limit) q.set('limit', String(params.limit))
+    return apiClient.get(`/follows/${userId}/following?${q.toString()}`)
+  },
 }

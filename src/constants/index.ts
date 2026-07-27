@@ -164,9 +164,9 @@ export const ROUTES = {
   settings: '/settings',
   upload: '/upload',
   auth: {
-    login: '/auth/login',
-    register: '/auth/register',
-    forgotPassword: '/auth/forgot-password',
-    resetPassword: '/auth/reset-password',
+    login: '/login',
+    register: '/signup',
+    forgotPassword: '/forgot-password',
+    resetPassword: '/reset-password',
   },
 } as const

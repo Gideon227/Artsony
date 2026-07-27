@@ -1,10 +1,35 @@
 import type { Artwork } from '@/types'
 
-export type FeedSort = 'trending' | 'newest' | 'recommended'
+export type HeroArtworkCreator = {
+  id: string
+  username: string | null
+  display_name: string | null
+  avatar_url: string | null
+  bio: string | null
+  role: 'USER' | 'ARTIST' | 'MODERATOR' | 'ADMIN'
+}
+
+export type HeroArtwork = {
+  id: string
+  slug: string
+  title: string
+  description: string
+  thumbnail_url: string | null
+  view_count: number
+  like_count: number
+  purchase_count: number
+  creator: HeroArtworkCreator
+}
+
+// 'following' and 'newbies' have no backend support yet (no follow-graph
+// query on the feed, no "new artist" flag) — they're wired to sensible
+// fallbacks in getFeed() until that ships. 'for_you' has no recommendation
+// engine yet either, so it currently == the default feed order.
+export type FeedSort = 'for_you' | 'following' | 'new' | 'trending' | 'newbies'
 
 export type FeedTab = {
   label: string
-  value: FeedSort | 'all'
+  value: FeedSort
 }
 
 export type FeaturedArtwork = {
@@ -24,8 +49,9 @@ export type SpotlightArtist = {
 }
 
 export const FEED_TABS: FeedTab[] = [
-  { label: 'All', value: 'all' },
-  { label: 'Trending', value: 'trending' },
-  { label: 'Newest', value: 'newest' },
-  { label: 'For You', value: 'recommended' },
+  { label: 'For you',  value: 'for_you' },
+  { label: 'Following', value: 'following' },
+  { label: 'New',       value: 'new' },
+  { label: 'Trending',  value: 'trending' },
+  { label: 'Newbies',   value: 'newbies' },
 ]

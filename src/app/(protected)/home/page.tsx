@@ -1,143 +1,121 @@
-// 'use client';
-
-// import { Spinner } from "@/components";
-// import Footer from "@/components/layout/footer";
-// import { Navbar } from "@/components/layout/navbar"
-// import { HeroSection } from "@/features/home/components/hero";
-// import { useLogout } from "@/hooks/use-auth-mutations";
-// import { useAuthStore } from "@/store";
-
-// const HomePage = () => {
-//    const user   = useAuthStore((s) => s.user)
-//   const isHydrated = useAuthStore((s) => s.isHydrated)
-//   const { mutate: logout, isPending: isLoggingOut } = useLogout()
- 
-//   // Wait for session bootstrap before rendering — prevents flash
-//   if (!isHydrated) {
-//     return (
-//       <div className="min-h-screen flex items-center justify-center bg-background">
-//         <Spinner size="lg" />
-//       </div>
-//     )
-//   }
-
-//   return (
-//     <div>
-//       <Navbar />
-//       <HeroSection 
-//         // backgroundImage="/images/mural-bg.jpg" 
-//         // title={<>Buy What You Love.<br />Sell What You Make.</>}
-//         // artistName="Ivan Kovačević"
-//         // artistAvatar="/avatar-ivan.jpg"
-//         // quote="I paint like I'm remembering something I've never seen before."
-//       />
-//       <Footer />
-//     </div>
-//   )
-// }
-
-// export default HomePage
-
-
 'use client'
 
+import { useMemo, useState } from 'react'
 import { Spinner } from '@/components'
 import Footer from '@/components/layout/footer'
 import { Navbar } from '@/components/layout/navbar'
 import { HeroSection } from '@/features/home/components/hero'
-import { FeaturedSection } from '@/features/home/components/featured-section'
 import { FeedSection } from '@/features/home/components/feed-section'
+import { FeedContinuation } from '@/features/home/components/feed-continuation'
 import { CreatorCTASection } from '@/features/home/components/creator-cta-section'
+import { GalleryPulseSection } from '@/features/home/components/gallery-pulse-section'
+import { MobileFilterDrawer } from '@/features/home/components/mobile-filter-drawer'
 import { useAuthStore } from '@/store'
 import FilterComponent, { FilterDropdownConfig } from '@/features/home/components/filter'
-import { useState } from 'react'
 import { DropdownOption } from '@/components/ui/dropdown'
 import { INTERESTS } from '@/features/onboarding/data/interests'
-import { GalleryPulseSection } from '@/features/home/components/gallery-pulse-section'
-import { ArtCard } from '@/components/ui/art-card'
-import { MoodboardCard, MoodboardItem } from '@/components/ui/moodboard'
+import { COLOR_SWATCHES, findClosestSwatch } from '@/features/home/data/color-swatches'
+import { useFeed, useArtworkLocations } from '@/hooks/use-artwork'
+import type { FeedSort } from '@/features/home/types'
 
-interface MoodboardGridProps {
-  items: MoodboardItem[];
-  onCreateNew: () => void;
-  onCardClick: (id: string) => void;
-}
+const MAX_CATEGORIES = 5
 
-const MOCK_DATA = {
-  image: "/images/image-avatar.svg",
-  title: "Placeholder",
-  artist: [
-    {
-      id: '0',
-      name: "Ivan Kovačević",
-      avatarUrl: "/images/image-avatar.svg"
-    },
-    {
-      id: '1',
-      name: "Ivan Kovačević",
-      avatarUrl: "/images/image-avatar.svg"
-    },
-    {
-      id: '2',
-      name: "Ivan Kovačević",
-      avatarUrl: "/images/image-avatar.svg"
-    },
-  ],
-  stats: { likes: "55.5k", views: "108k" },
-  alternate: true
-}
+const CATEGORY_OPTIONS: DropdownOption[] = [...INTERESTS]
+  .sort((a, b) => a.label.localeCompare(b.label))
+  .map((item) => ({ id: item.id, label: item.label }))
+
+const COLOR_OPTIONS: DropdownOption[] = COLOR_SWATCHES.map((c) => ({
+  id: c.id,
+  label: c.label,
+  hex: c.hex,
+}))
 
 const HomePage = () => {
   const isHydrated = useAuthStore((s) => s.isHydrated)
-  const { user } = useAuthStore()
 
-  console.log("User data: ", user)
+  const [activeTab, setActiveTab] = useState<FeedSort>('for_you')
+  const [selectedCategories, setSelectedCategories] = useState<DropdownOption[]>([])
+  const [selectedLocation, setSelectedLocation] = useState<DropdownOption | null>(null)
+  const [selectedColor, setSelectedColor] = useState<DropdownOption | null>(null)
+  const [hexQuery, setHexQuery] = useState('')
+  const [locationQuery, setLocationQuery] = useState('')
+  const [isMobileFiltersOpen, setIsMobileFiltersOpen] = useState(false)
 
-  const [selectedCategory, setSelectedCategory] = useState<any>(null);
-  const [selectedColor, setSelectedColor] = useState<any>(null);
-  const [selectedLocation, setSelectedLocation] = useState<any>(null);
+  const { data: locations, isLoading: isLoadingLocations } = useArtworkLocations()
 
-  const categoriesOption: DropdownOption[] = INTERESTS.map((item) => ({
-    id: item.id,
-    icon: item.image,
-    label: item.label
-  }))
+  const locationOptions: DropdownOption[] = useMemo(() => {
+    const list = (locations ?? []).map((l) => ({ id: l.label, label: l.label }))
+    if (!locationQuery.trim()) return list
+    const q = locationQuery.trim().toLowerCase()
+    return list.filter((c) => c.label.toLowerCase().includes(q))
+  }, [locations, locationQuery])
+
+  const feedQuery = useFeed({
+    sort: activeTab,
+    categories: selectedCategories.map((c) => String(c.id)),
+    ...(selectedLocation ? { location: selectedLocation.label } : {}),
+  })
+
+  const allArtworks = feedQuery.data?.pages.flatMap((p) => p.data) ?? []
+  const midpoint = Math.ceil(allArtworks.length / 2)
+  const firstHalf = allArtworks.slice(0, midpoint)
+  const secondHalf = allArtworks.slice(midpoint)
 
   const handleClearFilters = () => {
-    setSelectedCategory(null);
-    setSelectedColor(null);
-    setSelectedLocation(null);
+    setSelectedCategories([])
+    setSelectedLocation(null)
+    setSelectedColor(null)
+    setLocationQuery('')
+    setHexQuery('')
   }
 
   const filterDropdowns: FilterDropdownConfig[] = [
     {
       id: 'category',
-      options: categoriesOption,
-      value: selectedCategory,
-      onChange: (val) => setSelectedCategory(val),
+      options: CATEGORY_OPTIONS,
+      multiple: true,
+      values: selectedCategories,
+      onChangeMultiple: setSelectedCategories,
+      maxSelected: MAX_CATEGORIES,
+      indicator: 'checkmark',
       placeholder: 'Categories',
-      leftIcon: '/icons/widget.svg'
+      leftIcon: '/icons/widget.svg',
     },
     {
       id: 'color',
-      options: categoriesOption, // Replace with actual color options later
+      options: COLOR_OPTIONS,
       value: selectedColor,
-      onChange: (val) => setSelectedColor(val),
+      onChange: setSelectedColor,
+      layout: 'grid',
+      searchable: true,
+      searchPlaceholder: 'Hex code',
+      searchValue: hexQuery,
+      searchVariant: 'button',
+      onSearchChange: setHexQuery,
+      onSearchSubmit: () => {
+        const closest = findClosestSwatch(hexQuery)
+        if (closest) setSelectedColor({ id: closest.id, label: closest.label, hex: closest.hex })
+      },
       placeholder: 'Color',
-      leftIcon: '/icons/palette.svg'
+      leftIcon: '/icons/palette.svg',
     },
     {
       id: 'location',
-      options: categoriesOption, // Replace with actual location options later
+      options: locationOptions,
       value: selectedLocation,
-      onChange: (val) => setSelectedLocation(val),
+      onChange: setSelectedLocation,
+      indicator: 'checkmark',
+      searchable: true,
+      searchPlaceholder: 'Search location',
+      searchValue: locationQuery,
+      onSearchChange: setLocationQuery,
+      isLoading: isLoadingLocations,
+      emptyMessage: 'No matching locations',
       placeholder: 'Location',
-      leftIcon: '/icons/map-point.svg'
+      leftIcon: '/icons/map-point.svg',
     },
   ]
 
-  // Block render until SessionBootstrap completes so the feed
-  // always has an access token ready when it first fetches.
   if (!isHydrated) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-white">
@@ -148,47 +126,38 @@ const HomePage = () => {
 
   return (
     <div className="min-h-screen bg-white">
-      {/* ── Navigation ──────────────────────────────────────────── */}
       <Navbar />
-
-      {/* ── Hero ────────────────────────────────────────────────── */}
       <HeroSection />
-
       <GalleryPulseSection />
 
-      <div className='w-1/4'>
-        <ArtCard 
-          {...MOCK_DATA}
-        />
-      </div>
-      <div className='w-1/4'>
-        <MoodboardCard 
-          variant='populated'
-          // data={{
-          //   id: 'mood-board',
-          //   title: 'Moodboard custom',
-          //   // artworks: MOCK_DATA.stats
-          // }}
-        />
-      </div>
+      <FilterComponent dropdowns={filterDropdowns} onClear={handleClearFilters} />
 
-      {/* ── Featured Today (teal strip) ───────────────────────────
-      <FeaturedSection /> */}
-      <FilterComponent
-        dropdowns={filterDropdowns} 
-        onClear={handleClearFilters}
+      <FeedSection
+        activeTab={activeTab}
+        onTabChange={setActiveTab}
+        artworks={firstHalf}
+        isLoading={feedQuery.isLoading}
+        onOpenMobileFilters={() => setIsMobileFiltersOpen(true)}
       />
 
-      {/* ── Main feed ───────────────────────────────────────────── */}
-      <FeedSection />
-
-      {/* ── Creator / Artist spotlight CTA ──────────────────────── */}
       <CreatorCTASection />
 
-      <FeedSection />
+      <FeedContinuation
+        artworks={secondHalf}
+        isLoading={feedQuery.isLoading}
+        hasNextPage={feedQuery.hasNextPage}
+        isFetchingNextPage={feedQuery.isFetchingNextPage}
+        onLoadMore={() => feedQuery.fetchNextPage()}
+      />
 
-      {/* ── Footer ──────────────────────────────────────────────── */}
       <Footer />
+
+      <MobileFilterDrawer
+        open={isMobileFiltersOpen}
+        onClose={() => setIsMobileFiltersOpen(false)}
+        dropdowns={filterDropdowns}
+        onClear={handleClearFilters}
+      />
     </div>
   )
 }

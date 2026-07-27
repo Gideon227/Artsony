@@ -1,19 +1,18 @@
+import { Suspense } from 'react'
 import { Navbar } from '@/components/layout/navbar'
-import LeftSideBarComp from '@/features/orders/all-orders/components/left-sidebar'
-import React from 'react'
+import { OrdersPageContent } from '@/features/orders/my-orders/components/orders-page-content'
 
-const MyOrderPage = () => {
-    return (
-        <>
-            <Navbar />
-            <div className='px-8 py-6 flex bg-white'>
-                <div className='bg-secondary-50 rounded-2xl p-4 flex gap-x-4 '>
-                    <LeftSideBarComp />
-
-                </div>
-            </div>
-        </>
-    )
+export default function MyOrderPage() {
+  return (
+    <>
+      <Navbar />
+      <div className="px-8 py-6 flex bg-white min-h-[calc(100vh-96px)]">
+        <div className="bg-secondary-50 rounded-2xl p-4 flex gap-x-4 w-full">
+          <Suspense fallback={null}>
+            <OrdersPageContent />
+          </Suspense>
+        </div>
+      </div>
+    </>
+  )
 }
-
-export default MyOrderPage

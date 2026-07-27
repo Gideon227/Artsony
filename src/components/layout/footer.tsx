@@ -9,31 +9,33 @@ import {
 } from 'lucide-react';
 import { Input } from '../ui/input';
 import { Button } from '../ui/button';
+import { useAuthStore } from '@/store';
 
 const Footer = () => {
+  const { user } = useAuthStore()
   const footerLinks = {
     explore: [
-      { name: 'Discover art', href: '#' },
-      { name: 'Artsony shop', href: '#' },
-      { name: 'Art of the week', href: '#' },
-      { name: 'Categories', href: '#' },
+      { name: 'Discover art', href: '/discover' },
+      { name: 'Artsony shop', href: '/shop' },
+      { name: 'Art of the week', href: '/explore' },
+      { name: 'Categories', href: '/categories' },
     ],
     creators: [
-      { name: 'Sell artwork', href: '#' },
-      { name: 'Post artwork', href: '#' },
+      { name: 'Sell artwork', href: '/artworks/upload' },
+      { name: 'Post artwork', href: '/artworks/upload' },
       { name: 'Upload guidelines', href: '#' },
       { name: 'Community rules', href: '#' },
     ],
     company: [
-      { name: 'FAQ', href: '#' },
-      { name: 'Contact', href: '#' },
-      { name: 'Terms & conditions', href: '#' },
-      { name: 'Privacy policy', href: '#' },
+      { name: 'FAQ', href: '/faq' },
+      { name: 'Contact', href: '/contact' },
+      { name: 'Terms & conditions', href: '/terms' },
+      { name: 'Privacy policy', href: '/privacy' },
     ]
   };
 
   return (
-    <footer className="relative w-full bg-black text-white pt-32 pb-10 overflow-hidden">
+    <footer className="relative w-full bg-black text-white pt-32 pb-10 overflow-hidden max-md:hidden">
       {/* 1. The Wavy Mask/Background */}
       <div className="absolute top-0 left-0 w-full overflow-hidden leading-[0] rotate-180">
         {/* <svg 
@@ -48,10 +50,10 @@ const Footer = () => {
       {/* 2. Background Mural Image with Overlay */}
       <div className="absolute inset-0 z-0 bg-white">
         <Image 
-          src="/images/footer-mural-bg.png" // Replace with your actual asset
+          src="/images/footer-mural-bg.png"
           alt="Mural Background"
           fill
-          className="object-cover select-none pointer-events-none"
+          className="object-fill select-none pointer-events-none"
         />
         <div className="absolute inset-0" />
       </div>
@@ -71,13 +73,13 @@ const Footer = () => {
               Discover, share, and collect original works from a growing community of visual creators.
             </p>
 
-            <div className="flex flex-col space-y-3 max-w-sm mt-14">
+            <div className="flex flex-col space-y-6 max-w-sm mt-14">
               <Input 
-                leftIcon='/icons/message-white.svg'
+                leftIcon='/home/message.svg'
                 type='email'
                 placeholder='Enter Email'
               />
-              <Button className='h-12'>
+              <Button className='h-12' fullWidth>
                 Subscribe to Newsletter
               </Button>
               
@@ -121,24 +123,24 @@ const Footer = () => {
           {/* Artist Quote Section */}
           <div className="lg:col-span-2 flex flex-col justify-start">
             <div className="flex items-center gap-3 group cursor-pointer w-fit mb-6">
-              <div className="w-12 h-12 rounded-full overflow-hidden border-2 border-white/20">
-                <Image src="/images/image-avatar.svg" alt="Ivan" width={40} height={40} className="object-cover" />
-              </div>
+              <Image src={user?.avatarUrl ?? "/images/image-avatar.svg"} alt="Ivan" width={40} height={40} className="object-cover border border-gray-50 rounded-full" />
+              
               <div className="flex items-center gap-2">
                 <span className="text-white text-[12px] font-poppins font-medium tracking-tight">
-                  Ivan Kovačević
+                  {user?.username}
                 </span>
                 <ChevronsRight className="text-white/70 w-5 h-5 transition-transform group-hover:translate-x-1" />
               </div>
             </div>
             <p className="text-[14px] font-poppins leading-6 italic tracking-wide text-white">
-              "I paint like I'm remembering something I've never seen before."
+              {user?.bio ?? `"I paint like I'm remembering something I've never seen before."`}
+              
             </p>
           </div>
         </div>
 
         {/* Divider */}
-        <div className="w-full h-px bg-gradient-to-r from-orange-500 via-gray-800 to-transparent mb-8" />
+        <div className="w-full h-px text-primary-500 mb-8" />
 
         {/* Footer Bottom */}
         <div className="flex flex-col md:flex-row items-center justify-between gap-8">
@@ -162,7 +164,7 @@ const Footer = () => {
               <ChevronDown className="w-4 h-4" />
               Language
             </button>
-            <div className="flex items-center gap-2 text-gray-400">
+            <div className="flex items-center gap-2 text-white">
               <Copyright className="w-4 h-4" />
               <span>2025 Artsony All rights reserved</span>
             </div>

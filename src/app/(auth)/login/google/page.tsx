@@ -18,6 +18,7 @@ export default function GoogleSignInPage() {
     setIsLoading(true);
     // Logic for Google OAuth redirect via Supabase/Backend
     // window.location.href = `${process.env.NEXT_PUBLIC_API_URL}/auth/google`;
+    window.location.href = `${process.env.NEXT_PUBLIC_API_URL}/api/auth/oauth/google`
     setTimeout(() => setIsLoading(false), 2000); // Simulate redirect
   };
 

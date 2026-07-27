@@ -11,17 +11,9 @@ import { useAuthStore } from "@/store";
 
 export default function UserMenuOverlay() {
   const { user } = useAuthStore();
-  
-  // --- MOCK DATA FOR DEMONSTRATION ---
-//   const user = {
-//     name: "Lee Chang",
-//     profileImage: "/images/image-avatar", // Placeholder
-//     memberSince: "2023",
-//   };
-  // -----------------------------------
 
   return (
-    <div className="w-99 bg-white rounded-3xl gap-12 border border-gray-50 p-8 flex flex-col box-border">
+    <div className="w-99 bg-white rounded-2xl gap-12 border border-gray-50 p-8 flex flex-col box-border">
       
         {/* HEADER: Avatar & User Info */}
         <div className="flex items-center gap-4">

@@ -155,6 +155,8 @@ export type ArtworkFilters = {
   categories?:     string[]
   min_price?:      number
   max_price?:      number
+  location?:       string
+  size_label?:     string
 }
 
 export type PaginatedArtworksResponse = {

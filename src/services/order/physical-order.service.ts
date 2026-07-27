@@ -13,6 +13,7 @@ import type {
   CommerceApiSuccess,
   CommercePaginatedResponse,
 } from '@/types/order'
+import { OrderItemPhysicalWithArtwork } from '@/types/physical-order'
 
 export type PhysicalOrderQueryParams = Omit<PhysicalOrderFilters, 'timeline_status_in'>
 
@@ -60,17 +61,17 @@ export type AddDeliveryProofInput = {
 
 export const physicalOrderService = {
   getBuyerOrders: (view: BuyerOrderView, filters: PhysicalOrderQueryParams = {}) =>
-    apiClient.get<CommercePaginatedResponse<OrderItemPhysical>>('/api/physical-orders/buyer', {
+    apiClient.get<CommercePaginatedResponse<OrderItemPhysicalWithArtwork>>('/api/physical-orders/buyer', {
       params: { view, ...filters },
     }),
 
   getArtistOrders: (view: ArtistOrderView, filters: PhysicalOrderQueryParams = {}) =>
-    apiClient.get<CommercePaginatedResponse<OrderItemPhysical>>('/api/physical-orders/artist', {
+    apiClient.get<CommercePaginatedResponse<OrderItemPhysicalWithArtwork>>('/api/physical-orders/artist', {
       params: { view, ...filters },
     }),
 
   getAdminOrders: (filters: PhysicalOrderQueryParams = {}) =>
-    apiClient.get<CommercePaginatedResponse<OrderItemPhysical>>('/api/physical-orders/admin', {
+    apiClient.get<CommercePaginatedResponse<OrderItemPhysicalWithArtwork>>('/api/physical-orders/admin', {
       params: filters,
     }),
 

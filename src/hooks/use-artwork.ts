@@ -1,4 +1,3 @@
-// src/hooks/use-artwork.ts
 // Full replacement for the existing stub.
 // Every hook follows the same pattern as use-auth-mutations.ts:
 //   useMutation → service call → cache invalidation → toast feedback
@@ -21,6 +20,7 @@ import type {
   CreateArtworkPayload,
   UpdateArtworkPayload,
   PaginatedArtworksResponse,
+  ListingType,
 } from '@/types/artwork'
 
 // ── Query key helpers ─────────────────────────────────────────────────────────
@@ -68,8 +68,10 @@ export function useArtworkList(filters: ArtworkFilters = {}) {
 // Infinite scroll feed — used by FeedSection and discover pages
 export function useFeed(
   params: {
-    category?: string
-    sort?: 'newest' | 'trending' | 'recommended'
+    categories?: string[]
+    location?: string
+    size_label?: string
+    sort?: 'for_you' | 'following' | 'new' | 'trending' | 'newbies'
   } = {},
 ) {
   return useInfiniteQuery<PaginatedArtworksResponse>({
@@ -79,6 +81,60 @@ export function useFeed(
     getNextPageParam: (last) => last.has_next ? last.page + 1 : undefined,
     initialPageParam: 1,
     staleTime: STALE_TIMES.fast,
+  })
+}
+
+export function useHeroArtworks(limit = 5) {
+  return useQuery({
+    queryKey: QUERY_KEYS.artworks({ featured: true, limit }),
+    queryFn: () => artworkService.getFeatured(limit).then((r) => r.data),
+    staleTime: STALE_TIMES.slow,
+    retry: 1,
+  })
+}
+
+// "Top Picks by Artsony" — real ranking algorithm (decayed hot-score, one
+// per creator), not manual curation. See get_top_picks() migration.
+export function useTopPicks(period: 'all' | 'week' = 'all', limit = 8, listingType?: ListingType) {
+  return useQuery({
+    queryKey: ['artworks', 'top-picks', period, limit, listingType ?? 'ALL'],
+    queryFn: () => artworkService.getTopPicks(limit, period, listingType).then((r) => r.data),
+    staleTime: STALE_TIMES.medium,
+  })
+}
+
+export function useArtworkLocations() {
+  return useQuery({
+    queryKey: ['artworks', 'locations'],
+    queryFn: () => artworkService.getLocations().then((r) => r.data),
+    staleTime: STALE_TIMES.slow,
+  })
+}
+
+export function useMarketplaceArtworks(limit = 10) {
+  return useQuery({
+    queryKey: ['artworks', 'marketplace-shop', limit],
+    queryFn: () =>
+      artworkService.list({
+        listing_type: 'MARKETPLACE',
+        status: 'PUBLISHED',
+        visibility: 'PUBLIC',
+        sort_by: 'created_at',
+        sort_order: 'desc',
+        limit,
+      }),
+    staleTime: STALE_TIMES.fast,
+  })
+}
+
+// Distinct SIZE-variant labels across all published artworks — populates
+// the "Medium" filter with real, currently-available sizes rather than a
+// hardcoded guess.
+export function useSizeLabels() {
+  return useQuery({
+    queryKey: ['artworks', 'size-labels'],
+    queryFn: () => artworkService.getSizeLabels(),
+    staleTime: STALE_TIMES.slow,
   })
 }
 
@@ -100,11 +156,26 @@ export function useSearchArtworks(query: string, filters?: ArtworkFilters) {
   })
 }
 
+// Shop page (browse + search-results mode) — paginated, works with an empty
+// query too, since browse mode reuses the same grid/filters as search mode.
+const RESULTS_PAGE_SIZE = 12
+
+export function useInfiniteArtworkResults(filters: ArtworkFilters) {
+  return useInfiniteQuery({
+    queryKey: [...ART_KEYS.lists(), 'shop-results', filters],
+    queryFn: ({ pageParam }) =>
+      artworkService.list({ ...filters, page: pageParam, limit: RESULTS_PAGE_SIZE }),
+    initialPageParam: 1,
+    getNextPageParam: (lastPage) => (lastPage.has_next ? lastPage.page + 1 : undefined),
+    staleTime: STALE_TIMES.medium,
+  })
+}
+
 // ── Create ────────────────────────────────────────────────────────────────────
 
 export function useCreateArtwork() {
-  const qc        = useQueryClient()
-  const router    = useRouter()
+  const qc = useQueryClient()
+  const router = useRouter()
   const clearDraft = useArtworkStore((s) => s.clearDraft)
   const { success, error } = useToast()
 
@@ -137,9 +208,12 @@ export function useUpdateArtwork(id: string) {
     onMutate: async (payload) => {
       await qc.cancelQueries({ queryKey: ART_KEYS.byId(id) })
       const prev = qc.getQueryData<Artwork>(ART_KEYS.byId(id))
+      
+      // FIX: Cast the optimistically merged object as Artwork to satisfy the cache type
       qc.setQueryData<Artwork>(ART_KEYS.byId(id), (old) =>
-        old ? { ...old, ...payload } : old,
+        old ? ({ ...old, ...payload } as Artwork) : old,
       )
+      
       return { prev }
     },
 

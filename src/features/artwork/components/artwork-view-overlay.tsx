@@ -140,15 +140,10 @@ export default function ArtworkViewOverlay({ artwork, onClose, onNavigate }: Art
     const wasFollowing = isFollowing
     setIsFollowing(!wasFollowing)
     try {
-      if (wasFollowing) {
-        await followService.unfollow(artwork.creator.id)
-      } else {
-        await followService.follow(artwork.creator.id)
-      }
+      await followService.toggle(artwork.creator.id)
     } catch (err) {
-      // Backend endpoint may not exist yet — keep optimistic state for now
-      // but roll back if you'd rather fail loudly:
-      // setIsFollowing(wasFollowing)
+      // Real backend now — roll back on failure instead of trusting optimism
+      setIsFollowing(wasFollowing)
     } finally {
       setIsFollowLoading(false)
     }

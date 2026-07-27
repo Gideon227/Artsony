@@ -1,15 +1,14 @@
 'use client'
 
 import React, { useEffect, useState, useRef, useCallback } from 'react'
-import { artworkService } from '@/services'
 import { Artwork } from '@/types/artwork'
 import { ArtCard } from '@/components/ui/art-card'
 import ArtworkViewOverlay from '@/features/artwork/components/artwork-view-overlay'
+import { useTopPicks } from '@/hooks/use-artwork'
 
 const TopPicks = () => {
-    const [artworks, setArtworks] = useState<Artwork[]>([])
-    const [isLoading, setIsLoading] = useState<boolean>(true)
-    const [error, setError] = useState<string | null>(null)
+    const { data: artworks = [], isLoading, isError } = useTopPicks('all', 8, 'MARKETPLACE')
+    const error = isError ? 'Failed to load top picks.' : null
 
     // Overlay state
     const [activeArtwork, setActiveArtwork] = useState<Artwork | null>(null)
@@ -36,34 +35,8 @@ const TopPicks = () => {
     }
 
     useEffect(() => {
-        const fetchMarketplaceArtworks = async () => {
-            try {
-                setIsLoading(true)
-                setError(null)
-
-                const response = await artworkService.list({
-                    listing_type: 'MARKETPLACE',
-                    status: 'PUBLISHED',
-                    visibility: 'PUBLIC',
-                    limit: 8
-                })
-
-                if (response.success) {
-                    setArtworks(response.data)
-                    setTimeout(checkScrollPosition, 100)
-                } else {
-                    setError('Failed to load top picks.')
-                }
-            } catch (err: any) {
-                console.error('[TOP_PICKS_FETCH_ERROR]:', err)
-                setError('An unexpected error occurred while fetching artworks.')
-            } finally {
-                setIsLoading(false)
-            }
-        }
-
-        fetchMarketplaceArtworks()
-    }, [checkScrollPosition])
+        if (!isLoading && artworks.length > 0) setTimeout(checkScrollPosition, 100)
+    }, [isLoading, artworks.length, checkScrollPosition])
 
     useEffect(() => {
         window.addEventListener('resize', checkScrollPosition)
@@ -112,13 +85,13 @@ const TopPicks = () => {
 
             {/* Loading / Error / Empty States */}
             {isLoading && (
-                <div className="flex justify-center items-center py-20 min-h-[400px]">
+                <div className="flex justify-center items-center py-20">
                     <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-primary-500" />
                 </div>
             )}
 
             {error && !isLoading && (
-                <div className="text-center py-10 text-red-500 font-poppins min-h-[400px]">
+                <div className="text-center py-10 text-red-500 font-poppins">
                     {error}
                 </div>
             )}

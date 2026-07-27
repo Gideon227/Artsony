@@ -8,6 +8,7 @@ import { motion } from 'framer-motion'
 import { ArtCard } from '@/components/ui/art-card'
 import { Skeleton } from '@/components/ui/skeleton'
 import type { Artwork } from '@/types'
+import EmptySearch from './empty-search'
 
 // ─── ResultsGrid ──────────────────────────────────────────────────────────────
 
@@ -57,17 +58,18 @@ export function ResultsGrid({
   }
 
   if (artworks.length === 0) {
-    return <EmptyState query={query} />
+    return <EmptySearch />
   }
+
+  {console.log("Artworks: ", artworks)}
 
   return (
     <div className="max-w-[1440px] mx-auto px-4 md:px-8 py-8">
       {/* Result count */}
       {total !== undefined && (
-        <p className="font-poppins text-[13px] text-neutral-400 mb-6">
-          <span className="font-semibold text-neutral-600">{total.toLocaleString()}</span>{' '}
-          result{total !== 1 ? 's' : ''} for{' '}
-          <span className="font-semibold text-primary-500">"{query}"</span>
+        <p className="font-raleway font-semibold text-h5 text-heading mb-6">
+          <span className="font-semibold text-primary-600">{total.toLocaleString()}</span>{' '}
+            Search Result {total !== 1 ? 's' : ''}
         </p>
       )}
 
@@ -82,17 +84,17 @@ export function ResultsGrid({
             className="flex justify-center"
           >
             <ArtCard
-              image={artwork.imageUrl}
+              image={artwork.assets[0]?.original_url as string}
               title={artwork.title}
               cardLink={`/artwork/${artwork.id}`}
               artist={[{
-                id: artwork.artist.id,
-                name: artwork.artist.displayName,
-                avatarUrl: artwork.artist.avatarUrl ?? '/images/image-avatar.svg',
+                id: artwork.creator_id,
+                name: artwork.creator?.username as string,
+                avatarUrl: artwork.creator?.profile?.avatar_url ?? '/images/image-avatar.svg',
               }]}
               stats={{
-                likes: String(artwork.likesCount),
-                views: String(artwork.viewsCount),
+                likes: String(artwork.like_count),
+                views: String(artwork.view_count),
               }}
               variant="standard"
             />
@@ -122,9 +124,9 @@ export function ResultsGrid({
 
 function ResultsSkeleton() {
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-x-0 gap-y-10">
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-x-4 gap-y-10">
       {Array.from({ length: 8 }).map((_, i) => (
-        <div key={i} className="flex flex-col gap-4 max-w-[332px] mx-auto w-full">
+        <div key={i} className="flex flex-col gap-x-4 max-w-[332px] mx-auto w-full">
           <Skeleton className="w-full aspect-[364/332] rounded-[40px]" />
           <Skeleton className="w-full h-[55px] rounded-full" />
         </div>

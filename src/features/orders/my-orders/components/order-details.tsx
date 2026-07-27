@@ -1,187 +1,250 @@
-import { Input } from '@/components';
-import { Artwork } from '@/types';
-import { Order } from '@/types/order';
+'use client'
+
+import { useState } from 'react'
+import { OrderActionsMenu, type OrderActionsMenuItem } from '../ui/order-actions-menu'
+import { PackagingProofLightbox } from './packaging-proof-lightbox'
+import { useDownloadReceipt, useDownloadInvoice } from '@/hooks/use-physical-order'
+import { RequestReviewModal } from './request-review-modal'
 import Image from 'next/image'
-import React from 'react'
+import type { UseQueryResult } from '@tanstack/react-query'
+import { Input } from '@/components'
+import type { CommerceApiSuccess } from '@/types/order'
+import { PhysicalOrderDetailView } from '@/types/physical-order'
+import { DetailSkeleton } from './detail-skeleton'
+import { DetailErrorState } from './detail-error-state'
+import { formatCurrency, formatDate } from '../utils'
+
 
 interface Props {
-    art: Partial<Artwork>
-    order: Order
-    status: 'completed' | 'canceled'
-    orderId: string;
-    artworkType: 'physical' | 'digital'
-    purchaseDate: string;
-    pickupDate: string;
-    deliveryDate: string;
+  query: UseQueryResult<CommerceApiSuccess<PhysicalOrderDetailView>, unknown>
+  status: 'completed' | 'canceled'
 }
 
-const OrderDetails = ({ status, orderId, artworkType, pickupDate, deliveryDate, purchaseDate, art, order }: Props) => {
-    
-    if (!art) {
-        return;
+export function OrderDetails({ query, status }: Props) {
+    const { data, isLoading, isError, error, refetch } = query
+    const [proofOpen, setProofOpen] = useState(false)
+    const [proofStartIndex, setProofStartIndex] = useState(0)
+    const [reviewOpen, setReviewOpen] = useState(false)
+    const downloadReceipt = useDownloadReceipt()
+    const downloadInvoice = useDownloadInvoice()
+
+    const contactSupportItem: OrderActionsMenuItem = {
+    id: 'support',
+    label: 'Contact Support',
+    onSelect: () =>
+        window.open(`mailto:support@artsony.com?subject=${encodeURIComponent(`Order ${physical.order_id}`)}`),
     }
 
+    const packagingProofItem: OrderActionsMenuItem = {
+    id: 'proof',
+    label: 'View Packaging Proof',
+    onSelect: () => {
+        setProofStartIndex(0)
+        setProofOpen(true)
+    },
+    }
+
+    const menuItems: OrderActionsMenuItem[] =
+        status === 'canceled'
+        ? [
+            {
+                id: 'receipt',
+                label: 'Download Receipt',
+                isPending: downloadReceipt.isPending,
+                onSelect: () =>
+                    downloadReceipt.mutate(physical.id, {
+                    onSuccess: (data) => window.open(data.receipt_url, '_blank', 'noopener,noreferrer'),
+                    }),
+            },
+            packagingProofItem,
+            contactSupportItem,
+        ]
+        : [
+            // TODO: "View Shipping Label" needs a backend discriminator (e.g. DeliveryProof.proof_type)
+            // to separate label images from packaging images. Currently opens the same proof set.
+            { id: 'label', label: 'View Shipping Label', onSelect: () => { setProofStartIndex(0); setProofOpen(true) } },
+            packagingProofItem,
+            {
+                id: 'invoice',
+                label: 'Download Invoice',
+                isPending: downloadInvoice.isPending,
+                onSelect: () =>
+                    downloadInvoice.mutate(physical.id, {
+                    onSuccess: (data) => window.open(data.invoice_url, '_blank', 'noopener,noreferrer'),
+                    }),
+            },
+            { id: 'review', label: 'Request Review', onSelect: () => setReviewOpen(true) },
+            contactSupportItem,
+        ]
+
+    if (isLoading) return <DetailSkeleton />
+    if (isError || !data) return <DetailErrorState error={error} onRetry={refetch} />
+
+    const { physical, order_item, delivery_address, refund_requests, delivery_proofs } = data.data
+    const total = (order_item?.unit_price ?? 0) * (order_item?.quantity ?? 1) + (physical.shipping_cost ?? 0)
+    const latestRefund = refund_requests[refund_requests.length - 1]
+
     return (
-        <div className='bg-white py-4 border-2 border-gray-50 rounded-xl flex flex-col justify-between'>
-            {/* Header */}
-            <div className='px-4 w-full flex flex-col gap-y-10'>
-                <div className='flex justify-between items-center w-full'>
-                    <h5 className='font-raleway font-semibold text-h5 text-heading leading-10 tracking-wide'>{status === 'completed' ? 'Delivery Information' : status === 'canceled' ? 'Canceled Order Info' : null}</h5>
-                    <button className='cursor-pointer '>
-                        <svg width="40" height="40" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
-                            <mask id="path-1-inside-1_6542_34054" fill="white">
-                            <path d="M0 20C0 8.95431 8.95431 0 20 0C31.0457 0 40 8.95431 40 20C40 31.0457 31.0457 40 20 40C8.95431 40 0 31.0457 0 20Z"/>
-                            </mask>
-                            <path d="M20 40V38C10.0589 38 2 29.9411 2 20H0H-2C-2 32.1503 7.84974 42 20 42V40ZM40 20H38C38 29.9411 29.9411 38 20 38V40V42C32.1503 42 42 32.1503 42 20H40ZM20 0V2C29.9411 2 38 10.0589 38 20H40H42C42 7.84974 32.1503 -2 20 -2V0ZM20 0V-2C7.84974 -2 -2 7.84974 -2 20H0H2C2 10.0589 10.0589 2 20 2V0Z" fill="#E6E8EB" mask="url(#path-1-inside-1_6542_34054)"/>
-                            <path d="M15 20C15 21.1046 14.1046 22 13 22C11.8954 22 11 21.1046 11 20C11 18.8954 11.8954 18 13 18C14.1046 18 15 18.8954 15 20Z" fill="#525965"/>
-                            <path d="M22 20C22 21.1046 21.1046 22 20 22C18.8954 22 18 21.1046 18 20C18 18.8954 18.8954 18 20 18C21.1046 18 22 18.8954 22 20Z" fill="#525965"/>
-                            <path d="M29 20C29 21.1046 28.1046 22 27 22C25.8954 22 25 21.1046 25 20C25 18.8954 25.8954 18 27 18C28.1046 18 29 18.8954 29 20Z" fill="#525965"/>
-                        </svg>
-                    </button>
+        <div className="bg-white py-4 border-2 border-gray-50 rounded-xl flex flex-col">
+            <div className="px-4 w-full flex flex-col gap-y-10">
+                <div className="flex justify-between items-center w-full">
+                    <h5 className="font-raleway font-semibold text-h5 text-heading leading-10 tracking-wide">
+                        {status === 'completed' ? 'Delivery Information' : 'Canceled Order Info'}
+                    </h5>
+                    <OrderActionsMenu items={menuItems} />
                 </div>
 
-                <div className='flex items-center justify-between'>
-                    <div className='flex items-center gap-x-4'>
-                        <span className='border border-gray-50 rounded-[20px] p-3'>
-                            <Image src='/icons/' width={38} height={38} alt='box icon' />
+                <div className="flex items-center justify-between">
+                <div className="flex items-center gap-x-4">
+                    <span className="border border-gray-50 rounded-[20px] p-3">
+                    <Image src="/icons/box.svg" width={38} height={38} alt="" />
+                    </span>
+                    <div className="flex flex-col gap-y-2">
+                    <p className="font-poppins text-body-xs text-gray-200 tracking-wide">
+                        Artwork Type: <span className="text-body">{order_item?.artwork_format ?? '—'}</span>
+                    </p>
+                    <p className="font-poppins text-body-xs text-gray-200 tracking-wide">
+                        Order ID: <span className="text-body">{physical.order_id.slice(0, 12).toUpperCase()}</span>
+                    </p>
+                    <p className="font-poppins text-body-xs text-gray-200 tracking-wide">
+                        Status:{' '}
+                        <span className={status === 'completed' ? 'text-successful-500' : 'text-error-500'}>
+                        {status === 'completed' ? 'Delivered' : 'Cancelled'}
                         </span>
+                    </p>
+                    </div>
+                </div>
 
-                        <div className='flex flex-col gap-y-2'>
-                            <p className='font-poppins text-body-xs text-gray-200 tracking-wide'>Artwork Type: <span className='text-body'>{artworkType}</span></p>
-                            <p className='font-poppins text-body-xs text-gray-200 tracking-wide'>Order ID: <span className='text-body'>{orderId}</span></p>
-                            <p className='font-poppins text-body-xs text-gray-200 tracking-wide'>Status: <span className={`${status === 'completed' ? 'text-successful-500' : 'text-error-500'}`}>{status}</span></p>
-                        </div>
+                <div className="flex flex-col gap-y-2 text-right">
+                    <p className="font-poppins text-body-xs text-gray-200 tracking-wide">
+                    Purchase Date: <span className="text-body">{formatDate(order_item?.created_at, true)}</span>
+                    </p>
+                    <p className="font-poppins text-body-xs text-gray-200 tracking-wide">
+                    {status === 'completed' ? 'Pickup Date:' : 'Canceled Date:'}{' '}
+                    <span className="text-body">
+                        {status === 'completed' ? formatDate(physical.picked_up_at, true) : formatDate(physical.updated_at, true)}
+                    </span>
+                    </p>
+                    <p className="font-poppins text-body-xs text-gray-200 tracking-wide">
+                    {status === 'completed' ? 'Delivery Date:' : 'Refund Date:'}{' '}
+                    <span className={status === 'completed' ? 'text-body' : 'text-info-500'}>
+                        {status === 'completed'
+                        ? formatDate(physical.delivered_at, true)
+                        : physical.refund_completed_at
+                            ? formatDate(physical.refund_completed_at, true)
+                            : 'In Progress'}
+                    </span>
+                    </p>
+                </div>
+                </div>
+            </div>
+
+            <div className="py-6 px-4 flex flex-col gap-y-4 border-y border-gray-50">
+                <p className="font-poppins font-medium text-body-m text-body tracking-wide">Artwork Details</p>
+                <div className="flex gap-x-4 items-center">
+                    <div className="relative w-[114px] h-[114px] rounded-xl overflow-hidden bg-gray-50 shrink-0">
+                        {order_item?.artwork_thumbnail_url ? (
+                            <Image src={order_item.artwork_thumbnail_url} alt={order_item.artwork_title} fill sizes="114px" className="object-cover" />
+                        ) : (
+                            <div className="w-full h-full flex items-center justify-center font-poppins text-body-xxs text-gray-200">No image</div>
+                        )}
                     </div>
 
-                    <div className='flex flex-col gap-y-2'>
-                        <p className='font-poppins text-body-xs text-gray-200 tracking-wide'>Purchase Date: <span className='text-body'>{purchaseDate}</span></p>
-                        <p className='font-poppins text-body-xs text-gray-200 tracking-wide'>{status === 'completed' ? 'Pickup Date: ': 'Canceled Date' } <span className='text-body'>{pickupDate}</span></p>
-                        <p className='font-poppins text-body-xs text-gray-200 tracking-wide'>{status === 'completed' ? 'Delivery Date: ' : 'Refund Date'} <span className={`${status === 'completed' ? 'text-body' : 'text-info-500'}`}>{status === 'completed' ? deliveryDate : 'In Progress'}</span></p>
+                    <div className="grid grid-cols-3 gap-x-4 gap-y-4 flex-1">
+                        <ReadOnlyField label="Artwork Name" value={order_item?.artwork_title ?? 'Unavailable'} />
+                        <ReadOnlyField label="Artwork Cost" value={formatCurrency(order_item?.unit_price)} />
+                        <ReadOnlyField label="Quantity" value={String(order_item?.quantity ?? 1)} />
+                        <ReadOnlyField label="Shipping Cost" value={formatCurrency(physical.shipping_cost)} />
+                        <ReadOnlyField
+                            label="Variant"
+                            value={order_item?.variant_snapshot ? `${order_item.variant_snapshot.variant_type}: ${order_item.variant_snapshot.option_label}` : '—'}
+                        />
+                        <ReadOnlyField label="Total Cost" value={formatCurrency(total)} />
                     </div>
                 </div>
             </div>
 
-            {/* Artwork Details */}
-            <div className='py-6 px-4 flex flex-col gap-y-4 border-y border-gray-50'>
-                <p className='font-poppins font-medium text-body-m text-body tracking-wide'>Artwork Details</p>
-                <div className='flex gap-x-4 items-center'>
-                    {art.assets && <div className='w-full h-full '>
-                        <Image src={art?.assets[0]?.thumbnail_url as string} fill alt='art image' />
-                    </div>}
-
-                    <div className='grid col-span-2 row-span-3 gap-x-4 gap-y-2 '>
-                        <div className='flex flex-col gap-y-2'>
-                            <p className='font-poppins text-body-xxs text-body tracking-wide'>Artwork Name</p>
-                            <Input placeholder={art?.title} value={art.title} disabled />
-                        </div>
-
-                        <div className='flex flex-col gap-y-2'>
-                            <p className='font-poppins text-body-xxs text-body tracking-wide'>Artwork Cost</p>
-                            <Input placeholder={String(art?.price)} value={String(art.price)} disabled />
-                        </div>
-
-                        <div className='flex flex-col gap-y-2'>
-                            <p className='font-poppins text-body-xxs text-body tracking-wide'>Quantity</p>
-                            <Input placeholder={order.items.length.toString()} value={order.items.length.toString()} disabled />
-                        </div>
-
-                        <div className='flex flex-col gap-y-2'>
-                            <p className='font-poppins text-body-xxs text-body tracking-wide'>Shipping Cost</p>
-                            <Input placeholder={order.shipping_cost} value={order.shipping_cost} disabled />
-                        </div>
-
-                        <div className='flex flex-col gap-y-2'>
-                            <p className='font-poppins text-body-xxs text-body tracking-wide'>Variant</p>
-                            <Input placeholder={order.items[0]?.variant_snapshot?.variant_name} value={order.items[0]?.variant_snapshot?.variant_name} disabled /> TODO: ADD VARIANTS VALUE
-                        </div>
-
-                        <div className='flex flex-col gap-y-2'>
-                            <p className='font-poppins text-body-xxs text-body tracking-wide'>Total Cost</p>
-                            <Input placeholder={order.subtotal.toString()} value={order.subtotal.toString()} disabled />
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            {/* Shipping Details */}
             {status === 'canceled' && (
-                <div className='px-4 flex flex-col gap-y-6'>
-                    <p className='font-poppins font-medium text-body-m leading-6 tracking-white text-body'>Refund Details</p>
-
-                    <div className='grid grid-cols-2 gap-y-2 gap-x-8'>
-                        <div className='flex flex-col gap-y-2'>
-                            <label className='font-poppins text-body-xxs text-body tracking-wide'>Courier</label>
-                            <Input value={order.courier_service} disabled />
-                        </div>
-
-                        <div className='flex flex-col gap-y-2'>
-                            <label className='font-poppins text-body-xxs text-body tracking-wide'>Reason</label>
-                            <Input placeholder='The artwork was damaged before packaging.' disabled />
-                        </div>
-
-                        <div className='flex flex-col gap-y-2'>
-                            <label className='font-poppins text-body-xxs text-body tracking-wide'>Tracking ID :</label>
-                            <Input value={order.tracking_id} disabled />
-                        </div>
-
-                        <div className='flex flex-col gap-y-2'>
-                            <label className='font-poppins text-body-xxs text-body tracking-wide'>Refund Status</label>
-                            <Input value={order.refund_status} disabled />
-                        </div>
-
-                        <div className='flex flex-col gap-y-2'>
-                            <label className='font-poppins text-body-xxs text-body tracking-wide'>Service Type</label>
-                            <Input placeholder='Not Activated' disabled />
-                        </div>
-
-                        <div className='flex flex-col gap-y-2'>
-                            <label className='font-poppins text-body-xxs text-body tracking-wide'>Refund Amount</label>
-                            <Input value={order.refund_amount} disabled />
-                        </div>
-
-                        <div className='flex flex-col gap-y-2'>
-                            <label className='font-poppins text-body-xxs text-body tracking-wide'>Pickup Address</label>
-                            <Input value={order.shipping_address!} disabled />
-                        </div>
-                    </div>
+                <div className="px-4 pt-6 flex flex-col gap-y-6">
+                <p className="font-poppins font-medium text-body-m leading-6 tracking-wide text-body">Refund Details</p>
+                <div className="grid grid-cols-2 gap-y-4 gap-x-8">
+                    <ReadOnlyField label="Courier" value={physical.courier_name ?? '—'} />
+                    <ReadOnlyField label="Reason" value={latestRefund?.reason ?? '—'} />
+                    <ReadOnlyField label="Tracking ID :" value={physical.tracking_id ?? '—'} />
+                    <ReadOnlyField label="Refund Status" value={physical.refund_status} valueClassName={physical.refund_status === 'COMPLETED' ? 'text-successful-500' : 'text-info-500'} />
+                    <ReadOnlyField label="Service Type" value={physical.courier_service_type ?? 'Not Activated'} />
+                    <ReadOnlyField label="Refund Amount" value={formatCurrency(physical.refund_amount)} />
+                    <ReadOnlyField label="Pickup Address" value={physical.pickup_address ?? '—'} />
+                </div>
                 </div>
             )}
 
             {status === 'completed' && (
-                <div className='px-4 flex flex-col gap-y-6'>
-                    <p className='font-poppins font-medium text-body-m leading-6 tracking-white text-body'>Shipping Details</p>
-                
-                    <div className='flex items-center gap-x-12 w-full'>
-                        <div className='flex flex-col gap-y-2 w-2/3'>
-                            <div className='flex flex-col gap-y-2'>
-                                <label className='font-poppins text-body-xxs text-body tracking-wide'>Courier</label>
-                                <Input value={order.courier_service} disabled />
-                            </div>
-
-                            <div className='flex flex-col gap-y-2'>
-                                <label className='font-poppins text-body-xxs text-body tracking-wide'>Tracking ID:</label>
-                                <Input value={order.tracking_id} disabled />
-                            </div>
-                            <div className='flex flex-col gap-y-2'>
-                                <label className='font-poppins text-body-xxs text-body tracking-wide'>Service Type</label>
-                                <Input placeholder='Standard (3-5) Days' disabled />
-                            </div>
-                            <div className='flex flex-col gap-y-2'>
-                                <label className='font-poppins text-body-xxs text-body tracking-wide'>Delivery Address</label>
-                                <Input value={order.shipping_address!} disabled />
-                            </div>
-                        </div>
-
-                        <div className='flex flex-col gap-y-3'>
-                            <p className='font-poppins text-body-m text-body leading-6 tracking-wide'>Delivery Gallery</p>
-                            {/* TODO: PHOTO OF THE PRODUCT DELIVERED TO YOUR DOORSTEP */}
-                        </div>
+                <div className="px-4 pt-6 flex flex-col gap-y-6">
+                <p className="font-poppins font-medium text-body-m leading-6 tracking-wide text-body">Shipping Details</p>
+                <div className="flex items-start gap-x-12 w-full">
+                    <div className="flex flex-col gap-y-4 w-2/3">
+                    <ReadOnlyField label="Courier" value={physical.courier_name ?? '—'} />
+                    <ReadOnlyField label="Tracking ID:" value={physical.tracking_id ?? '—'} />
+                    <ReadOnlyField label="Service Type" value={physical.courier_service_type ?? '—'} />
+                    <ReadOnlyField
+                        label="Delivery Address"
+                        value={delivery_address ? `${delivery_address.address_line_1}, ${delivery_address.city}, ${delivery_address.postal_code}, ${delivery_address.country_code}` : '—'}
+                    />
                     </div>
+
+                    <div className="flex flex-col gap-y-3 flex-1">
+                        <p className="font-poppins text-body-m text-body leading-6 tracking-wide">Delivery Gallery</p>
+                        {delivery_proofs.length === 0 ? (
+                            <p className="font-poppins text-body-xs text-gray-200">No delivery photos yet.</p>
+                        ) : (
+                            <div className="flex -space-x-4">
+                                {delivery_proofs.slice(0, 3).map((proof) => (
+                                    <button
+                                        key={proof.id}
+                                        type="button"
+                                        onClick={() => {
+                                            setProofStartIndex(delivery_proofs.indexOf(proof))
+                                            setProofOpen(true)
+                                        }}
+                                        aria-label="View delivery photo"
+                                        className="relative w-20 h-20 rounded-xl overflow-hidden border-2 border-white shadow-sm hover:opacity-90 transition-opacity"
+                                    >
+                                        <Image src={proof.secure_url} alt="Delivery proof" fill sizes="80px" className="object-cover" />
+                                    </button>
+                                ))}
+                            </div>
+                        )}
+                    </div>
+                </div>
                 </div>
             )}
 
+            <PackagingProofLightbox
+                proofs={delivery_proofs}
+                startIndex={proofStartIndex}
+                open={proofOpen}
+                onClose={() => setProofOpen(false)}
+            />
+            
+            {status === 'completed' && (
+                <RequestReviewModal
+                    open={reviewOpen}
+                    onClose={() => setReviewOpen(false)}
+                    artworkTitle={order_item?.artwork_title ?? 'this artwork'}
+                />
+            )}
+
+            <PackagingProofLightbox proofs={delivery_proofs} open={proofOpen} onClose={() => setProofOpen(false)} />
         </div>
     )
 }
 
-export default OrderDetails
+function ReadOnlyField({ label, value, valueClassName }: { label: string; value: string; valueClassName?: string }) {
+  return (
+    <div className="flex flex-col gap-y-2">
+      <label className="font-poppins text-body-xxs text-body tracking-wide">{label}</label>
+      <Input value={value} disabled className={valueClassName} />
+    </div>
+  )
+}

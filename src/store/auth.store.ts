@@ -64,5 +64,6 @@ export const useAuthStore = create<AuthState & AuthActions>()(
 )
 
 export const selectUser = (s: AuthState & AuthActions) => s.user
+export const selectHasSellerAccount = (s: AuthState & AuthActions) => s.user?.role === 'ARTIST'
 export const selectIsAuthenticated = (s: AuthState & AuthActions) => s.user !== null
 export const selectIsHydrated = (s: AuthState & AuthActions) => s.isHydrated

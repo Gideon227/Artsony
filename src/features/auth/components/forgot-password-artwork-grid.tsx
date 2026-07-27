@@ -3,46 +3,17 @@
 import Image from 'next/image'
 import { useState } from 'react'
 import { cn } from '@/lib/utils'
+import { useRandomShowcaseArtworks, type ShowcaseArtwork } from '@/features/auth/hooks/use-random-showcase-artworks'
 
-const artworks = [
-  {
-    id: '1',
-    src: "/images/purple-circle.png",
-    alt: 'Neon circle',
-    artist: { name: 'Amara Obi', avatar: '/images/image-avatar.svg' },
-    cell: 'col-start-1 row-start-1',
-  },
-  {
-    id: '2',
-    src: "/images/geometric.png",
-    alt: 'Abstract geometry',
-    artist: { name: 'Tunde Fashola', avatar: '/images/image-avatar.svg' },
-    cell: 'col-start-2 row-start-1',
-  },
-  {
-    id: '3',
-    src: "/images/mountain.png",
-    alt: 'Mountain landscape',
-    artist: { name: 'Kemi Adeyemi', avatar: '/images/image-avatar.svg' },
-    cell: 'col-span-2 row-start-2', 
-  },
-  {
-    id: '4',
-    src: "/images/purple-cloud.png",
-    alt: 'Purple cloud',
-    artist: { name: 'Uzochukwu', avatar: '/images/image-avatar.svg' },
-    cell: 'col-start-1 row-start-3', 
-  },
-  {
-    id: '5',
-    src: "/images/abstract-face.png",
-    alt: 'Colorful portrait',
-    artist: { name: 'Zara Bello', avatar: '/images/image-avatar.svg' },
-    cell: 'col-start-2 row-start-3', 
-  },
+const CELLS = [
+  'col-start-1 row-start-1',
+  'col-start-2 row-start-1',
+  'col-span-2 row-start-2',
+  'col-start-1 row-start-3',
+  'col-start-2 row-start-3',
 ]
 
-function ArtworkCard({ src, alt, artist, cell }: (typeof artworks)[number]) {
+function ArtworkCard({ src, alt, artist, cell }: ShowcaseArtwork & { cell: string }) {
   const [hovered, setHovered] = useState(false)
 
   return (
@@ -84,11 +55,18 @@ function ArtworkCard({ src, alt, artist, cell }: (typeof artworks)[number]) {
 }
 
 export function ForgotPasswordArtworkGrid() {
+  const { artworks, isLoading } = useRandomShowcaseArtworks(CELLS.length)
+
   return (
     <div className="grid h-full w-full gap-4 grid-cols-2 grid-rows-[1fr_1.2fr_1fr]">
-      {artworks.map((art) => (
-        <ArtworkCard key={art.id} {...art} />
-      ))}
+      {isLoading
+        ? CELLS.map((cell, i) => (
+            <div key={i} className={cn('rounded-[32px] bg-gray-100 animate-pulse w-full h-full', cell)} />
+          ))
+        : artworks.map((art, i) => (
+            <ArtworkCard key={art.id} {...art} cell={CELLS[i] ?? ''} />
+          ))
+      }
     </div>
   )
 }

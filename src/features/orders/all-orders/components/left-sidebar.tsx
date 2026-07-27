@@ -1,51 +1,102 @@
 'use client'
-import { Input } from '@/components';
-import { ArrowLeftIcon } from 'lucide-react';
-import Image from 'next/image';
+
+import Image from 'next/image'
 import React from 'react'
+import clsx from 'clsx'
 
 interface NavContentProps {
-    id: string;
-    icon: string;
-    text: string;
-    isSelected: boolean;
-    notification: number;
+  id: string
+  icon: string
+  text: string
+  isSelected: boolean
+  notification: number
 }
 
+const navContent: NavContentProps[] = [
+    {
+        id: 'all-orders',
+        icon: '/icons/orders/all-orders.svg',
+        text: 'All Orders',
+        isSelected: true,
+        notification: 0,
+    },
+    {
+        id: 'live-orders',
+        icon: '/icons/orders/live-orders.svg',
+        text: 'Live Orders',
+        isSelected: false,
+        notification: 0,
+    },
+    {
+        id: 'pending-orders',
+        icon: '/icons/orders/pending-orders.svg',
+        text: 'Pending Orders',
+        isSelected: false,
+        notification: 0,
+    },
+    {
+        id: 'completed-orders',
+        icon: '/icons/orders/completed-orders.svg',
+        text: 'Completed Orders',
+        isSelected: false,
+        notification: 0,
+    },
+    {
+        id: 'canceled-orders',
+        icon: '/icons/orders/cancelled-orders.svg',
+        text: 'Canceled Orders',
+        isSelected: false,
+        notification: 0,
+    },
+]
 
 const LeftSideBarComp = () => {
-    const navContent: NavContentProps[] = [
-        { id: 'all-orders', icon: '/icons/', text: 'All Orders', isSelected: false, notification: 0 },
-        { id: 'live-orders', icon: '/icons/', text: 'Live Orders', isSelected: false, notification: 0 },
-        { id: 'pending-orders', icon: '/icons/', text: 'Pending Orders', isSelected: false, notification: 0 },
-        { id: 'completed-orders', icon: '/icons/', text: 'Completed Orders', isSelected: false, notification: 0 },
-        { id: 'canceled-orders', icon: '/icons/', text: 'Canceled Orders', isSelected: false, notification: 0 },
-    ]
-
     return (
-        <div className='bg-successful-100 px-4 pb-4 pt-6 flex flex-col gap-y-8 items-center justify-center'>
-            <div className='flex items-center gap-x-4 '>
-                <span className='w-10 h-10 border-gray-50 rounded-full items-center justify-center'>
-                    <ArrowLeftIcon color='#525965' size={16} />
-                </span>
+        <aside className="w-1/4 min-h-screen bg-[#F5F7F8] rounded-r-2XL px-4 py-8">
+            <h2 className="font-raleway text-H4 font-semibold leading-none text-primary-500">
+                Order Management
+            </h2>
 
-                <h6 className='font-raleway font-semibold text-h6 text-body leading-8 tracking-wide'>Order Management</h6>
-            </div>
+            <div className="mt-10 flex flex-col gap-4">
+                {navContent.map((nav) => (
+                    <button
+                        key={nav.id}
+                        className={clsx(
+                        'w-full h-[76px] rounded-2xl px-6 flex items-center flex-1 gap-x-4 transition-all duration-200',
+                        nav.isSelected
+                            ? 'border-2 border-gray-50 outline outline-offset-2 outline-primary-500 bg-[#FFF1ED]'
+                            : 'border-2 border-transparent hover:bg-white'
+                        )}
+                    >
+                        <Image
+                            src={nav.icon}
+                            alt={nav.text}
+                            width={22}
+                            height={22}
+                        />
 
-            <div className='border-t border-gray-50 flex flex-col gap-y-4 pt-4'>
-                {navContent?.map((nav) => (
-                    <div key={nav.id} className={`flex group items-center justify-center border rounded-m py-6 px-4 gap-x-4 bg-transparent border-transparent group-hover:bg-primary-50 group-focus-visible:ring-2 group-focus-visible:ring-white group-focus-visible:border-gray-50 `}>
-                        <Image src={nav.icon} width={19} height={18} alt='icons' />
-                        <p className='font-poppins text-body-s leading-6 text-body group-hover-text-primary-500 '>{nav.text}</p>
-                        <span className='border rounded-s bg-primary-500 p-1 items-center justify-center'>
-                            <p className='text-white text-body-xs'>
-                                {nav.notification > 0 && String(nav.notification)}
-                            </p>
+                        <span
+                            className={clsx(
+                            'font-poppins text-[22px] leading-none flex-1',
+                            nav.isSelected
+                                ? 'text-primary-500'
+                                : 'text-[#525965]'
+                            )}
+                        >
+                            {nav.text}
                         </span>
-                    </div>
+
+                        {nav.notification > 0 && (
+                            <div className="min-w-[28px] h-[28px] rounded-lg bg-primary-500 flex items-center justify-center px-2">
+                                <span className="text-white text-sm font-medium">
+                                {String(nav.notification).padStart(2, '0')}
+                                </span>
+                            </div>
+                        )}
+                    </button>
                 ))}
             </div>
-        </div>
+        </aside>
     )
 }
 

@@ -18,7 +18,7 @@ const SESSION_COOKIE  = 'artsony_session'   // non-httpOnly, set by backend + cl
 const ONBOARDED_COOKIE = 'artsony_onboarded' // non-httpOnly, set by backend + client
 const VISITED_COOKIE  = 'artsony_visited'   // set by this middleware
 
-const PUBLIC_AUTH_PATHS = ['/login', '/signup', '/forgot-password', '/reset-password']
+const PUBLIC_AUTH_PATHS = ['/login', '/signup', '/forgot-password', '/reset-password', '/oauth/callback']
 
 function isPublicAuth(p: string) {
   return PUBLIC_AUTH_PATHS.some((r) => p === r || p.startsWith(r + '/'))

@@ -6,11 +6,11 @@ import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { MoveLeft } from 'lucide-react'
 import { z } from 'zod'
 
 import { Input } from '@/components/ui/input'
 import { LoginArtworkGrid } from '@/features/auth/components/login-artwork-grid'
+import { MobileAuthHero } from '@/features/auth/components/mobile-auth-hero'
 import { useLogin } from '@/hooks/use-auth-mutations'
 import { loginSchema, type LoginInput } from "@/features/auth/schemas/login.schema";
 
@@ -31,38 +31,21 @@ export default function LoginPage() {
   const onSubmit = (data: LoginInput) => login(data)
 
   return (
-    <main className="min-h-screen gap-x-[132px] w-full bg-white flex flex-col lg:flex-row overflow-x-hidden p-16">
+    <main className="min-h-screen gap-x-[132px] w-full bg-white flex flex-col lg:flex-row overflow-x-hidden p-4 md:p-16">
 
       {/* Desktop: artwork grid */}
       <section className="hidden lg:block w-1/2 h-screen sticky top-16">
         <LoginArtworkGrid />
       </section>
 
-      {/* Mobile: background */}
-      <div className="lg:hidden absolute inset-0 h-[40vh] w-full z-0">
-        <Image src="/images/mobile-login-bg.jpg" alt="Artsony" fill priority className="object-cover" />
-        <div className="absolute inset-0 bg-black/20" />
-        <div className="relative z-10 p-6 flex justify-between items-center">
-          <button
-            type="button"
-            onClick={() => router.back()}
-            aria-label="Go back"
-            className="w-10 h-10 rounded-full border border-white/50 flex items-center justify-center text-white backdrop-blur-sm"
-          >
-            <MoveLeft className="w-5 h-5" />
-          </button>
-          <div className="flex items-center gap-2 bg-white/20 backdrop-blur-md px-3 py-1.5 rounded-full border border-white/30">
-            <div className="w-6 h-6 rounded-full bg-neutral-300 overflow-hidden relative" />
-            <span className="text-white text-xs font-medium">Artist</span>
-          </div>
-        </div>
-      </div>
+      {/* Mobile: hero */}
+      <MobileAuthHero onBack={() => router.back()} />
 
       {/* Form panel */}
-      <section className="relative z-10 flex-1 flex flex-col items-center mt-[30vh] lg:mt-0">
-        <div className="w-full bg-white rounded-t-[40px] lg:rounded-none flex flex-col justify-between h-full pt-12 lg:pt-0 px-6 lg:px-0">
+      <section className="max-lg:absolute max-lg:left-4 max-lg:bottom-6 relative z-10 flex-1 flex flex-col items-center mt-[30vh] lg:mt-0">
+        <div className="w-full bg-white rounded-xl lg:rounded-none flex flex-col justify-between h-full py-12 lg:py-0 px-6 lg:px-0">
 
-          <div className="flex justify-center mb-auto">
+          <div style={{ marginBottom: 80 }} className="flex justify-center mb-20">
             <Image src="/icons/logo.svg" alt="Artsony" width={180} height={48} className="h-auto" priority />
           </div>
 
@@ -105,7 +88,7 @@ export default function LoginPage() {
               <button
                 type="submit"
                 disabled={isPending}
-                className="w-full h-[52px] mt-4 bg-primary-500 hover:bg-primary-600 active:scale-[0.98] text-white rounded-full font-medium text-[15px] transition-all flex items-center justify-center disabled:opacity-70 disabled:pointer-events-none"
+                className="w-full h-[52px] cursor-pointer mt-4 bg-primary-500 hover:bg-primary-600 active:scale-[0.98] text-white rounded-full font-medium text-[15px] transition-all flex items-center justify-center disabled:opacity-70 disabled:pointer-events-none"
               >
                 {isPending
                   ? <span className="flex items-center gap-2"><span className="animate-spin h-5 w-5 border-2 border-white border-t-transparent rounded-full inline-block" />Signing in…</span>
@@ -128,7 +111,8 @@ export default function LoginPage() {
               {(['google', 'apple', 'facebook'] as const).map((provider) => (
                 <a
                   key={provider}
-                  href={`${process.env.NEXT_PUBLIC_API_URL}/api/auth/oauth/${provider}`}
+                  // href={`${process.env.NEXT_PUBLIC_API_URL}/api/auth/oauth/${provider}`}
+                  href='/login/google'
                   className="w-10 h-10 rounded-full border border-secondary-400 flex items-center justify-center hover:bg-gray-50 transition-colors"
                   aria-label={`Sign in with ${provider}`}
                 >

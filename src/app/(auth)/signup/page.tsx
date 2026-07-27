@@ -1,22 +1,38 @@
 'use client'
 
-import React from 'react'
+import React, { useState } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
-import { useRouter } from 'next/navigation'
 import { useForm, Controller } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { MoveLeft } from 'lucide-react'
+import { Mail } from 'lucide-react'
 
 import { Input } from '@/components/ui/input'
 import { Button, Checkbox } from '@/components'
 import { ArtworkGrid } from '@/features/auth/components/artwork-grid'
+import { MobileAuthHero } from '@/features/auth/components/mobile-auth-hero'
 import { useRegister } from '@/hooks/use-auth-mutations'
 import { signUpSchema, type SignUpInput } from '@/features/auth/schemas/signup.schema'
+import { cn } from '@/lib/utils'
+
+const OAUTH_PROVIDERS = ['google', 'apple', 'facebook'] as const
+const OAUTH_LABELS: Record<(typeof OAUTH_PROVIDERS)[number], string> = {
+  google: 'Sign up with Google',
+  apple: 'Sign up with Apple ID',
+  facebook: 'Sign up with Facebook',
+}
+const OAUTH_ICONS: Record<(typeof OAUTH_PROVIDERS)[number], string> = {
+  google: '/socials/google.svg',
+  apple: '/socials/apple.svg',
+  facebook: '/socials/facebook-blue.svg'
+}
+
 
 export default function SignUpPage() {
-  const router = useRouter()
   const { mutate: registerUser, isPending } = useRegister()
+
+  // Mobile only — desktop always shows the full form, no step split.
+  const [mobileStep, setMobileStep] = useState<'choose' | 'form'>('choose')
 
   const {
     register,
@@ -42,42 +58,52 @@ export default function SignUpPage() {
   }
 
   return (
-    <main className="min-h-screen gap-x-[132px] w-full bg-white flex flex-col lg:flex-row overflow-x-hidden p-16">
+    <main className="min-h-screen gap-x-[132px] w-full bg-white flex flex-col lg:flex-row overflow-x-hidden p-4 md:p-16">
 
       {/* Desktop: artwork grid */}
       <section className="hidden lg:block w-1/2 min-h-screen sticky top-0">
         <ArtworkGrid />
       </section>
 
-      {/* Mobile: background image */}
-      <div className="lg:hidden absolute inset-0 h-[40vh] w-full z-0">
-        <Image src="/images/mobile-bg-grunge.jpg" alt="BG" fill className="object-cover" priority />
-        <div className="absolute inset-0 bg-black/20" />
-        <div className="relative z-10 p-6 flex justify-between items-center">
-          <button
-            type="button"
-            onClick={() => router.back()}
-            aria-label="Go back"
-            className="w-10 h-10 rounded-full border border-white/50 flex items-center justify-center text-white backdrop-blur-sm"
-          >
-            <MoveLeft className="w-5 h-5" />
-          </button>
-          <div className="flex items-center gap-2 bg-white/20 backdrop-blur-md px-3 py-1.5 rounded-full border border-white/30">
-            <div className="w-6 h-6 rounded-full overflow-hidden relative bg-neutral-300" />
-            <span className="text-white text-xs font-medium">Artist</span>
-          </div>
-        </div>
-      </div>
+      <MobileAuthHero onBack={mobileStep === 'form' ? () => setMobileStep('choose') : undefined} />
 
       {/* Form panel */}
-      <section className="relative z-10 flex-1 flex flex-col items-center">
-        <div className="w-full h-full flex-1 bg-white rounded-t-[40px] lg:rounded-none flex flex-col justify-between">
+      <section style={{ bottom: 23 }} className="max-lg:absolute relative z-10 flex-1 flex flex-col items-center mt-[45vh] lg:mt-0">
+        <div className="w-full bg-white rounded-xl lg:rounded-none flex flex-col justify-between h-full py-12 lg:py-0 px-6 lg:px-0">
 
-          <div className="flex justify-center mb-auto">
+          <div className="flex justify-center" style={{ marginBottom: 48 }}>
             <Image src="/icons/logo.svg" alt="ARTSONY" width={180} height={48} className="h-auto" priority />
           </div>
 
-          <div className="w-full space-y-6">
+          {/* MOBILE — step 1: choose sign up method */}
+          <div className={cn('lg:hidden w-full space-y-8', mobileStep !== 'choose' && 'hidden')}>
+            <p className="text-center text-sm text-neutral-500 font-poppins px-2">
+              Welcome to Artsony , please choose a sign up option
+            </p>
+            <div className="space-y-4">
+              {OAUTH_PROVIDERS.map((provider) => (
+                <a
+                  key={provider}
+                  href={`${process.env.NEXT_PUBLIC_API_URL}/api/auth/oauth/${provider}`}
+                  className="w-full h-12 rounded-2xl border border-gray-50 flex items-center justify-start gap-3 py-3 px-6 hover:bg-gray-50 transition-colors"
+                >
+                  <Image src={OAUTH_ICONS[provider]} alt="" width={20} height={20} />
+                  <span className="text-xs font-poppins text-text-disabled text-center leading-4 flex-1 w-full">{OAUTH_LABELS[provider]}</span>
+                </a>
+              ))}
+              <button
+                type="button"
+                onClick={() => setMobileStep('form')}
+                className="w-full h-12 rounded-2xl border border-gray-50 flex items-center justify-start gap-3 py-3 px-6 hover:bg-gray-50 transition-colors"
+              >
+                <Mail className="w-5 h-5 text-neutral-700" />
+                <span className="text-xs font-poppins text-text-disabled text-center leading-4 flex-1 w-full">Sign up with Email & Password</span>
+              </button>
+            </div>
+          </div>
+
+          {/* Step 2 (mobile) / always (desktop): email & password form */}
+          <div className={cn('w-full space-y-6', mobileStep !== 'form' && 'hidden lg:block')}>
             <h1 className="font-raleway font-medium text-gray-500 text-[32px] tracking-wide leading-10">
               Hello
             </h1>
@@ -171,14 +197,24 @@ export default function SignUpPage() {
                 Log in now
               </Link>
             </p>
+
+            {/* Mobile only — desktop gets its own forgot-password link below,
+                alongside the OAuth icon row */}
+            <Link
+              href="/forgot-password"
+              className="lg:hidden block text-center text-primary-500 font-medium text-sm hover:underline"
+            >
+              Forgot Password? Reset
+            </Link>
           </div>
 
-          <div className="mt-10 text-center space-y-4">
+          {/* Desktop only — mobile handles OAuth as full-width buttons in step 1 */}
+          <div className="hidden lg:block mt-10 text-center space-y-4">
             <p className="text-sm font-poppins font-medium text-black tracking-wide leading-6">
               Or signup with
             </p>
             <div className="flex justify-center gap-6">
-              {(['google', 'apple', 'facebook'] as const).map((provider) => (
+              {OAUTH_PROVIDERS.map((provider) => (
                 <a
                   key={provider}
                   href={`${process.env.NEXT_PUBLIC_API_URL}/api/auth/oauth/${provider}`}

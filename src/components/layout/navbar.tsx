@@ -8,6 +8,8 @@ import { motion, AnimatePresence } from "framer-motion"; // Added for animations
 import { cn } from "@/lib/utils";
 import { SearchInput } from "../ui/search-input";
 import UserMenuOverlay from "@/features/home/components/user-menu-overlay";
+import { Input } from "../ui/input";
+import NotificationModal from "@/features/notification/components/notification-modal";
 
 const IconButton = ({
   icon,
@@ -34,7 +36,8 @@ const IconButton = ({
 
 export function Navbar({ hideSearchBar = false }: { hideSearchBar?: boolean }) {
   const router = useRouter();
-  const [isMenuOpen, setIsMenuOpen] = useState(false); // State to control menu
+  const [isMenuOpen, setIsMenuOpen] = useState(false); 
+  const [isNotificationOpen, setIsNotificationOpen] = useState(false)
 
   const handleSearch = (query: string) => {
     const trimmed = query.trim();
@@ -45,32 +48,34 @@ export function Navbar({ hideSearchBar = false }: { hideSearchBar?: boolean }) {
   return (
     <>
       <header className="w-full bg-white border-b-2 border-gray-50 sticky top-0 z-50">
-        <div className="max-w-[1440px] mx-auto px-4 md:px-6 lg:px-8 h-[72px] flex items-center justify-between">
+        <div className="container mx-auto px-4 md:px-6 lg:px-8 py-3 h-[72px] flex items-center justify-between">
           
           {/* LEFT SECTION */}
-          <div className="flex items-center gap-8 shrink-0">
+          <div className="flex items-center gap-4 shrink-0">
             <Link href="/" className="shrink-0 flex items-center pt-1">
               <Image src="/home/logo-text.svg" alt="Artsony Logo" width={136} height={20} priority className="h-4 w-auto md:h-5" />
             </Link>
             <nav className="hidden md:flex items-center gap-2 font-medium font-poppins leading-6 text-[16px]">
-              <Link href="/discover" className="text-gray-400 hover:text-primary-500 transition-colors p-2 tracking-wide">Discover</Link>
-              <Link href="/shop" className="text-gray-400 hover:text-primary-500 transition-colors p-2 tracking-wide">Shop</Link>
+              <Link href="/discover" className="text-body hover:text-primary-500 transition-colors p-2 tracking-wide">Discover</Link>
+              <Link href="/shop" className="text-body hover:text-primary-500 transition-colors p-2 tracking-wide">Shop</Link>
             </nav>
           </div>
 
           {/* MIDDLE SECTION */}
           {!hideSearchBar && (
-            <div className="hidden md:flex flex-1 max-w-[600px] mx-8">
+            <div className="hidden md:flex flex-1 max-w-[564px]">
               <SearchInput placeholder="Find your next visual obsession..." leftIconPath='/home/magnifier.svg' onSearch={handleSearch} />
             </div>
           )}
 
           {/* RIGHT SECTION */}
-          <div className="flex items-center gap-3 md:gap-4 shrink-0">
+          <div className="flex items-center gap-2 shrink-0">
             <div className="flex items-center gap-2 md:gap-3">
               <IconButton icon='/home/upload-square.svg' hideOnMobile />
-              <IconButton icon='/home/delivery.svg' hideOnMobile />
-              <Link href="/notifications"><IconButton icon='/home/notification-bell.svg' /></Link>
+              <Link href='/'>
+                <IconButton icon='/home/delivery.svg' hideOnMobile />
+              </Link>
+              <IconButton onClick={() => setIsNotificationOpen(prev => !prev)} icon='/home/notification-bell.svg' />
               <Link href='/cart'>
                 <IconButton icon='/home/cart.svg' hideOnMobile />
               </Link>
@@ -89,8 +94,6 @@ export function Navbar({ hideSearchBar = false }: { hideSearchBar?: boolean }) {
               </div>
               <Image src='/icons/arrow-down.svg' width={14} height={8} alt="arrow down" />
             </button>
-
-            <IconButton icon='/home/hamburger.svg' className="md:hidden" />
           </div>
         </div>
       </header>
@@ -104,8 +107,8 @@ export function Navbar({ hideSearchBar = false }: { hideSearchBar?: boolean }) {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              onClick={() => setIsMenuOpen(false)} // Close when clicking outside
-              className="fixed inset-0 bg-black/40 z-[60] backdrop-blur-[2px]"
+              onClick={() => setIsMenuOpen(false)} 
+              className="fixed inset-0 bg-black/40 z-60 backdrop-blur-[2px]"
             />
 
             {/* 2. Menu Component (Floating over the backdrop) */}
@@ -117,6 +120,35 @@ export function Navbar({ hideSearchBar = false }: { hideSearchBar?: boolean }) {
               className="fixed top-20 right-6 md:right-16 z-[70]"
             >
               <UserMenuOverlay />
+            </motion.div>
+          </>
+        )}
+
+        {isNotificationOpen && (
+          <>
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setIsNotificationOpen(false)}
+              className="fixed inset-0 bg-black/40 z-[60] backdrop-blur-[2px]"
+            />
+
+            {/* UPDATED WRAPPER */}
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95, y: -20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: -20 }}
+              transition={{ type: "spring", damping: 25, stiffness: 300 }}
+              className={cn(
+                "fixed z-[70]",
+                // MOBILE: Center perfectly in the middle of the screen
+                "max-md:inset-0 max-md:flex max-md:items-center max-md:justify-center",
+                // DESKTOP: Position tightly under the 72px navbar, close to the bell icon 
+                "md:top-[76px] md:right-20 lg:right-32"
+              )}
+            >
+              <NotificationModal />
             </motion.div>
           </>
         )}

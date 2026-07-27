@@ -3,39 +3,16 @@
 import Image from 'next/image'
 import { useState } from 'react'
 import { cn } from '@/lib/utils'
+import { useRandomShowcaseArtworks, type ShowcaseArtwork } from '@/features/auth/hooks/use-random-showcase-artworks'
 
-const loginArtworks = [
-  {
-    id: '1',
-    src: "/images/masonry-tree.png",
-    alt: 'Tree branches',
-    artist: { name: 'Amara Obi', avatar: '/images/image-avatar.svg' },
-    cell: 'col-start-1 row-start-1 row-span-2',
-  },
-  {
-    id: '2',
-    src: "/images/masonry-pottery.png",
-    alt: 'Ceramic pottery',
-    artist: { name: 'Kemi Adeyemi', avatar: '/images/image-avatar.svg' },
-    cell: 'col-start-2 row-start-1',
-  },
-  {
-    id: '3',
-    src: "/images/blossom.png",
-    alt: 'Pink blossom trees',
-    artist: { name: 'Tunde Fashola', avatar: '/images/image-avatar.svg' },
-    cell: 'col-start-2 row-start-2 row-span-2', 
-  },
-  {
-    id: '4',
-    src: "/images/hands.png",
-    alt: 'Painted hands',
-    artist: { name: 'Uzochukwu', avatar: '/images/image-avatar.svg' },
-    cell: 'col-start-1 row-start-3', 
-  },
+const CELLS = [
+  'col-start-1 row-start-1 row-span-2',
+  'col-start-2 row-start-1',
+  'col-start-2 row-start-2 row-span-2',
+  'col-start-1 row-start-3',
 ]
 
-function ArtworkCard({ src, alt, artist, cell }: (typeof loginArtworks)[number]) {
+function ArtworkCard({ src, alt, artist, cell }: ShowcaseArtwork & { cell: string }) {
   const [hovered, setHovered] = useState(false)
 
   return (
@@ -83,11 +60,18 @@ function ArtworkCard({ src, alt, artist, cell }: (typeof loginArtworks)[number])
 }
 
 export function LoginArtworkGrid() {
+  const { artworks, isLoading } = useRandomShowcaseArtworks(CELLS.length)
+
   return (
     <div className="grid h-full w-full gap-4 grid-cols-2 grid-rows-[1fr_0.5fr_1fr]">
-      {loginArtworks.map((art) => (
-        <ArtworkCard key={art.id} {...art} />
-      ))}
+      {isLoading
+        ? CELLS.map((cell, i) => (
+            <div key={i} className={cn('rounded-[32px] bg-gray-100 animate-pulse w-full h-full', cell)} />
+          ))
+        : artworks.map((art, i) => (
+            <ArtworkCard key={art.id} {...art} cell={CELLS[i] ?? ''} />
+          ))
+      }
     </div>
   )
 }

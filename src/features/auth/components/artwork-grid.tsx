@@ -3,42 +3,17 @@
 import Image from 'next/image'
 import { useState } from 'react'
 import { cn } from '@/lib/utils'
+import { useRandomShowcaseArtworks, type ShowcaseArtwork } from '@/features/auth/hooks/use-random-showcase-artworks'
 
-const artworks = [
-  {
-    id: '1',
-    src: "/images/statue.png",
-    alt: 'Statue artwork',
-    artist: { name: 'Amara Obi', avatar: '/images/image-avatar.svg' },
-    cell: 'col-start-1 row-start-1',
-  },
-  {
-    id: '2',
-    src: "/images/street.png",
-    alt: 'Street mural',
-    artist: { name: 'Tunde Fashola', avatar: '/images/image-avatar.svg' },
-    cell: 'col-start-1 row-start-2',
-  },
-  {
-    id: '3',
-    src: "/images/abstract-blue.png",
-    alt: 'Blue abstract painting',
-    artist: { name: 'Kemi Adeyemi', avatar: '/images/image-avatar.svg' },
-    cell: 'col-start-2 row-start-1 row-span-2', 
-  },
-  {
-    id: '4',
-    src: "/images/chickens.png",
-    alt: 'Chicken composition',
-    artist: { name: 'Uzochukwu', avatar: '/images/image-avatar.svg' },
-    cell: 'col-span-2 row-start-3', 
-    alwaysOverlay: false,
-  },
+const CELLS = [
+  'col-start-1 row-start-1',
+  'col-start-1 row-start-2',
+  'col-start-2 row-start-1 row-span-2',
+  'col-span-2 row-start-3',
 ]
 
-function ArtworkCard({ src, alt, artist, cell, alwaysOverlay = false }: (typeof artworks)[number]) {
+function ArtworkCard({ src, alt, artist, cell }: ShowcaseArtwork & { cell: string }) {
   const [hovered, setHovered] = useState(false)
-  const showOverlay = hovered || alwaysOverlay
 
   return (
     <div
@@ -61,7 +36,7 @@ function ArtworkCard({ src, alt, artist, cell, alwaysOverlay = false }: (typeof 
       <div
         className={cn(
           'absolute inset-0 bg-black/40 transition-opacity duration-300',
-          showOverlay ? 'opacity-100' : 'opacity-0'
+          hovered ? 'opacity-100' : 'opacity-0'
         )}
       />
 
@@ -69,7 +44,7 @@ function ArtworkCard({ src, alt, artist, cell, alwaysOverlay = false }: (typeof 
       <div
         className={cn(
           'absolute bottom-6 left-6 flex items-center gap-3 transition-all duration-500',
-          showOverlay ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'
+          hovered ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'
         )}
       >
         <div className="relative h-10 w-10 shrink-0 overflow-hidden rounded-full border-2 border-white/50">
@@ -85,11 +60,18 @@ function ArtworkCard({ src, alt, artist, cell, alwaysOverlay = false }: (typeof 
 }
 
 export function ArtworkGrid() {
+  const { artworks, isLoading } = useRandomShowcaseArtworks(CELLS.length)
+
   return (
     <div className="grid h-full w-full gap-4 grid-cols-2 grid-rows-[1.2fr_1.2fr_1fr]">
-      {artworks.map((art) => (
-        <ArtworkCard key={art.id} {...art} />
-      ))}
+      {isLoading
+        ? CELLS.map((cell, i) => (
+            <div key={i} className={cn('rounded-[32px] bg-gray-100 animate-pulse w-full h-full', cell)} />
+          ))
+        : artworks.map((art, i) => (
+            <ArtworkCard key={art.id} {...art} cell={CELLS[i] ?? ''} />
+          ))
+      }
     </div>
   )
 }

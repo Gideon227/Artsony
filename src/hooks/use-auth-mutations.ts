@@ -13,9 +13,9 @@ import { QUERY_KEYS, STALE_TIMES } from '@/constants'
 // after a client-side login — without waiting for a page reload.
 
 const COOKIE_BASE = `path=/; SameSite=Strict${process.env.NODE_ENV === 'production' ? '; Secure' : ''}`
-const ONE_YEAR    = 365 * 24 * 60 * 60
+const ONE_YEAR = 365 * 24 * 60 * 60
 
-function setClientCookie(name: string, value: string, maxAge = ONE_YEAR) {
+export function setClientCookie(name: string, value: string, maxAge = ONE_YEAR) {
   document.cookie = `${name}=${value}; max-age=${maxAge}; ${COOKIE_BASE}`
 }
 

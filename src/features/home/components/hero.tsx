@@ -1,57 +1,113 @@
 'use client'
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ChevronsRight } from 'lucide-react';
 import Image from 'next/image';
+import { useHeroArtworks } from '@/hooks/use-artwork';
+import type { HeroArtwork } from '../types';
 
-interface SlideData {
+const HERO_SLIDE_COUNT = 5;
+
+interface HeroSlide {
   id: string;
   image: string;
   title: React.ReactNode;
   artistName: string;
   artistAvatar: string;
-  quote: string;
+  bio: string;
 }
 
-const slides: SlideData[] = [
+// Shown whenever there aren't yet enough qualifying featured artworks to fill
+// every hero slot — early on that's most/all of them. As real artworks pick
+// up views, likes, and sales, GET /api/artworks/featured returns more real
+// slides and these get displaced automatically; nothing here needs to change
+// when that happens.
+const PLACEHOLDER_SLIDES: HeroSlide[] = [
   {
-    id: '1',
+    id: 'placeholder-1',
     image: '/images/mural-bg.jpg',
-    title: <>Buy What You Love Sell What You Make.</>,
+    title: <>Buy What You Love.<br />Sell What You Make.</>,
     artistName: 'Ivan Kovačević',
     artistAvatar: '/images/image-avatar.svg',
-    quote: "I paint like I'm remembering something I've never seen before.",
+    bio: "I paint like I'm remembering something I've never seen before.",
   },
   {
-    id: '2',
+    id: 'placeholder-2',
     image: '/images/wall-art.jpg',
     title: <>Where Creative Souls Connect.</>,
     artistName: 'Ivan Kovačević',
     artistAvatar: '/images/image-avatar.svg',
-    quote: 'Art is the only way to run away without leaving home.',
-  }
+    bio: 'Art is the only way to run away without leaving home.',
+  },
 ];
+
+function toHeroSlide(artwork: HeroArtwork): HeroSlide | null {
+  // No thumbnail means nothing to show behind the slide — skip rather than
+  // rendering a broken/blank hero background.
+  if (!artwork.thumbnail_url) return null;
+
+  return {
+    id: artwork.id,
+    image: artwork.thumbnail_url,
+    title: artwork.title,
+    artistName: artwork.creator.username ?? artwork.creator.display_name ?? 'Artsony Artist',
+    artistAvatar: artwork.creator.avatar_url ?? '/images/image-avatar.svg',
+    bio: artwork.creator.bio ?? 'Discover more from this artist on Artsony.',
+  };
+}
+
+export function buildSlides(featured: HeroArtwork[] | undefined): HeroSlide[] {
+  const real = (featured ?? [])
+    .map(toHeroSlide)
+    .filter((slide): slide is HeroSlide => slide !== null);
+
+  if (real.length >= HERO_SLIDE_COUNT) return real.slice(0, HERO_SLIDE_COUNT);
+
+  const needed = HERO_SLIDE_COUNT - real.length;
+  const padding = Array.from(
+    { length: needed },
+    (_, i) => PLACEHOLDER_SLIDES[i % PLACEHOLDER_SLIDES.length]!,
+  );
+
+  return [...real, ...padding];
+}
 
 export const HeroSection = () => {
   const [index, setIndex] = useState(0);
 
+  // Public, decorative data — a fetch failure should never block or error
+  // the hero, it should just fall back to placeholder slides.
+  const { data: featured, isError } = useHeroArtworks(HERO_SLIDE_COUNT);
+
+  useEffect(() => {
+    if (isError) {
+      console.error('[HeroSection] Failed to load featured artworks — showing placeholders');
+    }
+  }, [isError]);
+
+  const slides = useMemo(() => buildSlides(featured), [featured]);
+
+  useEffect(() => {
+    setIndex(0);
+  }, [slides]);
+
   const currentSlide = slides[index];
 
   useEffect(() => {
-    if (slides.length <= 1) return; 
+    if (slides.length <= 1) return;
 
     const timer = setInterval(() => {
       setIndex((prev) => (prev + 1) % slides.length);
     }, 6000);
-    
+
     return () => clearInterval(timer);
-  }, []);
+  }, [slides.length]);
 
   if (!currentSlide) return <div className="h-screen w-full bg-black" />;
 
   return (
-    <div className="relative h-screen w-full overflow-hidden bg-black">
+    <div className="relative h-[80vh] md:h-screen w-full overflow-hidden bg-black">
       <AnimatePresence mode="wait">
         <motion.div
           key={currentSlide.id}
@@ -88,7 +144,7 @@ export const HeroSection = () => {
             </motion.div>
 
             {/* Artist Info */}
-            <div className="absolute bottom-16 left-6 md:left-16 lg:left-24 max-w-2xl">
+            <div className="absolute bottom-8 left-8 max-w-2xl" style={{ bottom: 32, left: 32 }}>
               <motion.div 
                 initial={{ x: -20, opacity: 0 }}
                 animate={{ x: 0, opacity: 1 }}
@@ -116,7 +172,7 @@ export const HeroSection = () => {
                 transition={{ delay: 1, duration: 0.6 }}
                 className="text-white/80 text-[12px] md:text-[14px] font-medium italic leading-relaxed max-w-lg"
               >
-                “{currentSlide.quote}”
+                “{currentSlide.bio}”
               </motion.p>
             </div>
           </div>

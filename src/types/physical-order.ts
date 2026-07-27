@@ -1,5 +1,7 @@
 // ── Enums (mirrors backend commerce.types.ts — kept in sync manually) ────────
 
+import { OrderItem, OrderPartyProfile } from "./order"
+
 export type TimelineStatus =
   | 'ORDER_RECEIVED'
   | 'ORDER_RECEIVED_ACTIVE'
@@ -168,16 +170,21 @@ export type PaginatedPhysicalOrdersResponse = {
   has_prev: boolean
 }
 
+export type OrderItemPhysicalWithArtwork = OrderItemPhysical & {
+  order_item: OrderItem
+}
+
 export type PhysicalOrderDetailView = {
   physical: OrderItemPhysical
+  order_item: OrderItem
   timeline: OrderTimelineEvent[]
   delivery_proofs: DeliveryProof[]
   invoice: OrderInvoice | null
   receipt: OrderReceipt | null
   refund_requests: RefundRequest[]
   delivery_address: ShippingAddressSnapshot | null
-  buyer: { id: string; username: string; avatar_url: string | null } | null
-  seller: { id: string; username: string; avatar_url: string | null } | null
+  buyer: OrderPartyProfile | null
+  seller: OrderPartyProfile | null
 }
 
 // ── DTOs ──────────────────────────────────────────────────────────────────────

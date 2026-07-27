@@ -489,6 +489,7 @@ export type OrderPartyProfile = {
 /** Actual shape returned by GET /api/physical-orders/:physicalId */
 export type PhysicalOrderDetailView = {
   physical: OrderItemPhysical
+  order_item: OrderItem
   timeline: OrderTimelineEvent[]
   delivery_proofs: DeliveryProof[]
   invoice: OrderInvoice | null

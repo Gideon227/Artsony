@@ -1,73 +1,93 @@
-import { ChevronLeft, ChevronRight, MoreHorizontal } from 'lucide-react'
-import { cn } from '@/utils'
-import { Button } from './button'
+'use client'
 
-type PaginationProps = {
+import * as React from 'react'
+import { ArrowLeft, ArrowRight } from 'lucide-react'
+import { cn } from '@/lib/utils'
+
+export type PaginationProps = {
   page: number
   totalPages: number
   onPageChange: (page: number) => void
   className?: string
 }
 
-function getPageNumbers(current: number, total: number): (number | '…')[] {
-  if (total <= 7) return Array.from({ length: total }, (_, i) => i + 1)
-  if (current <= 4) return [1, 2, 3, 4, 5, '…', total]
-  if (current >= total - 3) return [1, '…', total - 4, total - 3, total - 2, total - 1, total]
-  return [1, '…', current - 1, current, current + 1, '…', total]
-}
+function getPageList(page: number, totalPages: number): (number | 'ellipsis')[] {
+    if (totalPages <= 6) return Array.from({ length: totalPages }, (_, i) => i + 1)
 
-export function Pagination({ page, totalPages, onPageChange, className }: PaginationProps) {
-  if (totalPages <= 1) return null
-  const pages = getPageNumbers(page, totalPages)
+    const pages = new Set<number>([1, 2, totalPages - 1, totalPages, page - 1, page, page + 1])
+    const sorted = [...pages].filter((p) => p >= 1 && p <= totalPages).sort((a, b) => a - b)
 
-  return (
-    <nav
-      role="navigation"
-      aria-label="Pagination"
-      className={cn('flex items-center gap-1', className)}
-    >
-      <Button
-        variant="outline"
-        size="icon-sm"
-        onClick={() => onPageChange(page - 1)}
-        disabled={page === 1}
-        aria-label="Previous page"
-      >
-        <ChevronLeft className="h-4 w-4" />
-      </Button>
+    const result: (number | 'ellipsis')[] = []
+    sorted?.forEach((p, i) => {
+      if (i > 0 && p - sorted[i - 1]! > 1) result.push('ellipsis')
+      result.push(p)
+    })
+    return result
+  }
 
-      {pages.map((p, i) =>
-        p === '…' ? (
-          <span
-            key={`ellipsis-${i}`}
-            className="flex h-8 w-8 items-center justify-center text-neutral-400"
-            aria-hidden="true"
-          >
-            <MoreHorizontal className="h-4 w-4" />
+  function Pagination({ page, totalPages, onPageChange, className }: PaginationProps) {
+    if (totalPages <= 1) return null
+    const pages = getPageList(page, totalPages)
+
+    return (
+      <nav aria-label="Pagination" className={cn('flex items-center justify-between', className)}>
+        <button
+          type="button"
+          disabled={page <= 1}
+          onClick={() => onPageChange(page - 1)}
+          className={cn(
+            'flex items-center gap-2 text-body-s font-medium transition-colors',
+            page <= 1 ? 'cursor-not-allowed text-text-disabled' : 'text-body hover:text-heading'
+          )}
+        >
+          <span className="flex h-9 w-9 items-center justify-center rounded-full border border-gray-50">
+            <ArrowLeft className="h-4 w-4" strokeWidth={1.5} />
           </span>
-        ) : (
-          <Button
-            key={p}
-            variant={p === page ? 'primary' : 'ghost'}
-            size="icon-sm"
-            onClick={() => onPageChange(p)}
-            aria-label={`Page ${p}`}
-            aria-current={p === page ? 'page' : undefined}
-          >
-            {p}
-          </Button>
-        )
-      )}
+          Previous
+        </button>
 
-      <Button
-        variant="outline"
-        size="icon-sm"
-        onClick={() => onPageChange(page + 1)}
-        disabled={page === totalPages}
-        aria-label="Next page"
-      >
-        <ChevronRight className="h-4 w-4" />
-      </Button>
-    </nav>
-  )
+        <ul className="flex items-center gap-2">
+          {pages.map((p, i) =>
+            p === 'ellipsis' ? (
+              <li key={`ellipsis-${i}`} className="px-1 text-body-s text-text-alt-grey">
+                …
+              </li>
+            ) : (
+              <li key={p}>
+                <button
+                  type="button"
+                  aria-current={p === page ? 'page' : undefined}
+                  onClick={() => onPageChange(p)}
+                  className={cn(
+                    'flex h-9 w-9 items-center justify-center rounded-full text-body-s font-medium transition-colors',
+                    p === page
+                      ? 'border border-primary-500 text-primary-500'
+                      : 'text-body hover:bg-neutral-50'
+                  )}
+                >
+                  {p}
+                </button>
+              </li>
+            )
+          )}
+        </ul>
+
+        <button
+          type="button"
+          disabled={page >= totalPages}
+          onClick={() => onPageChange(page + 1)}
+          className={cn(
+            'flex items-center gap-2 text-body-s font-medium transition-colors',
+            page >= totalPages ? 'cursor-not-allowed text-text-disabled' : 'text-primary-500 hover:text-primary-600'
+          )}
+        >
+          Next
+          <span className="flex h-9 w-9 items-center justify-center rounded-full bg-primary-500 text-white">
+            <ArrowRight className="h-4 w-4" strokeWidth={1.5} />
+          </span>
+        </button>
+      </nav>
+    )
 }
+
+export { Pagination }

@@ -1,40 +1,69 @@
-import { Button, Input } from '@/components'
+'use client'
+
 import { ArrowLeft } from 'lucide-react'
-import Image from 'next/image'
-import React from 'react'
+import { useRouter } from 'next/navigation'
+import { ORDER_TABS } from '../constant'
+import { OrderList } from './order-list'
+import { useBuyerPhysicalOrders } from '@/hooks/use-physical-order'
+import type { BuyerOrderView, OrderItemPhysicalWithArtwork } from '@/types/physical-order'
+import { cn } from '@/lib/utils'
 
-const LeftSideBar = () => {
-    return (
-        <div className='flex flex-col gap-y-4 '>
-            {/* Topbar */}
-            <div className='flex flex-col gap-y-8 pb-4'>
-                <div className='flex items-center justify-start gap-x-4'>
-                    <span className='p-2'>
-                        <ArrowLeft color='#525965' size={24} />
-                    </span>
-
-                    <h4 className='font-raleway font-semibold text-h4 text-body tracking-wide leading-10'>My Orders</h4>
-                </div>
-
-                <div className='flex flex-col gap-y-4'>
-                    <div className='flex gap-x-2 items-center w-full'>
-                        <Input leftIcon='/home/magnifier.svg' placeholder='Search Order' className='flex-1' />
-                        <span className='border border-gray-50 rounded-full p-2 justify-items-center'>
-                            <Image src='/icons/tuning.svg' width={21} height={16} alt='tuning icon' />
-                        </span>
-                    </div>
-
-                    <div className='flex items-center gap-x-2 w-full'>
-                        <button className='cursor-pointer flex-1 px-6 py-3 border border-gray-50 rounded-2xl font-poppins text-body text-body-s'>Delivered</button>
-                        <button className='cursor-pointer flex-1 px-6 py-3 border border-gray-50 rounded-2xl font-poppins text-body text-body-s'>Live</button>
-                        <button className='cursor-pointer flex-1 px-6 py-3 border border-gray-50 rounded-2xl font-poppins text-body text-body-s'>Canceled</button>
-                    </div>
-                </div>
-
-                
-            </div>
-        </div>
-    )
+interface Props {
+  view: BuyerOrderView
+  selectedId: string | undefined
+  onViewChange: (view: BuyerOrderView) => void
+  onSelect: (physicalId: string) => void
 }
 
-export default LeftSideBar
+export function LeftSideBar({ view, selectedId, onViewChange, onSelect }: Props) {
+  const router = useRouter()
+  const { data, isLoading, isError, error, refetch } = useBuyerPhysicalOrders(view)
+  const orders = data?.data as OrderItemPhysicalWithArtwork[] | undefined
+
+  return (
+    <div className="flex flex-col gap-y-4 w-[396px] min-h-0">
+      <div className="flex flex-col gap-y-8 pb-4">
+        <div className="flex items-center justify-start gap-x-4">
+          <button
+            type="button"
+            onClick={() => router.back()}
+            aria-label="Go back"
+            className="p-2 border border-gray-50 rounded-full"
+          >
+            <ArrowLeft color="#525965" size={24} />
+          </button>
+          <h4 className="font-raleway font-semibold text-h5 text-body tracking-wide leading-10">My Orders</h4>
+        </div>
+
+        <div className="flex items-center gap-x-2 w-full">
+          {ORDER_TABS.map((tab) => (
+            <button
+              key={tab.value}
+              type="button"
+              onClick={() => onViewChange(tab.value)}
+              aria-pressed={view === tab.value}
+              className={cn(
+                'cursor-pointer flex-1 px-6 py-3 rounded-2xl font-poppins text-body-s transition-colors',
+                view === tab.value
+                  ? 'bg-primary-500 text-white border border-primary-500'
+                  : 'border border-gray-50 text-body',
+              )}
+            >
+              {tab.label}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      <OrderList
+        orders={orders}
+        isLoading={isLoading}
+        isError={isError}
+        error={error}
+        selectedId={selectedId}
+        onSelect={onSelect}
+        onRetry={refetch}
+      />
+    </div>
+  )
+}

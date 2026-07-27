@@ -1,274 +1,435 @@
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { physicalOrderService } from '@/services/physical-order.service'
+'use client'
+
+import {
+  useQuery,
+  useMutation,
+  useQueryClient,
+  keepPreviousData,
+  type QueryClient,
+} from '@tanstack/react-query'
+import { physicalOrderService } from '@/services/order/physical-order.service'
+import type {
+  ActivatePickupInput,
+  AddDeliveryProofInput,
+  InTransitInput,
+  PickupFailureInput,
+  ProcessRefundInput,
+  UpdateCourierInfoInput,
+  PhysicalOrderQueryParams,
+} from '@/services/order/physical-order.service'
+import { HttpError } from '@/lib/api-client'
+import { useAuthStore, selectUser, selectIsAuthenticated } from '@/store'
 import { useToast } from '@/components/ui/toaster'
 import { STALE_TIMES } from '@/constants'
-import { HttpError } from '@/lib/api-client'
 import type {
-  PhysicalOrderFilters,
-  ActivatePickupInput,
-  UpdateCourierInfoInput,
-  NotesInput,
-  TransitUpdateInput,
-  PickupFailureInput,
-  CancelItemInput,
-  RefundRequestInput,
-  ProcessRefundInput,
-  DeliveryProofInput,
-  UpdateShippingAddressInput,
-} from '@/types/physical-order'
+  OrderItemPhysical,
+  BuyerOrderView,
+  ArtistOrderView,
+  CommerceApiSuccess,
+  PhysicalOrderDetailView,
+  ShippingAddressSnapshot,
+} from '@/types/order'
 
-const PHYSICAL_KEYS = {
+export const physicalOrderKeys = {
   all: ['physical-orders'] as const,
-  lists: () => [...PHYSICAL_KEYS.all, 'list'] as const,
-  buyer: (f: PhysicalOrderFilters) => [...PHYSICAL_KEYS.lists(), 'buyer', f] as const,
-  artist: (f: PhysicalOrderFilters) => [...PHYSICAL_KEYS.lists(), 'artist', f] as const,
-  admin: (f: PhysicalOrderFilters) => [...PHYSICAL_KEYS.lists(), 'admin', f] as const,
-  refundRequests: () => [...PHYSICAL_KEYS.all, 'refund-requests'] as const,
-  detail: () => [...PHYSICAL_KEYS.all, 'detail'] as const,
-  byId: (id: string) => [...PHYSICAL_KEYS.detail(), id] as const,
+  buyer: (view: BuyerOrderView, filters: PhysicalOrderQueryParams) =>
+    [...physicalOrderKeys.all, 'buyer', view, filters] as const,
+  artist: (view: ArtistOrderView, filters: PhysicalOrderQueryParams) =>
+    [...physicalOrderKeys.all, 'artist', view, filters] as const,
+  admin: (filters: PhysicalOrderQueryParams) => [...physicalOrderKeys.all, 'admin', filters] as const,
+  refundRequests: () => [...physicalOrderKeys.all, 'refund-requests'] as const,
+  detail: (physicalId: string) => [...physicalOrderKeys.all, 'detail', physicalId] as const,
 }
 
-function invalidateAllLists(qc: ReturnType<typeof useQueryClient>) {
-  qc.invalidateQueries({ queryKey: PHYSICAL_KEYS.lists() })
+function describeError(err: unknown, fallback: string): string {
+  if (err instanceof HttpError) {
+    if (err.statusCode === 409) return 'This item was just updated by someone else. Refreshing…'
+    if (err.statusCode === 403) return "You don't have permission to do this."
+    if (err.statusCode === 422 || err.statusCode === 400) return err.message
+    return err.message || fallback
+  }
+  return fallback
 }
 
-function errorMessage(err: unknown, fallback: string): string {
-  return err instanceof HttpError ? err.message : fallback
-}
+// ── Queries ────────────────────────────────────────────────────────────────────
 
-// ── Queries ──────────────────────────────────────────────────────────────────
-
-export function useBuyerPhysicalOrders(filters: PhysicalOrderFilters = {}) {
+export function useBuyerPhysicalOrders(view: BuyerOrderView, filters: PhysicalOrderQueryParams = {}) {
+  const isAuthenticated = useAuthStore(selectIsAuthenticated)
   return useQuery({
-    queryKey: PHYSICAL_KEYS.buyer(filters),
-    queryFn: () => physicalOrderService.getBuyerItems(filters),
+    queryKey: physicalOrderKeys.buyer(view, filters),
+    queryFn: () => physicalOrderService.getBuyerOrders(view, filters),
+    enabled: isAuthenticated,
+    staleTime: STALE_TIMES.fast,
+    placeholderData: keepPreviousData,
+  })
+}
+
+export function useArtistPhysicalOrders(view: ArtistOrderView, filters: PhysicalOrderQueryParams = {}) {
+  const user = useAuthStore(selectUser)
+  const enabled = user?.role === 'ARTIST' || user?.role === 'ADMIN'
+  return useQuery({
+    queryKey: physicalOrderKeys.artist(view, filters),
+    queryFn: () => physicalOrderService.getArtistOrders(view, filters),
+    enabled,
+    staleTime: STALE_TIMES.fast,
+    placeholderData: keepPreviousData,
+  })
+}
+
+export function useAdminPhysicalOrders(filters: PhysicalOrderQueryParams = {}) {
+  const user = useAuthStore(selectUser)
+  const enabled = user?.role === 'ADMIN'
+  return useQuery({
+    queryKey: physicalOrderKeys.admin(filters),
+    queryFn: () => physicalOrderService.getAdminOrders(filters),
+    enabled,
+    staleTime: STALE_TIMES.fast,
+    placeholderData: keepPreviousData,
+  })
+}
+
+export function usePendingRefundRequests() {
+  const user = useAuthStore(selectUser)
+  const enabled = user?.role === 'ADMIN'
+  return useQuery({
+    queryKey: physicalOrderKeys.refundRequests(),
+    queryFn: () => physicalOrderService.getPendingRefundRequests().then((r) => r.data),
+    enabled,
     staleTime: STALE_TIMES.fast,
   })
 }
 
-export function useArtistPhysicalOrders(filters: PhysicalOrderFilters = {}) {
+export function usePhysicalOrderDetail(physicalId: string | undefined) {
   return useQuery({
-    queryKey: PHYSICAL_KEYS.artist(filters),
-    queryFn: () => physicalOrderService.getArtistItems(filters),
-    staleTime: STALE_TIMES.fast,
-  })
-}
-
-export function useAdminPhysicalOrders(filters: PhysicalOrderFilters = {}) {
-  return useQuery({
-    queryKey: PHYSICAL_KEYS.admin(filters),
-    queryFn: () => physicalOrderService.getAdminItems(filters),
-    staleTime: STALE_TIMES.fast,
-  })
-}
-
-export function useAdminRefundRequests() {
-  return useQuery({
-    queryKey: PHYSICAL_KEYS.refundRequests(),
-    queryFn: () => physicalOrderService.getAdminRefundRequests().then((r) => r.data),
-    staleTime: STALE_TIMES.fast,
-  })
-}
-
-export function usePhysicalOrderView(physicalId: string) {
-  return useQuery({
-    queryKey: PHYSICAL_KEYS.byId(physicalId),
-    queryFn: () => physicalOrderService.getOrderView(physicalId).then((r) => r.data),
-    staleTime: STALE_TIMES.fast,
+    queryKey: physicalOrderKeys.detail(physicalId ?? ''),
+    queryFn: () => physicalOrderService.getOrderView(physicalId!),
     enabled: Boolean(physicalId),
+    staleTime: 30_000,
   })
 }
 
-// ── Shared mutation factory for the fulfillment pipeline ─────────────────────
+// ── Optimistic patch helper ────────────────────────────────────────────────────
 
-function usePhysicalMutation<TInput>(
-  mutationFn: (physicalId: string, payload: TInput) => Promise<unknown>,
-  successMessage: string,
-  failureFallback = 'Something went wrong. Please try again.',
+function patchDetailCache(
+  queryClient: QueryClient,
+  physicalId: string,
+  patch: Partial<OrderItemPhysical>,
 ) {
-  const qc = useQueryClient()
-  const { success, error } = useToast()
+  const key = physicalOrderKeys.detail(physicalId)
+  const previous = queryClient.getQueryData<CommerceApiSuccess<PhysicalOrderDetailView>>(key)
+  if (!previous) return previous
 
-  return useMutation({
-    mutationFn: ({ physicalId, payload }: { physicalId: string; payload: TInput }) =>
-      mutationFn(physicalId, payload),
-    onSuccess: (_, { physicalId }) => {
-      success('Updated', successMessage)
-      qc.invalidateQueries({ queryKey: PHYSICAL_KEYS.byId(physicalId) })
-    },
-    onError: (err) => error('Action Failed', errorMessage(err, failureFallback)),
-    onSettled: () => invalidateAllLists(qc),
+  queryClient.setQueryData<CommerceApiSuccess<PhysicalOrderDetailView>>(key, {
+    ...previous,
+    data: { ...previous.data, physical: { ...previous.data.physical, ...patch } },
   })
+  return previous
 }
 
-// ── Artist actions ────────────────────────────────────────────────────────────
+function rollbackDetailCache(
+  queryClient: QueryClient,
+  physicalId: string,
+  previous: CommerceApiSuccess<PhysicalOrderDetailView> | undefined,
+) {
+  if (previous) queryClient.setQueryData(physicalOrderKeys.detail(physicalId), previous)
+}
 
-export function useArtistConfirmItem() {
-  const qc = useQueryClient()
-  const { success, error } = useToast()
+function invalidateListsFor(queryClient: QueryClient, scope: 'buyer' | 'artist' | 'admin' | 'all') {
+  if (scope === 'all') {
+    void queryClient.invalidateQueries({ queryKey: physicalOrderKeys.all })
+    return
+  }
+  void queryClient.invalidateQueries({ queryKey: [...physicalOrderKeys.all, scope] })
+}
+
+// ── Buyer / artist mutations ───────────────────────────────────────────────────
+
+export function useArtistConfirmOrder() {
+  const queryClient = useQueryClient()
+  const { error } = useToast()
+
   return useMutation({
     mutationFn: (physicalId: string) => physicalOrderService.artistConfirm(physicalId),
-    onSuccess: (_, physicalId) => {
-      success('Order Confirmed', 'You have confirmed fulfillment for this order.')
-      qc.invalidateQueries({ queryKey: PHYSICAL_KEYS.byId(physicalId) })
+
+    onMutate: async (physicalId) => {
+      await queryClient.cancelQueries({ queryKey: physicalOrderKeys.detail(physicalId) })
+      const previous = patchDetailCache(queryClient, physicalId, { timeline_status: 'AWAITING_PICKUP' })
+      return { previous }
     },
-    onError: (err) => error('Confirmation Failed', errorMessage(err, 'Could not confirm this order.')),
-    onSettled: () => invalidateAllLists(qc),
+
+    onError: (err, physicalId, ctx) => {
+      rollbackDetailCache(queryClient, physicalId, ctx?.previous)
+      error('Could not confirm order', describeError(err, 'Please try again.'))
+    },
+
+    onSettled: (_data, _err, physicalId) => {
+      void queryClient.invalidateQueries({ queryKey: physicalOrderKeys.detail(physicalId) })
+      invalidateListsFor(queryClient, 'artist')
+    },
+  })
+}
+
+export function useCancelPhysicalItem() {
+  const queryClient = useQueryClient()
+  const { error, success } = useToast()
+
+  return useMutation({
+    mutationFn: ({ physicalId, reason }: { physicalId: string; reason: string }) =>
+      physicalOrderService.cancelItem(physicalId, reason),
+
+    onMutate: async ({ physicalId }) => {
+      await queryClient.cancelQueries({ queryKey: physicalOrderKeys.detail(physicalId) })
+      const previous = patchDetailCache(queryClient, physicalId, {
+        timeline_status: 'ORDER_FAILED_TO_CONFIRM',
+        delivery_status: 'CANCELLED',
+      })
+      return { previous }
+    },
+
+    onError: (err, { physicalId }, ctx) => {
+      rollbackDetailCache(queryClient, physicalId, ctx?.previous)
+      if (err instanceof HttpError && err.statusCode === 409) {
+        error('Already being processed', 'This item is mid-update elsewhere. Refreshing…')
+      } else {
+        error('Could not cancel order', describeError(err, 'Please try again.'))
+      }
+    },
+
+    onSuccess: () => success('Order cancelled'),
+
+    onSettled: (_data, _err, { physicalId }) => {
+      void queryClient.invalidateQueries({ queryKey: physicalOrderKeys.detail(physicalId) })
+      invalidateListsFor(queryClient, 'all')
+    },
   })
 }
 
 export function useRequestRefund() {
-  return usePhysicalMutation<RefundRequestInput>(
-    (id, payload) => physicalOrderService.requestRefund(id, payload),
-    'Refund request submitted for admin review.',
+  const queryClient = useQueryClient()
+  const { error, success } = useToast()
+
+  return useMutation({
+    mutationFn: ({ physicalId, reason }: { physicalId: string; reason: string }) =>
+      physicalOrderService.requestRefund(physicalId, reason),
+
+    onSuccess: (_data, { physicalId }) => {
+      success('Refund request submitted')
+      void queryClient.invalidateQueries({ queryKey: physicalOrderKeys.detail(physicalId) })
+      invalidateListsFor(queryClient, 'artist')
+    },
+
+    onError: (err) => {
+      if (err instanceof HttpError && err.statusCode === 409) {
+        error('Refund already requested', 'A refund has already been initiated for this item.')
+      } else {
+        error('Could not submit refund request', describeError(err, 'Please try again.'))
+      }
+    },
+  })
+}
+
+// ── Admin transition mutations ─────────────────────────────────────────────────
+
+function useAdminTransitionMutation<TInput extends { physicalId: string }>(
+  mutationFn: (input: TInput) => Promise<CommerceApiSuccess<OrderItemPhysical>>,
+  optimisticPatch: (input: TInput) => Partial<OrderItemPhysical> | undefined,
+  errorTitle: string,
+) {
+  const queryClient = useQueryClient()
+  const { error } = useToast()
+
+  return useMutation({
+    mutationFn,
+
+    onMutate: async (input) => {
+      await queryClient.cancelQueries({ queryKey: physicalOrderKeys.detail(input.physicalId) })
+      const patch = optimisticPatch(input)
+      const previous = patch ? patchDetailCache(queryClient, input.physicalId, patch) : undefined
+      return { previous }
+    },
+
+    onError: (err, input, ctx) => {
+      rollbackDetailCache(queryClient, input.physicalId, ctx?.previous)
+      error(errorTitle, describeError(err, 'Please try again.'))
+    },
+
+    onSettled: (_data, _err, input) => {
+      void queryClient.invalidateQueries({ queryKey: physicalOrderKeys.detail(input.physicalId) })
+      invalidateListsFor(queryClient, 'admin')
+      invalidateListsFor(queryClient, 'buyer')
+      invalidateListsFor(queryClient, 'artist')
+    },
+  })
+}
+
+export function useActivatePickup() {
+  return useAdminTransitionMutation(
+    (input: { physicalId: string } & ActivatePickupInput) =>
+      physicalOrderService.activatePickup(input.physicalId, input),
+    () => ({ timeline_status: 'AWAITING_PICKUP_ACTIVE' }),
+    'Could not activate pickup',
   )
 }
 
-// ── Shared buyer/artist/admin ─────────────────────────────────────────────────
-
-export function useCancelPhysicalItem() {
-  return usePhysicalMutation<CancelItemInput>(
-    (id, payload) => physicalOrderService.cancelItem(id, payload),
-    'Order item cancelled.',
+export function useUpdateCourierInfo() {
+  return useAdminTransitionMutation(
+    (input: { physicalId: string } & UpdateCourierInfoInput) =>
+      physicalOrderService.updateCourierInfo(input.physicalId, input),
+    (input) => {
+      const { physicalId: _physicalId, ...patch } = input
+      return patch
+    },
+    'Could not update courier info',
   )
 }
+
+export function useMarkPickedUp() {
+  return useAdminTransitionMutation(
+    (input: { physicalId: string }) => physicalOrderService.markPickedUp(input.physicalId),
+    () => ({ timeline_status: 'PICKED_UP_ACTIVE' }),
+    'Could not mark as picked up',
+  )
+}
+
+export function useMarkInTransit() {
+  return useAdminTransitionMutation(
+    (input: { physicalId: string } & InTransitInput) =>
+      physicalOrderService.markInTransit(input.physicalId, input),
+    () => ({ timeline_status: 'IN_TRANSIT_ACTIVE' }),
+    'Could not mark as in transit',
+  )
+}
+
+export function useMarkOutForDelivery() {
+  return useAdminTransitionMutation(
+    (input: { physicalId: string }) => physicalOrderService.markOutForDelivery(input.physicalId),
+    () => ({ timeline_status: 'OUT_FOR_DELIVERY_ACTIVE' }),
+    'Could not mark as out for delivery',
+  )
+}
+
+export function useMarkDelivered() {
+  return useAdminTransitionMutation(
+    (input: { physicalId: string }) => physicalOrderService.markDelivered(input.physicalId),
+    () => ({ timeline_status: 'DELIVERED', delivery_status: 'DELIVERED' }),
+    'Could not mark as delivered',
+  )
+}
+
+export function useMarkDeliveryFailed() {
+  return useAdminTransitionMutation(
+    (input: { physicalId: string; notes?: string }) =>
+      physicalOrderService.markDeliveryFailed(input.physicalId, input.notes),
+    () => ({ timeline_status: 'DELIVERY_FAILED' }),
+    'Could not mark delivery as failed',
+  )
+}
+
+export function useMarkDelayed() {
+  return useAdminTransitionMutation(
+    (input: { physicalId: string; notes?: string }) =>
+      physicalOrderService.markDelayed(input.physicalId, input.notes),
+    () => ({ timeline_status: 'DELAYED_DELIVERY' }),
+    'Could not mark as delayed',
+  )
+}
+
+export function useReportPickupFailure() {
+  return useAdminTransitionMutation(
+    (input: { physicalId: string } & PickupFailureInput) =>
+      physicalOrderService.reportPickupFailure(input.physicalId, input),
+    (input) => ({ timeline_status: input.reason }),
+    'Could not report pickup failure',
+  )
+}
+
+// ── Refund processing (admin) — no optimistic patch, deliberate review action ──
+
+export function useProcessRefund() {
+  const queryClient = useQueryClient()
+  const { error, success } = useToast()
+
+  return useMutation({
+    mutationFn: ({ requestId, ...payload }: { requestId: string } & ProcessRefundInput) =>
+      physicalOrderService.processRefund(requestId, payload),
+
+    onSuccess: (res) => {
+      success(res.data.request.status === 'APPROVED' ? 'Refund approved' : 'Refund rejected')
+      void queryClient.invalidateQueries({ queryKey: physicalOrderKeys.refundRequests() })
+      void queryClient.invalidateQueries({
+        queryKey: physicalOrderKeys.detail(res.data.physical.id),
+      })
+      invalidateListsFor(queryClient, 'all')
+    },
+
+    onError: (err) => error('Could not process refund', describeError(err, 'Please try again.')),
+  })
+}
+
+// ── Delivery proof (admin) — no optimistic patch, array append ────────────────
+
+export function useAddDeliveryProof() {
+  const queryClient = useQueryClient()
+  const { error, success } = useToast()
+
+  return useMutation({
+    mutationFn: ({ physicalId, ...payload }: { physicalId: string } & AddDeliveryProofInput) =>
+      physicalOrderService.addDeliveryProof(physicalId, payload),
+
+    onSuccess: (_data, { physicalId }) => {
+      success('Delivery proof uploaded')
+      void queryClient.invalidateQueries({ queryKey: physicalOrderKeys.detail(physicalId) })
+    },
+
+    onError: (err) => error('Could not upload delivery proof', describeError(err, 'Please try again.')),
+  })
+}
+
+// ── Shipping address (admin, order-scoped) ─────────────────────────────────────
+// Detail cache is keyed by physicalId, this mutation only knows orderId — cannot
+// invalidate by direct key, so we predicate-match cached detail entries by their
+// embedded physical.order_id.
+
+export function useUpdateShippingAddress() {
+  const queryClient = useQueryClient()
+  const { error, success } = useToast()
+
+  return useMutation({
+    mutationFn: ({ orderId, address }: { orderId: string; address: ShippingAddressSnapshot }) =>
+      physicalOrderService.updateShippingAddress(orderId, address),
+
+    onSuccess: (_data, { orderId }) => {
+      success('Shipping address updated')
+      void queryClient.invalidateQueries({
+        predicate: (query) => {
+          if (query.queryKey[0] !== 'physical-orders' || query.queryKey[1] !== 'detail') return false
+          const cached = query.state.data as CommerceApiSuccess<PhysicalOrderDetailView> | undefined
+          return cached?.data.physical.order_id === orderId
+        },
+      })
+      invalidateListsFor(queryClient, 'all')
+    },
+
+    onError: (err) => error('Could not update shipping address', describeError(err, 'Please try again.')),
+  })
+}
+
+// ── Downloads (imperative, click-triggered) ────────────────────────────────────
 
 export function useDownloadInvoice() {
   const { error } = useToast()
   return useMutation({
-    mutationFn: (physicalId: string) => physicalOrderService.getInvoice(physicalId),
-    onSuccess: (res) => {
-      if (typeof window !== 'undefined') window.open(res.data.invoice_url, '_blank')
-    },
-    onError: (err) => {
-      const message =
-        err instanceof HttpError && err.statusCode === 404
-          ? 'No invoice is available for this order yet.'
-          : errorMessage(err, 'Could not fetch invoice.')
-      error('Invoice Unavailable', message)
-    },
+    mutationFn: (physicalId: string) => physicalOrderService.getInvoice(physicalId).then((r) => r.data),
+    onError: (err) =>
+      error('Invoice unavailable', describeError(err, 'This order has no invoice yet.')),
   })
 }
 
 export function useDownloadReceipt() {
   const { error } = useToast()
   return useMutation({
-    mutationFn: (physicalId: string) => physicalOrderService.getReceipt(physicalId),
-    onSuccess: (res) => {
-      if (typeof window !== 'undefined') window.open(res.data.receipt_url, '_blank')
-    },
-    onError: (err) => {
-      const message =
-        err instanceof HttpError && err.statusCode === 404
-          ? 'No receipt is available for this order yet.'
-          : errorMessage(err, 'Could not fetch receipt.')
-      error('Receipt Unavailable', message)
-    },
+    mutationFn: (physicalId: string) => physicalOrderService.getReceipt(physicalId).then((r) => r.data),
+    onError: (err) =>
+      error('Receipt unavailable', describeError(err, 'This order has no receipt yet.')),
   })
-}
-
-// ── Admin: shipping address ───────────────────────────────────────────────────
-
-export function useUpdateShippingAddress() {
-  const qc = useQueryClient()
-  const { success, error } = useToast()
-  return useMutation({
-    mutationFn: ({ orderId, payload }: { orderId: string; payload: UpdateShippingAddressInput }) =>
-      physicalOrderService.updateShippingAddress(orderId, payload),
-    onSuccess: (_, { orderId }) => {
-      success('Address Updated', 'Shipping address has been updated.')
-      qc.invalidateQueries({ queryKey: PHYSICAL_KEYS.byId(orderId) })
-    },
-    onError: (err) => error('Update Failed', errorMessage(err, 'Could not update shipping address.')),
-    onSettled: () => invalidateAllLists(qc),
-  })
-}
-
-// ── Admin: refunds ────────────────────────────────────────────────────────────
-
-export function useProcessRefund() {
-  const qc = useQueryClient()
-  const { success, error } = useToast()
-  return useMutation({
-    mutationFn: ({ requestId, payload }: { requestId: string; payload: ProcessRefundInput }) =>
-      physicalOrderService.processRefund(requestId, payload),
-    onSuccess: () => success('Refund Processed', 'The refund decision has been recorded.'),
-    onError: (err) => error('Action Failed', errorMessage(err, 'Could not process refund request.')),
-    onSettled: () => {
-      qc.invalidateQueries({ queryKey: PHYSICAL_KEYS.refundRequests() })
-      invalidateAllLists(qc)
-    },
-  })
-}
-
-// ── Admin: fulfillment pipeline ───────────────────────────────────────────────
-
-export function useActivatePickup() {
-  return usePhysicalMutation<ActivatePickupInput>(
-    (id, payload) => physicalOrderService.activatePickup(id, payload),
-    'Pickup activated and courier assigned.',
-  )
-}
-
-export function useUpdateCourierInfo() {
-  return usePhysicalMutation<UpdateCourierInfoInput>(
-    (id, payload) => physicalOrderService.updateCourierInfo(id, payload),
-    'Courier information updated.',
-  )
-}
-
-export function useMarkPickedUp() {
-  return usePhysicalMutation<NotesInput>(
-    (id, payload) => physicalOrderService.markPickedUp(id, payload),
-    'Marked as picked up.',
-  )
-}
-
-export function useMarkInTransit() {
-  return usePhysicalMutation<TransitUpdateInput>(
-    (id, payload) => physicalOrderService.markInTransit(id, payload),
-    'Marked as in transit.',
-  )
-}
-
-export function useMarkOutForDelivery() {
-  return usePhysicalMutation<NotesInput>(
-    (id, payload) => physicalOrderService.markOutForDelivery(id, payload),
-    'Marked as out for delivery.',
-  )
-}
-
-export function useMarkDelivered() {
-  return usePhysicalMutation<NotesInput>(
-    (id, payload) => physicalOrderService.markDelivered(id, payload),
-    'Order marked as delivered.',
-  )
-}
-
-export function useMarkDeliveryFailed() {
-  return usePhysicalMutation<NotesInput>(
-    (id, payload) => physicalOrderService.markDeliveryFailed(id, payload),
-    'Delivery marked as failed.',
-  )
-}
-
-export function useMarkDelayed() {
-  return usePhysicalMutation<NotesInput>(
-    (id, payload) => physicalOrderService.markDelayed(id, payload),
-    'Delivery marked as delayed.',
-  )
-}
-
-export function useReportPickupFailure() {
-  return usePhysicalMutation<PickupFailureInput>(
-    (id, payload) => physicalOrderService.reportPickupFailure(id, payload),
-    'Pickup failure recorded.',
-  )
-}
-
-export function useAddDeliveryProof() {
-  return usePhysicalMutation<DeliveryProofInput>(
-    (id, payload) => physicalOrderService.addDeliveryProof(id, payload),
-    'Delivery proof uploaded.',
-  )
 }

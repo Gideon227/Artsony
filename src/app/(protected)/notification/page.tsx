@@ -24,7 +24,7 @@ export default function NotificationsPage() {
   const [filter, setFilter] = useState<'all' | 'unread'>('all')
   const [deletingIds, setDeletingIds] = useState<Set<string>>(new Set())
 
-  // ── Data ──────────────────────────────────────────────────────────────────
+  // ── Data ────────────────
   const {
     data,
     isLoading,
@@ -40,8 +40,8 @@ export default function NotificationsPage() {
     [data]
   )
 
-  // ── Mutations ─────────────────────────────────────────────────────────────
-  const { mutate: markRead }          = useMarkRead()
+  // ── Mutations 
+  const { mutate: markRead } = useMarkRead()
   const { mutate: markAllRead, isPending: isMarkingAll } = useMarkAllRead()
   const { mutate: deleteNotification } = useDeleteNotification()
 
@@ -62,14 +62,14 @@ export default function NotificationsPage() {
     <div className="min-h-screen bg-white flex flex-col">
       <Navbar />
 
-      {/* ── Unread banner ────────────────────────────────────────────────── */}
+      {/* ── Unread banner  */}
       <UnreadBanner
         count={unreadCount}
         onMarkAllRead={() => markAllRead()}
         isLoading={isMarkingAll}
       />
 
-      {/* ── Main content ──────────────────────────────────────────────────── */}
+      {/* ── Main content ── */}
       <main className="flex-1 w-full max-w-2xl mx-auto px-4 md:px-6 py-8">
 
         {/* ── Page header ───────────────────────────────────────────────── */}
