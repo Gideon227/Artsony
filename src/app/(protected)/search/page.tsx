@@ -9,12 +9,22 @@ import { Navbar } from '@/components/layout/navbar'
 import Footer from '@/components/layout/footer'
 import { SearchInput } from '@/components/ui/search-input'
 import { ResultsGrid } from '@/features/search/components/results-grid'
-import { useSearchArtworks, useArtworkLocations, useHeroArtworks } from '@/hooks/use-artwork'
-import type { Artwork } from '@/types'
+import { useArtworkLocations, useHeroArtworks, useInfiniteArtworkResults } from '@/hooks/use-artwork'
+import type { Artwork, ArtworkFilters } from '@/types'
+import ArtworkViewOverlay from '@/features/artwork/components/home/artwork-view-overlay'
 import FilterComponent, { FilterDropdownConfig } from '@/features/home/components/filter'
 import { DropdownOption } from '@/components/ui/dropdown'
 import { INTERESTS } from '@/features/onboarding/data/interests'
 import { buildSlides } from '@/features/home/components/hero'
+
+// Price dropdown options are UI-friendly range ids ('0-500', '5000+'); the
+// API filters on numeric min_price/max_price, so this is the one place that
+// translation happens.
+function parsePriceRange(id: string): Pick<ArtworkFilters, 'min_price' | 'max_price'> {
+  if (id === '5000+') return { min_price: 5000 }
+  const [min, max] = id.split('-').map(Number)
+  return { min_price: min, max_price: max }
+}
 
 const SearchPage = () => {
   const searchParams = useSearchParams()
@@ -23,6 +33,7 @@ const SearchPage = () => {
   const urlQuery = searchParams.get('q') ?? ''
   const [localQuery, setLocalQuery] = useState(urlQuery)
   const [index, setIndex] = useState(0);
+  const [activeArtwork, setActiveArtwork] = useState<Artwork | null>(null)
   
 
   useEffect(() => {
@@ -178,22 +189,33 @@ const SearchPage = () => {
   }
 
   // ── Data fetching — filters flow straight from dropdown state now ────────
-  const searchFilters = useMemo(
+  const searchFilters: ArtworkFilters = useMemo(
     () => ({
-      q: urlQuery,
-      category: selectedCategory ? String(selectedCategory.id) : null,
-      price: selectedPrice ? String(selectedPrice.id) : null,
-      size: selectedSize ? String(selectedSize.id) : null,
-      location: selectedLocation ? String(selectedLocation.id) : null,
+      search: urlQuery || undefined,
+      categories: selectedCategory ? [String(selectedCategory.id)] : undefined,
+      size_label: selectedSize ? String(selectedSize.id) : undefined,
+      location: selectedLocation ? String(selectedLocation.id) : undefined,
+      ...(selectedPrice ? parsePriceRange(String(selectedPrice.id)) : {}),
     }),
     [urlQuery, selectedCategory, selectedPrice, selectedSize, selectedLocation]
   )
 
   const { data, isLoading, isFetchingNextPage, hasNextPage, fetchNextPage } =
-    useSearchArtworks(searchFilters)
+    useInfiniteArtworkResults(searchFilters)
 
   const artworks: Artwork[] = useMemo(() => data?.pages.flatMap((p) => p.data) ?? [], [data])
   const total = data?.pages[0]?.total
+
+  const activeArtworkIndex = activeArtwork ? artworks.findIndex((a) => a.id === activeArtwork.id) : -1
+
+  const handleNavigateArtwork = (direction: 'prev' | 'next') => {
+    if (activeArtworkIndex === -1) return
+    const nextIndex = direction === 'next'
+      ? Math.min(activeArtworkIndex + 1, artworks.length - 1)
+      : Math.max(activeArtworkIndex - 1, 0)
+    if (nextIndex === activeArtworkIndex) return
+    setActiveArtwork(artworks[nextIndex] as Artwork)
+  }
 
   if (!currentSlide) return <div className="h-screen w-full bg-black" />;
 
@@ -309,12 +331,21 @@ const SearchPage = () => {
           fetchNextPage={fetchNextPage}
           query={urlQuery}
           total={total}
+          onArtworkClick={setActiveArtwork}
         />
       </main>
       
       <FilterComponent dropdowns={filterDropdowns} onClear={handleClearFilters} />
 
       <Footer />
+
+      {activeArtwork && (
+        <ArtworkViewOverlay
+          artwork={activeArtwork}
+          onClose={() => setActiveArtwork(null)}
+          onNavigate={handleNavigateArtwork}
+        />
+      )}
     </div>
   )
 }
