@@ -16,11 +16,12 @@ interface FeedSectionProps {
   artworks: Artwork[]
   isLoading: boolean
   onOpenMobileFilters?: () => void
+  onArtworkClick: (artwork: Artwork) => void
 }
 
 const FEED_TAB_OPTIONS: DropdownOption[] = FEED_TABS.map((t) => ({ id: t.value, label: t.label }))
 
-export function FeedSection({ activeTab, onTabChange, artworks, isLoading, onOpenMobileFilters }: FeedSectionProps) {
+export function FeedSection({ activeTab, onTabChange, artworks, isLoading, onOpenMobileFilters, onArtworkClick }: FeedSectionProps) {
   const activeOption = FEED_TAB_OPTIONS.find((o) => o.id === activeTab) ?? FEED_TAB_OPTIONS[0]
 
   return (
@@ -81,7 +82,8 @@ export function FeedSection({ activeTab, onTabChange, artworks, isLoading, onOpe
                 <ArtCard
                   image={artwork.assets[0]?.thumbnail_url ?? artwork.assets[0]?.optimized_url ?? artwork.assets[0]?.original_url ?? ''}
                   title={artwork.title}
-                  cardLink={`/artwork/${artwork.id}`}
+                  onCardClick={() => onArtworkClick(artwork)}
+                  showVideo={artwork.assets[0]?.media_type === 'VIDEO'}
                   artist={[{
                     id: artwork.creator_id,
                     name: artwork.creator?.profile?.display_name || artwork.creator?.username || 'Artist',

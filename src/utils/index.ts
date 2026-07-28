@@ -136,3 +136,19 @@ export function relativeTime(iso: string): string {
   if (d < 7)  return `${d}d ago`
   return `${w}w ago`
 }
+
+export function formatOrdinalDate(dateString: string): string {
+  const date = new Date(dateString)
+  const day = date.getDate()
+  const suffix = (d: number) => {
+    if (d > 3 && d < 21) return 'th'
+    switch (d % 10) {
+      case 1: return 'st'
+      case 2: return 'nd'
+      case 3: return 'rd'
+      default: return 'th'
+    }
+  }
+  const month = date.toLocaleDateString('en-US', { month: 'long' })
+  return `${day}${suffix(day)} ${month}, ${date.getFullYear()}`
+}

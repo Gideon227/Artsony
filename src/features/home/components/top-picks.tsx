@@ -4,7 +4,7 @@ import React, { useEffect, useState, useRef, useCallback } from 'react'
 import { artworkService } from '@/services'
 import { Artwork } from '@/types/artwork'
 import { ArtCard } from '@/components/ui/art-card'
-import ArtworkViewOverlay from '@/features/artwork/components/artwork-view-overlay'
+import ArtworkViewOverlay from '@/features/artwork/components/shop/artwork-view-overlay'
 
 const TopPicks = () => {
     const [artworks, setArtworks] = useState<Artwork[]>([])

@@ -360,23 +360,43 @@ export function useLikeArtwork() {
 
 export function useSaveArtwork() {
   const qc = useQueryClient()
-  const setOptimisticSave = useArtworkStore((s) => s.setOptimisticSave)
+  // const setOptimisticSave = useArtworkStore((s) => s.setOptimisticSave)
   const { error } = useToast()
 
   return useMutation({
-    mutationFn: ({ id, isSaved }: { id: string; isSaved: boolean }) =>
-      isSaved ? artworkService.unsave(id) : artworkService.save(id),
+    // mutationFn: ({ id, isSaved }: { id: string; isSaved: boolean }) =>
+    //   isSaved ? artworkService.unsave(id) : artworkService.save(id),
 
-    onMutate: ({ id, isSaved }) => {
-      setOptimisticSave(id, !isSaved)
+    // onMutate: ({ id, isSaved }) => {
+    //   setOptimisticSave(id, !isSaved)
+    // },
+
+    // onError: (_err, { id, isSaved }) => {
+    //   setOptimisticSave(id, isSaved)
+    //   error('Action failed', 'Could not update saved status.')
+    // },
+
+    // onSettled: (_data, _err, { id }) => {
+    //   void qc.invalidateQueries({ queryKey: ART_KEYS.byId(id) })
+    // },
+
+    mutationFn: (id: string) => artworkService.toggleSave(id),
+
+    onMutate: async (id) => {
+      await qc.cancelQueries({ queryKey: ART_KEYS.byId(id) })
+      const prev = qc.getQueryData<Artwork>(ART_KEYS.byId(id))
+      qc.setQueryData<Artwork>(ART_KEYS.byId(id), (old) =>
+        old ? { ...old, is_saved: !old.is_saved } : old,
+      )
+      return { prev, id }
     },
 
-    onError: (_err, { id, isSaved }) => {
-      setOptimisticSave(id, isSaved)
+    onError: (_err, id, ctx) => {
+      if (ctx?.prev) qc.setQueryData(ART_KEYS.byId(id), ctx.prev)
       error('Action failed', 'Could not update saved status.')
     },
 
-    onSettled: (_data, _err, { id }) => {
+    onSettled: (_data, _err, id) => {
       void qc.invalidateQueries({ queryKey: ART_KEYS.byId(id) })
     },
   })
@@ -408,6 +428,16 @@ export function useFlagArtwork() {
     onError: () => {
       error('Moderation failed', 'Could not update moderation status.')
     },
+  })
+}
+
+export function useReportArtwork() {
+  const { success, error } = useToast()
+  return useMutation({
+    mutationFn: ({ id, reason, notes }: { id: string; reason: string; notes?: string }) =>
+      artworkService.report(id, reason, notes),
+    onSuccess: () => success('Reported', "Thanks — we'll take a look."),
+    onError: () => error('Report failed', 'Could not submit your report. Please try again.'),
   })
 }
 

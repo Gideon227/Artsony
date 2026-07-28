@@ -17,7 +17,7 @@ import { INTERESTS } from '@/features/onboarding/data/interests'
 import { COLOR_SWATCHES, findClosestSwatch } from '@/features/home/data/color-swatches'
 import { useFeed, useArtworkLocations } from '@/hooks/use-artwork'
 import type { FeedSort } from '@/features/home/types'
-import ArtworkViewOverlay from '@/features/artwork/components/home/artwork-view-overlay'
+import ArtworkViewOverlay from '@/features/artwork/components/artwork-view-overlay'
 import type { Artwork } from '@/types/artwork'
 
 const MAX_CATEGORIES = 5
@@ -74,7 +74,7 @@ const HomePage = () => {
       ? Math.min(activeArtworkIndex + 1, allArtworks.length - 1)
       : Math.max(activeArtworkIndex - 1, 0)
     if (nextIndex === activeArtworkIndex) return
-    setActiveArtwork(allArtworks[nextIndex] as Artwork)
+    setActiveArtwork(allArtworks[nextIndex])
   }
 
   const handleClearFilters = () => {

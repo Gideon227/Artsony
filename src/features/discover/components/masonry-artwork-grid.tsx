@@ -1,5 +1,6 @@
 import { ArtCard } from '@/components/ui/art-card'
-import type { Artwork } from '@/types'
+import { cn } from '@/lib/utils'
+import type { Artwork } from '@/types/artwork'
 
 // Cycled per item to produce the varied-height Pinterest-style rhythm from
 // the reference. This is a presentational approximation, not a literal
@@ -22,31 +23,37 @@ const ASPECT_PATTERN = [
 
 type MasonryArtworkGridProps = {
   artworks: Artwork[]
+  onArtworkClick: (artwork: Artwork) => void
 }
 
-export function MasonryArtworkGrid({ artworks }: MasonryArtworkGridProps) {
+export function MasonryArtworkGrid({ artworks, onArtworkClick }: MasonryArtworkGridProps) {
   return (
     <div className="columns-2 gap-6 px-4 sm:columns-3 md:px-8 lg:columns-4">
-      {artworks.map((artwork, i) => (
-        <div key={artwork.id} className="mb-6 break-inside-avoid">
-          <ArtCard
-            image={artwork.imageUrl}
-            title={artwork.title}
-            cardLink={`/artwork/${artwork.id}`}
-            artist={[
-              {
-                id: artwork.artist.id,
-                name: artwork.artist.displayName,
-                avatarUrl: artwork.artist.avatarUrl ?? '/images/image-avatar.svg',
-              },
-            ]}
-            stats={{ likes: String(artwork.likesCount), views: String(artwork.viewsCount) }}
-            variant="discover"
-            showSaleBadge={artwork.availability === 'for-sale'}
-            aspectClassName={ASPECT_PATTERN[i % ASPECT_PATTERN.length]}
-          />
-        </div>
-      ))}
+      {artworks.map((artwork, i) => {
+        const asset = artwork.assets?.[0]
+        const image = asset?.thumbnail_url || asset?.optimized_url || asset?.original_url || '/placeholder.png'
+
+        return (
+          <div key={artwork.id} className={cn('mb-6 break-inside-avoid', ASPECT_PATTERN[i % ASPECT_PATTERN.length])}>
+            <ArtCard
+              image={image}
+              title={artwork.title}
+              onCardClick={() => onArtworkClick(artwork)}
+              showCart={artwork.listing_type === 'MARKETPLACE'}
+              showVideo={asset?.media_type === 'VIDEO'}
+              artist={[
+                {
+                  id: artwork.creator_id,
+                  name: artwork.creator?.profile?.display_name || artwork.creator?.username || 'Artist',
+                  avatarUrl: artwork.creator?.profile?.avatar_url ?? '/images/image-avatar.svg',
+                },
+              ]}
+              stats={{ likes: String(artwork.like_count), views: String(artwork.view_count) }}
+              variant="discover"
+            />
+          </div>
+        )
+      })}
     </div>
   )
 }

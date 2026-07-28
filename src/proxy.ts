@@ -39,7 +39,7 @@ function isStaticOrApi(p: string) {
   )
 }
 
-export function middleware(request: NextRequest) {
+export function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl
 
   if (isStaticOrApi(pathname)) return NextResponse.next()

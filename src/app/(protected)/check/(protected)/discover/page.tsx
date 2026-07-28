@@ -11,7 +11,7 @@ import { CategoryPills } from '@/features/discover/components/category-pills'
 import { DiscoverResultsHeader } from '@/features/discover/components/discover-results-header'
 import { MasonryArtworkGrid } from '@/features/discover/components/masonry-artwork-grid'
 import { LoadMoreButton } from '@/features/discover/components/load-more-button'
-import ArtworkViewOverlay from '@/features/artwork/components/home/artwork-view-overlay'
+import ArtworkViewOverlay from '@/features/artwork/components/artwork-view-overlay'
 import type { Artwork } from '@/types/artwork'
 import type { FeedSort } from '@/features/home/types'
 
@@ -29,7 +29,7 @@ export default function DiscoverPage() {
     fetchNextPage,
     refetch,
   } = useFeed({
-    categories: Array(category as string) ?? undefined,
+    category: category ?? undefined,
     sort: sort === 'all' ? undefined : sort,
   })
 
@@ -47,7 +47,7 @@ export default function DiscoverPage() {
       ? Math.min(activeArtworkIndex + 1, artworks.length - 1)
       : Math.max(activeArtworkIndex - 1, 0)
     if (nextIndex === activeArtworkIndex) return
-    setActiveArtwork(artworks[nextIndex] as Artwork)
+    setActiveArtwork(artworks[nextIndex])
   }
 
   return (

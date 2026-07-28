@@ -6,9 +6,10 @@ interface Props {
     artworks: Artwork[]
     num: number
     artVariant: "standard" | "discover" | "bland" | "shop"
+    onCardClick?: (artwork: Artwork, index: number) => void
 }
 
-const ArtGrid = ({ artworks, num, artVariant }: Props) => {
+const ArtGrid = ({ artworks, num, artVariant, onCardClick }: Props) => {
     return (
         <div className='py-12 px-8 gap-x-4 gap-y-12 grid grid-cols-4'>
             {artworks.slice(num)?.map((art, index) => {
@@ -31,6 +32,7 @@ const ArtGrid = ({ artworks, num, artVariant }: Props) => {
                         variant={artVariant}
                         image={art.assets?.[0]?.optimized_url || art.assets?.[0]?.original_url || '/placeholder.png'} 
                         title={art.title}
+                        onCardClick={onCardClick ? () => onCardClick(art, index) : undefined}
                         artist={mappedArtists}
                         stats={{
                             likes: art.like_count?.toString() || '0',

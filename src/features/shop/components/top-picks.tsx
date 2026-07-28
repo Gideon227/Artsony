@@ -3,7 +3,7 @@
 import React, { useEffect, useState, useRef, useCallback } from 'react'
 import { Artwork } from '@/types/artwork'
 import { ArtCard } from '@/components/ui/art-card'
-import ArtworkViewOverlay from '@/features/artwork/components/artwork-view-overlay'
+import ArtworkViewOverlay from '@/features/artwork/components/shop/artwork-view-overlay'
 import { useTopPicks } from '@/hooks/use-artwork'
 
 const TopPicks = () => {

@@ -124,11 +124,17 @@ export const artworkService = {
   unlike: (id: string): Promise<ApiResponse<Artwork>> =>
     apiClient.delete<ApiResponse<Artwork>>(`/api/artworks/${id}/like`),
 
-  save: (id: string): Promise<void> =>
-    apiClient.post<void>(`/api/artworks/${id}/save`),
+  // save: (id: string): Promise<void> =>
+  //   apiClient.post<void>(`/api/artworks/${id}/save`),
 
-  unsave: (id: string): Promise<void> =>
-    apiClient.delete<void>(`/api/artworks/${id}/save`),
+  // unsave: (id: string): Promise<void> =>
+  //   apiClient.delete<void>(`/api/artworks/${id}/save`),
+
+  toggleSave: (id: string): Promise<ApiResponse<{ saved: boolean; save_count: number }>> =>
+    apiClient.post(`/api/artworks/${id}/save`),
+
+  report: (id: string, reason: string, notes?: string): Promise<ApiResponse<void>> =>
+    apiClient.post(`/api/artworks/${id}/report`, { reason, notes }),
 
   // ── Moderation (MODERATOR / ADMIN only) ─────────────────────────────────────
 

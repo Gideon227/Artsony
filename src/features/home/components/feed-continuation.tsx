@@ -13,9 +13,10 @@ interface FeedContinuationProps {
   hasNextPage?: boolean
   isFetchingNextPage: boolean
   onLoadMore: () => void
+  onArtworkClick: (artwork: Artwork) => void
 }
 
-export function FeedContinuation({ artworks, isLoading, hasNextPage, isFetchingNextPage, onLoadMore }: FeedContinuationProps) {
+export function FeedContinuation({ artworks, isLoading, hasNextPage, isFetchingNextPage, onLoadMore, onArtworkClick }: FeedContinuationProps) {
   if (!isLoading && artworks.length === 0) return null
 
   return (
@@ -36,7 +37,8 @@ export function FeedContinuation({ artworks, isLoading, hasNextPage, isFetchingN
                 <ArtCard
                   image={artwork.assets[0]?.thumbnail_url ?? artwork.assets[0]?.optimized_url ?? artwork.assets[0]?.original_url ?? ''}
                   title={artwork.title}
-                  cardLink={`/artwork/${artwork.id}`}
+                  onCardClick={() => onArtworkClick(artwork)}
+                  showVideo={artwork.assets[0]?.media_type === 'VIDEO'}
                   artist={[{
                     id: artwork.creator_id,
                     name: artwork.creator?.profile?.display_name || artwork.creator?.username || 'Artist',

@@ -12,8 +12,9 @@ import TopArt from '@/features/shop/components/top-arts'
 import TopPicks from '@/features/shop/components/top-picks'
 import { ResultsGrid } from '@/features/search/components/results-grid'
 import { useInfiniteArtworkResults } from '@/hooks/use-artwork'
-import type { ArtworkFilters } from '@/types/artwork'
-import Footer from '@/components/layout/footer'
+import type { ArtworkFilters, Artwork } from '@/types/artwork'
+import ArtworkViewOverlay from '@/features/artwork/components/shop/artwork-view-overlay'
+import { ShopResultsGrid } from '@/features/shop/components/shop-result-grid'
 
 function toArtworkFilters(query: string, filters: ShopFilterState): ArtworkFilters {
   // listing_type is always MARKETPLACE here — Shop only ever surfaces
@@ -70,8 +71,19 @@ const ShopPage = () => {
   const artworks = useMemo(() => data?.pages.flatMap((p) => p.data) ?? [], [data])
   const total = data?.pages[0]?.total
 
+  const [activeGridIndex, setActiveGridIndex] = useState<number | null>(null)
+  const activeGridArtwork = activeGridIndex !== null ? artworks[activeGridIndex] ?? null : null
+
+  const handleGridNavigate = (direction: 'prev' | 'next') => {
+    if (activeGridIndex === null) return
+    const nextIndex = direction === 'next'
+      ? Math.min(activeGridIndex + 1, artworks.length - 1)
+      : Math.max(activeGridIndex - 1, 0)
+    if (nextIndex !== activeGridIndex) setActiveGridIndex(nextIndex)
+  }
+
   return (
-    <div>
+    <div className='bg-white'>
       <Navbar />
       <HeroSection />
       <SearchSection
@@ -83,7 +95,7 @@ const ShopPage = () => {
       />
 
       {isSearchMode ? (
-        <ResultsGrid
+        <ShopResultsGrid
           artworks={artworks}
           isLoading={isLoading}
           isFetchingNextPage={isFetchingNextPage}
@@ -98,7 +110,16 @@ const ShopPage = () => {
           <TopArt />
           <AroundTheWorld />
 
-          <ArtGrid artworks={artworks} num={0} artVariant="shop" />
+          <ArtGrid artworks={artworks} num={0} artVariant="shop" onCardClick={(_, index) => setActiveGridIndex(index)} />
+
+          {activeGridArtwork && (
+            <ArtworkViewOverlay
+              artwork={activeGridArtwork}
+              onClose={() => setActiveGridIndex(null)}
+              onNavigate={handleGridNavigate}
+            />
+          )}
+
 
           <div className="flex justify-center pb-16">
             {hasNextPage && (
@@ -114,7 +135,6 @@ const ShopPage = () => {
           </div>
         </>
       )}
-      <Footer />
     </div>
   )
 }

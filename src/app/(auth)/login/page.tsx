@@ -42,7 +42,7 @@ export default function LoginPage() {
       <MobileAuthHero onBack={() => router.back()} />
 
       {/* Form panel */}
-      <section className="max-lg:absolute max-lg:left-4 max-lg:bottom-6 relative z-10 flex-1 flex flex-col items-center mt-[30vh] lg:mt-0">
+      <section className="max-lg:absolute max-lg:left-4 max-lg:bottom-6 relative z-10 flex-1 flex flex-col self-center items-center mt-[30vh] lg:mt-0">
         <div className="w-full bg-white rounded-xl lg:rounded-none flex flex-col justify-between h-full py-12 lg:py-0 px-6 lg:px-0">
 
           <div style={{ marginBottom: 80 }} className="flex justify-center mb-20">

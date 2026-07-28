@@ -87,6 +87,7 @@ export type Artwork = {
   show_engagement_stats: boolean
   status: ArtworkStatus
   is_flagged: boolean
+  is_saved: boolean
   moderation_status: ModerationStatus
   reviewed_by: string | null
   review_notes: string | null
@@ -103,6 +104,16 @@ export type Artwork = {
   created_at: string
   updated_at: string
   deleted_at: string | null
+  /**
+   * Not yet on the backend — artwork upload never wired this up. Added here
+   * as optional so the overlay can render it when it exists and fall back to
+   * a placeholder when it doesn't. Remove this comment once the backend
+   * actually sends it.
+   */
+  license?: {
+    type: string
+    url?: string
+  }
 }
 
 // ── DTOs ──────────────────────────────────────────────────────────────────────

@@ -11,13 +11,30 @@ import { ArtCard } from '@/components/ui/art-card'
 import { useMarketplaceArtworks } from '@/hooks/use-artwork'
 import { formatNumber } from '@/utils'
 import { cn } from '@/utils'
+import { Artwork } from '@/types'
+import ArtworkViewOverlay from '@/features/artwork/components/shop/artwork-view-overlay'
 
 export function CreatorCTASection() {
   const router = useRouter()
   const [currentIndex, setCurrentIndex] = useState(0)
+  const [activeArtwork, setActiveArtwork] = useState<Artwork | null>(null)
+  
 
   const { data, isLoading } = useMarketplaceArtworks(10)
   const artworks = data?.data ?? []
+
+  const activeArtworkIndex = activeArtwork
+    ? artworks.findIndex((a) => a.id === activeArtwork.id)
+    : -1
+
+  const handleNavigateArtwork = (direction: 'prev' | 'next') => {
+    if (activeArtworkIndex === -1) return
+    const nextIndex = direction === 'next'
+      ? Math.min(activeArtworkIndex + 1, artworks.length - 1)
+      : Math.max(activeArtworkIndex - 1, 0)
+    if (nextIndex === activeArtworkIndex) return
+    setActiveArtwork(artworks[nextIndex] as Artwork)
+  }
 
   if (!isLoading && artworks.length === 0) return null
 
@@ -68,7 +85,7 @@ export function CreatorCTASection() {
                     <ArtCard
                       image={artwork.assets[0]?.thumbnail_url ?? artwork.assets[0]?.optimized_url ?? artwork.assets[0]?.original_url ?? ''}
                       title={artwork.title}
-                      cardLink={`/artwork/${artwork.id}`}
+                      onCardClick={() => setActiveArtwork(artwork)}
                       artist={[{
                         id: artwork.creator_id,
                         name: artwork.creator?.profile?.display_name || artwork.creator?.username || 'Artist',
@@ -126,6 +143,14 @@ export function CreatorCTASection() {
           </Button>
         </div>
       </div>
+
+      {activeArtwork && (
+        <ArtworkViewOverlay
+          artwork={activeArtwork}
+          onClose={() => setActiveArtwork(null)}
+          onNavigate={handleNavigateArtwork}
+        />
+      )}
     </section>
   )
 }

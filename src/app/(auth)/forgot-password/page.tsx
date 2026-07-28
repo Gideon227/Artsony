@@ -35,7 +35,7 @@ export default function ForgotPasswordPage() {
   }
 
   return (
-    <main className="min-h-screen w-full flex gap-x-[132px] bg-white relative overflow-hidden p-4 lg:p-16">
+    <main className="min-h-screen w-full flex gap-x-[132px] bg-white relative overflow-hidden p-4 md:p-16">
 
       {/* Mobile hero */}
       <MobileAuthHero
@@ -49,7 +49,7 @@ export default function ForgotPasswordPage() {
       </section>
 
       {/* Form panel */}
-      <div className=" flex-1 flex flex-col items-center mt-[30vh] lg:mt-0">
+      <div className=" flex-1 flex flex-col self-center items-center mt-[45vh] lg:mt-0">
         <div className="w-full relative bg-white rounded-xl lg:rounded-none flex flex-col justify-between py-12 lg:py-0 px-6 lg:px-0">
           <div className="flex flex-col justify-center">
 

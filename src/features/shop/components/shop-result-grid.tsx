@@ -8,7 +8,7 @@ import { motion } from 'framer-motion'
 import { ArtCard } from '@/components/ui/art-card'
 import { Skeleton } from '@/components/ui/skeleton'
 import type { Artwork } from '@/types'
-import EmptySearch from './empty-search'
+import EmptySearch from '../../search/components/empty-search'
 
 // ─── ResultsGrid ──────────────────────────────────────────────────────────────
 
@@ -20,10 +20,9 @@ type ResultsGridProps = {
   fetchNextPage: () => void
   query: string
   total?: number
-  onArtworkClick: (artwork: Artwork) => void
 }
 
-export function ResultsGrid({
+export function ShopResultsGrid({
   artworks,
   isLoading,
   isFetchingNextPage,
@@ -31,7 +30,6 @@ export function ResultsGrid({
   fetchNextPage,
   query,
   total,
-  onArtworkClick,
 }: ResultsGridProps) {
   const observerRef = useRef<IntersectionObserver | null>(null)
 
@@ -63,6 +61,8 @@ export function ResultsGrid({
     return <EmptySearch />
   }
 
+  {console.log("Artworks: ", artworks)}
+
   return (
     <div className="max-w-[1440px] mx-auto px-4 md:px-8 py-8">
       {/* Result count */}
@@ -84,11 +84,9 @@ export function ResultsGrid({
             className="flex justify-center"
           >
             <ArtCard
-              image={artwork.assets[0]?.thumbnail_url || artwork.assets[0]?.optimized_url || artwork.assets[0]?.original_url as string}
+              image={artwork.assets[0]?.original_url as string}
               title={artwork.title}
-              onCardClick={() => onArtworkClick(artwork)}
-              showCart={artwork.listing_type === 'MARKETPLACE'}
-              showVideo={artwork.assets[0]?.media_type === 'VIDEO'}
+              cardLink={`/artwork/${artwork.id}`}
               artist={[{
                 id: artwork.creator_id,
                 name: artwork.creator?.username as string,
