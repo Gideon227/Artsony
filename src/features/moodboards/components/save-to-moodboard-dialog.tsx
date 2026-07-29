@@ -144,7 +144,7 @@ export function SaveToMoodboardDialog({
             onClick={handleCreate}
             isLoading={isCreating}
             disabled={!newTitle.trim()}
-            leftIcon={<Plus className="h-4 w-4" />}
+            leftIcon='/icons/plus-white-bg.svg'
             className="shrink-0"
           >
             Create
