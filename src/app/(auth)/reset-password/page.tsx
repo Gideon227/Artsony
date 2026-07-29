@@ -149,29 +149,31 @@ function ResetPasswordContent() {
       </section>
 
       {/* Form panel */}
-      <div className="w-full lg:w-1/2 flex flex-col justify-end lg:justify-center lg:items-center z-10 bg-white">
-        <div className="rounded-t-[2.5rem] lg:rounded-none w-full min-h-[50vh] lg:min-h-screen py-10 lg:py-16 flex flex-col items-center shadow-[0_-8px_30px_rgba(0,0,0,0.12)] lg:shadow-none overflow-y-auto">
-          <div className="w-full min-w-[420px] flex flex-col relative h-full flex-1">
-            <div className="flex-1 flex flex-col justify-center">
+      <Suspense>
+        <div className="w-full lg:w-1/2 flex flex-col justify-end lg:justify-center lg:items-center z-10 bg-white">
+          <div className="rounded-t-[2.5rem] lg:rounded-none w-full min-h-[50vh] lg:min-h-screen py-10 lg:py-16 flex flex-col items-center shadow-[0_-8px_30px_rgba(0,0,0,0.12)] lg:shadow-none overflow-y-auto">
+            <div className="w-full min-w-[420px] flex flex-col relative h-full flex-1">
+              <div className="flex-1 flex flex-col justify-center">
 
-              <div className="flex justify-center mb-10 lg:mb-20">
-                <Image src="/icons/logo.svg" alt="Artsony" width={160} height={40} priority />
-              </div>
+                <div className="flex justify-center mb-10 lg:mb-20">
+                  <Image src="/icons/logo.svg" alt="Artsony" width={160} height={40} priority />
+                </div>
 
-              {isValidLink
-                ? <ResetPasswordForm token={token!} email={email!} />
-                : <InvalidLinkPanel />
-              }
+                {isValidLink
+                  ? <ResetPasswordForm token={token!} email={email!} />
+                  : <InvalidLinkPanel />
+                }
 
-              <div className="hidden lg:flex mt-10 justify-center gap-6 text-sm text-neutral-500 font-medium">
-                {[['Privacy', '/privacy'], ['Terms & Conditions', '/terms'], ['FAQ', '/faq'], ['About', '/about']].map(([label, href]) => (
-                  <Link key={label} href={href!} className="hover:text-neutral-800 transition-colors">{label}</Link>
-                ))}
+                <div className="hidden lg:flex mt-10 justify-center gap-6 text-sm text-neutral-500 font-medium">
+                  {[['Privacy', '/privacy'], ['Terms & Conditions', '/terms'], ['FAQ', '/faq'], ['About', '/about']].map(([label, href]) => (
+                    <Link key={label} href={href!} className="hover:text-neutral-800 transition-colors">{label}</Link>
+                  ))}
+                </div>
               </div>
             </div>
           </div>
         </div>
-      </div>
+      </Suspense>
     </main>
   )
 }

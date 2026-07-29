@@ -45,43 +45,45 @@ export default function OrderManagementPage() {
     return (
         <>
             <Navbar />
-            <div className="grid grid-cols-4 gap-4 py-6 px-8 bg-white w-full">
-                <div className='col-span-1'>
-                    <OrdersSidebarNav
-                        activeGroup={filters.statusGroup}
-                        onChangeGroup={(statusGroup) => updateFilters((prev) => ({ ...prev, statusGroup, page: 1 }))}
-                        counts={statusCounts}
-                    />
-                </div>
-
-                <div style={{ backgroundColor: '#F5FAFA', gridColumn: 'span 3 / span 3' }} className="col-span-3 rounded-2xl p-4 flex flex-col gap-y-12">
-                    <OrdersFilterBar
-                        filters={filters}
-                        onFiltersChange={updateFilters}
-                        resultCount={total}
-                        isFiltered={hasActiveFilters(filters)}
-                    />
-
-                    <div className="">
-                        <OrdersTable
-                            orders={pageData}
-                            isLoading={isLoading}
-                            isError={isError}
-                            onRetry={() => refetch()}
-                            getDetailHref={(order) => `/orders/${order.id}`}
+            <React.Suspense>
+                <div className="grid grid-cols-4 gap-4 py-6 px-8 bg-white w-full">
+                    <div className='col-span-1'>
+                        <OrdersSidebarNav
+                            activeGroup={filters.statusGroup}
+                            onChangeGroup={(statusGroup) => updateFilters((prev) => ({ ...prev, statusGroup, page: 1 }))}
+                            counts={statusCounts}
                         />
                     </div>
 
-                    {!isLoading && !isError && pageData.length > 0 && (
-                    <Pagination
-                        page={filters.page}
-                        totalPages={totalPages}
-                        onPageChange={(page) => updateFilters((prev) => ({ ...prev, page }))}
-                        className="mt-6"
-                    />
-                    )}
+                    <div style={{ backgroundColor: '#F5FAFA', gridColumn: 'span 3 / span 3' }} className="col-span-3 rounded-2xl p-4 flex flex-col gap-y-12">
+                        <OrdersFilterBar
+                            filters={filters}
+                            onFiltersChange={updateFilters}
+                            resultCount={total}
+                            isFiltered={hasActiveFilters(filters)}
+                        />
+
+                        <div className="">
+                            <OrdersTable
+                                orders={pageData}
+                                isLoading={isLoading}
+                                isError={isError}
+                                onRetry={() => refetch()}
+                                getDetailHref={(order) => `/orders/${order.id}`}
+                            />
+                        </div>
+
+                        {!isLoading && !isError && pageData.length > 0 && (
+                        <Pagination
+                            page={filters.page}
+                            totalPages={totalPages}
+                            onPageChange={(page) => updateFilters((prev) => ({ ...prev, page }))}
+                            className="mt-6"
+                        />
+                        )}
+                    </div>
                 </div>
-            </div>
+            </React.Suspense>
         </>
     )
 }
