@@ -8,9 +8,9 @@ const ProfileArtCard = ({ artworks }: { artworks: Artwork[] }) => {
             {artworks?.map((art, index) => {
                 const formattedArtists: Artist[] = [
                     {
-                        id: String(art.artist?.id || index),
-                        name: art.artist?.username || 'Unknown Artist',
-                        avatarUrl: art.artist?.avatarUrl || '/images/image-avatar.svg',
+                        id: String(art.creator_id || index),
+                        name: art.creator?.username || 'Unknown Artist',
+                        avatarUrl: art.creator?.profile?.avatar_url || '/images/image-avatar.svg',
                         role: 'Artist',
                         // stats: {
                         //     followers: String(art. || '0'),
@@ -24,12 +24,12 @@ const ProfileArtCard = ({ artworks }: { artworks: Artwork[] }) => {
                 return (
                     <div key={art.id || index} className="w-full flex justify-center">
                         <ArtCard 
-                            image={art.imageUrl}
+                            image={art.assets[0]?.original_url as string}
                             title={art.title || 'Profile Art'}
                             artist={formattedArtists} 
                             stats={{
-                                likes: String(art.likesCount || '0'),
-                                views: String(art.viewsCount || '0')
+                                likes: String(art.like_count || '0'),
+                                views: String(art.view_count || '0')
                             }}
                             cardLink={`/artwork/${art.id}`}
                             onAction={(action) => console.log('Action:', action)}

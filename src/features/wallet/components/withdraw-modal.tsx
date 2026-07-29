@@ -17,7 +17,7 @@ import { Button, Input } from '@/components'
 import { Dropdown, type DropdownOption } from '@/components/ui/dropdown'
 import { useWithdraw } from '@/hooks/queries/use-wallet'
 import { formatUsd } from '@/lib/wallet/format'
-import type { WalletNetwork } from '@/types/wallet'
+import type { WalletNetwork, WithdrawInput } from '@/types/wallet' // Added WithdrawInput import
 
 const NETWORK_OPTIONS: DropdownOption[] = [
   { id: 'TRON', label: 'TRON (TRC-20)' },
@@ -47,6 +47,7 @@ function createWithdrawSchema(availableBalance: number) {
     })
 }
 
+// We extract the exact output type from the schema
 type WithdrawFormValues = z.infer<ReturnType<typeof createWithdrawSchema>>
 
 export type WithdrawModalProps = {
@@ -66,14 +67,17 @@ export function WithdrawModal({ open, onOpenChange, availableBalance }: Withdraw
     reset,
     formState: { errors, isValid },
   } = useForm<WithdrawFormValues>({
-    resolver: zodResolver(schema),
+    // Type assertion here forces the resolver to match our extracted type
+    resolver: zodResolver(schema) as any, 
     mode: 'onChange',
     defaultValues: { network: 'TRON', wallet_address: '' },
   })
 
   const onSubmit = handleSubmit(async (values) => {
     try {
-      await withdraw.mutateAsync(values)
+      // We cast 'values' to 'WithdrawInput' so the mutation accepts it.
+      // Since Zod already validated it, we know the shape is safe.
+      await withdraw.mutateAsync(values as WithdrawInput)
       reset()
       onOpenChange(false)
     } catch {

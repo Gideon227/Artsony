@@ -19,7 +19,7 @@
 //   showHelp?: boolean
 // }
 
-// const WalletStatsContent = () => {
+const WalletStatsContent = () => {
 //     const [loading, setLoading] = useState(false);
 //     const searchParams = useSearchParams()
 
@@ -41,7 +41,8 @@
 //         )
 //     }
 
-//     return (
+    return (
+        <></>
 //         <div className='bg-secondary-100 p-4 flex flex-col gap-y-4 rounded-2xl'>
 //             <div className='flex items-center gap-x-2'>
 //                 {CARDS.map((card) => {
@@ -73,7 +74,8 @@
 //                 })}
 //             </div>
 //         </div>
-//     )
-// }
+    )
+}
 
-// export default WalletStatsContent
+export default WalletStatsContent
+

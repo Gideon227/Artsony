@@ -1,8 +1,6 @@
 import { cva, type VariantProps } from 'class-variance-authority'
 import { cn } from '@/utils'
 
-export type BadgeVariant = 'primary' | 'secondary' | 'outline' | 'info' | 'success' | 'warning' | 'error' | 'neutral'
-
 const badgeVariants = cva(
   'inline-flex items-center gap-1 font-medium transition-colors',
   {
@@ -29,6 +27,10 @@ const badgeVariants = cva(
     },
   }
 )
+
+// Automatically extracts exactly what is defined in `variants.variant` above
+// NonNullable prevents it from including null/undefined in the export
+export type BadgeVariant = NonNullable<VariantProps<typeof badgeVariants>['variant']>
 
 type BadgeProps = React.HTMLAttributes<HTMLSpanElement> & VariantProps<typeof badgeVariants>
 

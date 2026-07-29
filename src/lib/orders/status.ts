@@ -26,7 +26,6 @@ export function getOrderStatusGroup(status: OrderStatus): OrderStatusGroup {
 export type StatusGroupMeta = {
   /** Label used in the "Order Management" sidebar nav */
   sidebarLabel: string
-  /** Label used in the Status filter dropdown and the table status badge */
   badgeLabel: string
   badgeVariant: BadgeVariant
 }
