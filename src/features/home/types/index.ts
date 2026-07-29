@@ -45,7 +45,7 @@ export type SpotlightArtist = {
   name: string
   avatarUrl: string
   quote: string
-  artworks: Pick<Artwork, 'id' | 'imageUrl' | 'title'>[]
+  artworks: Pick<Artwork, 'id' | 'assets' | 'title'>[]
 }
 
 export const FEED_TABS: FeedTab[] = [
