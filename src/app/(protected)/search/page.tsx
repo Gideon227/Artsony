@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useMemo, useCallback, useEffect } from 'react'
+import { useState, useMemo, useCallback, useEffect, Suspense } from 'react'
 import { useSearchParams, useRouter } from 'next/navigation'
 import Image from 'next/image'
 import { AnimatePresence, motion } from 'framer-motion'
@@ -17,31 +17,27 @@ import { DropdownOption } from '@/components/ui/dropdown'
 import { INTERESTS } from '@/features/onboarding/data/interests'
 import { buildSlides } from '@/features/home/components/hero'
 
-// Price dropdown options are UI-friendly range ids ('0-500', '5000+'); the
-// API filters on numeric min_price/max_price, so this is the one place that
-// translation happens.
+// Price dropdown options translation
 function parsePriceRange(id: string): Pick<ArtworkFilters, 'min_price' | 'max_price'> {
   if (id === '5000+') return { min_price: 5000 }
   const [min, max] = id.split('-').map(Number)
   return { min_price: min, max_price: max }
 }
 
-const SearchPage = () => {
+function SearchContent() {
   const searchParams = useSearchParams()
   const router = useRouter()
 
   const urlQuery = searchParams.get('q') ?? ''
   const [localQuery, setLocalQuery] = useState(urlQuery)
-  const [index, setIndex] = useState(0);
+  const [index, setIndex] = useState(0)
   const [activeArtwork, setActiveArtwork] = useState<Artwork | null>(null)
-  
 
   useEffect(() => {
     setLocalQuery(urlQuery)
   }, [urlQuery])
 
-  // ── Filter state — this IS the source of truth for the search query now,
-  // not a separate mirrored object ──────────────────────────────────────────
+  // Filter state
   const [selectedCategory, setSelectedCategory] = useState<DropdownOption | null>(null)
   const [selectedPrice, setSelectedPrice] = useState<DropdownOption | null>(null)
   const [selectedColor, setSelectedColor] = useState<DropdownOption | null>(null)
@@ -50,32 +46,31 @@ const SearchPage = () => {
   const [locationQuery, setLocationQuery] = useState('')
 
   const { data: locations, isLoading: isLoadingLocations } = useArtworkLocations()
+  const { data: featured, isError } = useHeroArtworks(5)
 
-  const { data: featured, isError } = useHeroArtworks(5);
-  
   useEffect(() => {
     if (isError) {
-      console.error('[HeroSection] Failed to load featured artworks — showing placeholders');
+      console.error('[HeroSection] Failed to load featured artworks — showing placeholders')
     }
-  }, [isError]);
+  }, [isError])
 
-  const slides = useMemo(() => buildSlides(featured), [featured]);
-
-  useEffect(() => {
-    setIndex(0);
-  }, [slides]);
-
-  const currentSlide = slides[index];
+  const slides = useMemo(() => buildSlides(featured), [featured])
 
   useEffect(() => {
-    if (slides.length <= 1) return;
+    setIndex(0)
+  }, [slides])
+
+  const currentSlide = slides[index]
+
+  useEffect(() => {
+    if (slides.length <= 1) return
 
     const timer = setInterval(() => {
-      setIndex((prev) => (prev + 1) % slides.length);
-    }, 6000);
+      setIndex((prev) => (prev + 1) % slides.length)
+    }, 6000)
 
-    return () => clearInterval(timer);
-  }, [slides.length]);
+    return () => clearInterval(timer)
+  }, [slides.length])
 
   const locationOptions: DropdownOption[] = useMemo(() => {
     const list = (locations ?? []).map((l) => ({ id: l.label, label: l.label }))
@@ -96,7 +91,6 @@ const SearchPage = () => {
     { id: '5000+', label: 'Over $5,000' },
   ]
 
-  // Not yet wired into the query — see note on SearchFilters.color
   const colorOptions: DropdownOption[] = [
     { id: 'red', label: 'Red', icon: '/icons/colors/red.svg' },
     { id: 'blue', label: 'Blue', icon: '/icons/colors/blue.svg' },
@@ -188,7 +182,6 @@ const SearchPage = () => {
     router.push(`/search?q=${encodeURIComponent(trimmed)}`)
   }
 
-  // ── Data fetching — filters flow straight from dropdown state now ────────
   const searchFilters: ArtworkFilters = useMemo(
     () => ({
       search: urlQuery || undefined,
@@ -210,36 +203,34 @@ const SearchPage = () => {
 
   const handleNavigateArtwork = (direction: 'prev' | 'next') => {
     if (activeArtworkIndex === -1) return
-    const nextIndex = direction === 'next'
-      ? Math.min(activeArtworkIndex + 1, artworks.length - 1)
-      : Math.max(activeArtworkIndex - 1, 0)
+    const nextIndex =
+      direction === 'next'
+        ? Math.min(activeArtworkIndex + 1, artworks.length - 1)
+        : Math.max(activeArtworkIndex - 1, 0)
     if (nextIndex === activeArtworkIndex) return
     setActiveArtwork(artworks[nextIndex] as Artwork)
   }
 
-  if (!currentSlide) return <div className="h-screen w-full bg-black" />;
-
+  if (!currentSlide) return <div className="h-screen w-full bg-black" />
 
   return (
     <div className="min-h-screen bg-white flex flex-col">
       <Navbar hideSearchBar />
 
-      <section
-        className="relative h-[80vh] md:h-[calc(95vh-72px)] w-full overflow-hidden bg-black"
-      >
-        <AnimatePresence> 
+      <section className="relative h-[80vh] md:h-[calc(95vh-72px)] w-full overflow-hidden bg-black">
+        <AnimatePresence>
           <motion.div
             key={currentSlide.id}
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            transition={{ duration: 5, ease: "easeInOut" }} 
+            transition={{ duration: 5, ease: 'easeInOut' }}
             className="absolute inset-0"
           >
-            <motion.div 
+            <motion.div
               initial={{ scale: 1.1 }}
               animate={{ scale: 1 }}
-              transition={{ duration: 8, ease: "linear" }}
+              transition={{ duration: 8, ease: 'linear' }}
               className="absolute inset-0 bg-cover bg-center"
               style={{ backgroundImage: `url('${currentSlide.image}')` }}
             >
@@ -249,18 +240,17 @@ const SearchPage = () => {
 
             {/* Artist Info */}
             <div className="absolute bottom-8 left-8 max-w-2xl z-10" style={{ bottom: 32, left: 32 }}>
-            
-              <motion.div 
+              <motion.div
                 initial={{ x: -30, opacity: 0 }}
                 animate={{ x: 0, opacity: 1 }}
-                transition={{ delay: 1.5, duration: 1.5, ease: "easeOut" }}
+                transition={{ delay: 1.5, duration: 1.5, ease: 'easeOut' }}
                 className="flex items-center gap-2 mb-4 group cursor-pointer w-fit"
               >
-                <Image 
-                  src={currentSlide.artistAvatar} 
+                <Image
+                  src={currentSlide.artistAvatar}
                   alt={currentSlide.artistName}
                   width={40}
-                  height={40} 
+                  height={40}
                   className="w-10 h-10 rounded-full border border-white/30 object-cover"
                 />
                 <div className="flex items-center gap-2">
@@ -271,10 +261,10 @@ const SearchPage = () => {
                 </div>
               </motion.div>
 
-              <motion.p 
+              <motion.p
                 initial={{ y: 20, opacity: 0 }}
                 animate={{ y: 0, opacity: 1 }}
-                transition={{ delay: 2, duration: 1.5, ease: "easeOut" }}
+                transition={{ delay: 2, duration: 1.5, ease: 'easeOut' }}
                 className="text-white/80 text-[12px] md:text-[14px] font-medium italic leading-relaxed max-w-lg"
               >
                 “{currentSlide.bio}”
@@ -283,11 +273,9 @@ const SearchPage = () => {
           </motion.div>
         </AnimatePresence>
 
-        {/* pointer-events-none ensures this layer doesn't block clicks on the Artist Info below */}
         <div className="relative z-20 h-full flex flex-col justify-center px-4 md:px-8 pointer-events-none">
           <div className="max-w-5xl mx-auto w-full flex justify-center pointer-events-auto">
             <div className="relative flex flex-col items-center justify-center gap-5 w-full px-4 py-16 md:py-20">
-              
               <div className="w-full max-w-xl">
                 <SearchInput
                   value={localQuery}
@@ -301,7 +289,7 @@ const SearchPage = () => {
 
               {urlQuery && (
                 <motion.h2
-                  key={urlQuery} // This will only animate when the search term changes, not when the slide changes
+                  key={urlQuery}
                   initial={{ opacity: 0, y: 6 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.4 }}
@@ -316,7 +304,6 @@ const SearchPage = () => {
                   {urlQuery}
                 </motion.h2>
               )}
-              
             </div>
           </div>
         </div>
@@ -334,7 +321,7 @@ const SearchPage = () => {
           onArtworkClick={setActiveArtwork}
         />
       </main>
-      
+
       <FilterComponent dropdowns={filterDropdowns} onClear={handleClearFilters} />
 
       <Footer />
@@ -350,4 +337,10 @@ const SearchPage = () => {
   )
 }
 
-export default SearchPage
+export default function SearchPage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen bg-black" />}>
+      <SearchContent />
+    </Suspense>
+  )
+}

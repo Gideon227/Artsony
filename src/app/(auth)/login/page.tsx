@@ -1,12 +1,11 @@
 'use client'
 
-import React from 'react'
+import React, { Suspense } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { z } from 'zod'
 
 import { Input } from '@/components/ui/input'
 import { LoginArtworkGrid } from '@/features/auth/components/login-artwork-grid'
@@ -14,8 +13,8 @@ import { MobileAuthHero } from '@/features/auth/components/mobile-auth-hero'
 import { useLogin } from '@/hooks/use-auth-mutations'
 import { loginSchema, type LoginInput } from "@/features/auth/schemas/login.schema";
 
-
-export default function LoginPage() {
+// 1. Rename your original default export to a standard function
+function LoginContent() {
   const router = useRouter()
   const { mutate: login, isPending } = useLogin()
 
@@ -111,7 +110,6 @@ export default function LoginPage() {
               {(['google', 'apple', 'facebook'] as const).map((provider) => (
                 <a
                   key={provider}
-                  // href={`${process.env.NEXT_PUBLIC_API_URL}/api/auth/oauth/${provider}`}
                   href='/login/google'
                   className="w-10 h-10 rounded-full border border-secondary-400 flex items-center justify-center hover:bg-gray-50 transition-colors"
                   aria-label={`Sign in with ${provider}`}
@@ -134,5 +132,15 @@ export default function LoginPage() {
         </div>
       </section>
     </main>
+  )
+}
+
+// 2. Create a new default export that wraps your component in Suspense
+export default function LoginPage() {
+  return (
+    // The fallback can be a loader, but an empty div with the background color prevents a flash of unstyled content
+    <Suspense fallback={<div className="min-h-screen bg-white w-full" />}>
+      <LoginContent />
+    </Suspense>
   )
 }

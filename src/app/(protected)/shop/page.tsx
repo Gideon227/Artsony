@@ -1,6 +1,6 @@
 'use client'
 
-import { useCallback, useMemo, useState } from 'react'
+import { useCallback, useMemo, useState, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { Loader2 } from 'lucide-react'
 import { Navbar } from '@/components/layout/navbar'
@@ -10,15 +10,12 @@ import { HeroSection } from '@/features/shop/components/hero-section'
 import { SearchSection, ShopFilterState, EMPTY_SHOP_FILTERS } from '@/features/shop/components/search-section'
 import TopArt from '@/features/shop/components/top-arts'
 import TopPicks from '@/features/shop/components/top-picks'
-import { ResultsGrid } from '@/features/search/components/results-grid'
 import { useInfiniteArtworkResults } from '@/hooks/use-artwork'
-import type { ArtworkFilters, Artwork } from '@/types/artwork'
+import type { ArtworkFilters } from '@/types/artwork'
 import ArtworkViewOverlay from '@/features/artwork/components/shop/artwork-view-overlay'
 import { ShopResultsGrid } from '@/features/shop/components/shop-result-grid'
 
 function toArtworkFilters(query: string, filters: ShopFilterState): ArtworkFilters {
-  // listing_type is always MARKETPLACE here — Shop only ever surfaces
-  // purchasable artwork, unlike the home feed which mixes in portfolio pieces.
   return {
     listing_type: 'MARKETPLACE',
     status: 'PUBLISHED',
@@ -29,12 +26,10 @@ function toArtworkFilters(query: string, filters: ShopFilterState): ArtworkFilte
     max_price: filters.maxPrice ?? undefined,
     artwork_format: filters.format ?? undefined,
     location: filters.location ?? undefined,
-    // Note: filters.color is intentionally not sent — there's no color/tag
-    // column on artworks yet, so it's UI-only until that's built.
   }
 }
 
-const ShopPage = () => {
+function ShopContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const query = searchParams.get('q') ?? ''
@@ -76,14 +71,15 @@ const ShopPage = () => {
 
   const handleGridNavigate = (direction: 'prev' | 'next') => {
     if (activeGridIndex === null) return
-    const nextIndex = direction === 'next'
-      ? Math.min(activeGridIndex + 1, artworks.length - 1)
-      : Math.max(activeGridIndex - 1, 0)
+    const nextIndex =
+      direction === 'next'
+        ? Math.min(activeGridIndex + 1, artworks.length - 1)
+        : Math.max(activeGridIndex - 1, 0)
     if (nextIndex !== activeGridIndex) setActiveGridIndex(nextIndex)
   }
 
   return (
-    <div className='bg-white'>
+    <div className="bg-white">
       <Navbar />
       <HeroSection />
       <SearchSection
@@ -110,7 +106,12 @@ const ShopPage = () => {
           <TopArt />
           <AroundTheWorld />
 
-          <ArtGrid artworks={artworks} num={0} artVariant="shop" onCardClick={(_, index) => setActiveGridIndex(index)} />
+          <ArtGrid
+            artworks={artworks}
+            num={0}
+            artVariant="shop"
+            onCardClick={(_, index) => setActiveGridIndex(index)}
+          />
 
           {activeGridArtwork && (
             <ArtworkViewOverlay
@@ -119,7 +120,6 @@ const ShopPage = () => {
               onNavigate={handleGridNavigate}
             />
           )}
-
 
           <div className="flex justify-center pb-16">
             {hasNextPage && (
@@ -139,4 +139,10 @@ const ShopPage = () => {
   )
 }
 
-export default ShopPage
+export default function ShopPage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen bg-white" />}>
+      <ShopContent />
+    </Suspense>
+  )
+}
