@@ -1,64 +1,96 @@
 'use client'
 
 import * as React from 'react'
-import { AnimatePresence, motion } from 'framer-motion'
-import { CheckCircle, AlertCircle, AlertTriangle, Info, X } from 'lucide-react'
+import { AnimatePresence, motion, animate, useMotionValue } from 'framer-motion'
+import { CheckCircle2, AlertCircle, AlertTriangle, Info, X } from 'lucide-react'
 import { useUIStore, type Toast, type ToastVariant } from '@/store'
 import { cn } from '@/utils'
 
+const DEFAULT_DURATION = 4000
+
 const icons: Record<ToastVariant, React.ReactNode> = {
-  success: <CheckCircle className="h-4 w-4 shrink-0" />,
-  error: <AlertCircle className="h-4 w-4 shrink-0" />,
-  warning: <AlertTriangle className="h-4 w-4 shrink-0" />,
-  info: <Info className="h-4 w-4 shrink-0" />,
+  success: <CheckCircle2 className="h-[18px] w-[18px]" strokeWidth={2.25} />,
+  error: <AlertCircle className="h-[18px] w-[18px]" strokeWidth={2.25} />,
+  warning: <AlertTriangle className="h-[18px] w-[18px]" strokeWidth={2.25} />,
+  info: <Info className="h-[18px] w-[18px]" strokeWidth={2.25} />,
 }
 
-const variantClasses: Record<ToastVariant, string> = {
-  success: 'bg-success-50 border-success-200 text-success-800',
-  error: 'bg-error-50 border-error-200 text-error-800',
-  warning: 'bg-warning-50 border-warning-200 text-warning-800',
-  info: 'bg-info-50 border-info-200 text-info-800',
+const chipClasses: Record<ToastVariant, string> = {
+  success: 'bg-successful-100 text-successful-600',
+  error: 'bg-error-100 text-error-600',
+  warning: 'bg-warning-100 text-warning-600',
+  info: 'bg-info-100 text-info-600',
 }
 
-const iconClasses: Record<ToastVariant, string> = {
-  success: 'text-success-600',
-  error: 'text-error-600',
-  warning: 'text-warning-600',
-  info: 'text-info-600',
+const barClasses: Record<ToastVariant, string> = {
+  success: 'bg-successful-500',
+  error: 'bg-error-500',
+  warning: 'bg-warning-500',
+  info: 'bg-info-500',
 }
 
 function ToastItem({ toast }: { toast: Toast }) {
   const removeToast = useUIStore((s) => s.removeToast)
+  const duration = toast.duration ?? DEFAULT_DURATION
+  const isPersistent = !Number.isFinite(duration) || duration <= 0
+
+  // 1 → 0 over `duration`, driving both the visible progress bar and the
+  // actual dismiss timing, so the bar never "lies" about time remaining.
+  const progress = useMotionValue(1)
+  const controlsRef = React.useRef<ReturnType<typeof animate> | null>(null)
+
+  React.useEffect(() => {
+    if (isPersistent) return
+    controlsRef.current = animate(progress, 0, {
+      duration: duration / 1000,
+      ease: 'linear',
+      onComplete: () => removeToast(toast.id),
+    })
+    return () => controlsRef.current?.stop()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   return (
     <motion.div
       layout
-      initial={{ opacity: 0, y: 24, scale: 0.95 }}
+      initial={{ opacity: 0, y: -28, scale: 0.94 }}
       animate={{ opacity: 1, y: 0, scale: 1 }}
-      exit={{ opacity: 0, y: -8, scale: 0.95 }}
-      transition={{ type: 'spring', stiffness: 500, damping: 40 }}
+      exit={{ opacity: 0, y: -12, scale: 0.96, transition: { duration: 0.15 } }}
+      transition={{ type: 'spring', stiffness: 480, damping: 36 }}
+      onHoverStart={() => controlsRef.current?.pause()}
+      onHoverEnd={() => controlsRef.current?.play()}
       role="alert"
       aria-live="polite"
       className={cn(
-        'flex w-full max-w-sm items-start gap-3 rounded-[var(--radius-lg)]',
-        'border px-4 py-3 shadow-[var(--shadow-lg)]',
-        variantClasses[toast.variant]
+        'relative flex w-[calc(100vw-2rem)] max-w-sm items-start gap-3 overflow-hidden',
+        'rounded-2xl border border-gray-100 bg-white pb-3.5 pl-4 pr-3 pt-4 shadow-[0_12px_32px_-8px_rgba(15,23,42,0.18)]'
       )}
     >
-      <span className={iconClasses[toast.variant]}>{icons[toast.variant]}</span>
-      <div className="flex flex-col gap-0.5 flex-1 min-w-0">
-        <p className="text-sm font-semibold leading-tight">{toast.title}</p>
+      <span className={cn('mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-full', chipClasses[toast.variant])}>
+        {icons[toast.variant]}
+      </span>
+
+      <div className="flex min-w-0 flex-1 flex-col gap-0.5 pt-0.5">
+        <p className="font-poppins text-[14px] font-semibold leading-snug text-heading">{toast.title}</p>
         {toast.description && (
-          <p className="text-xs opacity-80">{toast.description}</p>
+          <p className="font-poppins text-[13px] leading-snug text-gray-400">{toast.description}</p>
         )}
       </div>
+
       <button
         onClick={() => removeToast(toast.id)}
-        className="shrink-0 rounded-[var(--radius-xs)] p-0.5 opacity-60 hover:opacity-100 transition-opacity focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-current"
-        aria-label="Dismiss"
+        className="shrink-0 rounded-full p-1 text-gray-300 transition-colors hover:bg-gray-50 hover:text-gray-500 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-primary-500"
+        aria-label="Dismiss notification"
       >
-        <X className="h-3.5 w-3.5" />
+        <X className="h-4 w-4" />
       </button>
+
+      {!isPersistent && (
+        <motion.div
+          style={{ scaleX: progress }}
+          className={cn('absolute inset-x-0 bottom-0 h-[3px] origin-left rounded-b-2xl', barClasses[toast.variant])}
+        />
+      )}
     </motion.div>
   )
 }
@@ -68,7 +100,7 @@ export function Toaster() {
 
   return (
     <div
-      className="fixed bottom-4 right-4 z-[600] flex flex-col gap-2 pointer-events-none"
+      className="pointer-events-none fixed inset-x-0 top-4 z-[600] flex flex-col items-center gap-3 px-4"
       aria-label="Notifications"
     >
       <AnimatePresence mode="popLayout">

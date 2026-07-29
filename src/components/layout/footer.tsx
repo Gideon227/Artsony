@@ -5,7 +5,8 @@ import {
   Mail, 
   ChevronDown, 
   Copyright, 
-  ChevronsRight 
+  ChevronsRight, 
+  ArrowDown
 } from 'lucide-react';
 import { Input } from '../ui/input';
 import { Button } from '../ui/button';
@@ -140,7 +141,7 @@ const Footer = () => {
         </div>
 
         {/* Divider */}
-        <div className="w-full h-px text-primary-500 mb-8" />
+        <hr className="w-full h-px text-primary-500 mb-8" />
 
         {/* Footer Bottom */}
         <div className="flex flex-col md:flex-row items-center justify-between gap-8">
@@ -160,13 +161,13 @@ const Footer = () => {
           </div>
 
           <div className="flex flex-wrap items-center justify-center gap-8 text-sm font-medium">
-            <button className="flex items-center gap-2 px-4 py-2 border border-white/20 rounded-md hover:bg-white/5 transition-all">
-              <ChevronDown className="w-4 h-4" />
+            <button className="flex items-center gap-2 px-4 py-2 ">
+              <ArrowDown className="w-4 h-4" />
               Language
             </button>
             <div className="flex items-center gap-2 text-white">
               <Copyright className="w-4 h-4" />
-              <span>2025 Artsony All rights reserved</span>
+              <span>2026 Artsony All rights reserved</span>
             </div>
           </div>
         </div>

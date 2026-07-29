@@ -108,7 +108,7 @@ export function Navbar({ hideSearchBar = false }: { hideSearchBar?: boolean }) {
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               onClick={() => setIsMenuOpen(false)} 
-              className="fixed inset-0 bg-black/40 z-60 backdrop-blur-[2px]"
+              className="fixed inset-0 bg-black/40 z-[60] backdrop-blur-[2px]"
             />
 
             {/* 2. Menu Component (Floating over the backdrop) */}
@@ -117,7 +117,15 @@ export function Navbar({ hideSearchBar = false }: { hideSearchBar?: boolean }) {
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: -20 }}
               transition={{ type: "spring", damping: 25, stiffness: 300 }}
-              className="fixed top-20 right-6 md:right-16 z-[70]"
+              className={cn(
+                "fixed z-[70]",
+                // MOBILE: this menu's trigger is hidden below md (MobileNav owns
+                // profile access there), but centered/clamped defensively so it
+                // never breaks if that changes.
+                "max-md:inset-0 max-md:flex max-md:items-center max-md:justify-center max-md:p-4",
+                // DESKTOP: anchored under the avatar button
+                "md:top-20 md:right-6 lg:right-16"
+              )}
             >
               <UserMenuOverlay />
             </motion.div>
@@ -143,12 +151,12 @@ export function Navbar({ hideSearchBar = false }: { hideSearchBar?: boolean }) {
               className={cn(
                 "fixed z-[70]",
                 // MOBILE: Center perfectly in the middle of the screen
-                "max-md:inset-0 max-md:flex max-md:items-center max-md:justify-center",
+                "max-md:inset-0 max-md:flex max-md:items-center max-md:justify-center max-md:p-4",
                 // DESKTOP: Position tightly under the 72px navbar, close to the bell icon 
                 "md:top-[76px] md:right-20 lg:right-32"
               )}
             >
-              <NotificationModal />
+              <NotificationModal onClose={() => setIsNotificationOpen(false)} />
             </motion.div>
           </>
         )}

@@ -4,7 +4,7 @@ import type { Notification } from '@/types'
 import { NotificationList } from './notification-list'
 import UnreadNotification from './unread-notification'
 
-const NotificationModal = () => {
+const NotificationModal = ({ onClose }: { onClose?: () => void }) => {
     const [filter, setFilter] = useState<'all' | 'unread'>('all')
     const [deletingIds, setDeletingIds] = useState<Set<string>>(new Set())
     
@@ -43,10 +43,14 @@ const NotificationModal = () => {
     }
 
     return (
-        <div className='flex flex-col border border-gray-50 rounded-2xl bg-white w-9/10 h-4/5 mx-auto md:w-[40vw] md:h-[70vh] overflow-hidden shadow-2xl'>
+        <div className='flex flex-col border border-gray-50 rounded-2xl bg-white w-[calc(100vw-2rem)] max-w-[400px] h-[70vh] max-h-[560px] mx-auto md:w-[400px] md:h-[560px] md:max-h-[calc(100vh-112px)] overflow-hidden shadow-2xl'>
             <div className='flex justify-between items-center py-6 px-8 shrink-0'>
                 <h6 className='font-raleway font-medium text-h6 text-heading leading-8'>Notifications</h6>
-                <button className='border border-gray-50 p-2 rounded-full hover:bg-gray-50 transition-colors'>
+                <button
+                    onClick={onClose}
+                    aria-label="Close notifications"
+                    className='border border-gray-50 p-2 rounded-full hover:bg-gray-50 transition-colors'
+                >
                     <svg width="40" height="40" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
                         <mask id="path-1-inside-1_7128_27464" fill="white">
                             <path d="M0 20C0 8.95431 8.95431 0 20 0C31.0457 0 40 8.95431 40 20C40 31.0457 31.0457 40 20 40C8.95431 40 0 31.0457 0 20Z"/>
@@ -58,7 +62,7 @@ const NotificationModal = () => {
             </div>
 
             <div className='flex-1 overflow-y-auto'>
-                {unreadCount > 0 
+                {isLoading || notifications.length > 0
                     ?   <NotificationList
                             notifications={notifications}
                             isLoading={isLoading}

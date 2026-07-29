@@ -59,14 +59,14 @@ export function NotificationCard({
           {/* ── Avatar + type icon ──────────────────────────────────────── */}
           <div className="relative shrink-0">
             <Avatar
-              src={n.actor.avatarUrl}
-              name={n.actor.displayName}
+              src={n.actor?.avatarUrl}
+              name={n.actor?.username}
               size="md"
             />
-            <NotificationIcon
+            {/* <NotificationIcon
               type={n.type}
               className="absolute -bottom-1 -right-1 w-[18px] h-[18px]"
-            />
+            /> */}
           </div>
 
           {/* ── Text content ────────────────────────────────────────────── */}
@@ -77,7 +77,7 @@ export function NotificationCard({
           >
             <p className="font-poppins text-[13px] leading-5 text-neutral-600 line-clamp-2">
               <span className="font-semibold text-neutral-700">
-                {n.actor.displayName}
+                {n?.actor?.username}
               </span>{' '}
               {NOTIFICATION_LABELS[n.type]}
             </p>
@@ -131,8 +131,8 @@ export function NotificationCard({
 // ─── Resolve destination href for each notification type ─────────────────────
 
 function resolveHref(n: Notification): string {
-  if (n.resourceType === 'artwork')  return ROUTES.artwork(n.resourceId)
-  if (n.resourceType === 'user')     return ROUTES.profile(n.actor.username)
-  if (n.resourceType === 'comment')  return ROUTES.artwork(n.resourceId)
+  if (n.resourceType === 'artwork') return ROUTES.artwork(n.resourceId)
+  if (n.resourceType === 'user') return ROUTES.profile(n.actor.username)
+  if (n.resourceType === 'comment') return ROUTES.artwork(n.resourceId)
   return ROUTES.notifications
 }

@@ -115,7 +115,7 @@ export default function MoodboardDetailPage() {
             size="sm"
             isLoading={isDeleting}
             onClick={handleDelete}
-            leftIcon={<Trash2 className="h-4 w-4" />}
+            leftIcon='/icons/trash-red.svg'
           >
             Delete board
           </Button>

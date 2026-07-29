@@ -43,8 +43,8 @@ export const useUIStore = create<UIState & UIActions>()(
         set((state) => {
           state.toasts.push({ ...toast, id })
         })
-        const duration = toast.duration ?? 4000
-        setTimeout(() => get().removeToast(id), duration)
+        // Auto-dismiss timing now lives in <ToastItem> — it needs to pause the
+        // countdown on hover, which a fire-and-forget timeout here can't do.
       },
 
       removeToast: (id) =>
