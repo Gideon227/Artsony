@@ -39,7 +39,7 @@ export default function MoodboardsPage() {
               onClick={handleCreate}
               isLoading={isPending}
               disabled={!title.trim()}
-              leftIcon={<Plus className="h-4 w-4" />}
+              leftIcon='/icons/plus-white-bg.svg'
             >
               Create
             </Button>
