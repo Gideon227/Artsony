@@ -60,7 +60,7 @@ function LoginContent() {
                   disabled={isPending}
                   variant={errors.email ? 'error' : 'default'}
                   autoComplete="email"
-                  className="h-10 lg:h-12 rounded-full px-6 text-base"
+                  className="h-12 rounded-full px-6 text-body-m placeholder:text-body-m"
                 />
                 {errors.email && (
                   <span className="text-sm text-error-600 pl-4">{errors.email.message}</span>
@@ -75,7 +75,7 @@ function LoginContent() {
                   disabled={isPending}
                   variant={errors.password ? 'error' : 'default'}
                   autoComplete="current-password"
-                  className="h-10 lg:h-12 rounded-full px-6 text-base"
+                  className="h-12 rounded-full px-6 text-body-m placeholder:text-body-m"
                 />
                 {errors.password && (
                   <span className="text-sm text-error-600 pl-4">{errors.password.message}</span>

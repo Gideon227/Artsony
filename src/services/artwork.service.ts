@@ -74,7 +74,7 @@ export const artworkService = {
     if (params.location)   searchParams.set('location', params.location)
     if (params.size_label) searchParams.set('size_label', params.size_label)
 
-    return apiClient.get<PaginatedArtworksResponse>(`/artworks/feed?${searchParams.toString()}`)
+    return apiClient.get<PaginatedArtworksResponse>(`/api/artworks/feed?${searchParams.toString()}`)
   },
 
   search: (query: string, filters?: Omit<ArtworkFilters, 'search'>):
@@ -92,10 +92,10 @@ export const artworkService = {
   },
 
   getLocations: (): Promise<ApiResponse<{ label: string; artwork_count: number }[]>> =>
-    apiClient.get('/artworks/locations'),
+    apiClient.get('/api/artworks/locations'),
 
   getSizeLabels: (): Promise<ApiResponse<{ label: string; artwork_count: number }[]>> =>
-    apiClient.get('/artworks/size-labels'),
+    apiClient.get('/api/artworks/size-labels'),
 
   // ── Writes ──────────────────────────────────────────────────────────────────
 
