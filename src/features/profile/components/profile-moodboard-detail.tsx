@@ -57,7 +57,7 @@ export function ProfileMoodboardDetail({ moodboardId, onBack, onSelectArtwork }:
         <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
           {moodboard.artworks.map((artwork) => {
             const img = pickMoodboardThumbnail(artwork) || '/placeholder.jpg'
-            const isForSale = readField(artwork, 'listing_type', '') === 'MARKETPLACE'
+            const isForSale = readField<string | null>(artwork, 'listing_type', '') === 'MARKETPLACE'
             const price = readField<number | null>(artwork, 'price', null)
             const likeCount = readField(artwork, 'like_count', 0)
             const viewCount = readField(artwork, 'view_count', 0)
