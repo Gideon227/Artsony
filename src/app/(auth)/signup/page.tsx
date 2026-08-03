@@ -58,18 +58,19 @@ export default function SignUpPage() {
   }
 
   return (
-    <main className="min-h-screen w-full flex gap-x-[132px] bg-white relative overflow-hidden p-4 md:p-16">
+    // <main className="min-h-screen w-full flex gap-x-[132px] bg-white relative overflow-hidden p-4 md:p-16">
+    <main className="h-dvh overflow-hidden flex flex-col lg:flex-row bg-white p-4 md:p-8 xl:p-10 2xl:p-12 gap-8 xl:gap-12">
 
       {/* Desktop: artwork grid */}
-      <section className="hidden lg:block w-1/2 min-h-screen sticky top-0">
+      <section className="hidden lg:flex flex-1 min-h-0 w-1/2 h-full">
         <ArtworkGrid />
       </section>
 
       <MobileAuthHero onBack={mobileStep === 'form' ? () => setMobileStep('choose') : undefined} />
 
       {/* Form panel */}
-      <section className=" flex-1 lg:h-screen flex flex-col self-center items-center mt-[45vh] w-full lg:mt-0">
-        <div className="w-full relative lg:flex-1 bg-white rounded-xl lg:rounded-none flex flex-col justify-between py-12 lg:py-0 px-6 lg:px-0">
+       <section className="overflow-y-auto scrollbar-hide max-lg:absolute max-lg:left-4 max-lg:right-4 max-lg:bottom-6 relative z-10 flex-1 flex flex-col h-full min-h-0 items-center w-[calc(100vw_-_32px)] ">
+        <div className="w-full bg-white rounded-xl lg:rounded-none flex flex-col justify-between h-full py-12 lg:py-0 px-6 lg:px-0">
           <div className="flex flex-col justify-center lg:flex-1">
             
             <div className="flex justify-center mb-12 lg:mb-auto">

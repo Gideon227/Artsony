@@ -29,10 +29,10 @@ function LoginContent() {
   const onSubmit = (data: LoginInput) => login(data)
 
   return (
-    <main className="min-h-screen gap-x-[132px] w-full bg-white flex flex-col lg:flex-row overflow-x-hidden p-4 md:p-16">
-
+    // <main className="gap-x-[132px] w-full bg-white flex flex-col lg:flex-row overflow-x-hidden p-4 md:p-16">
+    <main className="h-dvh overflow-hidden flex flex-col lg:flex-row bg-white p-4 md:p-8 xl:p-10 2xl:p-12 gap-8 xl:gap-12">
       {/* Desktop: artwork grid */}
-      <section className="hidden lg:block w-1/2 h-screen sticky top-16">
+      <section className="hidden lg:flex flex-1 min-h-0 w-1/2 h-full">
         <LoginArtworkGrid />
       </section>
 
@@ -40,7 +40,7 @@ function LoginContent() {
       <MobileAuthHero onBack={() => router.back()} />
 
       {/* Form panel */}
-      <section className="max-lg:absolute max-lg:left-4 max-lg:right-4 max-lg:bottom-6 relative z-10 flex-1 flex flex-col self-center items-center w-[calc(100vw_-_32px)] ">
+      <section className="overflow-y-auto scrollbar-hide max-lg:absolute max-lg:left-4 max-lg:right-4 max-lg:bottom-6 relative z-10 flex-1 flex flex-col h-full min-h-0 items-center w-[calc(100vw_-_32px)] ">
         <div className="w-full bg-white rounded-xl lg:rounded-none flex flex-col justify-between h-full py-12 lg:py-0 px-6 lg:px-0">
 
           <div className="flex justify-center mb-12">
