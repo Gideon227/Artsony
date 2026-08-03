@@ -13,7 +13,6 @@ import { MobileAuthHero } from '@/features/auth/components/mobile-auth-hero'
 import { useLogin } from '@/hooks/use-auth-mutations'
 import { loginSchema, type LoginInput } from "@/features/auth/schemas/login.schema";
 
-// 1. Rename your original default export to a standard function
 function LoginContent() {
   const router = useRouter()
   const { mutate: login, isPending } = useLogin()
@@ -41,15 +40,15 @@ function LoginContent() {
       <MobileAuthHero onBack={() => router.back()} />
 
       {/* Form panel */}
-      <section className="max-lg:absolute max-lg:left-4 max-lg:bottom-6 relative z-10 flex-1 flex flex-col self-center items-center mt-[30vh] lg:mt-0">
+      <section className="max-lg:absolute max-lg:left-4 max-lg:right-4 max-lg:bottom-6 relative z-10 flex-1 flex flex-col self-center items-center w-[calc(100vw_-_32px)] ">
         <div className="w-full bg-white rounded-xl lg:rounded-none flex flex-col justify-between h-full py-12 lg:py-0 px-6 lg:px-0">
 
-          <div style={{ marginBottom: 80 }} className="flex justify-center mb-20">
-            <Image src="/icons/logo.svg" alt="Artsony" width={180} height={48} className="h-auto" priority />
+          <div className="flex justify-center mb-12">
+            <Image src="/icons/logo.svg" alt="ARTSONY" width={272} height={48} className="h-auto max-lg:w-[181px]" priority />
           </div>
 
-          <div className="w-full space-y-8 mt-12 lg:mt-0">
-            <h1 className="font-raleway font-medium text-gray-500 text-[32px] tracking-wide leading-10">
+          <div className="w-full space-y-8">
+            <h1 className="font-raleway font-medium text-heading text-h6 lg:text-h4 tracking-wide leading-10">
               Welcome Back
             </h1>
 
@@ -62,7 +61,7 @@ function LoginContent() {
                   disabled={isPending}
                   variant={errors.email ? 'error' : 'default'}
                   autoComplete="email"
-                  className="h-[52px] rounded-full px-6 text-base"
+                  className="h-10 lg:h-12 rounded-full px-6 text-base"
                 />
                 {errors.email && (
                   <span className="text-sm text-error-600 pl-4">{errors.email.message}</span>
@@ -77,7 +76,7 @@ function LoginContent() {
                   disabled={isPending}
                   variant={errors.password ? 'error' : 'default'}
                   autoComplete="current-password"
-                  className="h-[52px] rounded-full px-6 text-base"
+                  className="h-10 lg:h-12 rounded-full px-6 text-base"
                 />
                 {errors.password && (
                   <span className="text-sm text-error-600 pl-4">{errors.password.message}</span>
@@ -97,8 +96,8 @@ function LoginContent() {
             </form>
 
             <div className="mt-4 flex justify-center items-center gap-x-1">
-              <p className="text-[14px] text-black leading-6 font-medium">Don&apos;t have an account?</p>
-              <Link href="/signup" className="text-[14px] text-primary-500 font-medium leading-6 hover:underline">
+              <p className="text-xs lg:text-sm text-black leading-6 font-medium">Don&apos;t have an account?</p>
+              <Link href="/signup" className="text-xs lg:text-sm text-primary-500 font-medium leading-6 hover:underline">
                 Sign Up
               </Link>
             </div>
@@ -123,7 +122,7 @@ function LoginContent() {
             </Link>
           </div>
 
-          <footer className="hidden font-poppins lg:flex mt-auto pt-10 gap-6 text-[14px] font-medium tracking-wide text-gray-400">
+          <footer className="hidden font-poppins lg:flex mt-auto mx-auto pt-10 gap-6 text-[14px] font-medium tracking-wide text-gray-400 hover:text-action-hover">
             {[['Privacy', '/privacy'], ['Terms & Conditions', '/terms'], ['FAQ', '/faq'], ['About', '/about']].map(([label, href]) => (
               <Link key={label} href={href!} className="p-2 text-nowrap hover:text-neutral-700 transition-colors">{label}</Link>
             ))}
@@ -135,10 +134,8 @@ function LoginContent() {
   )
 }
 
-// 2. Create a new default export that wraps your component in Suspense
 export default function LoginPage() {
   return (
-    // The fallback can be a loader, but an empty div with the background color prevents a flash of unstyled content
     <Suspense fallback={<div className="min-h-screen bg-white w-full" />}>
       <LoginContent />
     </Suspense>

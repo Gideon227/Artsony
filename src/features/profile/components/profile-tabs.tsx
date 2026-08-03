@@ -26,17 +26,22 @@ export function ProfileTabs({ tabs, defaultTab, className }: ProfileTabsProps) {
 
   return (
     <div className={cn("w-full flex flex-col bg-white", className)}>
-      {/* --- Tabs Header Navigation --- */}
-      <div className="w-full relative bg-white">
+      <div className="w-full relative flex-1 border-b border-gray-50 bg-white">
         <div 
-          className="flex items-center gap-4 overflow-x-auto py-6 px-8 no-scrollbar scroll-smooth"
+          className="flex justify-between items-center gap-4 overflow-x-auto py-6 px-8 no-scrollbar scroll-smooth"
           style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
         >
           {tabs.map((tab) => {
             const isActive = activeTabId === tab.id
 
             return (
-                <Button key={tab.id} onClick={() => setActiveTabId(tab.id)} fullWidth leftIcon={tab.icon} className={`text-gray-400 ${isActive && 'bg-primary-50 border-primary-500'}`} variant='outline'>
+                <Button
+                  key={tab.id}
+                  onClick={() => setActiveTabId(tab.id)}
+                  leftIcon={tab.icon}
+                  className={`shrink-0 whitespace-nowrap flex-1 hover:bg-action-hover text-body h-12 ${isActive && 'bg-primary-50 border-primary-500'}`}
+                  variant='outline'
+                >
                   {tab.label}
                 </Button>
             )
@@ -45,7 +50,7 @@ export function ProfileTabs({ tabs, defaultTab, className }: ProfileTabsProps) {
       </div>
 
       {/* --- Tab Content Area with Animation --- */}
-      <div className="w-full mt-4">
+      <div className="w-full mt-4 border-none">
         <AnimatePresence mode="wait">
           {activeTab && (
             <motion.div

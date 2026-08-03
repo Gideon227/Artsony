@@ -69,12 +69,12 @@ export function ResultsGrid({
       {total !== undefined && (
         <p className="font-raleway font-semibold text-h5 text-heading mb-6">
           <span className="font-semibold text-primary-600">{total.toLocaleString()}</span>{' '}
-            Search Result {total !== 1 ? 's' : ''}
+            Search Result{total !== 1 ? 's' : ''}
         </p>
       )}
 
       {/* 4-col grid — matches design exactly: 364px cards, 332px image, 55px pill */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-x-0 gap-y-10">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-x-4 gap-y-10">
         {artworks.map((artwork, i) => (
           <motion.div
             key={artwork.id}

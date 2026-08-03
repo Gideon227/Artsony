@@ -68,17 +68,17 @@ export default function SignUpPage() {
       <MobileAuthHero onBack={mobileStep === 'form' ? () => setMobileStep('choose') : undefined} />
 
       {/* Form panel */}
-      <section className=" flex-1 flex flex-col self-center items-center mt-[45vh] w-full lg:mt-0">
-        <div className="w-full relative bg-white rounded-xl lg:rounded-none flex flex-col justify-between py-12 lg:py-0 px-6 lg:px-0">
-          <div className="flex flex-col justify-center">
+      <section className=" flex-1 lg:h-screen flex flex-col self-center items-center mt-[45vh] w-full lg:mt-0">
+        <div className="w-full relative lg:flex-1 bg-white rounded-xl lg:rounded-none flex flex-col justify-between py-12 lg:py-0 px-6 lg:px-0">
+          <div className="flex flex-col justify-center lg:flex-1">
             
-            <div className="flex justify-center" style={{ marginBottom: 48 }}>
-              <Image src="/icons/logo.svg" alt="ARTSONY" width={180} height={48} className="h-auto" priority />
+            <div className="flex justify-center mb-12 lg:mb-auto">
+              <Image src="/icons/logo.svg" alt="ARTSONY" width={272} height={48} className="h-auto max-lg:w-[181px]" priority />
             </div>
 
             {/* MOBILE — step 1: choose sign up method */}
-            <div className={cn('lg:hidden w-full space-y-8', mobileStep !== 'choose' && 'hidden')}>
-              <p className="text-center text-sm text-neutral-500 font-poppins px-2">
+            <div className={cn('lg:hidden w-full space-y-4', mobileStep !== 'choose' && 'hidden')}>
+              <p className="text-center text-body-xxs text-heading font-poppins px-2">
                 Welcome to Artsony , please choose a sign up option
               </p>
               <div className="space-y-4">
@@ -86,7 +86,7 @@ export default function SignUpPage() {
                   <a
                     key={provider}
                     href={`${process.env.NEXT_PUBLIC_API_URL}/api/auth/oauth/${provider}`}
-                    className="w-full h-12 rounded-2xl border border-gray-50 flex items-center justify-start gap-3 py-3 px-6 hover:bg-gray-50 transition-colors"
+                    className="w-full h-12 rounded-2xl border border-gray-50 flex items-center justify-start gap-3 py-3 px-6 hover:border-primary-500 transition-colors"
                   >
                     <Image src={OAUTH_ICONS[provider]} alt="" width={20} height={20} />
                     <span className="text-xs font-poppins text-text-disabled text-center leading-4 flex-1 w-full">{OAUTH_LABELS[provider]}</span>
@@ -97,7 +97,7 @@ export default function SignUpPage() {
                   onClick={() => setMobileStep('form')}
                   className="w-full h-12 rounded-2xl border border-gray-50 flex items-center justify-start gap-3 py-3 px-6 hover:bg-gray-50 transition-colors"
                 >
-                  <Mail className="w-5 h-5 text-neutral-700" />
+                  <Image src='/icons/mail.svg' width={20} height={20} alt='mail icon' />
                   <span className="text-xs font-poppins text-text-disabled text-center leading-4 flex-1 w-full">Sign up with Email & Password</span>
                 </button>
               </div>
@@ -105,7 +105,7 @@ export default function SignUpPage() {
 
             {/* Step 2 (mobile) / always (desktop): email & password form */}
             <div className={cn('w-full space-y-6', mobileStep !== 'form' && 'hidden lg:block')}>
-              <h1 className="font-raleway font-medium text-gray-500 text-[32px] tracking-wide leading-10">
+              <h1 className="font-raleway font-medium text-heading text-h6 lg:text-h4 tracking-wide leading-10">
                 Hello
               </h1>
 
@@ -117,6 +117,7 @@ export default function SignUpPage() {
                     placeholder="Username (e.g. leggyman)"
                     disabled={isPending}
                     autoCapitalize="none"
+                    className='h-10 lg:h-12'
                     variant={touchedFields.username && errors.username ? 'error' : 'default'}
                   />
                   {touchedFields.username && errors.username && (
@@ -130,6 +131,7 @@ export default function SignUpPage() {
                     type="email"
                     placeholder="example@gmail.com"
                     disabled={isPending}
+                    className='h-10 lg:h-12'
                     variant={touchedFields.email && errors.email ? 'error' : 'default'}
                   />
                   {touchedFields.email && errors.email && (
@@ -143,6 +145,7 @@ export default function SignUpPage() {
                     type="password"
                     placeholder="Password"
                     disabled={isPending}
+                    className='h-10 lg:h-12'
                     variant={touchedFields.password && errors.password ? 'error' : 'default'}
                   />
                   {touchedFields.password && errors.password && (
@@ -151,7 +154,7 @@ export default function SignUpPage() {
                 </div>
 
                 {/* Checkbox via Controller so RHF gets the boolean value correctly */}
-                <div className="flex items-start gap-3 pt-1">
+                <div className="flex items-start justify-start gap-3 pt-1">
                   <Controller
                     name="termsAccepted"
                     control={control}
@@ -167,10 +170,10 @@ export default function SignUpPage() {
                   <div>
                     <label
                       htmlFor="termsAccepted"
-                      className="text-sm text-neutral-500 cursor-pointer"
+                      className="text-body-xs  text-neutral-500 cursor-pointer"
                     >
                       I hereby agree to Artsony&apos;s{' '}
-                      <Link href="/terms" className="font-semibold text-neutral-700 hover:underline">
+                      <Link href="/terms" className="font-semibold text-body hover:underline">
                         terms and conditions
                       </Link>
                       .

@@ -25,7 +25,7 @@ export function MobileAuthHero({ onBack, className }: MobileAuthHeroProps) {
       <div className="absolute inset-0 bg-black/20" />
 
       <div className={cn(
-        'relative z-10 p-6 flex items-center mt-10',
+        'relative z-10 p-6 flex items-center mt-4',
         onBack ? 'justify-between' : 'justify-start'
       )}>
         {onBack && (

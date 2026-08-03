@@ -1,6 +1,7 @@
 'use client'
 
 import React, { useEffect, useState } from 'react'
+import Image from 'next/image'
 import { Button } from '@/components'
 import { ArtCard } from '@/components/ui/art-card'
 import { artworkService } from '@/services'
@@ -9,9 +10,18 @@ import { Artwork, ArtworkStatus } from '@/types/artwork'
 interface ProfileArtworkProps {
     userId: string;
     tabType: 'artwork' | 'shop' | 'draft';
+    isOwnProfile: boolean;
+    onArtworkClick: (artwork: Artwork, list: Artwork[]) => void;
+    onPostArtwork?: () => void;
 }
 
-const ProfileArtwork = ({ userId, tabType }: ProfileArtworkProps) => {
+const EMPTY_COPY: Record<ProfileArtworkProps['tabType'], { title: string; body: string }> = {
+    artwork: { title: 'Nothing here… yet.', body: "You haven't shared any artworks yet. Create your first post to start engaging with the community." },
+    shop: { title: 'Nothing for sale… yet.', body: "No artworks are currently listed in the shop." },
+    draft: { title: 'No drafts.', body: "Artworks you save without publishing will show up here." },
+}
+
+const ProfileArtwork = ({ userId, tabType, isOwnProfile, onArtworkClick, onPostArtwork }: ProfileArtworkProps) => {
     const [artworks, setArtworks] = useState<Artwork[]>([])
     const [isLoading, setIsLoading] = useState<boolean>(true)
     const [page, setPage] = useState<number>(1)
@@ -73,42 +83,51 @@ const ProfileArtwork = ({ userId, tabType }: ProfileArtworkProps) => {
 
     return (
         <div className='flex flex-col'>
-            <div className='py-12 px-8 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-x-4 gap-y-12'>
-                {artworks?.map((art) => {
-                    const creator = (art as any).creator 
-                    const creatorRecentWorks = creator?.artworks?.assets?.map((item: any) => item.optimized_url)
-
-                    return (
-                        <ArtCard 
+            {isLoading && artworks.length === 0 ? (
+                <div className='grid grid-cols-1 gap-x-4 gap-y-12 px-4 py-12 sm:grid-cols-2 md:grid-cols-3 md:px-8 lg:grid-cols-4'>
+                    {Array.from({ length: 8 }).map((_, i) => (
+                        <div key={i} className='aspect-square animate-pulse rounded-2xl bg-gray-50' />
+                    ))}
+                </div>
+            ) : artworks.length === 0 ? (
+                <div className='flex flex-col items-center gap-6 px-4 py-16 text-center'>
+                    {/* Placeholder path — swap in the illustration you're adding yourself. */}
+                    <Image src='/images/empty-artworks.svg' width={224} height={224} alt='' />
+                    <div className='flex flex-col gap-2'>
+                        <h3 className='font-poppins text-body-l font-semibold text-heading'>{EMPTY_COPY[tabType].title}</h3>
+                        <p className='max-w-sm font-poppins text-body-s text-gray-400'>{EMPTY_COPY[tabType].body}</p>
+                    </div>
+                    {isOwnProfile && tabType === 'artwork' && onPostArtwork && (
+                        <Button variant='primary' leftIcon='/icons/plus-white-bg.svg' onClick={onPostArtwork}>
+                            Post Artwork
+                        </Button>
+                    )}
+                </div>
+            ) : (
+                <div className='grid grid-cols-1 gap-x-4 gap-y-12 px-4 py-12 sm:grid-cols-2 md:grid-cols-3 md:px-8 lg:grid-cols-4'>
+                    {artworks.map((art) => (
+                        <ArtCard
                             key={art.id}
                             image={art.assets?.[0]?.optimized_url || art.assets?.[0]?.original_url || '/placeholder.jpg'}
                             title={art.title}
-                            cardLink={`/artwork/${art.slug || art.id}`}
+                            onCardClick={() => onArtworkClick(art, artworks)}
+                            showVideo={art.assets?.[0]?.media_type === 'VIDEO'}
+                            showCart={art.listing_type === 'MARKETPLACE'}
                             artist={[{
-                                id: creator?.id || art.creator_id,
-                                name: creator?.username || 'Unknown Artist',
-                                avatarUrl: creator?.avatarUrl || '/default-avatar.png',
-                                role: 'Artist',
-                                stats: {
-                                    followers: String(creator?.followersCount || '0'),
-                                    likes: String(creator?.likesCount || '0'),
-                                    following: String(creator?.followingCount || '0')
-                                },
-                                recentArtworks: creatorRecentWorks as string[] || []
+                                id: art.creator?.id || art.creator_id,
+                                name: art.creator?.profile?.display_name || art.creator?.username || 'Unknown Artist',
+                                avatarUrl: art.creator?.profile?.avatar_url || '/images/image-avatar.svg',
                             }]}
                             stats={{
                                 likes: String(art.like_count || 0),
                                 views: String(art.view_count || 0)
                             }}
                             variant='standard'
-                            showHeart={true}
-                            showCat={true}
-                            alternate={false}
                         />
-                    )
-                })}
-            </div>
-            
+                    ))}
+                </div>
+            )}
+
             {hasMore && (
                 <div className='w-full py-6 flex items-center justify-center'>
                     <Button 

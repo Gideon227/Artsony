@@ -122,7 +122,7 @@ export default function ForgotPasswordPage() {
               <div className={cn('h-2 rounded-full transition-all duration-300', step === 3 ? 'w-6 bg-primary-500' : 'w-2 bg-neutral-200')} />
             </div>
 
-            <div className="hidden lg:flex mt-10 justify-center gap-6 text-sm text-neutral-500 font-medium">
+            <div className="hidden lg:flex mt-10 mx-auto justify-center gap-6 text-sm text-neutral-500 hover:text-action-hover font-medium">
               {[['Privacy', '/privacy'], ['Terms & Conditions', '/terms'], ['FAQ', '/faq'], ['About', '/about']].map(([label, href]) => (
                 <Link key={label} href={href!} className="hover:text-neutral-800 transition-colors">{label}</Link>
               ))}
