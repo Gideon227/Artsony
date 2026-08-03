@@ -32,6 +32,7 @@ const ArtGrid = ({ artworks, num, artVariant, onCardClick }: Props) => {
                         variant={artVariant}
                         image={art.assets?.[0]?.optimized_url || art.assets?.[0]?.original_url || '/placeholder.png'} 
                         title={art.title}
+                        artworkId={art.id}
                         onCardClick={onCardClick ? () => onCardClick(art, index) : undefined}
                         artist={mappedArtists}
                         stats={{

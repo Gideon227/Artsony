@@ -210,33 +210,23 @@ export default function ArtworkViewOverlay({ artwork: artworkProp, onClose, onNa
   //    inline placement, so the two layouts never drift out of sync) ───────
 
   const profileHeader = (
-    <div className='flex items-start justify-between w-full'>
-      <div className="flex items-center gap-2">
-        <Link href={`/profile/${artwork.creator_id}`} className="relative h-14 w-14 shrink-0 overflow-hidden rounded-full bg-gray-100">
-          <Image
-            src={artwork.creator?.profile?.avatar_url || '/images/image-avatar.svg'}
-            alt={artwork.creator?.username ?? 'Creator'}
-            fill
-            className="object-cover"
-          />
+    <div className="flex items-center gap-2">
+      <Link href={`/profile/${artwork.creator_id}`} className="relative h-14 w-14 shrink-0 overflow-hidden rounded-full bg-gray-100">
+        <Image
+          src={artwork.creator?.profile?.avatar_url || '/images/image-avatar.svg'}
+          alt={artwork.creator?.username ?? 'Creator'}
+          fill
+          className="object-cover"
+        />
+      </Link>
+      <div className="flex min-w-0 flex-col">
+        <Link href={`/profile/${artwork.creator_id}`} className="truncate font-poppins font-medium text-body-m leading-6 text-primary-500 tracking-wide">
+          {creatorName}
         </Link>
-        <div className="flex min-w-0 flex-col">
-          <Link href={`/profile/${artwork.creator_id}`} className="truncate font-poppins font-medium text-body-m leading-6 text-primary-500 tracking-wide">
-            {creatorName}
-          </Link>
-          <span className="truncate font-poppins font-light text-body-xs leading-4 tracking-wide text-body">
-            {artwork.categories[0]?.toUpperCase()}
-          </span>
-        </div>
+        <span className="truncate font-poppins font-light text-body-xs leading-4 tracking-wide text-body">
+          {artwork.categories[0]?.toUpperCase()}
+        </span>
       </div>
-
-      <button
-        onClick={requestClose}
-        aria-label="Close"
-        className="cursor-pointe flex h-10 w-10 items-center justify-center rounded-full border-2 border-gray-50 bg-white transition-colors hover:bg-gray-50 lg:absolute lg:right-6 lg:top-8"
-      >
-        <Image src="/icons/cancel.svg" width={20} height={20} alt="close" />
-      </button>
     </div>
   )
 
@@ -541,13 +531,13 @@ export default function ArtworkViewOverlay({ artwork: artworkProp, onClose, onNa
           )}
         >
           {/* Close button */}
-          {/* <button
+          <button
             onClick={requestClose}
             aria-label="Close"
             className="fixed cursor-pointer right-4 top-4 z-[70] flex h-10 w-10 items-center justify-center rounded-full border-2 border-gray-50 bg-white transition-colors hover:bg-gray-50 lg:absolute lg:right-6 lg:top-8"
           >
             <Image src="/icons/cancel.svg" width={20} height={20} alt="close" />
-          </button> */}
+          </button>
 
           {/* ================= LEFT: everything scrollable ================= */}
           <div className="flex flex-col lg:w-2/3">

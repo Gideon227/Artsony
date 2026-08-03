@@ -29,10 +29,10 @@ function LoginContent() {
   const onSubmit = (data: LoginInput) => login(data)
 
   return (
-    // <main className="gap-x-[132px] w-full bg-white flex flex-col lg:flex-row overflow-x-hidden p-4 md:p-16">
-    <main className="h-dvh overflow-hidden flex flex-col lg:flex-row bg-white p-4 md:p-8 xl:p-10 2xl:p-12 gap-8 xl:gap-12">
+    <main className="min-h-screen gap-x-[132px] w-full bg-white flex flex-col lg:flex-row overflow-x-hidden p-4 md:p-16">
+
       {/* Desktop: artwork grid */}
-      <section className="hidden lg:flex flex-1 min-h-0 w-1/2 h-full">
+      <section className="hidden lg:block w-1/2 h-screen sticky top-16">
         <LoginArtworkGrid />
       </section>
 
@@ -40,8 +40,9 @@ function LoginContent() {
       <MobileAuthHero onBack={() => router.back()} />
 
       {/* Form panel */}
-      <section className="overflow-y-auto scrollbar-hide max-lg:absolute max-lg:left-4 max-lg:right-4 max-lg:bottom-6 relative z-10 flex-1 flex flex-col lg:h-full min-h-0 items-center w-[calc(100vw_-_32px)]">
-        <div className="w-full max-lg:max-h-[75vh] max-lg:overflow-y-auto scrollbar-hide bg-white rounded-xl lg:rounded-none flex flex-col justify-between h-full py-12 lg:py-0 px-6 lg:px-0">
+      <section className="max-lg:absolute max-lg:left-4 max-lg:right-4 max-lg:bottom-6 relative z-10 flex-1 flex flex-col self-center items-center w-[calc(100vw_-_32px)] ">
+        <div className="w-full bg-white rounded-xl lg:rounded-none flex flex-col justify-between h-full py-12 lg:py-0 px-6 lg:px-0">
+
           <div className="flex justify-center mb-12">
             <Image src="/icons/logo.svg" alt="ARTSONY" width={272} height={48} className="h-auto max-lg:w-[181px]" priority />
           </div>
@@ -60,7 +61,7 @@ function LoginContent() {
                   disabled={isPending}
                   variant={errors.email ? 'error' : 'default'}
                   autoComplete="email"
-                  className="h-12 rounded-full px-6 text-body-m placeholder:text-body-m"
+                  className="h-10 lg:h-12 rounded-full px-6 text-base"
                 />
                 {errors.email && (
                   <span className="text-sm text-error-600 pl-4">{errors.email.message}</span>
@@ -75,7 +76,7 @@ function LoginContent() {
                   disabled={isPending}
                   variant={errors.password ? 'error' : 'default'}
                   autoComplete="current-password"
-                  className="h-12 rounded-full px-6 text-body-m placeholder:text-body-m"
+                  className="h-10 lg:h-12 rounded-full px-6 text-base"
                 />
                 {errors.password && (
                   <span className="text-sm text-error-600 pl-4">{errors.password.message}</span>

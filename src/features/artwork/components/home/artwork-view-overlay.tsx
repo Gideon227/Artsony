@@ -217,33 +217,23 @@ export default function ArtworkViewOverlay({ artwork: artworkProp, onClose, onNa
   //    inline placement, so the two layouts never drift out of sync) ───────
 
   const profileHeader = (
-    <div className='flex items-start justify-between'>
-      <div className="flex items-center gap-2">
-        <Link href={`/profile/${artwork.creator_id}`} className="relative h-14 w-14 shrink-0 overflow-hidden rounded-full bg-gray-100">
-          <Image
-            src={artwork.creator?.profile?.avatar_url || '/images/image-avatar.svg'}
-            alt={artwork.creator?.username ?? 'Creator'}
-            fill
-            className="object-cover"
-          />
+    <div className="flex items-center gap-2">
+      <Link href={`/profile/${artwork.creator_id}`} className="relative h-14 w-14 shrink-0 overflow-hidden rounded-full bg-gray-100">
+        <Image
+          src={artwork.creator?.profile?.avatar_url || '/images/image-avatar.svg'}
+          alt={artwork.creator?.username ?? 'Creator'}
+          fill
+          className="object-cover"
+        />
+      </Link>
+      <div className="flex min-w-0 flex-col">
+        <Link href={`/profile/${artwork.creator_id}`} className="truncate font-poppins font-medium text-body-m leading-6 text-primary-500 tracking-wide">
+          {creatorName}
         </Link>
-        <div className="flex min-w-0 flex-col">
-          <Link href={`/profile/${artwork.creator_id}`} className="truncate font-poppins font-medium text-body-m leading-6 text-primary-500 tracking-wide">
-            {creatorName}
-          </Link>
-          <span className="truncate font-poppins font-light text-body-xs leading-4 tracking-wide text-body">
-            {categories[0]?.toUpperCase()}
-          </span>
-        </div>
+        <span className="truncate font-poppins font-light text-body-xs leading-4 tracking-wide text-body">
+          {categories[0]?.toUpperCase()}
+        </span>
       </div>
-
-      <button
-        onClick={requestClose}
-        aria-label="Close"
-        className="cursor-pointer flex h-10 w-10 items-center justify-center rounded-full border-2 border-gray-50 bg-white transition-colors hover:bg-gray-50 lg:absolute lg:right-6 lg:top-8"
-      >
-        <Image src="/icons/cancel.svg" width={20} height={20} alt="close" />
-      </button>
     </div>
   )
 
@@ -592,7 +582,7 @@ export default function ArtworkViewOverlay({ artwork: artworkProp, onClose, onNa
           className="relative flex min-h-screen w-full flex-col rounded-none bg-white shadow-2xl lg:my-auto lg:h-[90vh] lg:min-h-0 lg:w-[90%] lg:max-w-[1600px] lg:flex-row lg:overflow-hidden lg:rounded-2xl"
         >
           {/* Fixed mobile header — avatar/name for context while scrolling, options for
-            share/report. Desktop uses the sticky right-panel profile header instead. */}
+              share/report. Desktop uses the sticky right-panel profile header instead. */}
           <div className="fixed inset-x-0 top-0 z-[65] flex items-center justify-between border-b border-gray-100 bg-white/95 px-4 py-3 pr-16 backdrop-blur-sm lg:hidden">
             <Link href={`/profile/${artwork.creator_id}`} className="flex min-w-0 items-center gap-2">
               <div className="relative h-9 w-9 shrink-0 overflow-hidden rounded-full bg-gray-100">
@@ -617,16 +607,16 @@ export default function ArtworkViewOverlay({ artwork: artworkProp, onClose, onNa
           </div>
 
           {/* Close button */}
-          {/* <button
+          <button
             onClick={requestClose}
             aria-label="Close"
             className="fixed cursor-pointer right-4 top-3 z-[70] flex h-10 w-10 items-center justify-center rounded-full border-2 border-gray-50 bg-white transition-colors hover:bg-gray-50 lg:absolute lg:right-6 lg:top-8"
           >
             <Image src="/icons/cancel.svg" width={20} height={20} alt="close" />
-          </button> */}
+          </button>
 
-          {/* LEFT: scrolls independently of the right panel */}
-          <div ref={leftColRef} className="flex flex-col pt-14 lg:h-full lg:w-3/4 lg:overflow-y-auto lg:pt-0">
+          {/* ================= LEFT: scrolls independently of the right panel === */}
+          <div ref={leftColRef} className="flex flex-col pt-14 lg:h-full lg:w-2/3 lg:overflow-y-auto lg:pt-0">
             {heroMedia}
 
             <div className="px-5 pb-20 lg:px-8 lg:pb-0">
@@ -690,8 +680,8 @@ export default function ArtworkViewOverlay({ artwork: artworkProp, onClose, onNa
             </div>
           </div>
 
-          {/* RIGHT: details panel, scrolls independently (desktop only) === */}
-          <div className="hidden lg:flex lg:h-screen lg:w-1/4 lg:flex-col lg:border-l lg:border-gray-50 lg:px-6 lg:py-8">
+          {/* ================= RIGHT: details panel, scrolls independently (desktop only) === */}
+          <div className="hidden lg:flex lg:h-full lg:w-1/3 lg:flex-col lg:overflow-y-auto lg:border-l lg:border-gray-50 lg:px-6 lg:py-8">
             <div className="mb-6 pr-8">{profileHeader}</div>
             <div className="mb-6">{likeFollowRow}</div>
             <div className="mb-4">{artworkInfoStats}</div>

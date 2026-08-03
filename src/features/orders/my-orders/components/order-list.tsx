@@ -81,7 +81,14 @@ export function OrderList({ orders, isLoading, isError, error, selectedId, onSel
         {!isLoading &&
           !isError &&
           filtered.map((order) => (
-            <OrderCard key={order.id} order={order} selected={order.id === selectedId} onSelect={onSelect} />
+            <OrderCard
+              key={order.id}
+              order={order}
+              selected={order.id === selectedId}
+              onSelect={onSelect}
+              artistName={order.seller?.display_name || order.seller?.username || undefined}
+              artistAvatarUrl={order.seller?.avatar_url}
+            />
           ))}
       </div>
     </div>

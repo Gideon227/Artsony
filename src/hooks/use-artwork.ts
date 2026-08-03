@@ -103,6 +103,26 @@ export function useTopPicks(period: 'all' | 'week' = 'all', limit = 8, listingTy
   })
 }
 
+// Other published artworks by a given creator — powers the ArtCard hover
+// profile's "recent artworks" strip. Lazy: pass `enabled` so it only fires
+// once the hover card is actually shown, not for every card mounted in a grid.
+export function useCreatorArtworks(creatorId: string, enabled: boolean) {
+  return useQuery({
+    queryKey: ['artworks', 'by-creator', creatorId],
+    queryFn: () =>
+      artworkService.list({
+        creator_id: creatorId,
+        status: 'PUBLISHED',
+        visibility: 'PUBLIC',
+        sort_by: 'created_at',
+        sort_order: 'desc',
+        limit: 4,
+      }),
+    enabled: enabled && Boolean(creatorId),
+    staleTime: STALE_TIMES.medium,
+  })
+}
+
 export function useArtworkLocations() {
   return useQuery({
     queryKey: ['artworks', 'locations'],

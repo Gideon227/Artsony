@@ -8,16 +8,15 @@ const ProfileArtCard = ({ artworks }: { artworks: Artwork[] }) => {
             {artworks?.map((art, index) => {
                 const formattedArtists: Artist[] = [
                     {
-                        id: String(art.creator_id || index),
-                        name: art.creator?.username || 'Unknown Artist',
+                        id: art.creator?.id || art.creator_id,
+                        name: art.creator?.profile?.display_name || art.creator?.username || 'Unknown Artist',
                         avatarUrl: art.creator?.profile?.avatar_url || '/images/image-avatar.svg',
-                        role: 'Artist',
-                        // stats: {
-                        //     followers: String(art. || '0'),
-                        //     likes: String(art.likesCount || '0'),
-                        //     following: String(art.artist?. || '0')
-                        // },
-                        // recentArtworks: art.artist?. || [art.imageUrl]
+                        role: art.creator?.role || 'Artist',
+                        stats: {
+                            followers: String(art.creator?.profile?.followers_count ?? 0),
+                            likes: String(art.like_count ?? 0),
+                            following: String(art.creator?.profile?.following_count ?? 0),
+                        },
                     }
                 ];
 
@@ -27,6 +26,7 @@ const ProfileArtCard = ({ artworks }: { artworks: Artwork[] }) => {
                             image={art.assets[0]?.original_url as string}
                             title={art.title || 'Profile Art'}
                             artist={formattedArtists} 
+                            artworkId={art.id}
                             stats={{
                                 likes: String(art.like_count || '0'),
                                 views: String(art.view_count || '0')

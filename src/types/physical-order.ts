@@ -157,11 +157,34 @@ export type PhysicalOrderFilters = {
   limit?: number
 }
 
-// Bare rows only — findByBuyerWithItems/findBySellerWithItems/findAllAdminList
-// do not join artwork/buyer/seller data. See open backend gap.
+// Public-safe buyer/seller summary embedded in list rows.
+export type OrderPartySummary = {
+  id: string
+  username: string | null
+  display_name: string | null
+  avatar_url: string | null
+}
+
+// findByBuyerWithItems/findBySellerWithItems/findAllAdminList now join the
+// order_item's product snapshot (already denormalized at checkout, so no
+// separate artwork fetch needed) plus buyer/seller public profiles.
+export type OrderItemPhysicalListEntry = OrderItemPhysical & {
+  order_number: string | null
+  order_item: {
+    artwork_id: string
+    artwork_title: string
+    artwork_slug: string
+    artwork_thumbnail_url: string | null
+    unit_price: number
+    quantity: number
+  }
+  buyer: OrderPartySummary | null
+  seller: OrderPartySummary | null
+}
+
 export type PaginatedPhysicalOrdersResponse = {
   success: boolean
-  data: OrderItemPhysical[]
+  data: OrderItemPhysicalListEntry[]
   total: number
   page: number
   limit: number
@@ -170,9 +193,9 @@ export type PaginatedPhysicalOrdersResponse = {
   has_prev: boolean
 }
 
-export type OrderItemPhysicalWithArtwork = OrderItemPhysical & {
-  order_item: OrderItem
-}
+/** @deprecated superseded by OrderItemPhysicalListEntry. Kept temporarily in
+ *  case any in-flight code still imports it. */
+export type OrderItemPhysicalWithArtwork = OrderItemPhysicalListEntry
 
 export type PhysicalOrderDetailView = {
   physical: OrderItemPhysical

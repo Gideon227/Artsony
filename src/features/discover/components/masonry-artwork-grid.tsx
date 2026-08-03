@@ -38,14 +38,21 @@ export function MasonryArtworkGrid({ artworks, onArtworkClick }: MasonryArtworkG
             <ArtCard
               image={image}
               title={artwork.title}
+              artworkId={artwork.id}
               onCardClick={() => onArtworkClick(artwork)}
               showCart={artwork.listing_type === 'MARKETPLACE'}
               showVideo={asset?.media_type === 'VIDEO'}
               artist={[
                 {
-                  id: artwork.creator_id,
+                  id: artwork.creator?.id || artwork.creator_id,
                   name: artwork.creator?.profile?.display_name || artwork.creator?.username || 'Artist',
                   avatarUrl: artwork.creator?.profile?.avatar_url ?? '/images/image-avatar.svg',
+                  role: artwork.creator?.role || 'Artist',
+                  stats: {
+                    followers: String(artwork.creator?.profile?.followers_count ?? 0),
+                    likes: String(artwork.like_count ?? 0),
+                    following: String(artwork.creator?.profile?.following_count ?? 0),
+                  },
                 },
               ]}
               stats={{ likes: String(artwork.like_count), views: String(artwork.view_count) }}

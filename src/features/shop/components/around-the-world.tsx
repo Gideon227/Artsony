@@ -209,6 +209,12 @@ export default function AroundTheWorld() {
                                         id: art.creator.id,
                                         name: art.creator.profile?.display_name || art.creator.username || 'Unknown',
                                         avatarUrl: art.creator.profile?.avatar_url || '/default-avatar.png',
+                                        role: art.creator.role || 'Artist',
+                                        stats: {
+                                            followers: String(art.creator.profile?.followers_count ?? 0),
+                                            likes: String(art.like_count ?? 0),
+                                            following: String(art.creator.profile?.following_count ?? 0),
+                                        },
                                     }] : [];
 
                                     return (
@@ -217,7 +223,9 @@ export default function AroundTheWorld() {
                                                 variant="discover" // Using discover to match the overlay style in the image
                                                 image={art.assets?.[0]?.optimized_url || art.assets?.[0]?.original_url || '/placeholder.png'} 
                                                 title={art.title}
+                                                artworkId={art.id}
                                                 artist={mappedArtists}
+                                                stats={{ likes: String(art.like_count ?? 0), views: String(art.view_count ?? 0) }}
                                                 showHeart={true}
                                                 showCat={false}
                                                 onCardClick={() => setActiveIndex(index)}

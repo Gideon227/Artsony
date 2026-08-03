@@ -2,11 +2,14 @@
 
 import React, { useState, useRef } from 'react'
 import Image from 'next/image'
-import { Heart, ShoppingCart, Play, Trash2, FolderPlus, Eye, UserPlus } from 'lucide-react'
+import { UserPlus, Check } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { cn } from '@/utils'
 import Link from 'next/link'
 import { AvatarGroup } from './avatar-group'
+import { useAuthStore, selectUser } from '@/store'
+import { useIsFollowing, useToggleFollow } from '@/hooks/use-follow'
+import { useCreatorArtworks } from '@/hooks/use-artwork'
 
 export interface Artist {
   id: string
@@ -18,7 +21,6 @@ export interface Artist {
     likes: string
     following: string
   }
-  recentArtworks?: string[]
 }
 
 interface ArtCardProps {
@@ -29,6 +31,10 @@ interface ArtCardProps {
     likes: string
     views: string
   }
+  /** The artwork's own id — used to exclude it from the artist's "recent
+   *  artworks" hover strip and to key that fetch. Optional so existing
+   *  callers that don't have it yet (e.g. mid-upload drafts) don't break. */
+  artworkId?: string
   cardLink?: string;
   onCardClick?: () => void;
   showCart?: boolean;
@@ -41,8 +47,104 @@ interface ArtCardProps {
   alternate?: boolean;
 }
 
+const DEFAULT_AVATAR = '/images/image-avatar.svg'
+
+// ── Follow button — wired to the real follow endpoints, self-aware ───────────
+function FollowButton({ userId, size = 16 }: { userId: string; size?: number }) {
+  const currentUser = useAuthStore(selectUser)
+  const isSelf = Boolean(currentUser && currentUser.id === userId)
+
+  const { data: isFollowing } = useIsFollowing(isSelf ? undefined : userId)
+  const toggleFollow = useToggleFollow(userId)
+
+  if (isSelf) return null
+
+  return (
+    <button
+      onClick={(e) => {
+        e.preventDefault()
+        e.stopPropagation()
+        toggleFollow.mutate()
+      }}
+      disabled={toggleFollow.isPending}
+      aria-label={isFollowing ? 'Unfollow' : 'Follow'}
+      aria-pressed={Boolean(isFollowing)}
+      className={cn(
+        'h-9 w-9 rounded-full border flex items-center justify-center transition-colors shrink-0 disabled:opacity-60',
+        isFollowing
+          ? 'border-[#F15A2B] bg-[#F15A2B]/10 text-[#F15A2B] hover:bg-[#F15A2B]/15'
+          : 'border-slate-200 text-slate-600 hover:bg-slate-50 hover:border-slate-300',
+      )}
+    >
+      {isFollowing ? <Check size={size - 1} strokeWidth={2.5} /> : <UserPlus size={size} strokeWidth={2.5} />}
+    </button>
+  )
+}
+
+// ── Recent-artworks strip — lazily fetched real thumbnails, no placeholders ──
+function RecentArtworksRow({
+  creatorId,
+  excludeArtworkId,
+  enabled,
+}: {
+  creatorId: string
+  excludeArtworkId?: string
+  enabled: boolean
+}) {
+  const { data, isLoading } = useCreatorArtworks(creatorId, enabled)
+
+  const items = (data?.data ?? [])
+    .filter((a) => a.id !== excludeArtworkId)
+    .slice(0, 3)
+    .map((a) => ({
+      id: a.id,
+      slug: a.slug,
+      url: a.assets?.[0]?.thumbnail_url || a.assets?.[0]?.optimized_url || a.assets?.[0]?.original_url || null,
+    }))
+    .filter((a) => a.url)
+
+  if (isLoading) {
+    return (
+      <div className="flex gap-2 w-full justify-between">
+        {[0, 1, 2].map((i) => (
+          <div key={i} className="w-full aspect-square rounded-[16px] bg-slate-100 animate-pulse" />
+        ))}
+      </div>
+    )
+  }
+
+  if (items.length === 0) {
+    return (
+      <p className="text-[12px] font-medium text-slate-400 text-center py-2">
+        No other public artworks yet
+      </p>
+    )
+  }
+
+  return (
+    <div className="flex gap-2 w-full justify-between">
+      {items.map((item) => (
+        <Link
+          key={item.id}
+          href={`/artwork/${item.id}`}
+          className="relative w-full aspect-square rounded-[16px] overflow-hidden bg-slate-100"
+          onClick={(e) => e.stopPropagation()}
+        >
+          <Image src={item.url as string} alt="Artwork" fill className="object-cover" />
+        </Link>
+      ))}
+    </div>
+  )
+}
+
 // Hover Profile Component (Functional layout, no container styling overrides needed)
-function ArtistHoverProfile({ artists }: { artists: Artist[] }) {
+function ArtistHoverProfile({
+  artists,
+  artworkId,
+}: {
+  artists: Artist[]
+  artworkId?: string
+}) {
   if (!artists || artists.length === 0) return null;
   const isSingle = artists.length === 1;
 
@@ -60,7 +162,7 @@ function ArtistHoverProfile({ artists }: { artists: Artist[] }) {
           <div className="flex items-start justify-between">
             <div className="flex gap-3 items-center">
               <div className="relative h-12 w-12 rounded-full overflow-hidden shrink-0 bg-slate-100">
-                <Image src={artists[0]?.avatarUrl!} alt={artists[0]?.name!} fill className="object-cover" />
+                <Image src={artists[0]?.avatarUrl || DEFAULT_AVATAR} alt={artists[0]?.name || 'Artist'} fill className="object-cover" />
               </div>
               <div className="flex flex-col">
                 <span className="text-[15px] font-semibold text-[#F15A2B] leading-tight truncate max-w-[140px]">
@@ -71,35 +173,29 @@ function ArtistHoverProfile({ artists }: { artists: Artist[] }) {
                 </span>
               </div>
             </div>
-            <button className="h-9 w-9 rounded-full border border-slate-200 flex items-center justify-center text-slate-600 hover:bg-slate-50 hover:border-slate-300 transition-colors shrink-0">
-              <UserPlus size={16} strokeWidth={2.5} />
-            </button>
+            {artists[0]?.id && <FollowButton userId={artists[0].id} />}
           </div>
 
           <div className="flex items-center justify-between w-full mt-5 mb-4 px-2">
             <div className="flex flex-col items-center flex-1">
-              <span className="text-[13px] font-semibold text-[#F15A2B]">{artists[0]?.stats?.followers || '0'}</span>
+              <span className="text-[13px] font-semibold text-[#F15A2B]">{artists[0]?.stats?.followers ?? '0'}</span>
               <span className="text-[11px] font-medium text-slate-400 mt-1 uppercase tracking-wide">Followers</span>
             </div>
             <div className="w-px h-8 bg-slate-100" />
             <div className="flex flex-col items-center flex-1">
-              <span className="text-[13px] font-semibold text-[#F15A2B]">{artists[0]?.stats?.likes || '0'}</span>
+              <span className="text-[13px] font-semibold text-[#F15A2B]">{artists[0]?.stats?.likes ?? '0'}</span>
               <span className="text-[11px] font-medium text-slate-400 mt-1 uppercase tracking-wide">Likes</span>
             </div>
             <div className="w-px h-8 bg-slate-100" />
             <div className="flex flex-col items-center flex-1">
-              <span className="text-[13px] font-semibold text-[#F15A2B]">{artists[0]?.stats?.following || '0'}</span>
+              <span className="text-[13px] font-semibold text-[#F15A2B]">{artists[0]?.stats?.following ?? '0'}</span>
               <span className="text-[11px] font-medium text-slate-400 mt-1 uppercase tracking-wide">Following</span>
             </div>
           </div>
 
-          <div className="flex gap-2 w-full justify-between">
-            {(artists[0]?.recentArtworks || [artists[0]?.avatarUrl, artists[0]?.avatarUrl, artists[0]?.avatarUrl]).slice(0, 3).map((art, idx) => (
-              <div key={idx} className="relative w-full aspect-square rounded-[16px] overflow-hidden bg-slate-100">
-                <Image src={art!} alt="Artwork" fill className="object-cover" />
-              </div>
-            ))}
-          </div>
+          {artists[0]?.id && (
+            <RecentArtworksRow creatorId={artists[0].id} excludeArtworkId={artworkId} enabled />
+          )}
         </div>
       ) : (
         <div className="flex flex-col gap-4">
@@ -107,20 +203,18 @@ function ArtistHoverProfile({ artists }: { artists: Artist[] }) {
             <div key={artist.id} className="flex items-center justify-between w-full">
               <div className="flex gap-3 items-center min-w-0">
                 <div className="relative h-10 w-10 rounded-full overflow-hidden shrink-0 bg-slate-100">
-                  <Image src={artist.avatarUrl} alt={artist.name} fill className="object-cover" />
+                  <Image src={artist.avatarUrl || DEFAULT_AVATAR} alt={artist.name} fill className="object-cover" />
                 </div>
                 <div className="flex flex-col min-w-0">
                   <span className="text-[14px] font-semibold text-[#F15A2B] leading-tight truncate">
                     {artist.name}
                   </span>
                   <span className="text-[12px] font-medium text-slate-500 truncate mt-0.5">
-                    {artist.role || 'Placeholder'}
+                    {artist.role || 'Collaborator'}
                   </span>
                 </div>
               </div>
-              <button className="h-8 w-8 rounded-full border border-slate-200 flex items-center justify-center text-slate-600 hover:bg-slate-50 hover:border-slate-300 transition-colors shrink-0 ml-2">
-                <UserPlus size={15} strokeWidth={2.5} />
-              </button>
+              <FollowButton userId={artist.id} size={15} />
             </div>
           ))}
         </div>
@@ -134,6 +228,7 @@ export function ArtCard({
   title, 
   artist, 
   stats, 
+  artworkId,
   cardLink,
   onCardClick,
   showCart = false,
@@ -147,7 +242,7 @@ export function ArtCard({
 }: ArtCardProps) {
   // SAFETY CHECKS ADDED HERE
   const primaryArtist = artist?.[0]
-  const artistImages = artist?.map((a) => a.avatarUrl) || []
+  const artistImages = artist?.map((a) => a.avatarUrl || DEFAULT_AVATAR) || []
   const artistCount = artist?.length || 0
 
   // HOVER STATE LOGIC
@@ -185,7 +280,7 @@ export function ArtCard({
       {/* --- Image Container --- */}
       <div className="relative group aspect-square overflow-hidden rounded-2xl bg-neutral-100">
         <Image
-          src={image}
+          src={image || DEFAULT_AVATAR}
           alt={title}
           fill
           className="object-cover transition-transform duration-500 group-hover:scale-110"
@@ -307,7 +402,7 @@ export function ArtCard({
             onMouseLeave={handleMouseLeave}
             onClick={(e) => e.preventDefault()}
           >
-            <ArtistHoverProfile artists={artist} />
+            <ArtistHoverProfile artists={artist} artworkId={artworkId} />
           </div>
         )}
       </AnimatePresence>

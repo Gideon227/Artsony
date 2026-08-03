@@ -88,7 +88,7 @@ export const artworkService = {
   ): Promise<ApiResponse<Artwork[]>> => {
     const params = new URLSearchParams({ limit: String(limit), period })
     if (listingType) params.set('listingType', listingType)
-    return apiClient.get(`/artworks/top-picks?${params.toString()}`)
+    return apiClient.get(`/api/artworks/top-picks?${params.toString()}`)
   },
 
   getLocations: (): Promise<ApiResponse<{ label: string; artwork_count: number }[]>> =>

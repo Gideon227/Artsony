@@ -2,6 +2,13 @@ import { apiClient } from '@/lib/api-client'
 import type { User, Artwork, PaginatedResponse, ApiResponse } from '@/types'
 import type { EditProfileInput } from '@/schemas'
 
+export interface PublicProfileSummary {
+  id: string
+  username: string
+  role: string
+  profile: { display_name: string | null; avatar_url: string | null } | null
+}
+
 export const userService = {
   getProfile: (username: string) =>
     apiClient.get<ApiResponse<User>>(`/api/users/${username}`),
@@ -37,4 +44,14 @@ export const userService = {
 
   getSuggested: () =>
     apiClient.get<ApiResponse<User[]>>('/api/users/suggested'),
+
+  // Batch-resolves user ids to public profile summaries (id/username/role/
+  // display_name/avatar_url). Backed by the real GET /api/users/by-ids route.
+  getByIds: (ids: string[]) => {
+    const unique = Array.from(new Set(ids.filter(Boolean)))
+    if (unique.length === 0) return Promise.resolve({ success: true as const, data: [] as PublicProfileSummary[] })
+    return apiClient.get<ApiResponse<PublicProfileSummary[]>>('/api/users/by-ids', {
+      params: { ids: unique.join(',') },
+    })
+  },
 }

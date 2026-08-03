@@ -86,11 +86,18 @@ export function ShopResultsGrid({
             <ArtCard
               image={artwork.assets[0]?.original_url as string}
               title={artwork.title}
+              artworkId={artwork.id}
               cardLink={`/artwork/${artwork.id}`}
               artist={[{
-                id: artwork.creator_id,
-                name: artwork.creator?.username as string,
+                id: artwork.creator?.id || artwork.creator_id,
+                name: artwork.creator?.profile?.display_name || artwork.creator?.username as string,
                 avatarUrl: artwork.creator?.profile?.avatar_url ?? '/images/image-avatar.svg',
+                role: artwork.creator?.role || 'Artist',
+                stats: {
+                  followers: String(artwork.creator?.profile?.followers_count ?? 0),
+                  likes: String(artwork.like_count ?? 0),
+                  following: String(artwork.creator?.profile?.following_count ?? 0),
+                },
               }]}
               stats={{
                 likes: String(artwork.like_count),

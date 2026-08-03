@@ -8,6 +8,7 @@ import React, { useState } from 'react'
 import { ChevronLeft, ChevronRight, ChevronsRight } from 'lucide-react'
 import UploadHeader from './upload-header'
 import { useAuthStore } from '@/store'
+import { useUsersByIds } from '@/hooks/use-user'
 
 interface UploadPreviewProps {
   id?: string;
@@ -20,7 +21,7 @@ interface UploadPreviewProps {
   loading?: boolean
 }
 
-const UploadPreview = ({ onNext, onBack, onSaveAndExit, steps, number, previewFunction, loading }: UploadPreviewProps) => {
+const UploadPreview = ({ id, onNext, onBack, onSaveAndExit, steps, number, previewFunction, loading }: UploadPreviewProps) => {
   const draft = useArtworkStore(selectDraft)
   const { user } = useAuthStore()
   
@@ -37,7 +38,6 @@ const UploadPreview = ({ onNext, onBack, onSaveAndExit, steps, number, previewFu
   const previewImage = currentAsset?.original_url || '/placeholder.png' // Fallback image
   const displayTitle = draft?.title || 'Untitled Artwork'
 
-  // TODO: Replace this with the actual logged-in user from your Auth/User store
   const currentUser: Artist = {
     id: user?.id as string,
     name: user?.username!,
@@ -46,13 +46,23 @@ const UploadPreview = ({ onNext, onBack, onSaveAndExit, steps, number, previewFu
     stats: { followers: String(user?.followersCount) || '0', likes: String(user?.likesCount) || '0' , following: String(user?.followingCount) || '0' }
   }
 
-  // Map through collaborators to build the full artists array
-  const collaborators: Artist[] = (draft?.collaborator_ids || []).map((collabId, index) => ({
-    id: typeof collabId === 'string' ? collabId : String(collabId),
-    name: `Collaborator ${index + 1}`, // TODO: Fetch real collaborator details from your store based on ID
-    avatarUrl: '/default-avatar.png',
-    role: 'Collaborator'
-  }))
+  const collaboratorIds = (draft?.collaborator_ids || []).map((collabId) =>
+    typeof collabId === 'string' ? collabId : String(collabId)
+  )
+  const { data: collaboratorProfiles, isLoading: collaboratorsLoading } = useUsersByIds(collaboratorIds)
+
+  // Map through collaborators to build the full artists array, backed by
+  // real profile data once resolved. Falls back to a neutral placeholder
+  // only while the lookup is in flight (or if a profile can't be found).
+  const collaborators: Artist[] = collaboratorIds.map((collabId) => {
+    const profile = collaboratorProfiles?.find((p) => p.id === collabId)
+    return {
+      id: collabId,
+      name: profile?.profile?.display_name || profile?.username || (collaboratorsLoading ? 'Loading…' : 'Unknown collaborator'),
+      avatarUrl: profile?.profile?.avatar_url || '/default-avatar.png',
+      role: profile?.role === 'ARTIST' ? 'Artist' : 'Collaborator',
+    }
+  })
 
   // The full artist array passed to the ArtCard
   const allArtists = [currentUser, ...collaborators]
@@ -75,6 +85,7 @@ const UploadPreview = ({ onNext, onBack, onSaveAndExit, steps, number, previewFu
             <ArtCard 
               image={previewImage}
               title={displayTitle}
+              artworkId={id}
               artist={allArtists}
               variant="bland"
               alternate={true} // Enable this to show the AvatarGroup of collaborators nicely

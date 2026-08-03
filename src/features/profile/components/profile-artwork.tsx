@@ -110,6 +110,7 @@ const ProfileArtwork = ({ userId, tabType, isOwnProfile, onArtworkClick, onPostA
                             key={art.id}
                             image={art.assets?.[0]?.optimized_url || art.assets?.[0]?.original_url || '/placeholder.jpg'}
                             title={art.title}
+                            artworkId={art.id}
                             onCardClick={() => onArtworkClick(art, artworks)}
                             showVideo={art.assets?.[0]?.media_type === 'VIDEO'}
                             showCart={art.listing_type === 'MARKETPLACE'}
@@ -117,6 +118,12 @@ const ProfileArtwork = ({ userId, tabType, isOwnProfile, onArtworkClick, onPostA
                                 id: art.creator?.id || art.creator_id,
                                 name: art.creator?.profile?.display_name || art.creator?.username || 'Unknown Artist',
                                 avatarUrl: art.creator?.profile?.avatar_url || '/images/image-avatar.svg',
+                                role: art.creator?.role || 'Artist',
+                                stats: {
+                                    followers: String(art.creator?.profile?.followers_count ?? 0),
+                                    likes: String(art.like_count ?? 0),
+                                    following: String(art.creator?.profile?.following_count ?? 0),
+                                },
                             }]}
                             stats={{
                                 likes: String(art.like_count || 0),

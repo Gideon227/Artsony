@@ -158,6 +158,7 @@ const TopPicks = () => {
                                     <ArtCard
                                         image={imageUrl}
                                         title={artwork.title}
+                                        artworkId={artwork.id}
                                         variant="shop"
                                         onCardClick={() => handleOpenArtwork(index)}
                                         showCart={true}
@@ -168,7 +169,7 @@ const TopPicks = () => {
                                         }}
                                         artist={[
                                             {
-                                                id: artwork.creator_id,
+                                                id: artwork.creator?.id || artwork.creator_id,
                                                 name: artwork.creator?.profile?.display_name || artwork.creator?.username || 'Unknown Artist',
                                                 avatarUrl: artwork.creator?.profile?.avatar_url || '/default-avatar.png',
                                                 role: 'Artist',
