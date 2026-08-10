@@ -108,12 +108,18 @@ export type Comment = Timestamp & {
 
 export type Notification = Timestamp & {
   id: ID
-  type: 'like' | 'comment' | 'follow' | 'sale' | 'reply'
-  isRead: boolean
+  type: 'like' | 'comment' | 'follow' | 'sale' | 'reply' | 'message'
+  actor_id: string
+  data: {
+    preview: string
+    conversation_id: ID
+  }
+  is_read: boolean
   actor: Pick<User, 'id' | 'username' | 'displayName' | 'avatarUrl'>
   resourceId: ID
   resourceType: 'artwork' | 'comment' | 'user'
   message: string
+  created_at: string
 }
 
 export type CartItem = {
