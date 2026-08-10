@@ -188,18 +188,18 @@ export type CreateShippingAddressInput = Omit<
 
 // ── Digital delivery ───────────────────────────────────────────────────────────
 
-export type DigitalDeliveryToken = {
-  id: string
-  order_item_id: string
-  artwork_id: string
-  buyer_id: string
-  token_hash: string
-  expires_at: string
-  download_count: number
-  max_downloads: number
-  last_downloaded_at: string | null
-  created_at: string
-}
+// export type DigitalDeliveryToken = {
+//   id: string
+//   order_item_id: string
+//   artwork_id: string
+//   buyer_id: string
+//   token_hash: string
+//   expires_at: string
+//   download_count: number
+//   max_downloads: number
+//   last_downloaded_at: string | null
+//   created_at: string
+// }
 
 // ── Payment / transaction ──────────────────────────────────────────────────────
 
