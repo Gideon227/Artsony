@@ -23,6 +23,7 @@ type BackendUser = {
   display_name: string | null
   avatar_url: string | null
   bio: string | null
+  location?: string | null // Added to support the frontend requirement
   background_url: string | null
   website_url: string | null
   behance_url: string | null
@@ -44,6 +45,7 @@ function toFrontendUser(raw: BackendUser): User {
     role: raw.role,
     avatarUrl: raw.avatar_url,
     bio: raw.bio,
+    location: raw.location ?? null, // Added to fix the missing property error
     // Not populated by any current endpoint — nothing reads this field yet.
     artworks: [] as unknown as Artwork,
     website: raw.website_url,
