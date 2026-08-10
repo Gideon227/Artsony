@@ -3,11 +3,12 @@ import { cn } from '@/utils'
 import type { Notification } from '@/types'
 
 const ICON_MAP: Record<Notification['type'], React.ElementType> = {
-  like:    Heart,
+  like: Heart,
   comment: MessageCircle,
-  reply:   Reply,
-  follow:  UserPlus,
-  sale:    ShoppingBag,
+  message: MessageCircle,
+  reply: Reply,
+  follow: UserPlus,
+  sale: ShoppingBag,
 }
 
 type NotificationIconProps = {
