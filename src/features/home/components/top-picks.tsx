@@ -158,7 +158,7 @@ const TopPicks = () => {
                                     <ArtCard
                                         image={imageUrl}
                                         title={artwork.title}
-                                        artworkId={artwork.id}
+                                        // artworkId={artwork.id}
                                         variant="shop"
                                         onCardClick={() => handleOpenArtwork(index)}
                                         showCart={true}

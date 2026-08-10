@@ -1,8 +1,11 @@
+'use client'
 import { ArtCard, Artist } from '@/components/ui/art-card'
 import { Artwork } from '@/types'
-import React from 'react'
+import React, { useState } from 'react'
 
 const ProfileArtCard = ({ artworks }: { artworks: Artwork[] }) => {
+    const [activeArtwork, setActiveArtwork] = useState<Artwork | null>(null)
+
     return (
         <div className="py-12 px-8 bg-white grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-x-4 gap-y-12 items-center justify-center">
             {artworks?.map((art, index) => {
@@ -26,12 +29,13 @@ const ProfileArtCard = ({ artworks }: { artworks: Artwork[] }) => {
                             image={art.assets[0]?.original_url as string}
                             title={art.title || 'Profile Art'}
                             artist={formattedArtists} 
-                            artworkId={art.id}
+                            // artworkId={art.id}
                             stats={{
                                 likes: String(art.like_count || '0'),
                                 views: String(art.view_count || '0')
                             }}
-                            cardLink={`/artwork/${art.id}`}
+                            // cardLink={`/artwork/${art.id}`}
+                            onCardClick={() => setActiveArtwork}
                             onAction={(action) => console.log('Action:', action)}
                         />
                     </div>

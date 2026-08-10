@@ -86,8 +86,8 @@ export function ShopResultsGrid({
             <ArtCard
               image={artwork.assets[0]?.original_url as string}
               title={artwork.title}
-              artworkId={artwork.id}
-              cardLink={`/artwork/${artwork.id}`}
+              // artworkId={artwork.id}
+              // cardLink={`/artwork/${artwork.id}`}
               artist={[{
                 id: artwork.creator?.id || artwork.creator_id,
                 name: artwork.creator?.profile?.display_name || artwork.creator?.username as string,

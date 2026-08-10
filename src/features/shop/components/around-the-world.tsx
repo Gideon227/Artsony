@@ -223,7 +223,7 @@ export default function AroundTheWorld() {
                                                 variant="discover" // Using discover to match the overlay style in the image
                                                 image={art.assets?.[0]?.optimized_url || art.assets?.[0]?.original_url || '/placeholder.png'} 
                                                 title={art.title}
-                                                artworkId={art.id}
+                                                // artworkId={art.id}
                                                 artist={mappedArtists}
                                                 stats={{ likes: String(art.like_count ?? 0), views: String(art.view_count ?? 0) }}
                                                 showHeart={true}

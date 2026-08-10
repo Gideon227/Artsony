@@ -85,7 +85,7 @@ const UploadPreview = ({ id, onNext, onBack, onSaveAndExit, steps, number, previ
             <ArtCard 
               image={previewImage}
               title={displayTitle}
-              artworkId={id}
+              // artworkId={id}
               artist={allArtists}
               variant="bland"
               alternate={true} // Enable this to show the AvatarGroup of collaborators nicely
