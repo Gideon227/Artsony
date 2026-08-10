@@ -20,7 +20,7 @@ export function DownloadCard({ token }: Props) {
   return (
     <div className="w-full border border-gray-50 rounded-xl p-4 flex items-center gap-x-4">
       <div className="relative w-16 h-16 rounded-xl overflow-hidden bg-gray-50 shrink-0">
-        {token.artwork_thumbnail_url ? (
+        {/* {token.artwork_thumbnail_url ? (
           <Image
             src={token.artwork_thumbnail_url}
             alt={token.artwork_title}
@@ -30,11 +30,11 @@ export function DownloadCard({ token }: Props) {
           />
         ) : (
           <Image src="/icons/artwork-placeholder.svg" alt="Artwork unavailable" fill sizes="64px" className="object-cover" />
-        )}
+        )} */}
       </div>
-
+{/* They were commented out temporarily */}
       <div className="min-w-0 flex-1">
-        <p className="font-poppins font-medium text-body-s text-body truncate">{token.artwork_title}</p>
+        {/* <p className="font-poppins font-medium text-body-s text-body truncate">{token.artwork_title}</p> */}
         <p className="font-poppins text-body-xs text-gray-200 tracking-wide mt-1">
           {isExpired
             ? 'Download link expired'
