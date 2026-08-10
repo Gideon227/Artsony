@@ -62,6 +62,7 @@ export type User = Timestamp & {
   avatarUrl: Nullable<string>
   bio: Nullable<string>
   artworks: Artwork
+  location: Nullable<string>
   website: Nullable<string>
   instagramLink: Nullable<string>
   facebookLink: Nullable<string>

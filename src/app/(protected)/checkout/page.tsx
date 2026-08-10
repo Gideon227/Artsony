@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useMemo } from 'react'
+import { Suspense, useEffect, useMemo } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { ArrowLeft } from 'lucide-react'
@@ -10,7 +10,8 @@ import { useCartStore } from '@/store/cart.store'
 import { CheckoutForm } from '@/features/checkout/components/checkout-form'
 import { CheckoutFooterLinks } from '@/features/checkout/components/checkout-footer-links'
 
-export default function CheckoutPage() {
+// 1. Move all the search params, cart logic, and page content into this inner component
+function CheckoutContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const { cart, isLoading, fetchCart } = useCartStore()
@@ -32,9 +33,7 @@ export default function CheckoutPage() {
   }, [cart, requestedIds])
 
   return (
-    <div className="bg-white">
-      <Navbar />
-
+    <>
       <div className="flex items-center justify-between px-8 py-10">
         <div className="flex items-center gap-4">
           <button
@@ -74,6 +73,25 @@ export default function CheckoutPage() {
       )}
 
       <CheckoutFooterLinks />
+    </>
+  )
+}
+
+// 2. Export the main page, wrapping the inner component in Suspense
+export default function CheckoutPage() {
+  return (
+    <div className="bg-white">
+      <Navbar />
+      
+      <Suspense
+        fallback={
+          <div className="flex justify-center py-32">
+            <Spinner size="lg" />
+          </div>
+        }
+      >
+        <CheckoutContent />
+      </Suspense>
     </div>
   )
 }

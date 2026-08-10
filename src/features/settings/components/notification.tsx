@@ -1,5 +1,12 @@
+'use client'
+
 import { Button } from '@/components'
-import React, { useState } from 'react'
+import React, { useEffect, useState } from 'react'
+import {
+  useNotificationPreferences,
+  useUpdateNotificationPreferences,
+} from '@/hooks/use-notification-preferences'
+import type { NotificationType } from '@/services/notification-preferences.service'
 
 // --- 1. Interactive Switch Toggle Component ---
 interface ToggleProps {
@@ -46,298 +53,123 @@ const CustomBox = ({ title, text, checked, onChange }: CustomBoxProps) => {
     )
 }
 
-// --- 3. Parent Settings View Component ---
+// --- 3. Category definitions ---
+// Each category maps to the actual notification_type value(s) the backend
+// can produce for it — collapsed from the original 26 sub-toggles down to
+// what the backend can genuinely distinguish and enforce. A notification's
+// "type" is the only axis notification_preferences.types_muted can mute on;
+// there's no sub-type tracking (e.g. "order shipped" vs "order delivered"
+// both fire as the same order_update type), so those variants share one
+// toggle rather than pretending to be independently controllable.
+type Category = {
+    key: string
+    title: string
+    text: string
+    types: NotificationType[]
+}
+
+const CATEGORIES: Category[] = [
+    {
+        key: 'orders',
+        title: 'Orders & Shipping',
+        text: 'New orders, order status changes, and delivery updates.',
+        types: ['order_update'],
+    },
+    {
+        key: 'wallet',
+        title: 'Wallet & Payments',
+        text: 'Withdrawal requests, approvals, and payout status.',
+        types: ['sale'],
+    },
+    {
+        key: 'messages',
+        title: 'Messages',
+        text: 'Direct messages and announcements from artists you follow.',
+        types: ['message', 'broadcast'],
+    },
+    {
+        key: 'social',
+        title: 'Comments & Replies',
+        text: 'Comments and replies on your artwork.',
+        types: ['comment', 'reply'],
+    },
+    {
+        key: 'follows',
+        title: 'Follows & Likes',
+        text: 'New followers and likes on your artwork.',
+        types: ['follow', 'like'],
+    },
+    {
+        key: 'reviews',
+        title: 'Reviews',
+        text: 'New reviews left on your artwork sales.',
+        types: ['review'],
+    },
+]
+
 const NotificationSettings = () => {
-    // Consolidated tracking state for all explicit alert channels
-    const [settings, setSettings] = useState({
-        emailNotifications: true,
-        
-        // Orders & Shipping
-        newOrder: true,
-        orderActivated: false,
-        shipmentUpdates: true,
-        orderDelivered: true,
-        orderCanceled: false,
+    const { data: preferences } = useNotificationPreferences()
+    const { mutate: save, isPending } = useUpdateNotificationPreferences()
 
-        // Wallet & Payments
-        earningReceived: true,
-        fundsAvailable: true,
-        withdrawalCompleted: true,
-        refundIssued: false,
-        transactionFailed: true,
+    const [emailEnabled, setEmailEnabled] = useState(true)
+    const [typesMuted, setTypesMuted] = useState<NotificationType[]>([])
 
-        // Account & Security
-        newDeviceLogin: true,
-        passwordChanged: true,
-        suspiciousActivity: true,
+    useEffect(() => {
+        if (preferences) {
+            setEmailEnabled(preferences.email_enabled)
+            setTypesMuted(preferences.types_muted)
+        }
+    }, [preferences])
 
-        // Social Activity
-        newMessage: true,
-        newComment: false,
-        newFollower: true,
-        artworkLiked: false,
+    const isCategoryEnabled = (types: NotificationType[]) =>
+        !types.every((t) => typesMuted.includes(t))
 
-        // Reviews & Feedback
-        newReview: true,
-        ratingUpdated: false,
-
-        // Platform Updates
-        productUpdates: false,
-        policyChanged: true,
-        maintenanceAlerts: true,
-
-        // Marketing
-        featuredOpportunities: true,
-        challengesEvents: false,
-    })
-
-    // Atomic setting modifier function
-    const handleToggleSetting = (key: keyof typeof settings) => {
-        setSettings((prev) => ({
-            ...prev,
-            [key]: !prev[key],
-        }))
+    const toggleCategory = (types: NotificationType[]) => {
+        const enabled = isCategoryEnabled(types)
+        setTypesMuted((current) =>
+            enabled
+                ? [...new Set([...current, ...types])] // turning off — mute all types in this category
+                : current.filter((t) => !types.includes(t)), // turning on — unmute all
+        )
     }
 
-    const handleSaveSettings = () => {
-        console.log('Pushing updated notification parameters to user record state:', settings)
+    const handleSave = () => {
+        if (!preferences) return
+        const changed: { email_enabled?: boolean; types_muted?: NotificationType[] } = {}
+        if (emailEnabled !== preferences.email_enabled) changed.email_enabled = emailEnabled
+        const sortedCurrent = [...typesMuted].sort()
+        const sortedPrev = [...preferences.types_muted].sort()
+        if (JSON.stringify(sortedCurrent) !== JSON.stringify(sortedPrev)) changed.types_muted = typesMuted
+        if (Object.keys(changed).length === 0) return
+        save(changed)
     }
 
     return (
-        <div className='border border-gray-50 rounded-2xl bg-white w-full'>
-            {/* Header Toolbar */}
-            <div className='px-8 py-4 flex justify-between items-center border-b border-gray-50'>
-                <h5 className='font-raleway font-semibold text-h5 text-primary-500 leading-10 tracking-wide'>
-                    Notification Settings
-                </h5>
-                <Button size='sm' className='rounded-2xl' onClick={() => {}}>Save</Button>
+        <div className='border border-gray-50 rounded-2xl bg-white w-full pb-8'>
+            <div className='px-8 py-4 flex justify-between items-center border-b border-gray-50 '>
+                <h5 className='font-raleway font-semibold text-h5 text-primary-500 leading-10 tracking-wide'>Notifications</h5>
+                <Button size='sm' className='rounded-2xl' onClick={handleSave} isLoading={isPending} loadingText='Saving…'>Save</Button>
             </div>
 
-            {/* Main Application Preferences Body */}
-            <div className='pt-12 px-8 overflow-y-scroll gap-y-16 flex flex-col pb-12' style={{ gap: 64 }}>
-                
-                {/* Global Email Master Switch Row */}
+            <div className='pt-12 px-8 overflow-y-scroll gap-y-8 flex flex-col'>
                 <CustomBox
-                    title='Enable Notification Via Email'
-                    text='Choose to also receive notifications and updates via email also.'
-                    checked={settings.emailNotifications}
-                    onChange={() => handleToggleSetting('emailNotifications')}
+                    title='Enable Notifications Via Email'
+                    text='Receive a copy of important notifications by email, in addition to in-app.'
+                    checked={emailEnabled}
+                    onChange={() => setEmailEnabled((v) => !v)}
                 />
 
-                {/* Order Notifications Category Block */}
-                <div className='flex flex-col gap-y-6'>
-                    <p className='font-poppins font-semibold text-body-m text-primary-500 leading-8 tracking-wide'>
-                        Order & Shipping Notification
-                    </p>
-
-                    <div className='bg-secondary-50 p-6 gap-y-6 rounded-xl flex flex-col'>
-                        <CustomBox 
-                            title='New Order'
-                            text='Get notified when someone purchases your artwork.'
-                            checked={settings.newOrder}
-                            onChange={() => handleToggleSetting('newOrder')}
+                <div className='bg-secondary-50 p-6 gap-y-6 flex flex-col rounded-xl'>
+                    {CATEGORIES.map((category) => (
+                        <CustomBox
+                            key={category.key}
+                            title={category.title}
+                            text={category.text}
+                            checked={isCategoryEnabled(category.types)}
+                            onChange={() => toggleCategory(category.types)}
                         />
-                        <CustomBox 
-                            title='Order Activated'
-                            text='Know when a seller activates shipping for an order.'
-                            checked={settings.orderActivated}
-                            onChange={() => handleToggleSetting('orderActivated')}
-                        />
-                        <CustomBox 
-                            title='Shipment Updates'
-                            text='Receive updates as your order moves through transit.'
-                            checked={settings.shipmentUpdates}
-                            onChange={() => handleToggleSetting('shipmentUpdates')}
-                        />
-                        <CustomBox 
-                            title='Order Delivered'
-                            text='Be notified when an order has been successfully delivered.'
-                            checked={settings.orderDelivered}
-                            onChange={() => handleToggleSetting('orderDelivered')}
-                        />
-                        <CustomBox 
-                            title='Order Canceled'
-                            text='Be notified when an order has been successfully canceled.'
-                            checked={settings.orderCanceled}
-                            onChange={() => handleToggleSetting('orderCanceled')}
-                        />
-                    </div>
+                    ))}
                 </div>
-
-                {/* Wallet Notifications Category Block */}
-                <div className='flex flex-col gap-y-6'>
-                    <p className='font-poppins font-semibold text-body-m text-primary-500 leading-8 tracking-wide'>
-                        Wallet & Payments
-                    </p>
-
-                    <div className='bg-secondary-50 p-6 gap-y-6 rounded-xl flex flex-col'>
-                        <CustomBox 
-                            title='Earning Received'
-                            text='Get notified when an order is completed and earnings are assigned.'
-                            checked={settings.earningReceived}
-                            onChange={() => handleToggleSetting('earningReceived')}
-                        />
-                        <CustomBox 
-                            title='Funds Available'
-                            text='Know when your earnings move from pending to available.'
-                            checked={settings.fundsAvailable}
-                            onChange={() => handleToggleSetting('fundsAvailable')}
-                        />
-                        <CustomBox 
-                            title='Withdrawal Completed'
-                            text='Get notified when a payout has been sent to your account.'
-                            checked={settings.withdrawalCompleted}
-                            onChange={() => handleToggleSetting('withdrawalCompleted')}
-                        />
-                        <CustomBox 
-                            title='Refund Issued'
-                            text='Be notified when a refund has been processed.'
-                            checked={settings.refundIssued}
-                            onChange={() => handleToggleSetting('refundIssued')}
-                        />
-                        <CustomBox 
-                            title='Transaction Failed'
-                            text='Receive alerts if a payment or payout fails.'
-                            checked={settings.transactionFailed}
-                            onChange={() => handleToggleSetting('transactionFailed')}
-                        />
-                    </div>
-                </div>
-
-                {/* Account Security Category Block */}
-                <div className='flex flex-col gap-y-6'>
-                    <p className='font-poppins font-semibold text-body-m text-primary-500 leading-8 tracking-wide'>
-                        Account & Security
-                    </p>
-
-                    <div className='bg-secondary-50 p-6 gap-y-6 rounded-xl flex flex-col'>
-                        <CustomBox 
-                            title='New Device Login'
-                            text='Get alerted when your account is accessed from a new device.'
-                            checked={settings.newDeviceLogin}
-                            onChange={() => handleToggleSetting('newDeviceLogin')}
-                        />
-                        <CustomBox 
-                            title='Password Changed'
-                            text='Be notified after your password is updated.'
-                            checked={settings.passwordChanged}
-                            onChange={() => handleToggleSetting('passwordChanged')}
-                        />
-                        <CustomBox 
-                            title='Suspicious Activity'
-                            text='Get notified if we detect unusual activity on your account.'
-                            checked={settings.suspiciousActivity}
-                            onChange={() => handleToggleSetting('suspiciousActivity')}
-                        />
-                    </div>
-                </div>
-
-                {/* Engagement Social Activity Category Block */}
-                <div className='flex flex-col gap-y-6'>
-                    <p className='font-poppins font-semibold text-body-m text-primary-500 leading-8 tracking-wide'>
-                        Message & Social Activity
-                    </p>
-
-                    <div className='bg-secondary-50 p-6 gap-y-6 rounded-xl flex flex-col'>
-                        <CustomBox 
-                            title='New Message'
-                            text='Get notified when you receive a new message.'
-                            checked={settings.newMessage}
-                            onChange={() => handleToggleSetting('newMessage')}
-                        />
-                        <CustomBox 
-                            title='New Comment'
-                            text='Know when someone comments on your artwork.'
-                            checked={settings.newComment}
-                            onChange={() => handleToggleSetting('newComment')}
-                        />
-                        <CustomBox 
-                            title='New Follower'
-                            text='Get notified when a platform member starts following your profile portfolio.'
-                            checked={settings.newFollower}
-                            onChange={() => handleToggleSetting('newFollower')}
-                        />
-                        <CustomBox 
-                            title='Artwork Liked'
-                            text='Get notified when someone likes your artwork.'
-                            checked={settings.artworkLiked}
-                            onChange={() => handleToggleSetting('artworkLiked')}
-                        />
-                    </div>
-                </div>
-
-                {/* Quality Reviews Category Block */}
-                <div className='flex flex-col gap-y-6'>
-                    <p className='font-poppins font-semibold text-body-m text-primary-500 leading-8 tracking-wide'>
-                        Reviews & Feedbacks
-                    </p>
-
-                    <div className='bg-secondary-50 p-6 gap-y-6 rounded-xl flex flex-col'>
-                        <CustomBox 
-                            title='New Review'
-                            text='Get notified when a buyer leaves a review.'
-                            checked={settings.newReview}
-                            onChange={() => handleToggleSetting('newReview')}
-                        />
-                        <CustomBox 
-                            title='Rating Updated'
-                            text='Know when your overall rating changes.'
-                            checked={settings.ratingUpdated}
-                            onChange={() => handleToggleSetting('ratingUpdated')}
-                        />
-                    </div>
-                </div>
-
-                {/* Core Infrastructure Platform Updates Category Block */}
-                <div className='flex flex-col gap-y-6'>
-                    <p className='font-poppins font-semibold text-body-m text-primary-500 leading-8 tracking-wide'>
-                        Platform Updates & Announcements
-                    </p>
-
-                    <div className='bg-secondary-50 p-6 gap-y-6 rounded-xl flex flex-col'>
-                        <CustomBox 
-                            title='Product Updates'
-                            text='Stay informed about new features and improvements.'
-                            checked={settings.productUpdates}
-                            onChange={() => handleToggleSetting('productUpdates')}
-                        />
-                        <CustomBox 
-                            title='Policy Changed'
-                            text='Be notified about important updates to Artsony policies.'
-                            checked={settings.policyChanged}
-                            onChange={() => handleToggleSetting('policyChanged')}
-                        />
-                        <CustomBox 
-                            title='Maintenance Alerts'
-                            text='Receive alerts about scheduled maintenance or downtime.'
-                            checked={settings.maintenanceAlerts}
-                            onChange={() => handleToggleSetting('maintenanceAlerts')}
-                        />
-                    </div>
-                </div>
-
-                {/* Ecosystem Marketing Category Block */}
-                <div className='flex flex-col gap-y-6'>
-                    <p className='font-poppins font-semibold text-body-m text-primary-500 leading-8 tracking-wide'>
-                        Marketing & Community
-                    </p>
-
-                    <div className='bg-secondary-50 p-6 gap-y-6 rounded-xl flex flex-col'>
-                        <CustomBox 
-                            title='Featured Opportunities'
-                            text='Get notified when your artwork is featured or eligible for promotion.'
-                            checked={settings.featuredOpportunities}
-                            onChange={() => handleToggleSetting('featuredOpportunities')}
-                        />
-                        <CustomBox 
-                            title='Challenges & Events'
-                            text='Stay updated on community challenges and events.'
-                            checked={settings.challengesEvents}
-                            onChange={() => handleToggleSetting('challengesEvents')}
-                        />
-                    </div>
-                </div>
-
             </div>
         </div>
     )

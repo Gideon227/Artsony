@@ -1,5 +1,5 @@
 import { apiClient } from '@/lib/api-client'
-import type { User, ApiResponse, Artwork } from '@/types'
+import type { User, ApiResponse, Artwork, Nullable } from '@/types'
 
 type AuthResponse = { user: User; accessToken: string }
 
@@ -76,6 +76,7 @@ export type UpdateProfileInput = {
   display_name?: string | null
   bio?: string | null
   interests?: string[]
+  location?: Nullable<string>
   avatar_url?: string | null
   background_url?: string | null
   website_url?: string | null
