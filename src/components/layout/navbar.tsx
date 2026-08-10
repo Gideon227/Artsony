@@ -10,6 +10,7 @@ import { SearchInput } from "../ui/search-input";
 import UserMenuOverlay from "@/features/home/components/user-menu-overlay";
 import { Input } from "../ui/input";
 import NotificationModal from "@/features/notification/components/notification-modal";
+import UploadModal from "@/features/upload/components/upload-modal";
 
 const IconButton = ({
   icon,
@@ -26,7 +27,7 @@ const IconButton = ({
     onClick={onClick}
     className={cn(
       "flex items-center justify-center cursor-pointer w-10 h-10 rounded-full border border-neutral-200 text-slate-600 hover:bg-neutral-50 transition-colors active:scale-95",
-      hideOnMobile ? "hidden md:flex" : "flex",
+      hideOnMobile ? "hidden lg:flex" : "flex",
       className
     )}
   >
@@ -38,6 +39,8 @@ export function Navbar({ hideSearchBar = false }: { hideSearchBar?: boolean }) {
   const router = useRouter();
   const [isMenuOpen, setIsMenuOpen] = useState(false); 
   const [isNotificationOpen, setIsNotificationOpen] = useState(false)
+  const [showPostArtwork, setShowPostArtwork] = useState(false)
+  
 
   const handleSearch = (query: string) => {
     const trimmed = query.trim();
@@ -48,14 +51,14 @@ export function Navbar({ hideSearchBar = false }: { hideSearchBar?: boolean }) {
   return (
     <>
       <header className="w-full bg-white border-b-2 border-gray-50 sticky top-0 z-50">
-        <div className="container mx-auto px-4 md:px-6 lg:px-8 py-3 h-[72px] flex items-center justify-between">
+        <div className="container mx-auto px-4 lg:px-6 lg:px-8 py-3 h-[72px] flex items-center justify-between">
           
           {/* LEFT SECTION */}
           <div className="flex items-center gap-4 shrink-0">
             <Link href="/" className="shrink-0 flex items-center pt-1">
-              <Image src="/home/logo-text.svg" alt="Artsony Logo" width={136} height={20} priority className="h-4 w-auto md:h-5" />
+              <Image src="/home/logo-text.svg" alt="Artsony Logo" width={136} height={20} priority className="h-4 w-[108px] md:w-auto md:h-5" />
             </Link>
-            <nav className="hidden md:flex items-center gap-2 font-medium font-poppins leading-6 text-[16px]">
+            <nav className="hidden lg:flex items-center gap-2 font-medium font-poppins leading-6 text-[16px]">
               <Link href="/discover" className="text-body hover:text-primary-500 transition-colors p-2 tracking-wide">Discover</Link>
               <Link href="/shop" className="text-body hover:text-primary-500 transition-colors p-2 tracking-wide">Shop</Link>
             </nav>
@@ -63,16 +66,16 @@ export function Navbar({ hideSearchBar = false }: { hideSearchBar?: boolean }) {
 
           {/* MIDDLE SECTION */}
           {!hideSearchBar && (
-            <div className="hidden md:flex flex-1 max-w-[564px]">
+            <div className="hidden lg:flex flex-1 max-w-[564px]">
               <SearchInput placeholder="Find your next visual obsession..." leftIconPath='/home/magnifier.svg' onSearch={handleSearch} />
             </div>
           )}
 
           {/* RIGHT SECTION */}
           <div className="flex items-center gap-2 shrink-0">
-            <div className="flex items-center gap-2 md:gap-3">
-              <IconButton icon='/home/upload-square.svg' hideOnMobile />
-              <Link href='/'>
+            <div className="flex items-center gap-2 lg:gap-3">
+              <IconButton onClick={() => setShowPostArtwork(true)} icon='/home/upload-square.svg' hideOnMobile />
+              <Link href='/my-orders'>
                 <IconButton icon='/home/delivery.svg' hideOnMobile />
               </Link>
               <IconButton onClick={() => setIsNotificationOpen(prev => !prev)} icon='/home/notification-bell.svg' />
@@ -87,7 +90,7 @@ export function Navbar({ hideSearchBar = false }: { hideSearchBar?: boolean }) {
             {/* User Profile Button - CLICK TRIGGERS MENU */}
             <button 
               onClick={() => setIsMenuOpen(true)}
-              className="hidden md:flex items-center gap-2 ml-2 group cursor-pointer"
+              className="hidden lg:flex items-center gap-2 ml-2 group cursor-pointer"
             >
               <div className="relative w-10 h-10 rounded-full border border-neutral-200 overflow-hidden">
                 <Image src="/images/image-avatar.svg" alt="User Avatar" fill className="object-cover" />
@@ -98,11 +101,12 @@ export function Navbar({ hideSearchBar = false }: { hideSearchBar?: boolean }) {
         </div>
       </header>
 
+      <UploadModal isOpen={showPostArtwork} onClose={() => setShowPostArtwork(false)} />
+
       {/* --- MENU OVERLAY SYSTEM --- */}
       <AnimatePresence>
         {isMenuOpen && (
           <>
-            {/* 1. Backdrop (Low opacity black covering screen) */}
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
@@ -111,7 +115,6 @@ export function Navbar({ hideSearchBar = false }: { hideSearchBar?: boolean }) {
               className="fixed inset-0 bg-black/40 z-[60] backdrop-blur-[2px]"
             />
 
-            {/* 2. Menu Component (Floating over the backdrop) */}
             <motion.div
               initial={{ opacity: 0, scale: 0.95, y: -20 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
@@ -119,12 +122,8 @@ export function Navbar({ hideSearchBar = false }: { hideSearchBar?: boolean }) {
               transition={{ type: "spring", damping: 25, stiffness: 300 }}
               className={cn(
                 "fixed z-[70]",
-                // MOBILE: this menu's trigger is hidden below md (MobileNav owns
-                // profile access there), but centered/clamped defensively so it
-                // never breaks if that changes.
-                "max-md:inset-0 max-md:flex max-md:items-center max-md:justify-center max-md:p-4",
-                // DESKTOP: anchored under the avatar button
-                "md:top-20 md:right-6 lg:right-16"
+                "max-lg:inset-0 max-lg:flex max-lg:items-center max-lg:justify-center max-lg:p-4",
+                "lg:top-20 lg:right-6 lg:right-16"
               )}
             >
               <UserMenuOverlay />
@@ -142,7 +141,6 @@ export function Navbar({ hideSearchBar = false }: { hideSearchBar?: boolean }) {
               className="fixed inset-0 bg-black/40 z-[60] backdrop-blur-[2px]"
             />
 
-            {/* UPDATED WRAPPER */}
             <motion.div
               initial={{ opacity: 0, scale: 0.95, y: -20 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
@@ -150,10 +148,8 @@ export function Navbar({ hideSearchBar = false }: { hideSearchBar?: boolean }) {
               transition={{ type: "spring", damping: 25, stiffness: 300 }}
               className={cn(
                 "fixed z-[70]",
-                // MOBILE: Center perfectly in the middle of the screen
-                "max-md:inset-0 max-md:flex max-md:items-center max-md:justify-center max-md:p-4",
-                // DESKTOP: Position tightly under the 72px navbar, close to the bell icon 
-                "md:top-[76px] md:right-20 lg:right-32"
+                "max-lg:inset-0 max-lg:flex max-lg:items-center max-lg:justify-center max-lg:p-4",
+                "lg:top-[76px] lg:right-20 lg:right-32"
               )}
             >
               <NotificationModal onClose={() => setIsNotificationOpen(false)} />

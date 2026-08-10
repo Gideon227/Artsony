@@ -74,6 +74,7 @@ export function useLogin() {
     },
 
     onError: (err: Error) => {
+      console.error('[useLogin] Login failed:', err)
       if (err instanceof HttpError) {
         if (err.statusCode === 423) {
           error('Account locked', 'Too many failed attempts. Try again later.')
@@ -245,6 +246,33 @@ export function useCompleteOnboarding() {
 
     onError: () => {
       error('Failed to save', 'Your interests could not be saved. Please try again.')
+    },
+  })
+}
+
+// ─── Update profile (profile customization page) ──────────────────────────────
+
+export function useUpdateProfile() {
+  const setUser = useAuthStore((s) => s.setUser)
+  const queryClient = useQueryClient()
+  const { success, error } = useToast()
+
+  return useMutation({
+    mutationFn: (input: Parameters<typeof authService.updateProfile>[0]) =>
+      authService.updateProfile(input),
+
+    onSuccess: ({ data }) => {
+      setUser(data)
+      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.me })
+      success('Profile updated', 'Your changes have been saved.')
+    },
+
+    onError: (err) => {
+      const message =
+        err instanceof HttpError
+          ? err.message
+          : 'Your profile could not be saved. Please try again.'
+      error('Failed to save', message)
     },
   })
 }

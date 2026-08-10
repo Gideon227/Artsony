@@ -141,7 +141,7 @@ const HomePage = () => {
   }
 
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-screen bg-white max-lg:mb-20">
       <Navbar />
       <HeroSection />
       <GalleryPulseSection />

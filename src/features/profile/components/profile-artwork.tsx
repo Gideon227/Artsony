@@ -91,8 +91,7 @@ const ProfileArtwork = ({ userId, tabType, isOwnProfile, onArtworkClick, onPostA
                 </div>
             ) : artworks.length === 0 ? (
                 <div className='flex flex-col items-center gap-6 px-4 py-16 text-center'>
-                    {/* Placeholder path — swap in the illustration you're adding yourself. */}
-                    <Image src='/images/empty-artworks.svg' width={224} height={224} alt='' />
+                    <Image src='/illustrations/empty-artwork.png' width={445} height={459} alt='' />
                     <div className='flex flex-col gap-2'>
                         <h3 className='font-poppins text-body-l font-semibold text-heading'>{EMPTY_COPY[tabType].title}</h3>
                         <p className='max-w-sm font-poppins text-body-s text-gray-400'>{EMPTY_COPY[tabType].body}</p>
@@ -110,7 +109,7 @@ const ProfileArtwork = ({ userId, tabType, isOwnProfile, onArtworkClick, onPostA
                             key={art.id}
                             image={art.assets?.[0]?.optimized_url || art.assets?.[0]?.original_url || '/placeholder.jpg'}
                             title={art.title}
-                            artworkId={art.id}
+                            // artworkId={art.id}
                             onCardClick={() => onArtworkClick(art, artworks)}
                             showVideo={art.assets?.[0]?.media_type === 'VIDEO'}
                             showCart={art.listing_type === 'MARKETPLACE'}

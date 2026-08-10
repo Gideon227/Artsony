@@ -85,7 +85,7 @@ export function CreatorCTASection() {
                     <ArtCard
                       image={artwork.assets[0]?.thumbnail_url ?? artwork.assets[0]?.optimized_url ?? artwork.assets[0]?.original_url ?? ''}
                       title={artwork.title}
-                      artworkId={artwork.id}
+                      // artworkId={artwork.id}
                       onCardClick={() => setActiveArtwork(artwork)}
                       artist={[{
                         id: artwork.creator?.id || artwork.creator_id,
@@ -129,7 +129,7 @@ export function CreatorCTASection() {
         </div>
 
         {!isLoading && artworks.length > 1 && (
-          <div className="flex items-center gap-2 justify-center">
+          <div className="flex items-center gap-2 justify-center mt-8">
             {artworks.map((_, i) => (
               <button
                 key={i}

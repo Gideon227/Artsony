@@ -5,10 +5,12 @@ import { Artwork } from '@/types/artwork'
 import { ArtCard } from '@/components/ui/art-card'
 import ArtworkViewOverlay from '@/features/artwork/components/shop/artwork-view-overlay'
 import { useTopPicks } from '@/hooks/use-artwork'
+import { useQuickAddToCart } from '@/hooks/use-cart-actions'
 
 const TopPicks = () => {
     const { data: artworks = [], isLoading, isError } = useTopPicks('all', 8, 'MARKETPLACE')
     const error = isError ? 'Failed to load top picks.' : null
+    const { quickAdd } = useQuickAddToCart()
 
     // Overlay state
     const [activeArtwork, setActiveArtwork] = useState<Artwork | null>(null)
@@ -136,18 +138,20 @@ const TopPicks = () => {
                                     <ArtCard
                                         image={imageUrl}
                                         title={artwork.title}
-                                        artworkId={artwork.id}
                                         variant="shop"
                                         onCardClick={() => handleOpenArtwork(index)}
                                         showCart={true}
                                         showHeart={true}
+                                        onAction={(action) => {
+                                            if (action === 'cart') quickAdd(artwork)
+                                        }}
                                         stats={{
                                             likes: artwork.like_count.toString(),
                                             views: artwork.view_count.toString()
                                         }}
                                         artist={[
                                             {
-                                                id: artwork.creator?.id || artwork.creator_id,
+                                                id: artwork.creator_id,
                                                 name: artwork.creator?.profile?.display_name || artwork.creator?.username || 'Unknown Artist',
                                                 avatarUrl: artwork.creator?.profile?.avatar_url || '/default-avatar.png',
                                                 role: 'Artist',

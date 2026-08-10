@@ -2,13 +2,14 @@
 import { Button } from '@/components'
 import Image from 'next/image'
 import { useRouter } from 'next/navigation'
+import { ChevronsRight } from 'lucide-react'
 import React from 'react'
 
 const EmptyCartPage = () => {
     const router = useRouter()
     
     return (
-        <div className='mt-[85px] mb-14 flex justify-center items-center'>
+        <div className='my-[85px] mb-14 flex justify-center items-center bg-white'>
             <div className='w-[509px] h-[590px]'>
                 <div className='flex flex-col justify-center item-center gap-y-12'>
                     <Image src='/images/empty-cart.svg' width={448} height={378} alt='empty cart icon' />

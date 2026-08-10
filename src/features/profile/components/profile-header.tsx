@@ -45,17 +45,28 @@ const ProfileHeader = ({ user, isOwnProfile, onPostArtwork }: Props) => {
           style={{ background: 'linear-gradient(180deg, rgba(9, 10, 11, 0) 0%, rgba(27, 27, 27, 0.9) 85.35%)' }}
         >
           <div className="flex flex-col items-center justify-center gap-4">
-            <div className="relative flex h-28 w-28 shrink-0 items-center justify-center">
-              <Image src="/home/profile-ring.svg" alt="Profile Ring" width={144} height={144} className="object-contain" priority />
-              <div className="relative z-10 h-[104px] w-[104px] overflow-hidden rounded-full">
+            <div className="relative w-36 h-36 flex items-center justify-center shrink-0">
+              <Image
+                src="/home/profile-ring.svg"
+                alt="Profile Ring"
+                width={144}
+                height={144}
+                className="absolute object-contain"
+                priority
+              />
+              
+              {/* The actual User Avatar */}
+              <div className="relative w-[104px] h-[104px] rounded-full overflow-hidden z-10 bg-gray-50">
                 <Image
                   src={user?.avatarUrl || '/images/image-avatar.svg'}
-                  alt={`${user?.username}'s profile`}
-                  fill
-                  className="border border-gray-50 object-cover shadow-[0px_0px_4px_0px_#00000040]"
+                  alt={user?.username ? `${user.username}'s profile` : 'User avatar'}
+                  width={104}
+                  height={104}
+                  className="h-full w-full object-cover"
                 />
               </div>
-            </div>
+          </div>
+            
 
             <p className="text-center font-raleway text-[20px] font-semibold leading-8 tracking-wide text-white">
               {user.username || 'Unknown Artist'}
@@ -103,7 +114,7 @@ const ProfileHeader = ({ user, isOwnProfile, onPostArtwork }: Props) => {
               )}
 
               {isOwnProfile ? (
-                <Button variant="outline" leftIcon="/icons/message-white.svg" fullWidth onClick={handleMessage}>
+                <Button variant="outline" leftIcon="/icons/message-white.svg" fullWidth className='border-white text-white' onClick={handleMessage}>
                   Inbox
                 </Button>
               ) : (

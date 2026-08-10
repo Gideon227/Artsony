@@ -11,6 +11,7 @@ import {
 import { Input } from '../ui/input';
 import { Button } from '../ui/button';
 import { useAuthStore } from '@/store';
+import { truncate } from '@/utils';
 
 const Footer = () => {
   const { user } = useAuthStore()
@@ -134,8 +135,8 @@ const Footer = () => {
               </div>
             </div>
             <p className="text-[14px] font-poppins leading-6 italic tracking-wide text-white">
-              {user?.bio ?? `"I paint like I'm remembering something I've never seen before."`}
-              
+              {/* {user?.bio ?? `"I paint like I'm remembering something I've never seen before."`} */}
+              {truncate((user?.bio || "I paint like I'm remembering something I've never seen before."), 120)}
             </p>
           </div>
         </div>

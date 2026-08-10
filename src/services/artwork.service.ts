@@ -124,6 +124,9 @@ export const artworkService = {
   unlike: (id: string): Promise<ApiResponse<Artwork>> =>
     apiClient.delete<ApiResponse<Artwork>>(`/api/artworks/${id}/like`),
 
+  view: (id: string): Promise<ApiResponse<void>> =>
+    apiClient.post(`/api/artworks/${id}/view`),
+
   // save: (id: string): Promise<void> =>
   //   apiClient.post<void>(`/api/artworks/${id}/save`),
 

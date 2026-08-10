@@ -1,5 +1,6 @@
 import { ArtCard } from '@/components/ui/art-card'
 import { cn } from '@/lib/utils'
+import { useQuickAddToCart } from '@/hooks/use-cart-actions'
 import type { Artwork } from '@/types/artwork'
 
 // Cycled per item to produce the varied-height Pinterest-style rhythm from
@@ -27,6 +28,8 @@ type MasonryArtworkGridProps = {
 }
 
 export function MasonryArtworkGrid({ artworks, onArtworkClick }: MasonryArtworkGridProps) {
+  const { quickAdd } = useQuickAddToCart()
+
   return (
     <div className="columns-2 gap-6 px-4 sm:columns-3 md:px-8 lg:columns-4">
       {artworks.map((artwork, i) => {
@@ -38,21 +41,17 @@ export function MasonryArtworkGrid({ artworks, onArtworkClick }: MasonryArtworkG
             <ArtCard
               image={image}
               title={artwork.title}
-              artworkId={artwork.id}
               onCardClick={() => onArtworkClick(artwork)}
               showCart={artwork.listing_type === 'MARKETPLACE'}
               showVideo={asset?.media_type === 'VIDEO'}
+              onAction={(action) => {
+                if (action === 'cart') quickAdd(artwork)
+              }}
               artist={[
                 {
-                  id: artwork.creator?.id || artwork.creator_id,
+                  id: artwork.creator_id,
                   name: artwork.creator?.profile?.display_name || artwork.creator?.username || 'Artist',
                   avatarUrl: artwork.creator?.profile?.avatar_url ?? '/images/image-avatar.svg',
-                  role: artwork.creator?.role || 'Artist',
-                  stats: {
-                    followers: String(artwork.creator?.profile?.followers_count ?? 0),
-                    likes: String(artwork.like_count ?? 0),
-                    following: String(artwork.creator?.profile?.following_count ?? 0),
-                  },
                 },
               ]}
               stats={{ likes: String(artwork.like_count), views: String(artwork.view_count) }}

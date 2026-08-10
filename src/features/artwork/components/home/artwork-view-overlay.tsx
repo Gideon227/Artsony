@@ -19,9 +19,11 @@ import {
 import { artworkService } from '@/services/artwork.service'
 import { followService } from '@/services/follow.service'
 import { useCartStore } from '@/store/cart.store'
+import { useToast } from '@/components/ui/toaster'
 import { cn } from '@/lib/utils'
 import type { Artwork, ArtworkAsset, Variant } from '@/types/artwork'
 import { Dropdown } from '@/components/ui/dropdown'
+import { SaveToMoodboardDialog } from '@/features/moodboards/components/save-to-moodboard-dialog'
 import { ArtworkCreatorWorks } from './artwork-creator-works'
 import { ArtworkComments } from '../shop/artwork-comments'
 import Link from 'next/link'
@@ -67,6 +69,7 @@ export default function ArtworkViewOverlay({ artwork: artworkProp, onClose, onNa
   const [isAddingToCart, setIsAddingToCart] = useState(false)
   const [cartError, setCartError] = useState<string | null>(null)
   const [shareOpen, setShareOpen] = useState(false)
+  const [saveDialogOpen, setSaveDialogOpen] = useState(false)
 
   // Fixed-size centered dialog on desktop (90% viewport width, 90vh tall) —
   // the left and right columns each scroll independently inside it. Mobile
@@ -75,6 +78,7 @@ export default function ArtworkViewOverlay({ artwork: artworkProp, onClose, onNa
   const [isClosing, setIsClosing] = useState(false)
 
   const { addItem } = useCartStore()
+  const { success: toastSuccess, error: toastError } = useToast()
   const backdropRef = useRef<HTMLDivElement>(null)
   const leftColRef = useRef<HTMLDivElement>(null)
   const thumbStripRef = useRef<HTMLDivElement>(null)
@@ -193,8 +197,12 @@ export default function ArtworkViewOverlay({ artwork: artworkProp, onClose, onNa
         quantity,
         ...(selectedVariantOptionId ? { variant_option_id: selectedVariantOptionId } : {}),
       })
+      toastSuccess('Added to cart', `${displayTitle} is in your cart.`)
+      setQuantity(1)
     } catch (err: any) {
-      setCartError(err?.message ?? 'Could not add to cart.')
+      const message = err?.message ?? 'Could not add to cart.'
+      setCartError(message)
+      toastError('Could not add to cart', message)
     } finally {
       setIsAddingToCart(false)
     }
@@ -293,7 +301,7 @@ export default function ArtworkViewOverlay({ artwork: artworkProp, onClose, onNa
   const purchasingDetails = (
     <div className="flex flex-col gap-y-2 border-t border-gray-50 pt-4">
       <div className="flex items-center gap-x-2">
-        <Globe size={14} className="text-body" />
+        <Globe size={16} className="text-body" />
         <p className={cn('font-poppins font-light text-body-xs leading-4 tracking-wide', isAvailableInRegion ? 'text-info-500' : 'text-gray-400')}>
           {isAvailableInRegion ? 'Available in your Region' : 'This artwork is not available in your region'}
         </p>
@@ -306,7 +314,7 @@ export default function ArtworkViewOverlay({ artwork: artworkProp, onClose, onNa
       )}
 
       <div className="font-poppins font-medium text-body-m leading-6 tracking-wide text-body">
-        Price: <span className="ml-2 text-primary-500">{price}</span>
+        Price: <span className="ml-2 text-primary-500">{Number(price) * quantity }</span>
       </div>
     </div>
   )
@@ -351,13 +359,14 @@ export default function ArtworkViewOverlay({ artwork: artworkProp, onClose, onNa
     </div>
   )
 
-  // Folder/share/flag row — kept as functional placeholders. Share already
-  // works (copy link / WhatsApp / Dribbble); folder (save-to-collection) and
-  // flag (report) are stubbed pending the dedicated modals you're building.
+  // Folder/share/flag row — folder opens the save-to-moodboard dialog, share
+  // already works (copy link / WhatsApp / Dribbble); flag (report) is
+  // stubbed pending the dedicated report modal.
   const footerIcons = (
     <div className="relative flex items-center gap-4">
       <button
-        aria-label="Save to collection"
+        onClick={() => setSaveDialogOpen(true)}
+        aria-label="Save to moodboard"
         className="flex h-[46px] w-[46px] items-center justify-center rounded-full bg-[#F3F4F6] text-[#9CA3AF] transition-colors hover:bg-gray-200 hover:text-gray-600"
       >
         <FolderPlus size={20} strokeWidth={2.5} />
@@ -501,14 +510,14 @@ export default function ArtworkViewOverlay({ artwork: artworkProp, onClose, onNa
           <button
             onClick={handlePrevAsset}
             disabled={activeAssetIndex === 0}
-            className="absolute left-2 z-10 flex h-9 w-9 items-center justify-center rounded-full bg-primary-500 text-white shadow-md transition-colors hover:bg-primary-600 disabled:cursor-not-allowed disabled:opacity-50 lg:left-8 lg:h-10 lg:w-10"
+            className="absolute left-2 z-10 flex h-9 w-9 cursor-pointer items-center justify-center rounded-full bg-primary-500 text-white shadow-md transition-colors hover:bg-primary-600 disabled:cursor-not-allowed disabled:opacity-50 lg:left-8 lg:h-10 lg:w-10"
           >
             <ChevronLeft size={20} strokeWidth={3} />
           </button>
 
           <div
             ref={thumbStripRef}
-            className="flex w-full items-center gap-4 overflow-x-auto scroll-smooth px-10 scrollbar-hide lg:gap-6 lg:px-12"
+            className="flex w-full py-4 items-center gap-4 overflow-x-auto scroll-smooth px-10 scrollbar-hide lg:gap-6 lg:px-12"
           >
             {assets.map((asset, idx) => {
               const thumbSrc = asset.thumbnail_url || asset.optimized_url || asset.original_url
@@ -520,11 +529,11 @@ export default function ArtworkViewOverlay({ artwork: artworkProp, onClose, onNa
                   ref={isActive ? activeThumbRef : undefined}
                   onClick={() => setActiveAssetIndex(idx)}
                   className={cn(
-                    'relative h-[140px] w-[110px] shrink-0 overflow-hidden rounded-[18px] bg-secondary-100 transition-transform hover:-translate-y-1 lg:h-[220px] lg:w-[180px] lg:rounded-[24px] lg:hover:-translate-y-2',
+                    'relative cursor-pointer h-[140px] w-[110px] shrink-0 overflow-hidden rounded-[18px] transition-transform hover:-translate-y-1 lg:h-[220px] lg:w-[180px] lg:rounded-[24px] lg:hover:-translate-y-2',
                     isActive && 'ring-2 ring-primary-500'
                   )}
                 >
-                  <Image src={thumbSrc} alt={`Asset ${idx + 1}`} fill className="object-contain p-2" />
+                  <Image src={thumbSrc} alt={`Asset ${idx + 1}`} fill className="object-cover rounded-xl" />
                   {isVideo && (
                     <span className="absolute left-1.5 top-1.5 flex h-6 w-6 items-center justify-center rounded-full bg-black/50 text-white">
                       <Image src="/icons/play-icon.svg" width={10} height={10} alt="Video" />
@@ -538,7 +547,7 @@ export default function ArtworkViewOverlay({ artwork: artworkProp, onClose, onNa
           <button
             onClick={handleNextAsset}
             disabled={activeAssetIndex === assets.length - 1}
-            className="absolute right-2 z-10 flex h-9 w-9 items-center justify-center rounded-full bg-primary-500 text-white shadow-md transition-colors hover:bg-primary-600 disabled:cursor-not-allowed disabled:opacity-50 lg:right-8 lg:h-10 lg:w-10"
+            className="absolute right-2 z-10 flex h-9 w-9 cursor-pointer items-center justify-center rounded-full bg-primary-500 text-white shadow-md transition-colors hover:bg-primary-600 disabled:cursor-not-allowed disabled:opacity-50 lg:right-8 lg:h-10 lg:w-10"
           >
             <ChevronRight size={20} strokeWidth={3} />
           </button>
@@ -548,6 +557,7 @@ export default function ArtworkViewOverlay({ artwork: artworkProp, onClose, onNa
   )
 
   return (
+    <>
     <div
       ref={backdropRef}
       className="fixed inset-0 z-50 overflow-y-auto bg-black/40 lg:overflow-hidden"
@@ -579,7 +589,7 @@ export default function ArtworkViewOverlay({ artwork: artworkProp, onClose, onNa
           animate={{ y: isClosing ? '100%' : 0 }}
           transition={{ type: 'spring', damping: 32, stiffness: 320 }}
           onAnimationComplete={() => { if (isClosing) onClose() }}
-          className="relative flex min-h-screen w-full flex-col rounded-none bg-white shadow-2xl lg:my-auto lg:h-[90vh] lg:min-h-0 lg:w-[90%] lg:max-w-[1600px] lg:flex-row lg:overflow-hidden lg:rounded-2xl"
+          className="relative flex min-h-screen w-full flex-col rounded-none bg-white lg:mt-auto lg:h-[90vh] lg:min-h-0 lg:w-[90%] lg:max-w-[1600px] lg:flex-row lg:overflow-hidden lg:rounded-t-2xl"
         >
           {/* Fixed mobile header — avatar/name for context while scrolling, options for
               share/report. Desktop uses the sticky right-panel profile header instead. */}
@@ -711,5 +721,8 @@ export default function ArtworkViewOverlay({ artwork: artworkProp, onClose, onNa
         </button>
       </div>
     </div>
+
+    <SaveToMoodboardDialog artworkId={artwork.id} open={saveDialogOpen} onOpenChange={setSaveDialogOpen} />
+    </>
   )
 }

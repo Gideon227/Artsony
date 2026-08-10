@@ -1,7 +1,6 @@
 'use client'
 
 import React, { useEffect } from 'react'
-import Image from 'next/image'
 import { useCartStore } from '@/store/cart.store'
 import EmptyCartPage from './empty-cart-page'
 import CartPage from './cart-page' // your existing filled-cart component
@@ -33,23 +32,7 @@ const CartContent = () => {
 
   // ── Empty (cart fetched but has no items) ────────────────────────────────
   if (!cart || cart.items.length === 0) {
-    return (
-      <div className='flex justify-between items-center py-12 px-8'>
-        {/* Header */}
-        <div className='flex justify-between items-center w-full'>
-          <h2 className='font-raleway font-semibold text-body text-h4 leading-10 tracking-wide'>Cart</h2>
-          <div className='flex gap-3 items-center'>
-            <div className='rounded-full bg-primary-500 p-2'>
-              <Image src='/icons/cart-white.svg' width={24} height={24} alt='cart icon' />
-            </div>
-            <p className='font-raleway font-medium text-h5 text-body leading-8 tracking-wide'>
-              0
-            </p>
-          </div>
-        </div>
-        <EmptyCartPage />
-      </div>
-    )
+    return <EmptyCartPage />
   }
 
   // ── Has items ────────────────────────────────────────────────────────────

@@ -1,20 +1,24 @@
 'use client'
 
-import React, { useEffect } from 'react'
-import { ChevronsRight, ShoppingCart } from 'lucide-react'
+import React from 'react'
+import { ChevronsRight } from 'lucide-react'
+import Image from 'next/image'
+import Link from 'next/link'
+import Footer from '@/components/layout/footer'
 import { useCartStore } from '@/store/cart.store'
 import { CartItemRow } from './cart-item-row'
 import { SellerDivider } from './cart-summary-bar'
-import { CartItemWithArtwork } from '@/types/cart'
-import Image from 'next/image'
-import Link from 'next/link'
+import { AlsoLikeSection } from './also-like-section'
+import type { CartItemWithArtwork } from '@/types/cart'
 
+// Cart data is fetched once by the parent (CartContent) before this component
+// ever mounts — it owns the has-items branch only, so it never re-fetches.
 export default function CartPage() {
-  const { cart, isLoading, error, fetchCart } = useCartStore()
+  const cart = useCartStore((s) => s.cart)
 
-  useEffect(() => {
-    fetchCart()
-  }, [fetchCart])
+  if (!cart) return null
+
+  const groups = groupBySeller(cart.items)
 
   return (
     <div className="flex flex-col py-10">
@@ -23,54 +27,32 @@ export default function CartPage() {
         <h1 className="font-raleway font-semibold text-h4 leading-10 text-body tracking-wide">Cart</h1>
         <div className="flex items-center gap-2">
           <span className="flex h-10 w-10 items-center justify-center rounded-full bg-primary-500 text-white">
-            <Image src='/icons/cart.svg' width={20} height={20} alt='cart icon' />
+            <Image src="/icons/cart.svg" width={20} height={20} alt="cart icon" />
           </span>
           <span className="font-raleway font-medium text-h5 leading-9 text-body tracking-wide">
-            / {cart?.item_count ?? 0}
+            / {cart.item_count}
           </span>
         </div>
       </div>
 
-      {/* Loading */}
-      {isLoading && !cart && (
-        <div className="flex items-center justify-center py-20">
-          <div className="h-10 w-10 animate-spin rounded-full border-b-2 border-primary-500" />
-        </div>
-      )}
-
-      {/* Error */}
-      {error && !isLoading && (
-        <div className="py-10 text-center font-poppins text-red-500">{error}</div>
-      )}
-
-      {/* Empty */}
-      {!isLoading && !error && cart && cart.items.length === 0 && (
-        <div className="py-20 text-center font-poppins text-gray-500">
-          Your cart is empty.
-        </div>
-      )}
-
       {/* Items grouped by seller */}
-      {!isLoading && cart && cart.items.length > 0 && (
-        <div className="flex flex-col gap-y-4 px-8">
-          {groupBySeller(cart.items).map((group) => (
+      <div className="flex flex-col gap-y-4 px-8">
+        {groups.map((group) => {
+          const checkoutHref = `/checkout?items=${group.items.map((i) => i.id).join(',')}`
+
+          return (
             <div key={group.sellerId} className="flex flex-col gap-y-4">
               <SellerDivider name={group.sellerName} />
-              <div className='flex w-[95vw]'>
-                <div className="flex flex-col overflow-hidden rounded-tl-2xl border border-gray-50 divide-y divide-gray-50">
-                  {group.items.map((item, index) => (
-                    <>
-                      <CartItemRow key={item.id} item={item} />
-                      {group.items.length - 1 < index && (
-                        <hr className='text-gray-50' />
-                      )}
-                    </>
+              <div className="flex w-full">
+                <div className="flex flex-1 flex-col overflow-hidden rounded-tl-2xl border border-gray-50 divide-y divide-gray-50">
+                  {group.items.map((item) => (
+                    <CartItemRow key={item.id} item={item} />
                   ))}
                 </div>
 
                 <Link
-                  href={`/marketplace`}
-                  aria-label="View artwork details"
+                  href={checkoutHref}
+                  aria-label={`Checkout items from ${group.sellerName}`}
                   className="flex w-[116px] shrink-0 rounded-r-2xl border border-gray-50 items-center justify-center bg-[#FEEFEC] transition-colors hover:bg-[#FCDFDA]"
                 >
                   <span className="flex h-9 w-9 items-center justify-center rounded-full bg-gray-700 text-white">
@@ -79,17 +61,15 @@ export default function CartPage() {
                 </Link>
               </div>
             </div>
-          ))}
+          )
+        })}
+      </div>
 
-          {/* Subtotal */}
-          <div className="flex items-center justify-between border-t border-gray-100 pt-6">
-            <span className="font-poppins text-[16px] text-gray-500">Subtotal</span>
-            <span className="font-poppins text-[20px] font-semibold text-gray-900">
-              $ {cart.subtotal.toLocaleString('en-US')} {cart.currency}
-            </span>
-          </div>
-        </div>
-      )}
+      <AlsoLikeSection />
+
+      <div className="mt-16">
+        <Footer />
+      </div>
     </div>
   )
 }

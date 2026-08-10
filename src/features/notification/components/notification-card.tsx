@@ -10,6 +10,8 @@ import { NotificationIcon } from './notification-icon'
 import { NOTIFICATION_LABELS, relativeTime } from '@/utils/index'
 import { ROUTES } from '@/constants'
 import type { Notification } from '@/types'
+import { Button } from '@/components'
+import { useRouter } from 'next/navigation'
 
 type NotificationCardProps = {
   notification: Notification
@@ -25,10 +27,13 @@ export function NotificationCard({
   isDeleting,
 }: NotificationCardProps) {
   const href = resolveHref(n)
+  const router = useRouter()
 
   const handleClick = () => {
-    if (!n.isRead) onRead(n.id)
+    if (!n.is_read) onRead(n.id)
   }
+
+  console.log("notifs data: ", n)
 
   return (
     <AnimatePresence>
@@ -39,78 +44,39 @@ export function NotificationCard({
           animate={{ opacity: 1, y: 0 }}
           exit={{ opacity: 0, x: -40, height: 0, marginBottom: 0 }}
           transition={{ duration: 0.25, ease: [0.4, 0, 0.2, 1] }}
+          onClick={handleClick}
           className={cn(
-            'group flex items-center gap-3 px-4 py-3 rounded-2xl border',
+            'group flex items-start gap-4 p-6 border',
             'transition-colors duration-150',
-            n.isRead
+            n.is_read
               ? 'bg-white border-neutral-100 hover:bg-neutral-50'
               : 'bg-primary-50 border-primary-100 hover:bg-primary-50/80'
           )}
         >
-          {/* ── Unread dot ─────────────────────────────────────────────── */}
-          <span
-            className={cn(
-              'shrink-0 w-2 h-2 rounded-full transition-opacity duration-300',
-              n.isRead ? 'opacity-0' : 'opacity-100 bg-primary-500'
-            )}
-            aria-hidden="true"
-          />
+          <Image src='/icons/logo-var.svg' width={56} height={56} className='w-12 h-12 lg:w-auto lg:h-auto ' alt='icon'/>
 
-          {/* ── Avatar + type icon ──────────────────────────────────────── */}
-          <div className="relative shrink-0">
-            <Avatar
-              src={n.actor?.avatarUrl}
-              name={n.actor?.username}
-              size="md"
-            />
-            {/* <NotificationIcon
-              type={n.type}
-              className="absolute -bottom-1 -right-1 w-[18px] h-[18px]"
-            /> */}
+          <div className='flex flex-col w-full gap-y-2'>
+            <p className='font-poppins text-body-s text-heading'>{NOTIFICATION_LABELS[n.type]}</p>
+
+            {n.type === 'message' && <p className='font-poppins font-light text-body-xs text-body'>{n.data.preview}</p>}
+            
+            <div className='border border-gray-50 bg-white flex gap-4 py-2 pl-2 pr-4 rounded-m w-full'>
+              <Image src={n.actor.avatarUrl || '/images/image-avatar.svg'} width={72} height={72} className='object-cover rounded-m' alt='sender avatar' />
+              
+              <div className='h-full flex flex-col gap-2'>
+                <p className='font-poppins font-light text-body-xxs'>{n.data.preview}</p>
+                <Button variant='outline' size='md' onClick={() => router.push(`/messages/${n.data.conversation_id}`)}>Send a Message</Button>
+              </div>
+            </div>
+
+            <p className='font-poppins text-text-alt-grey text-body-xxs'>{String(n.created_at)}</p>
           </div>
 
-          {/* ── Text content ────────────────────────────────────────────── */}
-          <Link
-            href={href}
-            onClick={handleClick}
-            className="flex-1 min-w-0"
-          >
-            <p className="font-poppins text-[13px] leading-5 text-neutral-600 line-clamp-2">
-              <span className="font-semibold text-neutral-700">
-                {n?.actor?.username}
-              </span>{' '}
-              {NOTIFICATION_LABELS[n.type]}
-            </p>
-            <span className="font-poppins text-[11px] text-neutral-400 mt-0.5 block">
-              {relativeTime(n.createdAt)}
-            </span>
-          </Link>
 
-          {/* ── Artwork thumbnail (when notification is about an artwork) ─ */}
-          {n.resourceType === 'artwork' && (
-            <Link
-              href={ROUTES.artwork(n.resourceId)}
-              onClick={handleClick}
-              tabIndex={-1}
-              className="shrink-0 w-[52px] h-[52px] rounded-xl overflow-hidden border border-neutral-100 hover:opacity-90 transition-opacity"
-            >
-              <div className="relative w-full h-full">
-                <Image
-                  src={`/images/artwork-${n.resourceId}.jpg`}
-                  alt="Artwork thumbnail"
-                  fill
-                  className="object-cover"
-                  onError={(e) => {
-                    // Graceful fallback if image doesn't exist yet
-                    ;(e.currentTarget as HTMLImageElement).src = '/images/placeholder-art.jpg'
-                  }}
-                />
-              </div>
-            </Link>
-          )}
+          
 
           {/* ── Delete button ────────────────────────────────────────────── */}
-          <button
+          {/* <button
             onClick={() => onDelete(n.id)}
             aria-label="Dismiss notification"
             className={cn(
@@ -121,7 +87,7 @@ export function NotificationCard({
             )}
           >
             <X className="w-3.5 h-3.5" />
-          </button>
+          </button> */}
         </motion.div>
       )}
     </AnimatePresence>
@@ -132,7 +98,7 @@ export function NotificationCard({
 
 function resolveHref(n: Notification): string {
   if (n.resourceType === 'artwork') return ROUTES.artwork(n.resourceId)
-  if (n.resourceType === 'user') return ROUTES.profile(n.actor.username)
+  if (n.resourceType === 'user') return ROUTES.profile(n.actor_id)
   if (n.resourceType === 'comment') return ROUTES.artwork(n.resourceId)
   return ROUTES.notifications
 }

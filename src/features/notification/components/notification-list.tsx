@@ -9,7 +9,10 @@ import { groupNotifications } from '@/utils/index'
 import type { Notification } from '@/types'
 
 type NotificationListProps = {
-  notifications: Notification[]
+  notifications: {
+    hasMore: boolean,
+    items: Notification[]
+  }[]
   isLoading: boolean
   isFetchingNextPage: boolean
   hasNextPage: boolean
@@ -52,23 +55,38 @@ export function NotificationList({
 
   if (notifications.length === 0) return <EmptyState />
 
-  const groups = groupNotifications(notifications)
+  const groups = groupNotifications(notifications[0]?.items as Notification[])
+  
+  console.log("Notification Data on notiflist:", notifications)
 
   return (
-    <div className="flex flex-col gap-6">
-      {groups.map((group) => (
-        <section key={group.label}>
-          {/* Section label */}
-          <div className="flex items-center gap-3 mb-3">
+    <div className="flex flex-col">
+      {notifications[0]?.items.map((notifs, i) => (
+        <section key={notifs.id} className='flex flex-col gap-2'>
+          <motion.div
+            key={i}
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: Math.min(i * 0.03, 0.2), duration: 0.3 }}
+          >
+            <NotificationCard
+              notification={notifs}
+              onRead={onRead}
+              onDelete={onDelete}
+              isDeleting={deletingIds.has(notifs.id)}
+            />
+          </motion.div>
+
+          {/* <div className="flex items-center gap-4 p-6">
             <span className="w-1 h-4 rounded-full bg-primary-500 shrink-0" />
             <h3 className="font-raleway font-semibold text-[13px] uppercase tracking-[0.08em] text-neutral-400">
-              {group.label}
+              {notifs.label}
             </h3>
-          </div>
+          </div> */}
 
           {/* Cards */}
-          <div className="flex flex-col gap-2">
-            {group.items.map((notification, i) => (
+          {/* <div className="flex flex-col gap-2 ">
+            {notifs. map((n, i) => (
               <motion.div
                 key={i}
                 initial={{ opacity: 0, y: 8 }}
@@ -76,14 +94,14 @@ export function NotificationList({
                 transition={{ delay: Math.min(i * 0.03, 0.2), duration: 0.3 }}
               >
                 <NotificationCard
-                  notification={notification}
+                  notification={n}
                   onRead={onRead}
                   onDelete={onDelete}
-                  isDeleting={deletingIds.has(notification.id)}
+                  isDeleting={deletingIds.has(n.id)}
                 />
               </motion.div>
             ))}
-          </div>
+          </div> */}
         </section>
       ))}
 

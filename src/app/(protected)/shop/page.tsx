@@ -14,6 +14,7 @@ import { useInfiniteArtworkResults } from '@/hooks/use-artwork'
 import type { ArtworkFilters } from '@/types/artwork'
 import ArtworkViewOverlay from '@/features/artwork/components/shop/artwork-view-overlay'
 import { ShopResultsGrid } from '@/features/shop/components/shop-result-grid'
+import Footer from '@/components/layout/footer'
 
 function toArtworkFilters(query: string, filters: ShopFilterState): ArtworkFilters {
   return {
@@ -135,6 +136,8 @@ function ShopContent() {
           </div>
         </>
       )}
+
+      <Footer />
     </div>
   )
 }

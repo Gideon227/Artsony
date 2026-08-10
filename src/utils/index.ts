@@ -76,11 +76,12 @@ export function assertUnreachable(x: never): never {
 // ─── Label copy per notification type ─────────────────────────────────────────
 
 export const NOTIFICATION_LABELS: Record<Notification['type'], string> = {
-  like:    'liked your artwork',
+  like: 'liked your artwork',
   comment: 'commented on your artwork',
-  reply:   'replied to your comment',
-  follow:  'started following you',
-  sale:    'purchased your artwork',
+  reply: 'replied to your comment',
+  follow: 'started following you',
+  sale: 'purchased your artwork',
+  message: 'New Message'
 }
 
 // ─── Icon SVG paths for each type (used in NotificationIcon component) ────────

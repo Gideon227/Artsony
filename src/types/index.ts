@@ -67,6 +67,9 @@ export type User = Timestamp & {
   facebookLink: Nullable<string>
   twitterLink: Nullable<string>
   behanceLink: Nullable<string>
+  pinterestLink: Nullable<string>
+  linkedinLink: Nullable<string>
+  backgroundUrl: Nullable<string>
   followersCount: number
   followingCount: number
   likesCount: number

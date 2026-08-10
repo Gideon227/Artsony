@@ -19,9 +19,11 @@ import {
 import { artworkService } from '@/services/artwork.service'
 import { followService } from '@/services/follow.service'
 import { useCartStore } from '@/store/cart.store'
+import { useToast } from '@/components/ui/toaster'
 import { cn } from '@/lib/utils'
 import type { Artwork, ArtworkAsset, Variant } from '@/types/artwork'
 import { Dropdown } from '@/components/ui/dropdown'
+import { SaveToMoodboardDialog } from '@/features/moodboards/components/save-to-moodboard-dialog'
 import { ArtworkCreatorWorks } from './artwork-creator-works'
 import { ArtworkComments } from './artwork-comments'
 import Link from 'next/link'
@@ -67,15 +69,12 @@ export default function ArtworkViewOverlay({ artwork: artworkProp, onClose, onNa
   const [isAddingToCart, setIsAddingToCart] = useState(false)
   const [cartError, setCartError] = useState<string | null>(null)
   const [shareOpen, setShareOpen] = useState(false)
+  const [saveDialogOpen, setSaveDialogOpen] = useState(false)
 
-  // Pinterest/Behance-style docking: opens as a centered floating card,
-  // then the first scroll/wheel/touch gesture — even over the backdrop —
-  // permanently docks it to full viewport height and reveals everything
-  // below the fold.
-  const [isDocked, setIsDocked] = useState(false)
   const [isClosing, setIsClosing] = useState(false)
 
   const { addItem } = useCartStore()
+  const { success: toastSuccess, error: toastError } = useToast()
   const backdropRef = useRef<HTMLDivElement>(null)
 
   // Reset per-artwork UI state when navigating prev/next so stale state
@@ -182,8 +181,12 @@ export default function ArtworkViewOverlay({ artwork: artworkProp, onClose, onNa
         quantity,
         ...(selectedVariantOptionId ? { variant_option_id: selectedVariantOptionId } : {}),
       })
+      toastSuccess('Added to cart', `${displayTitle} is in your cart.`)
+      setQuantity(1)
     } catch (err: any) {
-      setCartError(err?.message ?? 'Could not add to cart.')
+      const message = err?.message ?? 'Could not add to cart.'
+      setCartError(message)
+      toastError('Could not add to cart', message)
     } finally {
       setIsAddingToCart(false)
     }
@@ -196,10 +199,6 @@ export default function ArtworkViewOverlay({ artwork: artworkProp, onClose, onNa
     else if (platform === 'whatsapp') window.open(`https://wa.me/?text=${encodeURIComponent(shareUrl)}`, '_blank')
     else if (platform === 'dribbble') window.open(`https://dribbble.com/shots/new?url=${encodeURIComponent(shareUrl)}`, '_blank')
     setShareOpen(false)
-  }
-
-  const dockOnScrollIntent = () => {
-    if (!isDocked) setIsDocked(true)
   }
 
   const requestClose = () => {
@@ -252,6 +251,73 @@ export default function ArtworkViewOverlay({ artwork: artworkProp, onClose, onNa
         {isFollowing ? 'Following' : 'Follow'}
       </button>
     </div>
+  )
+
+  // Mobile-only header bar: close, creator identity, save-to-moodboard, more.
+  const mobileHeaderBar = (
+    <div className="flex items-center gap-3 border-b border-gray-50 px-5 py-4 lg:hidden">
+      <button
+        onClick={requestClose}
+        aria-label="Close"
+        className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-gray-100 text-gray-600"
+      >
+        <Image src="/icons/cancel.svg" width={16} height={16} alt="close" />
+      </button>
+
+      <Link href={`/profile/${artwork.creator_id}`} className="flex min-w-0 flex-1 items-center gap-2">
+        <span className="relative h-8 w-8 shrink-0 overflow-hidden rounded-full bg-gray-100">
+          <Image
+            src={artwork.creator?.profile?.avatar_url || '/images/image-avatar.svg'}
+            alt={creatorName}
+            fill
+            className="object-cover"
+          />
+        </span>
+        <span className="truncate font-poppins text-[14px] font-medium text-gray-800">
+          {artwork.creator?.username ?? creatorName}
+        </span>
+      </Link>
+
+      <button
+        onClick={() => setSaveDialogOpen(true)}
+        aria-label="Save to moodboard"
+        className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-gray-100 text-gray-600"
+      >
+        <FolderPlus size={16} strokeWidth={2.5} />
+      </button>
+      <button
+        aria-label="More options"
+        className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-gray-100 text-gray-600"
+      >
+        <MoreHorizontal size={16} strokeWidth={2.5} />
+      </button>
+    </div>
+  )
+
+  // Mobile-only: centered creator avatar + name, shown once beneath the
+  // purchase panel (matches the mobile mockup — desktop shows the creator
+  // in the sticky right-hand panel instead, via profileHeader).
+  const mobileCreatorBlock = artwork.creator && (
+    <Link href={`/profile/${artwork.creator_id}`} className="flex flex-col items-center gap-3 text-center">
+      <span className="relative h-20 w-20 overflow-hidden rounded-full bg-gray-100 ring-4 ring-primary-100">
+        <Image src={artwork.creator.profile?.avatar_url || '/images/image-avatar.svg'} alt={creatorName} fill className="object-cover" />
+      </span>
+      <span className="font-poppins text-[15px] font-medium text-gray-800">{creatorName}</span>
+    </Link>
+  )
+
+  const mobileLikeRow = (
+    <button
+      onClick={handleLike}
+      disabled={isLiking}
+      className={cn(
+        'flex w-full cursor-pointer items-center justify-center gap-2 rounded-full border p-3 font-poppins text-body-s font-medium transition-colors disabled:opacity-60',
+        isLiked ? 'border-primary-500 bg-primary-50 text-primary-500' : 'border-primary-500 text-primary-500 hover:bg-primary-50'
+      )}
+    >
+      <Heart size={18} fill={isLiked ? 'currentColor' : 'none'} />
+      Like
+    </button>
   )
 
   const artworkInfoStats = (
@@ -342,13 +408,14 @@ export default function ArtworkViewOverlay({ artwork: artworkProp, onClose, onNa
     </div>
   )
 
-  // Folder/share/flag row — kept as functional placeholders. Share already
-  // works (copy link / WhatsApp / Dribbble); folder (save-to-collection) and
-  // flag (report) are stubbed pending the dedicated modals you're building.
+  // Folder/share/flag row — folder opens the save-to-moodboard dialog, share
+  // already works (copy link / WhatsApp / Dribbble); flag (report) is
+  // stubbed pending the dedicated report modal.
   const footerIcons = (
     <div className="relative flex items-center gap-4">
       <button
-        aria-label="Save to collection"
+        onClick={() => setSaveDialogOpen(true)}
+        aria-label="Save to moodboard"
         className="flex h-[46px] w-[46px] items-center justify-center rounded-full bg-[#F3F4F6] text-[#9CA3AF] transition-colors hover:bg-gray-200 hover:text-gray-600"
       >
         <FolderPlus size={20} strokeWidth={2.5} />
@@ -385,14 +452,6 @@ export default function ArtworkViewOverlay({ artwork: artworkProp, onClose, onNa
     <div className="py-6">
       <h3 className="mb-4 font-poppins text-[22px] font-semibold text-gray-800">Description</h3>
       <p className="whitespace-pre-line font-poppins text-[14px] leading-6 text-gray-500">{artwork.description}</p>
-      {artwork.creator && (
-        <div className="mt-8 flex flex-col items-center gap-3 text-center">
-          <div className="relative h-16 w-16 overflow-hidden rounded-full bg-gray-100">
-            <Image src={artwork.creator.profile?.avatar_url || '/images/image-avatar.svg'} alt={creatorName} fill className="object-cover" />
-          </div>
-          <span className="font-poppins text-[15px] text-gray-800">{creatorName}</span>
-        </div>
-      )}
     </div>
   )
 
@@ -488,142 +547,174 @@ export default function ArtworkViewOverlay({ artwork: artworkProp, onClose, onNa
           </button>
         </div>
       )}
+
+      {assets.length > 1 && (
+        <div className="flex items-center justify-center gap-1.5 bg-gray-50 pb-4 lg:hidden">
+          {assets.map((asset, idx) => (
+            <button
+              key={asset.id}
+              onClick={() => setActiveAssetIndex(idx)}
+              aria-label={`Go to image ${idx + 1}`}
+              className={cn(
+                'h-1.5 rounded-full transition-all',
+                idx === activeAssetIndex ? 'w-4 bg-primary-500' : 'w-1.5 bg-gray-200'
+              )}
+            />
+          ))}
+        </div>
+      )}
     </div>
   )
 
   return (
-    <div
-      ref={backdropRef}
-      onWheel={dockOnScrollIntent}
-      onTouchMove={dockOnScrollIntent}
-      className="fixed inset-0 z-50 overflow-y-auto bg-black/40"
-    >
-      {/* Global prev/next artwork arrows — fixed to the viewport so they stay
-          reachable regardless of scroll position, not just before docking. */}
-      {onNavigate && (
-        <>
-          <button
-            onClick={() => onNavigate('prev')}
-            aria-label="Previous artwork"
-            className="fixed left-4 top-1/2 z-[60] hidden h-12 w-12 -translate-y-1/2 items-center justify-center rounded-full border border-gray-50 bg-white text-gray-600 shadow-[0_5px_15px_rgba(0,0,0,0.1)] transition-transform hover:scale-105 lg:flex"
-          >
-            <ChevronLeft size={24} />
-          </button>
-          <button
-            onClick={() => onNavigate('next')}
-            aria-label="Next artwork"
-            className="fixed right-4 top-1/2 z-[60] hidden h-12 w-12 -translate-y-1/2 items-center justify-center rounded-full border border-gray-50 bg-white text-gray-600 shadow-[0_5px_15px_rgba(0,0,0,0.1)] transition-transform hover:scale-105 lg:flex"
-          >
-            <ChevronRight size={24} />
-          </button>
-        </>
-      )}
+    <>
+      <div
+        ref={backdropRef}
+        className="fixed inset-0 z-50 overflow-y-auto bg-black/40"
+      >
+        {/* Global prev/next artwork arrows — desktop only; mobile navigates
+            via the thumbnail strip instead, there's no room for these. */}
+        {onNavigate && (
+          <>
+            <button
+              onClick={() => onNavigate('prev')}
+              aria-label="Previous artwork"
+              className="fixed left-4 top-1/2 z-[60] hidden h-12 w-12 -translate-y-1/2 items-center justify-center rounded-full border border-gray-50 bg-white text-gray-600 shadow-[0_5px_15px_rgba(0,0,0,0.1)] transition-transform hover:scale-105 lg:flex"
+            >
+              <ChevronLeft size={24} />
+            </button>
+            <button
+              onClick={() => onNavigate('next')}
+              aria-label="Next artwork"
+              className="fixed right-4 top-1/2 z-[60] hidden h-12 w-12 -translate-y-1/2 items-center justify-center rounded-full border border-gray-50 bg-white text-gray-600 shadow-[0_5px_15px_rgba(0,0,0,0.1)] transition-transform hover:scale-105 lg:flex"
+            >
+              <ChevronRight size={24} />
+            </button>
+          </>
+        )}
 
-      <div className={cn('flex min-h-full items-center justify-center', isDocked ? 'items-start' : 'py-8')}>
-        <motion.div
-          initial={{ y: '100%' }}
-          animate={{ y: isClosing ? '100%' : 0 }}
-          transition={{ type: 'spring', damping: 32, stiffness: 320 }}
-          onAnimationComplete={() => { if (isClosing) onClose() }}
-          className={cn(
-            'relative flex w-full flex-col bg-white shadow-2xl transition-[border-radius] duration-500 lg:flex-row',
-            isDocked ? 'min-h-screen rounded-none lg:w-full' : 'my-auto max-h-[90vh] w-[95%] max-w-[1400px] overflow-hidden rounded-2xl lg:w-[80%]'
-          )}
-        >
-          {/* Close button */}
-          <button
-            onClick={requestClose}
-            aria-label="Close"
-            className="fixed cursor-pointer right-4 top-4 z-[70] flex h-10 w-10 items-center justify-center rounded-full border-2 border-gray-50 bg-white transition-colors hover:bg-gray-50 lg:absolute lg:right-6 lg:top-8"
+        {/* Mobile: always full-bleed, no top padding, backdrop fully covered.
+            Desktop: large card docked near the top with backdrop peeking
+            through above/around it — one fixed resting layout per
+            breakpoint, no scroll-to-dock step. */}
+        <div className="flex min-h-full items-start justify-center lg:py-8">
+          <motion.div
+            initial={{ y: '100%' }}
+            animate={{ y: isClosing ? '100%' : 0 }}
+            transition={{ type: 'spring', damping: 32, stiffness: 320 }}
+            onAnimationComplete={() => { if (isClosing) onClose() }}
+            className="relative flex min-h-screen w-full flex-col bg-white shadow-2xl lg:my-auto lg:min-h-0 lg:max-h-[90vh] lg:w-[90%] lg:max-w-[1400px] lg:flex-row lg:overflow-hidden lg:rounded-2xl"
           >
-            <Image src="/icons/cancel.svg" width={20} height={20} alt="close" />
-          </button>
+            {/* Close button — desktop only; mobile's close lives in mobileHeaderBar */}
+            <button
+              onClick={requestClose}
+              aria-label="Close"
+              className="absolute right-6 top-8 z-[70] hidden h-10 w-10 items-center justify-center rounded-full border-2 border-gray-50 bg-white transition-colors hover:bg-gray-50 lg:flex"
+            >
+              <Image src="/icons/cancel.svg" width={20} height={20} alt="close" />
+            </button>
 
-          {/* ================= LEFT: everything scrollable ================= */}
-          <div className="flex flex-col lg:w-2/3">
-            {heroMedia}
+            {/* ================= LEFT: everything scrollable ================= */}
+            <div className="flex flex-col lg:w-2/3">
+              {mobileHeaderBar}
 
-            <div className="px-5 lg:px-8">
-              {/* Mobile-only: Description, then price/cart, then profile — matches the mobile mockup order */}
-              <div className="lg:hidden">
-                {descriptionSection}
-                <div className="border-t border-gray-50 py-6">
-                  {purchasingDetails}
-                  {formControls}
+              <h1 className="px-5 pt-5 font-raleway text-[22px] font-semibold text-gray-900 lg:hidden">
+                {displayTitle}
+              </h1>
+
+              {heroMedia}
+
+              <div className="px-5 lg:px-8">
+                {/* Mobile-only order: description → price/cart → creator →
+                    like → stats. Matches the mobile mockup exactly. */}
+                <div className="lg:hidden">
+                  {descriptionSection}
+                  <div className="border-t border-gray-50 py-6">
+                    {purchasingDetails}
+                    {formControls}
+                  </div>
+                  <div className="flex flex-col items-center gap-4 border-t border-gray-50 py-6">
+                    {mobileCreatorBlock}
+                    <div className="w-full">{mobileLikeRow}</div>
+                    <span className="font-poppins font-light text-body-xs leading-4 tracking-wide text-info-500">
+                      {displayFormat}
+                    </span>
+                    <span className="font-poppins font-light text-body-xs leading-4 tracking-wide text-text-disabled">
+                      Published: {formatDate(artwork.created_at)}
+                    </span>
+                    {artwork.show_engagement_stats !== false && (
+                      <div className="flex items-center justify-center gap-4">
+                        <span className="flex items-center gap-2 font-poppins text-body-s text-body">
+                          <Heart size={20} className="text-primary-500" fill="currentColor" /> {formatCount(likeCount)}
+                        </span>
+                        <span className="flex items-center gap-2 font-poppins text-body-s text-body">
+                          <Image src="/icons/eye-red.svg" width={20} height={20} alt="views" /> {formatCount(artwork.view_count)}
+                        </span>
+                        <span className="flex items-center gap-2 font-poppins text-body-s text-body">
+                          <Image src="/icons/chat-round-red.svg" width={20} height={20} alt="comments" /> {formatCount(artwork.comment_count)}
+                        </span>
+                      </div>
+                    )}
+                  </div>
                 </div>
-                <div className="flex flex-col items-center gap-4 border-t border-gray-50 py-6">
-                  {profileHeader}
-                  <div className="w-full">{likeFollowRow}</div>
-                  {artwork.show_engagement_stats !== false && (
-                    <div className="flex items-center gap-4">
-                      <span className="flex items-center gap-2 font-poppins text-body-s text-body">
-                        <Heart size={20} className="text-primary-500" fill="currentColor" /> {formatCount(likeCount)}
-                      </span>
-                      <span className="flex items-center gap-2 font-poppins text-body-s text-body">
-                        <Image src="/icons/eye-red.svg" width={20} height={20} alt="views" /> {formatCount(artwork.view_count)}
-                      </span>
-                      <span className="flex items-center gap-2 font-poppins text-body-s text-body">
-                        <Image src="/icons/chat-round-red.svg" width={20} height={20} alt="comments" /> {formatCount(artwork.comment_count)}
-                      </span>
-                    </div>
-                  )}
+
+                {/* Desktop-only: Description lives in the main column here */}
+                <div className="hidden lg:block">{descriptionSection}</div>
+
+                {artwork.creator?.id && (
+                  <>
+                    <ArtworkCreatorWorks
+                      title="Also by "
+                      creatorId={artwork.creator.id}
+                      creatorName={creatorName}
+                      excludeArtworkId={artwork.id}
+                      scope="all"
+                      onSelectArtwork={(work) => setViewOverride(work)}
+                    />
+                    <ArtworkCreatorWorks
+                      title="For sale by "
+                      creatorId={artwork.creator.id}
+                      creatorName={creatorName}
+                      excludeArtworkId={artwork.id}
+                      scope="marketplace"
+                      onSelectArtwork={(work) => setViewOverride(work)}
+                    />
+                  </>
+                )}
+
+                <div className="grid grid-cols-1 gap-8 border-t border-gray-50 py-6 lg:grid-cols-[1fr_240px]">
+                  <ArtworkComments artworkId={artwork.id} />
+                  {categoriesTagsLicense}
                 </div>
-              </div>
-
-              {/* Desktop-only: Description lives in the main column here */}
-              <div className="hidden lg:block">{descriptionSection}</div>
-
-              {artwork.creator?.id && (
-                <>
-                  <ArtworkCreatorWorks
-                    title="Also by "
-                    creatorId={artwork.creator.id}
-                    creatorName={creatorName}
-                    excludeArtworkId={artwork.id}
-                    scope="all"
-                    onSelectArtwork={(work) => setViewOverride(work)}
-                  />
-                  <ArtworkCreatorWorks
-                    title="For sale by "
-                    creatorId={artwork.creator.id}
-                    creatorName={creatorName}
-                    excludeArtworkId={artwork.id}
-                    scope="marketplace"
-                    onSelectArtwork={(work) => setViewOverride(work)}
-                  />
-                </>
-              )}
-
-              <div className="grid grid-cols-1 gap-8 border-t border-gray-50 py-6 lg:grid-cols-[1fr_240px]">
-                <ArtworkComments artworkId={artwork.id} />
-                {categoriesTagsLicense}
               </div>
             </div>
-          </div>
 
-          {/* ================= RIGHT: sticky details panel (desktop only) === */}
-          <div className="hidden lg:sticky lg:top-0 lg:flex lg:h-screen lg:w-1/3 lg:flex-col lg:overflow-y-auto lg:px-6 lg:py-8">
-            <div className="mb-6 pr-8">{profileHeader}</div>
-            <div className="mb-6">{likeFollowRow}</div>
-            <div className="mb-4">{artworkInfoStats}</div>
-            <div className="mt-2">{purchasingDetails}</div>
-            {formControls}
-            <div className="flex-1" />
-            <div className="mt-8">{footerIcons}</div>
-          </div>
-        </motion.div>
+            {/* ================= RIGHT: sticky details panel (desktop only) === */}
+            <div className="hidden lg:sticky lg:top-0 lg:flex lg:h-screen lg:w-1/3 lg:flex-col lg:overflow-y-auto lg:px-6 lg:py-8">
+              <div className="mb-6 pr-8">{profileHeader}</div>
+              <div className="mb-6">{likeFollowRow}</div>
+              <div className="mb-4">{artworkInfoStats}</div>
+              <div className="mt-2">{purchasingDetails}</div>
+              {formControls}
+              <div className="flex-1" />
+              <div className="mt-8">{footerIcons}</div>
+            </div>
+          </motion.div>
+        </div>
+
+        {/* Mobile-only fixed action bar */}
+        <div className="fixed inset-x-0 bottom-0 z-[65] flex items-center justify-around border-t border-gray-100 bg-white px-4 py-3 lg:hidden">
+          {footerIcons}
+          <button
+            aria-label="More options"
+            className="flex h-[46px] w-[46px] items-center justify-center rounded-full bg-[#F3F4F6] text-[#9CA3AF]"
+          >
+            <MoreHorizontal size={20} strokeWidth={2.5} />
+          </button>
+        </div>
       </div>
 
-      {/* Mobile-only fixed action bar */}
-      <div className="fixed inset-x-0 bottom-0 z-[65] flex items-center justify-around border-t border-gray-100 bg-white px-4 py-3 lg:hidden">
-        {footerIcons}
-        <button
-          aria-label="More options"
-          className="flex h-[46px] w-[46px] items-center justify-center rounded-full bg-[#F3F4F6] text-[#9CA3AF]"
-        >
-          <MoreHorizontal size={20} strokeWidth={2.5} />
-        </button>
-      </div>
-    </div>
+      <SaveToMoodboardDialog artworkId={artwork.id} open={saveDialogOpen} onOpenChange={setSaveDialogOpen} />
+    </>
   )
 }

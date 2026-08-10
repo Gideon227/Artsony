@@ -82,7 +82,7 @@ export function FeedSection({ activeTab, onTabChange, artworks, isLoading, onOpe
                 <ArtCard
                   image={artwork.assets[0]?.thumbnail_url ?? artwork.assets[0]?.optimized_url ?? artwork.assets[0]?.original_url ?? ''}
                   title={artwork.title}
-                  artworkId={artwork.id}
+                  // artworkId={artwork.id}
                   onCardClick={() => onArtworkClick(artwork)}
                   showVideo={artwork.assets[0]?.media_type === 'VIDEO'}
                   artist={[{

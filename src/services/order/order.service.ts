@@ -12,8 +12,8 @@ import type {
 } from '@/types/order'
 
 export const orderService = {
-  checkout: (payload: CheckoutInput): Promise<CheckoutResult> =>
-    apiClient.post<CheckoutResult>('/api/orders/checkout', payload),
+  checkout: (payload: CheckoutInput): Promise<CommerceApiSuccess<CheckoutResult>> =>
+    apiClient.post<CommerceApiSuccess<CheckoutResult>>('/api/orders/checkout', payload),
 
   getBuyerOrders: (filters: OrderFilters = {}) =>
     apiClient.get<CommercePaginatedResponse<Order>>('/api/orders', { params: filters }),
@@ -26,7 +26,7 @@ export const orderService = {
   confirmPayment: (
     id: string,
     payload: ConfirmPaymentInput,
-  ): Promise<{ order: Order; payment_instructions: PaymentInstructions }> =>
+  ): Promise<CommerceApiSuccess<{ order: Order; payment_instructions: PaymentInstructions }>> =>
     apiClient.post(`/api/orders/${id}/confirm-payment`, payload),
 
   cancelOrder: (id: string) =>

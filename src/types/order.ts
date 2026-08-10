@@ -144,7 +144,15 @@ export type OrderSummary = Omit<Order, 'items'> & {
 
 export type CheckoutInput = {
   cart_item_ids: string[]
+  // Exactly one of these two is used to resolve the order's shipping
+  // address snapshot when the order contains a physical item — a saved
+  // address by id, or a one-off inline address for this order only.
+  shipping_address_id?: string
   shipping_address?: ShippingAddressSnapshot
+  // When true and shipping_address (inline) was supplied, it is also saved
+  // to the buyer's address book after the order is created. Ignored when
+  // shipping_address_id is used, since that address is already saved.
+  save_address?: boolean
   idempotency_key: string
   notes?: string
 }
@@ -512,3 +520,26 @@ export type CommerceApiSuccess<T> = {
 export type CommercePaginatedResponse<T> = {
   success: true
 } & PaginatedResult<T>
+
+// ── Digital delivery ─────────────────────────────────────────────────────────
+
+export type DigitalDeliveryToken = {
+  id: string
+  order_item_id: string
+  artwork_id: string
+  buyer_id: string
+  expires_at: string
+  download_count: number
+  max_downloads: number
+  last_downloaded_at: string | null
+  created_at: string
+  artwork_title: string
+  artwork_slug: string
+  artwork_thumbnail_url: string | null
+}
+
+export type DownloadRedeemResult = {
+  signed_url: string
+  filename: string
+  expires_at: string
+}

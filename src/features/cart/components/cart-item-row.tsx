@@ -2,8 +2,7 @@
 
 import React, { useState } from 'react'
 import Image from 'next/image'
-import Link from 'next/link'
-import { Plus, Minus, X, Pencil, ChevronsRight, HelpCircle } from 'lucide-react'
+import { Plus, Minus, X, Pencil, HelpCircle } from 'lucide-react'
 import { useCartStore } from '@/store/cart.store'
 import type { CartItemWithArtwork } from '@/types/cart'
 
@@ -85,14 +84,14 @@ export function CartItemRow({ item }: { item: CartItemWithArtwork }) {
       {/* Main content */}
       <div className="flex flex-1 items-center gap-6 py-4 pr-6">
         {/* Thumbnail */}
-        <Link href={`/marketplace/${item.artwork.slug}`} className="relative h-[152px] w-[152px] shrink-0 overflow-hidden rounded-[24px] bg-neutral-100">
+        <div className="relative h-[152px] w-[152px] shrink-0 overflow-hidden rounded-[24px] bg-neutral-100">
           <Image
             src={item.artwork.thumbnail_url || '/placeholder.png'}
             alt={item.artwork.title}
             fill
             className="object-cover"
           />
-        </Link>
+        </div>
 
         {/* Title / seller / price / type */}
         <div className="flex min-w-0 flex-col gap-1.5 font-poppins">
@@ -106,12 +105,7 @@ export function CartItemRow({ item }: { item: CartItemWithArtwork }) {
             $ {item.price_at_add.toLocaleString('en-US')} {item.currency_at_add}
           </p>
           <div className="flex items-center gap-1.5">
-            <Link
-              href={`/marketplace/${item.artwork.slug}`}
-              className="text-[12px] font-medium text-blue-500 hover:underline"
-            >
-              {artworkTypeLabel}
-            </Link>
+            <span className="text-[12px] font-medium text-blue-500">{artworkTypeLabel}</span>
             <HelpCircle size={14} className="text-blue-500" />
           </div>
 
@@ -169,7 +163,7 @@ export function CartItemRow({ item }: { item: CartItemWithArtwork }) {
             onClick={handleDecrement}
             disabled={isDigital || isUpdating || localQty <= 1}
             aria-label="Decrease quantity"
-            className="flex h-9 w-9 items-center justify-center rounded-full bg-gray-100 text-gray-700 transition-opacity disabled:opacity-40"
+            className="flex h-9 w-9 items-center justify-center rounded-full bg-gray-700 text-white transition-opacity disabled:opacity-40"
           >
             <Minus size={14} strokeWidth={2.5} />
           </button>
@@ -181,16 +175,9 @@ export function CartItemRow({ item }: { item: CartItemWithArtwork }) {
         </div>
       </div>
 
-      {/* Right expand affordance */}
-      {/* <Link
-        href={`/marketplace/${item.artwork.slug}`}
-        aria-label="View artwork details"
-        className="flex w-[116px] shrink-0 items-center justify-center bg-[#FEEFEC] transition-colors hover:bg-[#FCDFDA]"
-      >
-        <span className="flex h-9 w-9 items-center justify-center rounded-full bg-gray-700 text-white">
-          <ChevronsRight size={16} strokeWidth={2.5} />
-        </span>
-      </Link> */}
+      {/* Per-item deep link to artwork details intentionally omitted — no
+          public artwork-detail route exists in this app; viewing full
+          details happens via the ArtworkViewOverlay modal from the shop. */}
     </div>
   )
 }

@@ -69,7 +69,7 @@ const SettingLeftBar = ({ onLogout, onDeleteAccountRequest, activeTab, setActive
         >
         <div className="flex items-center gap-x-4">
             <Link
-                href="/settings"
+                href="/profile"
                 aria-label="Go back"
                 className="w-10 h-10 border border-gray-50 rounded-full flex items-center justify-center hover:bg-primary-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gray-50"
             >

@@ -1,104 +1,212 @@
+import { apiClient } from '@/lib/api-client'
 import type {
   WalletActivity,
   WalletActivityStatus,
   WalletActivityType,
+  WalletMetric,
   WalletPeriod,
   WalletSummary,
   WithdrawInput,
   WithdrawResult,
 } from '@/types/wallet'
 
-// TODO(backend): no /api/wallet/* endpoints exist yet. This module simulates
-// the contract below (latency + validation + persistence within the session)
-// so the Wallet feature is fully interactive today. Once the backend lands,
-// replace each function body with the corresponding apiClient call — the
-// signatures and return shapes are written to match what orderService already
-// does (see services/order/order.service.ts) so hooks/queries/use-wallet.ts
-// won't need to change.
+// Wired to the real backend. Endpoints:
+//   GET  /api/analytics/overview?period=   -> earnings/withdrawals trend + balance snapshot
+//   GET  /api/wallet/ledger?limit=         -> activity feed
+//   POST /api/wallet/withdrawals           -> submit withdrawal
+//   GET  /api/wallet/balance               -> post-withdrawal balance refresh
 //
-//   getSummary   -> GET  /api/wallet/summary?period=
-//   getActivity  -> GET  /api/wallet/activity?status=&type=&page=&limit=
-//   withdraw     -> POST /api/wallet/withdraw
+// This module's job is purely translation: the backend's shapes (see
+// common/types/analytics.types.ts, common/types/wallet.types.ts,
+// common/types/commerce.types.ts on the backend) don't match this
+// frontend's existing WalletSummary/WalletActivity contract 1:1, so each
+// function below documents exactly where and why it diverges rather than
+// silently reshaping.
 
-const NETWORK_DELAY_MS = 500
+const CURRENCY = 'USDT' // single-currency platform — see domain model
 
-function delay<T>(value: T, ms = NETWORK_DELAY_MS): Promise<T> {
-  return new Promise((resolve) => setTimeout(() => resolve(value), ms))
+type BackendMetricTrend = {
+  current: number
+  previous: number
+  change_percent: number
+  direction: 'up' | 'down' | 'flat'
 }
 
-const TYPES: WalletActivityType[] = ['SALE', 'WITHDRAWAL', 'REFUND']
-const STATUSES: WalletActivityStatus[] = ['HOLD', 'PENDING', 'CANCELED', 'COMPLETED']
-const ARTWORK_TITLES = [
-  'Fire Escape Symphony',
-  'Candid Street Scene',
-  'Grid of the Forgotten',
-  'Neon Solitude',
-  'Quiet Harbor Study',
-  'Concrete Bloom',
-]
+type BackendAnalyticsOverview = {
+  total_earnings: BackendMetricTrend
+  available_balance: number
+  pending_balance: number
+  hold_balance: number
+  total_withdrawals: BackendMetricTrend
+  total_sales: BackendMetricTrend
+  total_views: BackendMetricTrend
+  total_likes: BackendMetricTrend
+  period: string
+}
 
-function seedActivity(): WalletActivity[] {
-  const rows: WalletActivity[] = []
-  const now = Date.now()
+type BackendWalletLedgerEntry = {
+  id: string
+  transaction_id: string | null
+  category: 'SALE' | 'WITHDRAWAL' | 'REFUND' | 'ADJUSTMENT'
+  hold_status: 'PENDING_DELIVERY' | 'ON_HOLD' | 'AVAILABLE'
+  amount: number
+  description: string
+  created_at: string
+}
 
-  for (let i = 0; i < 42; i++) {
-    const type = TYPES[i % TYPES.length]!
-    const status = STATUSES[(i * 3 + 1) % STATUSES.length]!
-    const isDebit = type === 'REFUND'
-    const amount = Math.round((80 + ((i * 137) % 1900)) * 100) / 100
+type BackendWalletBalanceSummary = {
+  available_balance: number
+  pending_balance: number
+  hold_balance: number
+  total_withdrawn: number
+  total_earned: number
+  currency: string
+}
 
-    rows.push({
-      id: `wa_${i.toString().padStart(3, '0')}`,
-      type,
-      description: type === 'WITHDRAWAL' ? 'Withdrawal' : ARTWORK_TITLES[i % ARTWORK_TITLES.length]!,
-      amount: isDebit ? -amount : amount,
-      currency: 'USDT',
-      status,
-      transaction_id: `ART-TXN-WDL-45D1F0${i.toString().padStart(2, '0')}`,
-      wallet_address: type === 'WITHDRAWAL' ? `0xD4${(1000 + i * 7).toString(16)}c2` : null,
-      created_at: new Date(now - i * 6 * 60 * 60 * 1000).toISOString(),
-    })
+type BackendWithdrawalRequest = {
+  id: string
+  amount: number
+  currency: string
+  status: 'PENDING' | 'PROCESSING' | 'COMPLETED' | 'REJECTED' | 'FAILED' | 'CANCELLED'
+  destination_details: { wallet_address?: string }
+  created_at: string
+}
+
+// direction: backend has a third 'flat' state this frontend's TrendDirection
+// doesn't model — 0% change reads the same as 'UP' visually (no arrow
+// movement implied by change_percent: 0), so flat collapses into 'UP'.
+function toDirection(direction: 'up' | 'down' | 'flat'): 'UP' | 'DOWN' {
+  return direction === 'down' ? 'DOWN' : 'UP'
+}
+
+function toMetric(trend: BackendMetricTrend): WalletMetric {
+  return {
+    amount: trend.current,
+    currency: CURRENCY,
+    change_percent: trend.change_percent,
+    direction: toDirection(trend.direction),
   }
-  return rows
 }
 
-let activityStore = seedActivity()
-let availableBalance = 15540.2
+// available_balance/pending_balance are point-in-time snapshots on the
+// backend, not period-comparable trends the way earnings/withdrawals are —
+// there's no "previous period balance" concept computed server-side. Shown
+// with a neutral (0%, UP) trend rather than fabricating a change figure.
+function toBalanceMetric(amount: number): WalletMetric {
+  return { amount, currency: CURRENCY, change_percent: 0, direction: 'UP' }
+}
+
+const PERIOD_MAP: Record<WalletPeriod, string> = {
+  TODAY: 'day',
+  WEEK: 'week',
+  MONTH: 'month',
+  YEAR: 'year',
+  // Backend has no "all time" period option — 'year' is the longest window
+  // it supports. Documented gap rather than a silent approximation.
+  ALL_TIME: 'year',
+}
+
+const LEDGER_STATUS_MAP: Record<BackendWalletLedgerEntry['hold_status'], WalletActivityStatus> = {
+  PENDING_DELIVERY: 'HOLD',
+  ON_HOLD: 'HOLD',
+  AVAILABLE: 'COMPLETED',
+}
+
+// ADJUSTMENT has no frontend-side type equivalent (WalletActivityType is
+// SALE | WITHDRAWAL | REFUND) — bucketed under REFUND as the closest
+// "balance correction" concept rather than silently dropping the entry.
+function toActivityType(category: BackendWalletLedgerEntry['category']): WalletActivityType {
+  if (category === 'ADJUSTMENT') return 'REFUND'
+  return category
+}
+
+function toActivity(entry: BackendWalletLedgerEntry): WalletActivity {
+  return {
+    id: entry.id,
+    type: toActivityType(entry.category),
+    description: entry.description,
+    amount: entry.amount,
+    currency: CURRENCY,
+    status: LEDGER_STATUS_MAP[entry.hold_status],
+    transaction_id: entry.transaction_id ?? entry.id,
+    // Withdrawal destination address lives on the linked withdrawal_request,
+    // not embedded in the ledger row itself — not available without an
+    // additional join the backend doesn't currently do. Left null rather
+    // than fabricated.
+    wallet_address: null,
+    created_at: entry.created_at,
+  }
+}
+
+const WITHDRAWAL_STATUS_MAP: Record<BackendWithdrawalRequest['status'], WalletActivityStatus> = {
+  PENDING: 'PENDING',
+  PROCESSING: 'PENDING',
+  COMPLETED: 'COMPLETED',
+  REJECTED: 'CANCELED',
+  FAILED: 'CANCELED',
+  CANCELLED: 'CANCELED',
+}
 
 export const walletService = {
-  getSummary: (_period: WalletPeriod = 'WEEK'): Promise<WalletSummary> =>
-    delay({
-      period: _period,
-      total_earnings: { amount: 155240.05, currency: 'USDT', change_percent: 5, direction: 'UP' },
-      available_balance: { amount: availableBalance, currency: 'USDT', change_percent: 14, direction: 'UP' },
-      pending_balance: { amount: 3330, currency: 'USDT', change_percent: 10, direction: 'DOWN' },
-      total_withdrawals: { amount: 75000, currency: 'USDT', change_percent: 12, direction: 'UP' },
-    }),
+  getSummary: async (period: WalletPeriod = 'WEEK'): Promise<WalletSummary> => {
+    const { data } = await apiClient.get<{ success: true; data: BackendAnalyticsOverview }>(
+      `/api/analytics/overview?period=${PERIOD_MAP[period]}`,
+    )
 
-  getActivity: (): Promise<WalletActivity[]> => delay([...activityStore]),
-
-  withdraw: (input: WithdrawInput): Promise<WithdrawResult> => {
-    if (input.amount <= 0) return Promise.reject(new Error('Enter an amount greater than zero.'))
-    if (input.amount > availableBalance) return Promise.reject(new Error('Amount exceeds your available balance.'))
-    if (!/^0x[a-fA-F0-9]{6,}$/.test(input.wallet_address) && !/^T[a-zA-Z0-9]{20,}$/.test(input.wallet_address)) {
-      return Promise.reject(new Error('Enter a valid wallet address for the selected network.'))
+    return {
+      period,
+      total_earnings: toMetric(data.total_earnings),
+      available_balance: toBalanceMetric(data.available_balance),
+      pending_balance: toBalanceMetric(data.pending_balance),
+      total_withdrawals: toMetric(data.total_withdrawals),
     }
+  },
 
-    availableBalance -= input.amount
+  // Filtering/sorting/pagination stays client-side (see lib/wallet/filters.ts)
+  // — this fetches a generous single page rather than implementing
+  // pagination-aware fetching, matching the previous mock's flat-list
+  // behavior. Fine for the activity volumes an early-stage marketplace
+  // will have; revisit if a seller's ledger regularly exceeds 100 entries.
+  getActivity: async (): Promise<WalletActivity[]> => {
+    const { data } = await apiClient.get<{ success: true; data: BackendWalletLedgerEntry[] }>(
+      '/api/wallet/ledger?limit=100',
+    )
+    return data.map(toActivity)
+  },
+
+  withdraw: async (input: WithdrawInput): Promise<WithdrawResult> => {
+    const { data: request } = await apiClient.post<{ success: true; data: BackendWithdrawalRequest }>(
+      '/api/wallet/withdrawals',
+      {
+        amount: input.amount,
+        destination_type: 'WALLET_ADDRESS',
+        destination_details: {
+          network: input.network,
+          wallet_address: input.wallet_address,
+        },
+      },
+    )
+
+    // The withdrawal response doesn't include a refreshed balance — fetch
+    // it explicitly rather than computing it client-side (which is what
+    // the previous mock did, and how it could silently drift from the
+    // real ledger).
+    const { data: balance } = await apiClient.get<{ success: true; data: BackendWalletBalanceSummary }>(
+      '/api/wallet/balance',
+    )
 
     const activity: WalletActivity = {
-      id: `wa_${Date.now()}`,
+      id: request.id,
       type: 'WITHDRAWAL',
       description: 'Withdrawal',
-      amount: input.amount,
-      currency: 'USDT',
-      status: 'PENDING',
-      transaction_id: `ART-TXN-WDL-${Date.now().toString(36).toUpperCase()}`,
-      wallet_address: input.wallet_address,
-      created_at: new Date().toISOString(),
+      amount: request.amount,
+      currency: request.currency,
+      status: WITHDRAWAL_STATUS_MAP[request.status],
+      transaction_id: request.id,
+      wallet_address: request.destination_details.wallet_address ?? input.wallet_address,
+      created_at: request.created_at,
     }
-    activityStore = [activity, ...activityStore]
 
-    return delay({ activity, available_balance: availableBalance }, 900)
+    return { activity, available_balance: balance.available_balance }
   },
 }

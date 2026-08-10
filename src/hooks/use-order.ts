@@ -45,10 +45,12 @@ export function useCheckout() {
 
   return useMutation({
     mutationFn: (payload: CheckoutInput) => orderService.checkout(payload),
-    onSuccess: (result) => {
+    onSuccess: (response) => {
+      const result = response.data
+
       // Invalidate the cart explicitly so it empties
       qc.invalidateQueries({ queryKey: ['cart'] })
-      
+
       setActiveCheckout(result)
       setCheckoutStep('PAYMENT')
 

@@ -103,6 +103,21 @@ export function useTopPicks(period: 'all' | 'week' = 'all', limit = 8, listingTy
   })
 }
 
+export function useViewArtwork() {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: (id: string) => artworkService.view(id),
+
+    onSuccess: (_data, id) => {
+      // Refresh this artwork in cache
+      queryClient.invalidateQueries({
+        queryKey: ART_KEYS.byId(id),
+      })
+    },
+  })
+}
+
 // Other published artworks by a given creator — powers the ArtCard hover
 // profile's "recent artworks" strip. Lazy: pass `enabled` so it only fires
 // once the hover card is actually shown, not for every card mounted in a grid.
