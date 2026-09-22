@@ -1,5 +1,5 @@
 import { apiClient } from '@/lib/api-client'
-import type { User, Artwork, PaginatedResponse, ApiResponse } from '@/types'
+import type { User, Artwork, PaginatedResponse, ApiResponse, PrivacySettings, InteractionPermissions } from '@/types'
 import type { EditProfileInput } from '@/schemas'
 
 export interface PublicProfileSummary {
@@ -15,6 +15,18 @@ export const userService = {
 
   updateProfile: (body: EditProfileInput) =>
     apiClient.patch<ApiResponse<User>>('/api/users/me', body),
+
+  getPrivacySettings: () =>
+    apiClient.get<ApiResponse<PrivacySettings>>('/api/users/me/privacy'),
+
+  updatePrivacySettings: (body: Partial<PrivacySettings>) =>
+    apiClient.patch<ApiResponse<PrivacySettings>>('/api/users/me/privacy', body),
+
+  // Viewer-relative preview of another user's message/comment/purchase
+  // privacy settings — used to show/disable the message button, comment
+  // box, and buy button on someone else's profile or artwork ahead of time.
+  getInteractionPermissions: (userId: string) =>
+    apiClient.get<ApiResponse<InteractionPermissions>>(`/api/users/${userId}/permissions`),
 
   updateAvatar: async (file: File): Promise<ApiResponse<{ avatarUrl: string }>> => {
     const form = new FormData()

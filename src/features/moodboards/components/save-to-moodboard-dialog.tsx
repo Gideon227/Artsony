@@ -20,6 +20,13 @@ import {
 } from '@/hooks/use-moodboards'
 import { cn } from '@/lib/utils'
 
+// Stable reference for the "no ids passed" case. A `= []` default parameter
+// creates a NEW array on every render, which made the effect below think
+// `savedMoodboardIds` changed on every single render (including the one its
+// own setSavedIds call caused) — an unconditional infinite loop from mount,
+// regardless of anything the user did.
+const EMPTY_IDS: string[] = []
+
 type SaveToMoodboardDialogProps = {
   artworkId: string
   open: boolean
@@ -33,7 +40,7 @@ export function SaveToMoodboardDialog({
   artworkId,
   open,
   onOpenChange,
-  savedMoodboardIds = [],
+  savedMoodboardIds = EMPTY_IDS,
 }: SaveToMoodboardDialogProps) {
   const { data: moodboards, isLoading } = useMoodboards()
   const { mutate: createMoodboard, isPending: isCreating } = useCreateMoodboard()

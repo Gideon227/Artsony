@@ -117,6 +117,7 @@ export default function ShareArtworkWizardPage() {
             allow_likes: formFields.allow_likes ?? true,
             show_engagement_stats: formFields.show_engagement_stats ?? true,
             status: targetStatus, 
+            ...(formFields.license_type ? { license_type: formFields.license_type } : {}),
 
             // Commerce optionals explicitly typed/casted
             ...(formFields.price !== undefined && formFields.price !== null ? { price: Number(formFields.price) } : {}),

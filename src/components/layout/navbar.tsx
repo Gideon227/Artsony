@@ -51,11 +51,11 @@ export function Navbar({ hideSearchBar = false }: { hideSearchBar?: boolean }) {
   return (
     <>
       <header className="w-full bg-white border-b-2 border-gray-50 sticky top-0 z-50">
-        <div className="container mx-auto px-4 lg:px-6 lg:px-8 py-3 h-[72px] flex items-center justify-between">
+        <div className="xl:max-w-[95%] w-full mx-auto px-4 lg:px-8 py-3 h-18 flex items-center justify-between">
           
           {/* LEFT SECTION */}
           <div className="flex items-center gap-4 shrink-0">
-            <Link href="/" className="shrink-0 flex items-center pt-1">
+            <Link href="/" className="shrink-0 flex items-center">
               <Image src="/home/logo-text.svg" alt="Artsony Logo" width={136} height={20} priority className="h-4 w-[108px] md:w-auto md:h-5" />
             </Link>
             <nav className="hidden lg:flex items-center gap-2 font-medium font-poppins leading-6 text-[16px]">

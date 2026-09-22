@@ -20,6 +20,8 @@ import { artworkService } from '@/services/artwork.service'
 import { followService } from '@/services/follow.service'
 import { useCartStore } from '@/store/cart.store'
 import { useToast } from '@/components/ui/toaster'
+import { useInteractionPermissions } from '@/hooks/use-user'
+import { useViewArtwork } from '@/hooks/use-artwork'
 import { cn } from '@/lib/utils'
 import type { Artwork, ArtworkAsset, Variant } from '@/types/artwork'
 import { Dropdown } from '@/components/ui/dropdown'
@@ -75,6 +77,9 @@ export default function ArtworkViewOverlay({ artwork: artworkProp, onClose, onNa
 
   const { addItem } = useCartStore()
   const { success: toastSuccess, error: toastError } = useToast()
+  const { data: creatorPermissions } = useInteractionPermissions(artwork.creator_id)
+  const canPurchase = creatorPermissions?.can_purchase ?? true
+  const { mutate: trackView } = useViewArtwork()
   const backdropRef = useRef<HTMLDivElement>(null)
 
   // Reset per-artwork UI state when navigating prev/next so stale state
@@ -96,6 +101,15 @@ export default function ArtworkViewOverlay({ artwork: artworkProp, onClose, onNa
     setCartError(null)
     backdropRef.current?.scrollTo({ top: 0, behavior: 'auto' })
   }, [artwork.id])
+
+  // The overlay receives `artwork` as a prop from an already-loaded feed/
+  // list query — it never hits GET /:id, which is where view tracking
+  // normally happens server-side. Record the view explicitly instead.
+  // POST /:id/view is Redis-deduped per viewer for 30 min server-side, so
+  // re-renders or reopening the same artwork shortly after won't inflate it.
+  useEffect(() => {
+    trackView(artwork.id)
+  }, [artwork.id, trackView])
 
   useEffect(() => {
     const previousOverflow = document.body.style.overflow
@@ -128,6 +142,7 @@ export default function ArtworkViewOverlay({ artwork: artworkProp, onClose, onNa
   const isAvailableInRegion = true // TODO: wire to real region availability check once that exists
   const creatorName = artwork.creator?.profile?.display_name || artwork.creator?.username || 'Unknown Artist'
   const tags = artwork.keywords ?? []
+  const isForSale = artwork.listing_type === 'MARKETPLACE'
 
   // ── Handlers ─────────────────────────────────────────────────────────────
   const handlePrevAsset = () => setActiveAssetIndex((prev) => Math.max(0, prev - 1))
@@ -139,15 +154,23 @@ export default function ArtworkViewOverlay({ artwork: artworkProp, onClose, onNa
   const handleLike = async () => {
     if (isLiking) return
     setIsLiking(true)
-    const wasLiked = isLiked
-    setIsLiked(!wasLiked)
-    setLikeCount((prev) => (wasLiked ? prev - 1 : prev + 1))
+    const previousLiked = isLiked
+    const previousCount = likeCount
+    // toggle_artwork_like always flips whatever the server has on file —
+    // there's no separate add/remove endpoint. `previousLiked` is only this
+    // component's local guess (it can be stale: is_liked isn't populated by
+    // every fetch path this overlay's `artwork` prop can come from), so the
+    // optimistic flip below is provisional and gets corrected from the
+    // actual server response once it arrives, not assumed to have "worked".
+    setIsLiked(!previousLiked)
+    setLikeCount((prev) => (previousLiked ? prev - 1 : prev + 1))
     try {
-      if (wasLiked) await artworkService.unlike(artwork.id)
-      else await artworkService.like(artwork.id)
+      const { data } = await artworkService.toggleLike(artwork.id)
+      setIsLiked(data.liked)
+      setLikeCount(data.like_count)
     } catch {
-      setIsLiked(wasLiked)
-      setLikeCount((prev) => (wasLiked ? prev + 1 : prev - 1))
+      setIsLiked(previousLiked)
+      setLikeCount(previousCount)
     } finally {
       setIsLiking(false)
     }
@@ -169,6 +192,10 @@ export default function ArtworkViewOverlay({ artwork: artworkProp, onClose, onNa
 
   const handleAddToCart = async () => {
     if (isAddingToCart) return
+    if (!canPurchase) {
+      setCartError('This artist limits who can purchase their artwork.')
+      return
+    }
     if (artwork.has_variants && !selectedVariantOptionId) {
       setCartError('Please select a type before adding to cart.')
       return
@@ -223,7 +250,7 @@ export default function ArtworkViewOverlay({ artwork: artworkProp, onClose, onNa
           {creatorName}
         </Link>
         <span className="truncate font-poppins font-light text-body-xs leading-4 tracking-wide text-body">
-          {artwork.categories[0]?.toUpperCase()}
+          {artwork.categories[0]}
         </span>
       </div>
     </div>
@@ -323,7 +350,9 @@ export default function ArtworkViewOverlay({ artwork: artworkProp, onClose, onNa
   const artworkInfoStats = (
     <div className="flex flex-col items-start gap-y-2 border-t border-gray-50 pt-4">
       <h4 className="font-poppins font-medium text-body-m leading-6 tracking-wide text-heading">{displayTitle}</h4>
-      <span className="font-poppins font-light text-body-xs leading-4 tracking-wide text-info-500">{displayFormat}</span>
+      {isForSale && (
+        <span className="font-poppins font-light text-body-xs leading-4 tracking-wide text-info-500">{displayFormat}</span>
+      )}
       <span className="font-poppins font-light text-body-xs leading-4 tracking-wide text-text-disabled">
         Published: {formatDate(artwork.created_at)}
       </span>
@@ -397,11 +426,11 @@ export default function ArtworkViewOverlay({ artwork: artworkProp, onClose, onNa
 
       <button
         onClick={handleAddToCart}
-        disabled={isAddingToCart}
-        className="mt-2 flex w-full cursor-pointer items-center justify-center gap-2 rounded-full bg-primary-500 py-4 text-[16px] font-bold text-white transition-colors hover:bg-primary-600 disabled:opacity-60"
+        disabled={isAddingToCart || !canPurchase}
+        className="mt-2 flex w-full cursor-pointer items-center justify-center gap-2 rounded-full bg-primary-500 py-4 text-[16px] font-bold text-white transition-colors hover:bg-primary-600 disabled:cursor-not-allowed disabled:opacity-60"
       >
         <ShoppingCart size={20} strokeWidth={2.5} />
-        {isAddingToCart ? 'Adding...' : 'Add to Cart'}
+        {isAddingToCart ? 'Adding...' : canPurchase ? 'Add to Cart' : 'Purchases restricted'}
       </button>
 
       {cartError && <p className="text-center font-poppins text-[13px] text-red-500">{cartError}</p>}
@@ -492,27 +521,43 @@ export default function ArtworkViewOverlay({ artwork: artworkProp, onClose, onNa
           </span>
         </h4>
         <p className="font-poppins text-[13px] text-gray-500">
-          License type: {artwork.license?.type ?? 'Attribution ShareAlike (CC BY-SA)'}
+          License type: {artwork.license?.type ?? 'All rights reserved'}
         </p>
-        {!artwork.license && (
-          <p className="mt-1 font-poppins text-[11px] text-gray-300">Placeholder — not yet set by the artist</p>
-        )}
       </div>
     </div>
   )
 
-  const heroMedia = (
+  const heroMediaMarketplace = (
     <div className="flex flex-col">
       <div className="relative flex h-[70vh] max-h-[640px] items-center justify-center overflow-hidden bg-secondary-100 lg:h-[60vh]">
         {mainImageSrc ? (
-          <Image src={mainImageSrc} alt={displayTitle} fill className="object-cover object-center" />
+          activeAsset?.media_type === 'VIDEO' ? (
+            <video
+              key={mainImageSrc}
+              src={mainImageSrc}
+              poster={activeAsset.thumbnail_url ?? undefined}
+              autoPlay
+              muted
+              loop
+              playsInline
+              controls
+              className="h-full w-full object-cover object-center"
+            />
+          ) : (
+            <Image src={mainImageSrc} alt={displayTitle} fill className="object-cover object-center" />
+          )
         ) : (
           <div className="flex h-full w-full items-center justify-center font-poppins text-gray-400">No image available</div>
+        )}
+        {activeAsset?.media_type === 'VIDEO' && (
+          <span className="absolute left-4 top-4 flex h-9 w-9 items-center justify-center rounded-full bg-black/40 text-white backdrop-blur-sm">
+            <Image src="/icons/play-icon.svg" width={16} height={16} alt="Video" />
+          </span>
         )}
       </div>
 
       {assets.length > 1 && (
-        <div className="relative flex items-center justify-center gap-4 bg-gray-50 px-6 py-6 lg:gap-6 lg:px-20">
+        <div className="relative flex items-center gap-4 bg-gray-50 px-6 py-6 lg:gap-6 lg:px-20">
           <button
             onClick={handlePrevAsset}
             disabled={activeAssetIndex === 0}
@@ -521,22 +566,30 @@ export default function ArtworkViewOverlay({ artwork: artworkProp, onClose, onNa
             <ChevronLeft size={20} strokeWidth={3} />
           </button>
 
-          {assets.map((asset, idx) => {
-            const thumbSrc = asset.optimized_url || asset.original_url
-            const isActive = idx === activeAssetIndex
-            return (
-              <button
-                key={asset.id}
-                onClick={() => setActiveAssetIndex(idx)}
-                className={cn(
-                  'relative h-[140px] w-[110px] shrink-0 overflow-hidden rounded-[18px] bg-secondary-100 transition-transform hover:-translate-y-1 lg:h-[220px] lg:w-[180px] lg:rounded-[24px] lg:hover:-translate-y-2',
-                  isActive && 'ring-2 ring-primary-500'
-                )}
-              >
-                <Image src={thumbSrc} alt={`Asset ${idx + 1}`} fill className="object-contain p-2" />
-              </button>
-            )
-          })}
+          <div className="flex w-full items-center gap-4 overflow-x-auto scroll-smooth px-10 py-4 scrollbar-hide lg:gap-6 lg:px-12">
+            {assets.map((asset, idx) => {
+              const thumbSrc = asset.optimized_url || asset.original_url
+              const isActive = idx === activeAssetIndex
+              const isVideo = asset.media_type === 'VIDEO'
+              return (
+                <button
+                  key={asset.id}
+                  onClick={() => setActiveAssetIndex(idx)}
+                  className={cn(
+                    'relative h-[140px] w-[110px] shrink-0 overflow-hidden rounded-[18px] bg-secondary-100 transition-transform hover:-translate-y-1 lg:h-[220px] lg:w-[180px] lg:rounded-[24px] lg:hover:-translate-y-2',
+                    isActive && 'ring-2 ring-primary-500'
+                  )}
+                >
+                  <Image src={thumbSrc} alt={`Asset ${idx + 1}`} fill className="object-contain p-2" />
+                  {isVideo && (
+                    <span className="absolute left-1.5 top-1.5 flex h-6 w-6 items-center justify-center rounded-full bg-black/50 text-white">
+                      <Image src="/icons/play-icon.svg" width={10} height={10} alt="Video" />
+                    </span>
+                  )}
+                </button>
+              )
+            })}
+          </div>
 
           <button
             onClick={handleNextAsset}
@@ -565,6 +618,54 @@ export default function ArtworkViewOverlay({ artwork: artworkProp, onClose, onNa
       )}
     </div>
   )
+
+  // PORTFOLIO (non-sale) posts show every asset stacked full-bleed, one after
+  // another — matches Image 1. See home/artwork-view-overlay.tsx for the
+  // same split; this file only ever reaches the marketplace branch above
+  // when its callers correctly filter to MARKETPLACE listings, but some
+  // (e.g. features/home/components/top-picks.tsx) don't, so this needs to
+  // render correctly either way.
+  const heroMediaPortfolio = (
+    <div className="flex flex-col">
+      {assets.length > 0 ? (
+        assets.map((asset, idx) => {
+          const src = asset.optimized_url || asset.original_url
+          const isVideo = asset.media_type === 'VIDEO'
+          return (
+            <div key={asset.id} className="relative h-[70vh] max-h-[640px] w-full overflow-hidden bg-secondary-100 lg:h-[60vh]">
+              {isVideo && src ? (
+                <video
+                  src={src}
+                  poster={asset.thumbnail_url ?? undefined}
+                  autoPlay
+                  muted
+                  loop
+                  playsInline
+                  controls
+                  className="h-full w-full object-cover object-center"
+                />
+              ) : src ? (
+                <Image src={src} alt={`${displayTitle} ${idx + 1}`} fill className="object-cover object-center" />
+              ) : (
+                <div className="flex h-full w-full items-center justify-center font-poppins text-gray-400">No image available</div>
+              )}
+              {isVideo && (
+                <span className="absolute left-4 top-4 flex h-9 w-9 items-center justify-center rounded-full bg-black/40 text-white backdrop-blur-sm">
+                  <Image src="/icons/play-icon.svg" width={16} height={16} alt="Video" />
+                </span>
+              )}
+            </div>
+          )
+        })
+      ) : (
+        <div className="flex h-[70vh] max-h-[640px] w-full items-center justify-center bg-secondary-100 font-poppins text-gray-400 lg:h-[60vh]">
+          No image available
+        </div>
+      )}
+    </div>
+  )
+
+  const heroMedia = isForSale ? heroMediaMarketplace : heroMediaPortfolio
 
   return (
     <>
@@ -629,16 +730,20 @@ export default function ArtworkViewOverlay({ artwork: artworkProp, onClose, onNa
                     like → stats. Matches the mobile mockup exactly. */}
                 <div className="lg:hidden">
                   {descriptionSection}
-                  <div className="border-t border-gray-50 py-6">
-                    {purchasingDetails}
-                    {formControls}
-                  </div>
+                  {isForSale && (
+                    <div className="border-t border-gray-50 py-6">
+                      {purchasingDetails}
+                      {formControls}
+                    </div>
+                  )}
                   <div className="flex flex-col items-center gap-4 border-t border-gray-50 py-6">
                     {mobileCreatorBlock}
                     <div className="w-full">{mobileLikeRow}</div>
-                    <span className="font-poppins font-light text-body-xs leading-4 tracking-wide text-info-500">
-                      {displayFormat}
-                    </span>
+                    {isForSale && (
+                      <span className="font-poppins font-light text-body-xs leading-4 tracking-wide text-info-500">
+                        {displayFormat}
+                      </span>
+                    )}
                     <span className="font-poppins font-light text-body-xs leading-4 tracking-wide text-text-disabled">
                       Published: {formatDate(artwork.created_at)}
                     </span>
@@ -683,21 +788,28 @@ export default function ArtworkViewOverlay({ artwork: artworkProp, onClose, onNa
                 )}
 
                 <div className="grid grid-cols-1 gap-8 border-t border-gray-50 py-6 lg:grid-cols-[1fr_240px]">
-                  <ArtworkComments artworkId={artwork.id} />
+                  <ArtworkComments
+                    artworkId={artwork.id}
+                    creatorId={artwork.creator_id}
+                    allowComments={artwork.allow_comments ?? true}
+                  />
                   {categoriesTagsLicense}
                 </div>
               </div>
             </div>
 
-            {/* ================= RIGHT: sticky details panel (desktop only) === */}
-            <div className="hidden lg:sticky lg:top-0 lg:flex lg:h-screen lg:w-1/3 lg:flex-col lg:overflow-y-auto lg:px-6 lg:py-8">
+            {/* ================= RIGHT: details panel, content-height (desktop only) === */}
+            <div className="hidden lg:flex lg:w-1/3 lg:flex-col lg:self-start lg:px-6 lg:py-8">
               <div className="mb-6 pr-8">{profileHeader}</div>
               <div className="mb-6">{likeFollowRow}</div>
               <div className="mb-4">{artworkInfoStats}</div>
-              <div className="mt-2">{purchasingDetails}</div>
-              {formControls}
-              <div className="flex-1" />
-              <div className="mt-8">{footerIcons}</div>
+              {isForSale && (
+                <>
+                  <div className="mt-2">{purchasingDetails}</div>
+                  {formControls}
+                </>
+              )}
+              <div className="mt-10">{footerIcons}</div>
             </div>
           </motion.div>
         </div>

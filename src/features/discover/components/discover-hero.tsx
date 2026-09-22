@@ -152,10 +152,10 @@ export const DiscoverHero = () => {
     return () => clearInterval(timer);
   }, [slides.length]);
 
-  if (!currentSlide) return <div className="h-screen w-full bg-black" />;
+  if (!currentSlide) return <div className="h-[320px] w-full bg-black" />;
 
   return (
-    <div className="relative h-[75vh] w-full overflow-hidden bg-black" style={{ height: '75vh' }}>
+    <div className="relative h-120 w-full overflow-hidden bg-black">
       <AnimatePresence mode="wait">
         <motion.div
           key={currentSlide.id}

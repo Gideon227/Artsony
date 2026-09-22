@@ -68,8 +68,8 @@ export default function SignUpPage() {
       <MobileAuthHero onBack={mobileStep === 'form' ? () => setMobileStep('choose') : undefined} />
 
       {/* Form panel */}
-      <section className=" flex-1 lg:h-screen flex flex-col self-center items-center mt-[45vh] w-full lg:mt-0">
-        <div className="w-full relative lg:flex-1 bg-white rounded-xl lg:rounded-none flex flex-col justify-between py-12 lg:py-0 px-6 lg:px-0">
+      <section className=" flex-1 h-[65vh] lg:h-screen flex flex-col self-center items-center mt-[40vh] w-full lg:mt-0">
+        <div className="w-full relative lg:flex-1 max-lg:overflow-y-auto scrollbar-hide bg-white rounded-xl lg:rounded-none flex flex-col justify-between py-12 lg:py-0 px-6 lg:px-0">
           <div className="flex flex-col justify-center lg:flex-1">
             
             <div className="flex justify-center mb-12 lg:mb-auto">

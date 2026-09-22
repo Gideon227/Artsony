@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useState, use } from 'react'
 import { useRouter } from 'next/navigation'
 import { useQuery } from '@tanstack/react-query'
 import Footer from '@/components/layout/footer'
@@ -15,8 +15,8 @@ import { userService } from '@/services/user.service'
 import { useAuthStore } from '@/store'
 import type { Artwork } from '@/types/artwork'
 
-export default function PublicProfilePage({ params }: { params: { id: string } }) {
-    const { id } = params
+export default function PublicProfilePage({ params }: { params: Promise<{ id: string }> }) {
+    const { id } = use(params)
     const router = useRouter()
     const { user: currentUser } = useAuthStore()
     const [activeArtwork, setActiveArtwork] = useState<Artwork | null>(null)

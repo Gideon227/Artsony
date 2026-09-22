@@ -14,6 +14,7 @@ export type InputProps = Omit<React.InputHTMLAttributes<HTMLInputElement>, 'pref
   leftIcon?: string
   rightIcon?: React.ReactNode
   rightElement?: React.ReactNode
+  rightIconFn?: (e: any) => void
   showStatusIcon?: boolean
   error?: string 
 }
@@ -50,6 +51,7 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>(
       leftIcon,
       rightIcon,
       rightElement,
+      rightIconFn,
       showStatusIcon = true,
       disabled,
       value,
@@ -108,6 +110,12 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>(
             )}
             {...props}
           />
+
+          {rightIcon && (
+            <button onClick={rightIconFn} className={cn('cursor-pointer absolute right-6 top-1/2 -translate-y-1/2 text-neutral-400')}>
+              <Image src={rightIcon as string} width={20} height={20} alt='left icon'/>
+            </button>
+          )}
 
           {/* Right slot (Combined logic) */}
           <div className="absolute right-5 top-1/2 -translate-y-1/2 flex items-center gap-2">

@@ -51,6 +51,7 @@ export function MobileFilterDrawer({ open, onClose, dropdowns, onClear }: Mobile
                   maxSelected={item.maxSelected}
                   placeholder={item.placeholder}
                   leftIcon={item.leftIcon}
+                  disabled={item.disabled}
                   searchable={item.searchable}
                   searchPlaceholder={item.searchPlaceholder}
                   searchValue={item.searchValue}

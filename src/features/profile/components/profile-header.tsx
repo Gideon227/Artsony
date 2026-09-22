@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import Image from 'next/image'
 import { Button } from '@/components'
 import { useIsFollowing, useToggleFollow } from '@/hooks/use-follow'
+import { useInteractionPermissions } from '@/hooks/use-user'
 import { useToast } from '@/components/ui/toaster'
 import { ProfileFollowersModal } from './profile-followers-modal'
 import { cn } from '@/utils'
@@ -25,18 +26,28 @@ const ProfileHeader = ({ user, isOwnProfile, onPostArtwork }: Props) => {
 
   const { data: isFollowing } = useIsFollowing(isOwnProfile ? undefined : user.id)
   const { mutate: toggleFollow, isPending: isTogglingFollow } = useToggleFollow(user.id)
+  const { data: permissions } = useInteractionPermissions(isOwnProfile ? undefined : user.id)
+  const canMessage = permissions?.can_message ?? true
 
-  const handleMessage = () => router.push(`/messages?userId=${user.id}`)
+  const handleMessage = () => {
+    if (!isOwnProfile && !canMessage) {
+      info('Messaging restricted', `${user.displayName || user.username} limits who can message them.`)
+      return
+    }
+    router.push(`/messages?userId=${user.id}`)
+  }
   const handleEdit = () => router.push('/settings/profile-customization')
 
   return (
     <div className="relative w-full bg-white">
-      <div className="h-[220px] w-full bg-[#D9D9D9] md:h-[280px] lg:h-[344px]" />
+      <div className="h-[220px] w-full bg-[#D9D9D9] md:h-[280px] lg:h-[344px] relative">
+        <Image fill src={user?.backgroundUrl || ''} alt='user background image' objectFit='cover' />
+      </div>
 
       <div
         className={cn(
           'relative z-20 mx-auto -mt-40 w-[92vw] max-w-[420px] rounded-2xl border-2 border-transparent',
-          'bg-gradient-to-b from-white from-[44.96%] to-[#F25B38] to-[128.93%] bg-clip-padding',
+          'bg-gradient-to-b from-[090A0B/0] to-[#1B1B1B] via-85% opacity-90 bg-clip-padding',
           '[background-origin:border-box] backdrop-blur-xl md:-mt-48 lg:-mt-56'
         )}
       >
@@ -65,7 +76,7 @@ const ProfileHeader = ({ user, isOwnProfile, onPostArtwork }: Props) => {
                   className="h-full w-full object-cover"
                 />
               </div>
-          </div>
+            </div>
             
 
             <p className="text-center font-raleway text-[20px] font-semibold leading-8 tracking-wide text-white">
@@ -75,7 +86,7 @@ const ProfileHeader = ({ user, isOwnProfile, onPostArtwork }: Props) => {
 
           <div className="flex w-full flex-col items-center justify-center gap-8">
             <div className="flex w-full items-center justify-center">
-              <button onClick={() => setFollowListType('followers')} className="flex w-1/3 flex-col items-center justify-center gap-4 transition-opacity hover:opacity-80">
+              <button onClick={() => setFollowListType('followers')} className="flex cursor-pointer w-1/3 flex-col items-center justify-center gap-4 transition-opacity hover:opacity-80">
                 <p className="text-center font-poppins text-body-m font-medium leading-6 tracking-wide text-secondary-500">
                   {(user.followersCount ?? 0).toLocaleString()}
                 </p>
@@ -87,7 +98,7 @@ const ProfileHeader = ({ user, isOwnProfile, onPostArtwork }: Props) => {
                 </p>
                 <p className="text-center font-poppins text-body-m leading-6 tracking-wide text-white">Likes</p>
               </div>
-              <button onClick={() => setFollowListType('following')} className="flex w-1/3 flex-col items-center justify-center gap-4 transition-opacity hover:opacity-80">
+              <button onClick={() => setFollowListType('following')} className="flex cursor-pointer w-1/3 flex-col items-center justify-center gap-4 transition-opacity hover:opacity-80">
                 <p className="text-center font-poppins text-body-m font-medium leading-6 tracking-wide text-secondary-500">
                   {(user.followingCount ?? 0).toLocaleString()}
                 </p>
@@ -97,7 +108,7 @@ const ProfileHeader = ({ user, isOwnProfile, onPostArtwork }: Props) => {
 
             <div className="flex w-full items-center justify-center gap-4 md:gap-6">
               {isOwnProfile ? (
-                <Button variant="primary" leftIcon="/icons/plus-white-bg.svg" fullWidth onClick={onPostArtwork}>
+                <Button variant="primary" leftIcon="/icons/plus-white-bg.svg" className='w-1/2 flex-1' onClick={onPostArtwork}>
                   Post Artwork
                 </Button>
               ) : (
@@ -114,12 +125,19 @@ const ProfileHeader = ({ user, isOwnProfile, onPostArtwork }: Props) => {
               )}
 
               {isOwnProfile ? (
-                <Button variant="outline" leftIcon="/icons/message-white.svg" fullWidth className='border-white text-white' onClick={handleMessage}>
+                <Button variant="outline" leftIcon="/icons/message-white.svg" className='border-white w-1/2 flex-1 text-white hover:bg-primary-100 hover:text-primary-500 hover:border-primary-500' onClick={handleMessage}>
                   Inbox
                 </Button>
               ) : (
-                <Button variant="outline" leftIcon="/icons/chat-round.svg" fullWidth onClick={handleMessage}>
-                  Message
+                <Button
+                  variant="outline"
+                  leftIcon="/icons/chat-round.svg"
+                  fullWidth
+                  onClick={handleMessage}
+                  disabled={!canMessage}
+                  title={!canMessage ? `${user.displayName || user.username} limits who can message them` : undefined}
+                >
+                  {canMessage ? 'Message' : 'Message restricted'}
                 </Button>
               )}
             </div>
@@ -129,7 +147,7 @@ const ProfileHeader = ({ user, isOwnProfile, onPostArtwork }: Props) => {
             <button
               onClick={handleEdit}
               aria-label="Edit profile"
-              className="absolute right-6 top-6 flex items-center justify-center rounded-full border-2 border-white p-2 transition-colors hover:bg-white/10"
+              className="absolute cursor-pointer right-6 top-6 flex items-center justify-center rounded-full border-2 border-white p-2 transition-colors hover:bg-white/10"
             >
               <Image src="/icons/pen.svg" width={20} height={20} alt="" />
             </button>
@@ -138,7 +156,7 @@ const ProfileHeader = ({ user, isOwnProfile, onPostArtwork }: Props) => {
               <button
                 onClick={() => setMenuOpen((v) => !v)}
                 aria-label="More options"
-                className="flex items-center justify-center rounded-full border-2 border-white p-2 transition-colors hover:bg-white/10"
+                className="flex items-center cursor-pointer justify-center rounded-full border-2 border-white p-2 transition-colors hover:bg-white/10"
               >
                 <Ellipsis color="#fff" size={20} />
               </button>

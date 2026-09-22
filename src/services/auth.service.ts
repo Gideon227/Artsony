@@ -1,5 +1,5 @@
 import { apiClient } from '@/lib/api-client'
-import type { User, ApiResponse, Artwork, Nullable } from '@/types'
+import type { User, ApiResponse, Artwork } from '@/types'
 
 type AuthResponse = { user: User; accessToken: string }
 
@@ -17,13 +17,16 @@ type BackendUser = {
   email: string
   username: string
   role: User['role']
+  provider: 'local' | 'google' | 'facebook'
   onboarded: boolean
   interests: string[]
   created_at: string
   display_name: string | null
   avatar_url: string | null
   bio: string | null
-  location?: string | null // Added to support the frontend requirement
+  country: string | null
+  state: string | null
+  city: string | null
   background_url: string | null
   website_url: string | null
   behance_url: string | null
@@ -43,9 +46,12 @@ function toFrontendUser(raw: BackendUser): User {
     username: raw.username,
     displayName: raw.display_name ?? raw.username,
     role: raw.role,
+    provider: raw.provider,
     avatarUrl: raw.avatar_url,
     bio: raw.bio,
-    location: raw.location ?? null, // Added to fix the missing property error
+    country: raw.country,
+    state: raw.state,
+    city: raw.city,
     // Not populated by any current endpoint — nothing reads this field yet.
     artworks: [] as unknown as Artwork,
     website: raw.website_url,
@@ -77,8 +83,10 @@ export type UpdateProfileInput = {
   username?: string
   display_name?: string | null
   bio?: string | null
+  country?: string | null
+  state?: string | null
+  city?: string | null
   interests?: string[]
-  location?: Nullable<string>
   avatar_url?: string | null
   background_url?: string | null
   website_url?: string | null
@@ -135,4 +143,13 @@ export const authService = {
     const res = await apiClient.patch<ApiResponse<BackendUser>>('/api/users/me', input)
     return { ...res, data: toFrontendUser(res.data) }
   },
+
+  changePassword: (body: { currentPassword: string; newPassword: string }) =>
+    apiClient.patch<{ success: true; message: string }>('/api/auth/password', body),
+
+  deactivateAccount: (body: { password?: string }) =>
+    apiClient.post<{ success: true; message: string }>('/api/auth/deactivate', body),
+
+  deleteAccount: (body: { password?: string }) =>
+    apiClient.delete<{ success: true; message: string }>('/api/auth/account', { body: JSON.stringify(body) }),
 }

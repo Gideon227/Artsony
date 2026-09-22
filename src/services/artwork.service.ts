@@ -62,17 +62,25 @@ export const artworkService = {
     page?: number
     perPage?: number
     categories?: string[]
-    location?: string
+    country?: string
+    state?: string
+    city?: string
     size_label?: string
     sort?: 'for_you' | 'following' | 'new' | 'trending' | 'newbies'
+    listingType?: ListingType
+    format?: 'DIGITAL' | 'PHYSICAL'
   } = {}): Promise<PaginatedArtworksResponse> => {
     const searchParams = new URLSearchParams()
     searchParams.set('mode', params.sort ?? 'new')
     searchParams.set('page', String(params.page ?? 1))
     searchParams.set('limit', String(params.perPage ?? 12))
     params.categories?.forEach((c) => searchParams.append('categories', c))
-    if (params.location)   searchParams.set('location', params.location)
-    if (params.size_label) searchParams.set('size_label', params.size_label)
+    if (params.country)     searchParams.set('country', params.country)
+    if (params.state)       searchParams.set('state', params.state)
+    if (params.city)        searchParams.set('city', params.city)
+    if (params.size_label)  searchParams.set('size_label', params.size_label)
+    if (params.listingType) searchParams.set('listing_type', params.listingType)
+    if (params.format)      searchParams.set('artwork_format', params.format)
 
     return apiClient.get<PaginatedArtworksResponse>(`/api/artworks/feed?${searchParams.toString()}`)
   },
@@ -91,8 +99,31 @@ export const artworkService = {
     return apiClient.get(`/api/artworks/top-picks?${params.toString()}`)
   },
 
-  getLocations: (): Promise<ApiResponse<{ label: string; artwork_count: number }[]>> =>
-    apiClient.get('/api/artworks/locations'),
+  // "Trending regardless of upload date" — see getTrendingArtworks in the
+  // backend's artwork.service.ts. Distinct from getTopPicks(period='week'),
+  // which only considers artworks uploaded within the window.
+  getTrending: (
+    limit = 8,
+    windowDays = 7,
+    listingType?: ListingType,
+  ): Promise<ApiResponse<Artwork[]>> => {
+    const params = new URLSearchParams({ limit: String(limit), windowDays: String(windowDays) })
+    if (listingType) params.set('listingType', listingType)
+    return apiClient.get(`/api/artworks/trending?${params.toString()}`)
+  },
+
+  // level: which field to return distinct values for. country/state scope
+  // results to a parent selection (e.g. only show states with artists
+  // within the already-selected country) — omit for the top-level list.
+  getLocations: (
+    level: 'country' | 'state' | 'city',
+    parent?: { country?: string; state?: string },
+  ): Promise<ApiResponse<{ label: string; artwork_count: number }[]>> => {
+    const params = new URLSearchParams({ level })
+    if (parent?.country) params.set('country', parent.country)
+    if (parent?.state)   params.set('state', parent.state)
+    return apiClient.get(`/api/artworks/locations?${params.toString()}`)
+  },
 
   getSizeLabels: (): Promise<ApiResponse<{ label: string; artwork_count: number }[]>> =>
     apiClient.get('/api/artworks/size-labels'),
@@ -118,11 +149,12 @@ export const artworkService = {
 
   // ── Engagement ──────────────────────────────────────────────────────────────
 
-  like: (id: string): Promise<ApiResponse<Artwork>> =>
-    apiClient.post<ApiResponse<Artwork>>(`/api/artworks/${id}/like`),
-
-  unlike: (id: string): Promise<ApiResponse<Artwork>> =>
-    apiClient.delete<ApiResponse<Artwork>>(`/api/artworks/${id}/like`),
+  // toggle_artwork_like is a genuine toggle server-side (POST flips current
+  // state, there's no separate "add"/"remove" endpoint — no DELETE route
+  // exists for this path). Always trust the returned {liked, like_count}
+  // rather than assuming which direction the toggle went.
+  toggleLike: (id: string): Promise<ApiResponse<{ liked: boolean; like_count: number }>> =>
+    apiClient.post<ApiResponse<{ liked: boolean; like_count: number }>>(`/api/artworks/${id}/like`),
 
   view: (id: string): Promise<ApiResponse<void>> =>
     apiClient.post(`/api/artworks/${id}/view`),

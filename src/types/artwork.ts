@@ -8,9 +8,17 @@ export type ListingType = 'MARKETPLACE' | 'PORTFOLIO'
 export type ArtworkFormat = 'DIGITAL' | 'PHYSICAL'
 export type ArtworkMediaType = 'IMAGE' | 'VIDEO' | 'THREE_D' | 'EXTERNAL_LINK'
 export type ArtworkVisibility = 'PUBLIC' | 'PRIVATE' | 'UNLISTED'
-export type ArtworkStatus = 'DRAFT' | 'PUBLISHED' | 'ARCHIVED' | 'UNDER_REVIEW'
+export type ArtworkStatus = 'DRAFT' | 'PUBLISHED' | 'ARCHIVED' | 'UNDER_REVIEW' | 'PAUSED'
 export type ModerationStatus = 'PENDING' | 'APPROVED' | 'REJECTED' | 'FLAGGED'
 export type UploadFlowType = 'SHARE' | 'PHYSICAL_ART' | 'DIGITAL_ART'
+
+// Mirrors the 4 option ids in upload-step-two.tsx's license dropdown exactly.
+// undefined/null = "All rights reserved", the dropdown's implicit default.
+export type LicenseType =
+  | 'attribution'
+  | 'attribution-sharealike'
+  | 'attribution-derivs'
+  | 'attribution-non-commercial'
 
 export type ArtworkAsset = {
   id: string
@@ -104,16 +112,11 @@ export type Artwork = {
   created_at: string
   updated_at: string
   deleted_at: string | null
-  /**
-   * Not yet on the backend — artwork upload never wired this up. Added here
-   * as optional so the overlay can render it when it exists and fall back to
-   * a placeholder when it doesn't. Remove this comment once the backend
-   * actually sends it.
-   */
+  license_type?: LicenseType | null
   license?: {
     type: string
     url?: string
-  }
+  } | null
 }
 
 // ── DTOs ──────────────────────────────────────────────────────────────────────
@@ -138,45 +141,47 @@ export type CreateArtworkPayload = {
   like_count: number
   save_count: number
   comment_count: number
-  show_engagement_stats?:boolean
+  show_engagement_stats?: boolean
   price?: number
   currency?: string
-  max_purchase_quantity?:number
+  max_purchase_quantity?: number
   physical_details?: PhysicalDetails
   has_variants: boolean
   variants?: Omit<Variant, 'id'>[]
+  license_type?: LicenseType
 }
 
-export type UpdateArtworkPayload = Partial<Omit<
-  CreateArtworkPayload,
-  'listing_type' | 'artwork_format'
->>
+export type UpdateArtworkPayload = Partial<
+  Omit<CreateArtworkPayload, 'listing_type' | 'artwork_format'>
+>
 
 export type ArtworkFilters = {
-  page?:           number
-  limit?:          number
-  sort_by?:        'created_at' | 'like_count' | 'view_count' | 'price'
-  sort_order?:     'asc' | 'desc'
-  listing_type?:   ListingType
+  page?: number
+  limit?: number
+  sort_by?: 'created_at' | 'like_count' | 'view_count' | 'price'
+  sort_order?: 'asc' | 'desc'
+  listing_type?: ListingType
   artwork_format?: ArtworkFormat
-  status?:         ArtworkStatus
-  visibility?:     ArtworkVisibility
-  creator_id?:     string
-  search?:         string
-  categories?:     string[]
-  min_price?:      number
-  max_price?:      number
-  location?:       string
-  size_label?:     string
+  status?: ArtworkStatus
+  visibility?: ArtworkVisibility
+  creator_id?: string
+  search?: string
+  categories?: string[]
+  min_price?: number
+  max_price?: number
+  country?: string
+  state?: string
+  city?: string
+  size_label?: string
 }
 
 export type PaginatedArtworksResponse = {
-  success:     boolean
-  data:        Artwork[]
-  total:       number
-  page:        number
-  limit:       number
+  success: boolean
+  data: Artwork[]
+  total: number
+  page: number
+  limit: number
   total_pages: number
-  has_next:    boolean
-  has_prev:    boolean
+  has_next: boolean
+  has_prev: boolean
 }

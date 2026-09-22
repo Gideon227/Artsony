@@ -119,6 +119,7 @@ export default function PhysicalSellWizardPage() {
             ...(formFields.currency ? { currency: String(formFields.currency) } : {}),
             ...(formFields.max_purchase_quantity ? { max_purchase_quantity: Math.max(1, parseInt(formFields.max_purchase_quantity) || 1) } : {}),
             ...(safePhysicalDetails ? { physical_details: safePhysicalDetails } : {}),
+            ...(formFields.license_type ? { license_type: formFields.license_type } : {}),
         }
     }
 

@@ -35,7 +35,7 @@ export default function ForgotPasswordPage() {
   }
 
   return (
-    <main className="min-h-screen w-full flex gap-x-[132px] bg-white relative overflow-hidden p-4 md:p-16">
+    <main className="h-screen w-full flex gap-x-[132px] bg-white relative overflow-hidden p-4 md:p-16">
 
       {/* Mobile hero */}
       <MobileAuthHero
@@ -44,17 +44,17 @@ export default function ForgotPasswordPage() {
       />
 
       {/* Desktop artwork grid */}
-      <section className="hidden lg:block w-1/2 h-[calc(100vh-128px)] sticky top-16">
+      <section className="hidden lg:block w-1/2 h-full sticky">
         <ForgotPasswordArtworkGrid />
       </section>
 
       {/* Form panel */}
-      <div className=" flex-1 flex flex-col self-center items-center mt-[45vh] lg:mt-0">
-        <div className="w-full relative bg-white rounded-xl lg:rounded-none flex flex-col justify-between py-12 lg:py-0 px-6 lg:px-0">
-          <div className="flex flex-col justify-center">
+      <section className=" flex-1 h-[65vh] lg:h-screen flex flex-col self-center items-center mt-[40vh] w-full lg:mt-0">
+        <div className="w-full relative lg:flex-1 max-lg:overflow-y-auto scrollbar-hide bg-white rounded-xl lg:rounded-none flex flex-col justify-between py-12 lg:py-0 px-6 lg:px-0">
+          <div className="flex flex-col justify-center lg:flex-1">
 
-            <div className="flex justify-center mb-10 lg:mb-20">
-              <Image src="/icons/logo.svg" alt="Artsony" width={160} height={40} priority />
+            <div className="flex justify-center mb-20">
+              <Image src="/icons/logo.svg" alt="ARTSONY" width={273} height={72} className="h-auto max-lg:w-[181px]" priority />
             </div>
 
             {step === 1 && (
@@ -116,7 +116,7 @@ export default function ForgotPasswordPage() {
             )}
 
             {/* Step indicator dots */}
-            <div className="flex justify-center gap-2 mt-12 mb-10">
+            <div className="flex justify-center gap-2 mt-10">
               <div className={cn('h-2 rounded-full transition-all duration-300', step === 1 ? 'w-6 bg-primary-500' : 'w-2 bg-neutral-200')} />
               <div className={cn('h-2 rounded-full transition-all duration-300', step === 2 ? 'w-6 bg-primary-500' : 'w-2 bg-neutral-200')} />
               <div className={cn('h-2 rounded-full transition-all duration-300', step === 3 ? 'w-6 bg-primary-500' : 'w-2 bg-neutral-200')} />
@@ -129,7 +129,7 @@ export default function ForgotPasswordPage() {
             </div>
           </div>
         </div>
-      </div>
+      </section>
     </main>
   )
 }

@@ -26,7 +26,9 @@ function toArtworkFilters(query: string, filters: ShopFilterState): ArtworkFilte
     min_price: filters.minPrice ?? undefined,
     max_price: filters.maxPrice ?? undefined,
     artwork_format: filters.format ?? undefined,
-    location: filters.location ?? undefined,
+    country: filters.country ?? undefined,
+    state: filters.state ?? undefined,
+    city: filters.city ?? undefined,
   }
 }
 

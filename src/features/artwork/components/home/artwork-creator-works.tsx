@@ -53,10 +53,10 @@ export function ArtworkCreatorWorks({
   if (!isLoading && works.length === 0) return null
 
   return (
-    <div className="py-6">
-      <h3 className="mb-4 font-poppins text-[15px] text-gray-800">
+    <div className="py-12 px-6">
+      <h3 className="mb-6 font-poppins text-body-m font-medium text-gray-500">
         {title}{' '}
-        <Link href={`/profile/${creatorId}`} className="font-semibold text-primary-500 hover:underline">
+        <Link href={`/profile/${creatorId}`} className="text-primary-500 hover:underline">
           {creatorName}
         </Link>
       </h3>
@@ -73,7 +73,7 @@ export function ArtworkCreatorWorks({
                 const artistName = work.creator?.profile?.display_name || work.creator?.username || 'Unknown artist'
 
                 return (
-                  <div key={work.id} className="w-[220px] shrink-0">
+                  <div key={work.id} className="w-[300px] shrink-0">
                     <ArtCard
                       image={img}
                       title={work.title}
@@ -103,7 +103,7 @@ export function ArtworkCreatorWorks({
           <button
             onClick={() => scroll('right')}
             aria-label="Scroll for more"
-            className="absolute right-2 top-[90px] flex h-9 w-9 items-center justify-center rounded-full bg-primary-500 text-white shadow-md transition-transform hover:scale-105"
+            className="absolute cursor-pointer right-2 top-2/5 flex h-9 w-9 items-center justify-center rounded-full bg-primary-500 text-white shadow-md transition-transform hover:scale-105"
           >
             <ChevronRight size={16} />
           </button>

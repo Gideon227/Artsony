@@ -5,14 +5,19 @@ import Image from 'next/image'
 import { motion, AnimatePresence } from 'framer-motion'
 import { ChevronLeft, ChevronRight, Sparkles } from 'lucide-react'
 import { cn } from '@/utils'
-import { useTopPicks } from '@/hooks/use-artwork'
+import { useTrendingArtworks } from '@/hooks/use-artwork'
 import type { Artwork } from '@/types/artwork'
 
 export function GalleryPulseSection() {
   const [index, setIndex] = useState(0)
   const [direction, setDirection] = useState(0)
 
-  const { data: FEATURED_ARTWORKS, isLoading, isError } = useTopPicks('week', 8)
+  // Gallery Pulse is "what's trending this week" regardless of when it was
+  // uploaded — useTopPicks('week') was scoped to artworks *uploaded* in the
+  // last 7 days instead, which is why an older artwork picking up likes
+  // this week never showed here. useTrendingArtworks scores by windowed
+  // engagement (artwork_engagement_daily) instead of created_at.
+  const { data: FEATURED_ARTWORKS, isLoading, isError } = useTrendingArtworks(8, 7)
 
   useEffect(() => {
     if (!FEATURED_ARTWORKS || FEATURED_ARTWORKS.length < 2) return
@@ -137,17 +142,24 @@ export function GalleryPulseSection() {
               <>
                 <button
                   onClick={prevStep}
-                  className="absolute left-6 top-1/2 -translate-y-1/2 w-12 h-12 rounded-full flex items-center justify-center text-white transition-all z-20 shadow-lg bg-primary-500 hover:scale-110 active:scale-95"
+                  disabled={index === 0}
+                  className={`cursor-pointer absolute left-6 top-1/2 disabled:pointer-events-none -translate-y-1/2 w-10 h-10 rounded-full flex items-center justify-center text-white transition-all z-20 shadow-lg hover:scale-110 active:scale-95 ${index === 0 ? 'bg-transparent border border-[#788191] rounded-full' : 'bg-primary-500'}`}
                   aria-label="Previous"
                 >
-                  <ChevronLeft size={24} />
+                  <svg width="8" height="14" viewBox="0 0 8 14" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M0.164852 6.62959L6.79533 0.199898C7.20906 -0.201305 8 0.0418882 8 0.570304L8 13.4297C8 13.9581 7.20906 14.2013 6.79533 13.8001L0.164852 7.37041C-0.0549501 7.15726 -0.0549501 6.84274 0.164852 6.62959Z" fill={index === 0 ? '#788191' : 'white'}/>
+                  </svg>
                 </button>
+
                 <button
                   onClick={nextStep}
-                  className="absolute right-6 top-1/2 -translate-y-1/2 w-12 h-12 rounded-full flex items-center justify-center text-white transition-all z-20 shadow-lg bg-primary-500 hover:scale-110 active:scale-95"
+                  disabled={index === FEATURED_ARTWORKS.length - 1}
+                  className={`cursor-pointer absolute right-6 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full flex items-center justify-center text-white transition-all z-20 shadow-lg hover:scale-110 active:scale-95 ${index === FEATURED_ARTWORKS.length - 1 ? 'bg-transparent border border-[#788191] rounded-full' : 'bg-primary-500'}`}
                   aria-label="Next"
                 >
-                  <ChevronRight size={24} />
+                  <svg width="8" height="14" viewBox="0 0 8 14" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M7.83515 6.62959L1.20467 0.199897C0.790939 -0.201306 5.852e-07 0.0418875 5.62102e-07 0.570303L0 13.4297C-2.30978e-08 13.9581 0.790938 14.2013 1.20467 13.8001L7.83515 7.37041C8.05495 7.15726 8.05495 6.84274 7.83515 6.62959Z" fill={index === FEATURED_ARTWORKS.length - 1 ? '#788191' : 'white'}/>
+                  </svg>
                 </button>
               </>
             )}

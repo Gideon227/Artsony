@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import Image from 'next/image'
 import { useComments, useCreateComment } from '@/hooks/use-comments'
+import { useInteractionPermissions } from '@/hooks/use-user'
 import { useAuthStore } from '@/store/auth.store'
 
 const MAX_LENGTH = 1000
@@ -14,59 +15,77 @@ function formatShortDate(value: string): string {
 
 interface ArtworkCommentsProps {
   artworkId: string
+  creatorId: string
+  allowComments: boolean
 }
 
-export function ArtworkComments({ artworkId }: ArtworkCommentsProps) {
+export function ArtworkComments({ artworkId, creatorId, allowComments }: ArtworkCommentsProps) {
   const [body, setBody] = useState('')
   const user = useAuthStore((s) => s.user)
   const { data, isLoading } = useComments(artworkId)
   const createComment = useCreateComment(artworkId)
+  const { data: permissions } = useInteractionPermissions(creatorId)
 
   const comments = data?.data ?? []
   const total = data?.total ?? 0
 
+  // allowComments is the artist's per-artwork toggle; permissions.can_comment
+  // is their account-level who_can_comment setting relative to this viewer.
+  // Both gate independently on the backend, so both must pass here too.
+  const canComment = allowComments && (permissions?.can_comment ?? true)
+
   const handleSend = () => {
     const trimmed = body.trim()
-    if (!trimmed || createComment.isPending) return
+    if (!trimmed || createComment.isPending || !canComment) return
     createComment.mutate({ body: trimmed }, { onSuccess: () => setBody('') })
   }
 
   return (
-    <div className="flex flex-col gap-8">
+    <div className="flex flex-col gap-8 border border-border p-6 rounded-xl">
       {/* Composer */}
-      <div className="flex gap-4">
-        <div className="relative h-11 w-11 shrink-0 overflow-hidden rounded-full bg-gray-100">
-          <Image
-            src={user?.avatarUrl || '/images/image-avatar.svg'}
-            alt={user?.username ?? 'You'}
-            fill
-            className="object-cover"
-          />
-        </div>
-        <div className="flex-1">
-          <div className="rounded-[24px] border border-gray-100 p-5">
-            <textarea
-              value={body}
-              onChange={(e) => setBody(e.target.value.slice(0, MAX_LENGTH))}
-              placeholder="Leave a comment"
-              rows={3}
-              className="w-full resize-none bg-transparent font-poppins text-[14px] text-gray-700 placeholder:text-gray-300 outline-none"
+      {canComment ? (
+        <div className="flex gap-4">
+          <div className="relative h-11 w-11 shrink-0 overflow-hidden rounded-full bg-gray-100">
+            <Image
+              src={user?.avatarUrl || '/images/image-avatar.svg'}
+              alt={user?.username ?? 'You'}
+              fill
+              className="object-cover"
             />
           </div>
-          <div className="mt-2 flex items-center justify-between">
-            <span className="font-poppins text-[12px] text-gray-300">
-              {MAX_LENGTH} characters max
-            </span>
-            <button
-              onClick={handleSend}
-              disabled={!body.trim() || createComment.isPending}
-              className="rounded-full bg-primary-500 px-8 py-2.5 font-poppins text-[14px] font-semibold text-white transition-colors hover:bg-primary-600 disabled:cursor-not-allowed disabled:opacity-50"
-            >
-              {createComment.isPending ? 'Sending...' : 'Send'}
-            </button>
+          <div className="flex-1">
+            <div className="rounded-[24px] border border-gray-100 p-5">
+              <textarea
+                value={body}
+                onChange={(e) => setBody(e.target.value.slice(0, MAX_LENGTH))}
+                placeholder="Leave a comment"
+                rows={3}
+                className="w-full resize-none bg-transparent border-border font-poppins text-[14px] text-gray-500 placeholder:text-gray-300 outline-none"
+              />
+            </div>
+            <div className="mt-2 flex items-center justify-between">
+              <span className="font-poppins text-[12px] text-gray-300">
+                {MAX_LENGTH} characters max
+              </span>
+              <button
+                onClick={handleSend}
+                disabled={!body.trim() || createComment.isPending}
+                className="rounded-full bg-primary-500 px-8 py-2.5 font-poppins text-[14px] font-semibold text-white transition-colors hover:bg-primary-600 disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                {createComment.isPending ? 'Sending...' : 'Send'}
+              </button>
+            </div>
           </div>
         </div>
-      </div>
+      ) : (
+        <p className="rounded-[24px] border border-gray-100 p-5 font-poppins text-[14px] text-gray-400">
+          {!allowComments
+            ? 'Comments are turned off for this artwork.'
+            : 'This artist limits who can comment on their artwork.'}
+        </p>
+      )}
+
+      <hr className='w-9/10 text-gray-50 items-center justify-center mx-auto ' />
 
       {/* List */}
       <div>

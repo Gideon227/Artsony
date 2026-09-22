@@ -74,9 +74,9 @@ const ImageSection = ({ draft, setField }: Props) => {
                 onClick={() => avatarInputRef.current?.click()}
                 disabled={uploadingAvatar}
                 className='absolute cursor-pointer w-14 h-14 bg-primary-500 rounded-full flex items-center justify-center disabled:opacity-60'
-                style={{ bottom: 10, left: '50%', transform: 'translateX(-50%)' }}
+                style={{ bottom: -20, left: '50%', transform: 'translateX(-50%)' }}
               >
-                <Image src='/icons/camera-white.svg' width={32} height={32} alt='camera icon' />
+                <Image src='/icons/camera-white.svg' width={32} height={32} color='white' alt='camera icon' />
               </button>
             </div>
           </div>
@@ -106,7 +106,7 @@ const ImageSection = ({ draft, setField }: Props) => {
                 <Spinner size='sm' className='text-white' />
               ) : (
                 <>
-                  <button type='button' onClick={() => backgroundInputRef.current?.click()}>
+                  <button type='button' className='cursor-pointer hover:bg-primary-500' onClick={() => backgroundInputRef.current?.click()}>
                     <Image src='/icons/camera-white.svg' width={32} height={32} alt='camera icon' />
                   </button>
                   <p className='font-poppins text-body-m text-white tracking-wide'>Resolution (1920px X 440px)</p>

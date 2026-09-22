@@ -3,10 +3,12 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { authService } from '@/services/auth.service'
+import { userService } from '@/services/user.service'
 import { useAuthStore } from '@/store/auth.store'
 import { useToast } from '@/components/ui/toaster'
 import { HttpError } from '@/lib/api-client'
 import { QUERY_KEYS, STALE_TIMES } from '@/constants'
+import type { PrivacySettings } from '@/types'
 
 // ─── Cookie helpers ───────────────────────────────────────────────────────────
 // These mirror what the backend sets so middleware sees the flags immediately
@@ -272,6 +274,69 @@ export function useUpdateProfile() {
         err instanceof HttpError
           ? err.message
           : 'Your profile could not be saved. Please try again.'
+      error('Failed to save', message)
+    },
+  })
+}
+
+// ─── Privacy settings (who can message/comment/purchase) ──────────────────────
+// Server truth lives behind /api/users/me/privacy (separate from GET /me — see
+// PrivacySettings). Kept in sync with auth.store.privacySettings on every
+// successful fetch or save so any component can read it synchronously,
+// mirroring how useMe/setUser keep `user` in sync.
+
+export function usePrivacySettings() {
+  const isAuthenticated = useAuthStore((s) => s.user !== null)
+  const setPrivacySettings = useAuthStore((s) => s.setPrivacySettings)
+
+  return useQuery({
+    queryKey: QUERY_KEYS.privacySettings,
+    queryFn: async () => {
+      const { data } = await userService.getPrivacySettings()
+      setPrivacySettings(data)
+      return data
+    },
+    enabled: isAuthenticated,
+    staleTime: STALE_TIMES.slow,
+  })
+}
+
+export function useUpdatePrivacySettings() {
+  const queryClient = useQueryClient()
+  const setPrivacySettings = useAuthStore((s) => s.setPrivacySettings)
+  const { success, error } = useToast()
+
+  return useMutation({
+    mutationFn: (partial: Partial<PrivacySettings>) => userService.updatePrivacySettings(partial),
+
+    onMutate: async (partial) => {
+      await queryClient.cancelQueries({ queryKey: QUERY_KEYS.privacySettings })
+      const previous = queryClient.getQueryData<PrivacySettings>(QUERY_KEYS.privacySettings)
+
+      if (previous) {
+        const optimistic = { ...previous, ...partial }
+        queryClient.setQueryData(QUERY_KEYS.privacySettings, optimistic)
+        setPrivacySettings(optimistic)
+      }
+
+      return { previous }
+    },
+
+    onSuccess: ({ data }) => {
+      queryClient.setQueryData(QUERY_KEYS.privacySettings, data)
+      setPrivacySettings(data)
+      success('Privacy settings updated', 'Your changes have been saved.')
+    },
+
+    onError: (err, _partial, context) => {
+      if (context?.previous) {
+        queryClient.setQueryData(QUERY_KEYS.privacySettings, context.previous)
+        setPrivacySettings(context.previous)
+      }
+      const message =
+        err instanceof HttpError
+          ? err.message
+          : 'Your privacy settings could not be saved. Please try again.'
       error('Failed to save', message)
     },
   })

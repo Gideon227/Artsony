@@ -13,7 +13,8 @@ export interface FilterDropdownConfig {
   id: string | number;
   options: DropdownOption[];
   placeholder: string;
-  leftIcon: string;
+  leftIcon?: string;
+  disabled?: boolean;
 
   // Single-select (default)
   value?: DropdownOption | null;
@@ -52,7 +53,7 @@ interface FilterComponentProps {
 
 const FilterComponent: React.FC<FilterComponentProps> = ({ dropdowns, onClear, hideClearButton = false }) => {
   return (
-    <div className='max-md:hidden py-6 px-8 flex gap-x-4 flex-1 items-center bg-white max-w-[1440px] mx-auto'>
+    <div className='max-md:hidden py-6 px-6 flex gap-x-26.5 flex-1 items-center bg-white max-w-[1440px] mx-auto'>
       <div className='flex flex-1 gap-x-4 items-center'>
         {dropdowns?.map((item) => (
           <Dropdown
@@ -66,6 +67,7 @@ const FilterComponent: React.FC<FilterComponentProps> = ({ dropdowns, onClear, h
             maxSelected={item.maxSelected}
             placeholder={item.placeholder}
             leftIcon={item.leftIcon}
+            disabled={item.disabled}
             searchable={item.searchable}
             searchPlaceholder={item.searchPlaceholder}
             searchValue={item.searchValue}

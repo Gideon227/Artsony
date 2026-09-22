@@ -32,6 +32,7 @@ const SocialSection = ({ draft, setField }: Props) => {
               rightIcon='/icons/cancel.svg'
               value={draft.behanceLink}
               onChange={(e) => setField('behanceLink', e.target.value)}
+              rightIconFn={(e) => setField('behanceLink', '')}
             />
           </div>
 

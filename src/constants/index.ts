@@ -134,6 +134,7 @@ export const QUERY_KEYS = {
   artworks: (params?: Record<string, unknown>) => ['artworks', params] as const,
   profile: (username: string) => ['profile', username] as const,
   me: ['me'] as const,
+  privacySettings: ['privacySettings'] as const,
   notifications: ['notifications'] as const,
   cart: ['cart'] as const,
   orders: ['orders'] as const,

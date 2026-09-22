@@ -169,15 +169,21 @@ const ContactSection = ({ user }: { user: User }) => {
 
                 {/* Country Dropdown */}
                 <div className='gap-y-2 flex flex-col w-full'>
-                    <label className='font-poppins font-medium text-body-s text-heading leading-6 tracking-wide'>Country</label>
+                    <label className='font-poppins font-medium text-body-s text-heading leading-6 tracking-wide'>
+                        Country
+                    </label>
                     <Dropdown 
                         options={countries}
                         value={formData.country || undefined}
                         onChange={(option) => handleDropdownChange('country', option)}
                         placeholder={isLoadingCountries ? 'Loading countries...' : 'Select Country'}
                         disabled={formData.isAutoLocation || isLoadingCountries || isDetectingLocation}
+                        searchable={true}
+                        searchPlaceholder="Search country..."
+                        isLoading={isLoadingCountries}
+                        emptyMessage="No countries found"
                     />
-                </div>
+                    </div>
 
                 {/* State Dropdown */}
                 <div className='gap-y-2 flex flex-col w-full'>
@@ -194,6 +200,10 @@ const ContactSection = ({ user }: { user: User }) => {
                                 : 'Select State/Province'
                         }
                         disabled={formData.isAutoLocation || isLoadingStates || !formData.country || isDetectingLocation}
+                        searchable={true}
+                        searchPlaceholder="Searching states..."
+                        isLoading={isLoadingStates}
+                        emptyMessage="No States Found In This Region"
                     />
                 </div>
                 
@@ -203,19 +213,19 @@ const ContactSection = ({ user }: { user: User }) => {
                         {isDetectingLocation ? 'Detecting location...' : 'Set Automatically by location'}
                     </p>
                     <button
-                        type="button"
-                        onClick={handleToggleLocation}
-                        disabled={isDetectingLocation}
-                        className={`relative inline-flex h-6 w-11 cursor-pointer items-center rounded-2xl transition-colors duration-200 focus:outline-none border border-primary-500 ${
-                            formData.isAutoLocation ? 'bg-primary-500' : 'bg-white'
-                        } ${isDetectingLocation ? 'opacity-50 cursor-wait' : ''}`}
+                      type="button"
+                      onClick={handleToggleLocation}
+                      disabled={isDetectingLocation}
+                      className={`relative inline-flex h-6 w-11 cursor-pointer items-center rounded-2xl transition-colors duration-200 focus:outline-none border border-primary-500 ${
+                          formData.isAutoLocation ? 'bg-primary-500' : 'bg-white'
+                      } ${isDetectingLocation ? 'opacity-50 cursor-wait' : ''}`}
                     >
-                        <span
-                            className={`inline-block transform rounded-full transition-transform duration-300 ease-in-out ${
-                                formData.isAutoLocation ? 'translate-x-6 bg-white' : 'translate-x-1 bg-primary-500'
-                            }`}
-                            style={{ width: 18, height: 18 }}
-                        />
+                      <span
+                        className={`inline-block transform rounded-full transition-transform duration-300 ease-in-out ${
+                          formData.isAutoLocation ? 'translate-x-6 bg-white' : 'translate-x-0.5 bg-primary-500'
+                        }`}
+                        style={{ width: 18, height: 18 }}
+                      />
                     </button>
                 </div>
             </form>

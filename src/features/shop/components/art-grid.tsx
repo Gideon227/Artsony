@@ -11,7 +11,7 @@ interface Props {
 
 const ArtGrid = ({ artworks, num, artVariant, onCardClick }: Props) => {
     return (
-        <div className='py-12 px-8 gap-x-4 gap-y-12 grid grid-cols-4'>
+        <div className='py-12 px-8 gap-x-4 gap-y-12 grid grid-cols-4 max-w-[1440px] mx-auto'>
             {artworks.slice(num)?.map((art, index) => {
                 
                 const mappedArtists: Artist[] = art.creator ? [{

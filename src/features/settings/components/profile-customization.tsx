@@ -1,6 +1,6 @@
 'use client'
 
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { Button } from '@/components'
 import InfoSection from '../sections/info-section'
 import { useAuthStore } from '@/store'
@@ -47,6 +47,12 @@ const ProfileCustomization = () => {
   }), [user?.id])
 
   const [draft, setDraft] = useState<ProfileDraft>(initialDraft)
+
+  useEffect(() => {
+    if (user) {
+      setDraft(initialDraft);
+    }
+  }, [initialDraft, user]);
 
   const setField = <K extends keyof ProfileDraft>(key: K, value: ProfileDraft[K]) =>
     setDraft((d) => ({ ...d, [key]: value }))

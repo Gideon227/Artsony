@@ -69,7 +69,10 @@ export function useArtworkList(filters: ArtworkFilters = {}) {
 export function useFeed(
   params: {
     categories?: string[]
-    location?: string
+    // location?: string
+    country?: string
+    state?: string
+    city?: string
     size_label?: string
     sort?: 'for_you' | 'following' | 'new' | 'trending' | 'newbies'
   } = {},
@@ -99,6 +102,18 @@ export function useTopPicks(period: 'all' | 'week' = 'all', limit = 8, listingTy
   return useQuery({
     queryKey: ['artworks', 'top-picks', period, limit, listingType ?? 'ALL'],
     queryFn: () => artworkService.getTopPicks(limit, period, listingType).then((r) => r.data),
+    staleTime: STALE_TIMES.medium,
+  })
+}
+
+// "Trending regardless of upload date" — see artworkService.getTrending.
+// Use this (not useTopPicks('week')) for "what's hot right now" surfaces
+// like Gallery Pulse, where an older artwork picking up a burst of likes
+// this week should still qualify.
+export function useTrendingArtworks(limit = 8, windowDays = 7, listingType?: ListingType) {
+  return useQuery({
+    queryKey: ['artworks', 'trending', windowDays, limit, listingType ?? 'ALL'],
+    queryFn: () => artworkService.getTrending(limit, windowDays, listingType).then((r) => r.data),
     staleTime: STALE_TIMES.medium,
   })
 }
@@ -138,11 +153,18 @@ export function useCreatorArtworks(creatorId: string, enabled: boolean) {
   })
 }
 
-export function useArtworkLocations() {
+export function useArtworkLocations(
+  level: 'country' | 'state' | 'city',
+  parent?: { country?: string; state?: string },
+) {
   return useQuery({
-    queryKey: ['artworks', 'locations'],
-    queryFn: () => artworkService.getLocations().then((r) => r.data),
+    queryKey: ['artworks', 'locations', level, parent?.country ?? null, parent?.state ?? null],
+    queryFn: () => artworkService.getLocations(level, parent).then((r) => r.data),
     staleTime: STALE_TIMES.slow,
+    // state/city queries are meaningless without a parent country selected
+    // for state, or country+state for city — keep them idle until then
+    // rather than firing a request that'll just return an empty list.
+    enabled: level === 'country' || Boolean(parent?.country),
   })
 }
 
@@ -337,9 +359,12 @@ export function useLikeArtwork() {
   const setOptimisticLike = useArtworkStore((s) => s.setOptimisticLike)
   const { error } = useToast()
 
+  // toggle_artwork_like flips whatever the server currently has on file —
+  // the `isLiked` passed in is only this client's guess of current state
+  // (used for the optimistic flip), never trusted as the true direction.
+  // onSuccess reconciles both caches with the server's actual result.
   return useMutation({
-    mutationFn: ({ id, isLiked }: { id: string; isLiked: boolean }) =>
-      isLiked ? artworkService.unlike(id) : artworkService.like(id),
+    mutationFn: ({ id }: { id: string; isLiked: boolean }) => artworkService.toggleLike(id),
 
     onMutate: async ({ id, isLiked }) => {
       await qc.cancelQueries({ queryKey: ART_KEYS.byId(id) })
@@ -351,6 +376,7 @@ export function useLikeArtwork() {
         old
           ? {
               ...old,
+              is_liked: !isLiked,
               like_count: isLiked ? old.like_count - 1 : old.like_count + 1,
             }
           : old,
@@ -367,7 +393,7 @@ export function useLikeArtwork() {
               ...page,
               data: page.data.map((a) =>
                 a.id === id
-                  ? { ...a, like_count: isLiked ? a.like_count - 1 : a.like_count + 1 }
+                  ? { ...a, is_liked: !isLiked, like_count: isLiked ? a.like_count - 1 : a.like_count + 1 }
                   : a,
               ),
             })),
@@ -378,9 +404,34 @@ export function useLikeArtwork() {
       return { prev }
     },
 
+    onSuccess: ({ data }, { id }) => {
+      // Reconcile with the server's actual resulting state — the optimistic
+      // flip above was a guess; this is truth, and may differ from the
+      // guess if this client's `isLiked` was stale.
+      setOptimisticLike(id, data.liked)
+      qc.setQueryData<Artwork>(ART_KEYS.byId(id), (old) =>
+        old ? { ...old, is_liked: data.liked, like_count: data.like_count } : old,
+      )
+      qc.setQueriesData<InfiniteData<PaginatedArtworksResponse>>(
+        { queryKey: ART_KEYS.all },
+        (old) => {
+          if (!old) return old
+          return {
+            ...old,
+            pages: old.pages.map((page) => ({
+              ...page,
+              data: page.data.map((a) =>
+                a.id === id ? { ...a, is_liked: data.liked, like_count: data.like_count } : a,
+              ),
+            })),
+          }
+        },
+      )
+    },
+
     onError: (_err, { id }, ctx) => {
       if (ctx?.prev) qc.setQueryData(ART_KEYS.byId(id), ctx.prev)
-      setOptimisticLike(id, false)
+      setOptimisticLike(id, ctx?.prev?.is_liked ?? false)
       error('Action failed', 'Could not update like. Please try again.')
     },
 

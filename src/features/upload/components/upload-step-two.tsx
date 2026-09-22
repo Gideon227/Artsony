@@ -5,7 +5,7 @@ import { Button, Switch } from "@/components"
 import { Dropdown, DropdownOption } from "@/components/ui/dropdown"
 import React, { useMemo } from 'react'
 import { useArtworkStore, selectDraft } from '@/store/artwork.store'
-import type { ArtworkVisibility } from '@/types/artwork'
+import type { ArtworkVisibility, LicenseType } from '@/types/artwork'
 import UploadHeader from "./upload-header"
 
 interface UploadStepTwoProps {
@@ -34,9 +34,11 @@ const UploadStepTwo = ({ onNext, onBack, onSaveAndExit, steps, number }: UploadS
     { id: 'PRIVATE', rightIcon: true, label: 'Only Me' },
   ], [])
 
-  // Hooked up to draft state. Defaults to first option if no draft value exists yet.
-  const selectedLicense = licenseOptions.find((o) => o.id === (draft as any).license) ?? licenseOptions[0]
-  
+  // Hooked up to draft state. No fallback: undefined shows the Dropdown's
+  // own "All rights reserved" placeholder, matching what actually persists
+  // when the artist never touches this field.
+  const selectedLicense = licenseOptions.find((o) => o.id === draft.license_type)
+
   const selectedVisibility = visibilityOptions.find((o) => o.id === draft.visibility) ?? visibilityOptions[0]
 
   // const handleNextStep = () => {
@@ -76,8 +78,7 @@ const UploadStepTwo = ({ onNext, onBack, onSaveAndExit, steps, number }: UploadS
               options={licenseOptions}
               value={selectedLicense}
               onChange={(option) => {
-                // WIRED UP: Saves selected license to the payload
-                setDraftField('license' as any, option.id)
+                setDraftField('license_type', option.id as LicenseType)
               }}
               placeholder="All rights reserved"
               className="font-poppins text-gray-700 text-sm"

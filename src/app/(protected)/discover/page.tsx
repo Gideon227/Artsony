@@ -14,11 +14,15 @@ import { LoadMoreButton } from '@/features/discover/components/load-more-button'
 import ArtworkViewOverlay from '@/features/artwork/components/home/artwork-view-overlay'
 import type { Artwork } from '@/types/artwork'
 import type { FeedSort } from '@/features/home/types'
+import type { LocationFilterValue } from '@/components/filters/location-cascade-filter'
+
+const EMPTY_LOCATION: LocationFilterValue = { country: null, state: null, city: null }
 
 export default function DiscoverPage() {
   const [category, setCategory] = useState<string | null>(null)
   const [sort, setSort] = useState<FeedSort | 'all'>('all')
   const [activeArtwork, setActiveArtwork] = useState<Artwork | null>(null)
+  const [location, setLocation] = useState<LocationFilterValue>(EMPTY_LOCATION)
 
   const {
     data,
@@ -29,7 +33,10 @@ export default function DiscoverPage() {
     fetchNextPage,
     refetch,
   } = useFeed({
-    categories: Array(category as string) ?? undefined,
+    categories: category ? [category] : undefined,
+    country: location.country ?? undefined,
+    state: location.state ?? undefined,
+    city: location.city ?? undefined,
     sort: sort === 'all' ? undefined : sort,
   })
 
@@ -63,6 +70,8 @@ export default function DiscoverPage() {
         total={total}
         sort={sort}
         onSortChange={setSort}
+        location={location}
+        onLocationChange={setLocation}
       />
 
       {isLoading ? (
@@ -70,14 +79,14 @@ export default function DiscoverPage() {
           <Spinner size="lg" />
         </div>
       ) : isError ? (
-        <div className="px-4 md:px-8">
+        <div className="max-w-[1440px] mx-auto px-4 md:px-8">
           <ErrorState
             description="Could not load artworks. Check your connection and try again."
             onRetry={() => refetch()}
           />
         </div>
       ) : artworks.length === 0 ? (
-        <div className="px-4 md:px-8">
+        <div className="max-w-[1440px] mx-auto px-4 md:px-8">
           <EmptyState
             title="No artworks found"
             description="Try a different category, or check back soon."

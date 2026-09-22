@@ -53,6 +53,28 @@ export type Timestamp = {
 
 export type UserRole = 'USER' | 'ARTIST' | 'MODERATOR' | 'ADMIN'
 
+// Mirrors the backend's `who_can_message` / `who_can_comment` / `who_can_purchase`
+// columns on `profiles` (see 20241204000000_settings_privacy_security.sql).
+// Fetched separately from the main User/`GET /me` shape via /api/users/me/privacy.
+export type PrivacyLevel = 'EVERYONE' | 'FOLLOWERS' | 'NO_ONE'
+
+export type PrivacySettings = {
+  who_can_message: PrivacyLevel
+  who_can_comment: PrivacyLevel
+  who_can_purchase: PrivacyLevel
+}
+
+// Computed, viewer-relative preview of PrivacySettings — "can I, the
+// requesting user, message/comment on/purchase from this specific person".
+// Returned by GET /api/users/:userId/permissions. UI-only signal for
+// showing/disabling buttons ahead of time; the backend still enforces
+// the real rule on the actual action.
+export type InteractionPermissions = {
+  can_message: boolean
+  can_comment: boolean
+  can_purchase: boolean
+}
+
 export type User = Timestamp & {
   id: ID
   email: string
@@ -62,7 +84,6 @@ export type User = Timestamp & {
   avatarUrl: Nullable<string>
   bio: Nullable<string>
   artworks: Artwork
-  location: Nullable<string>
   website: Nullable<string>
   instagramLink: Nullable<string>
   facebookLink: Nullable<string>
@@ -80,8 +101,10 @@ export type User = Timestamp & {
   onboarded: boolean
   interests: string[]
   created_at: string
-  state?: string;
-  country?: string;
+  country: Nullable<string>
+  state: Nullable<string>
+  city: Nullable<string>
+  provider: 'local' | 'google' | 'facebook'
 }
 
 export type ArtworkCategory =
@@ -120,7 +143,7 @@ export type Notification = Timestamp & {
   resourceId: ID
   resourceType: 'artwork' | 'comment' | 'user'
   message: string
-  created_at: string
+  created_at: Date
 }
 
 export type CartItem = {

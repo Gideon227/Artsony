@@ -30,7 +30,7 @@ function FollowToggleBadge({ userId }: { userId: string }) {
       onClick={(e) => { e.stopPropagation(); toggle() }}
       disabled={isPending}
       aria-label={isFollowing ? 'Unfollow' : 'Follow'}
-      className={`absolute left-3 top-3 flex h-7 w-7 items-center justify-center rounded-full text-white transition-colors disabled:opacity-60 ${isFollowing ? 'bg-gray-400' : 'bg-primary-500'}`}
+      className={`cursor-pointer absolute left-3 top-3 flex h-7 w-7 items-center justify-center rounded-full text-white transition-colors disabled:opacity-60 ${isFollowing ? 'bg-gray-400' : 'bg-primary-500'}`}
     >
       {isFollowing ? <UserCheck size={14} /> : <UserPlus size={14} />}
     </button>
@@ -86,7 +86,7 @@ export function ProfileFollowersModal({ userId, type, totalCount, onClose, onSel
             <h2 className="shrink-0 font-poppins text-body-l font-semibold text-heading">
               {type === 'followers' ? 'Followers' : 'Following'} <span className="text-primary-500">({totalCount.toLocaleString()})</span>
             </h2>
-            <button onClick={onClose} aria-label="Close" className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-gray-100 text-gray-500 transition-colors hover:bg-gray-50 md:hidden">
+            <button onClick={onClose} aria-label="Close" className="cursor-pointer flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-gray-100 text-gray-500 transition-colors hover:bg-gray-50 md:hidden">
               <X size={18} />
             </button>
           </div>
@@ -101,7 +101,7 @@ export function ProfileFollowersModal({ userId, type, totalCount, onClose, onSel
             />
           </div>
 
-          <button onClick={onClose} aria-label="Close" className="hidden h-9 w-9 shrink-0 items-center justify-center rounded-full border border-gray-100 text-gray-500 transition-colors hover:bg-gray-50 md:flex">
+          <button onClick={onClose} aria-label="Close" className="cursor-pointer hidden h-9 w-9 shrink-0 items-center justify-center rounded-full border border-gray-100 text-gray-500 transition-colors hover:bg-gray-50 md:flex">
             <X size={18} />
           </button>
         </div>
@@ -123,7 +123,7 @@ export function ProfileFollowersModal({ userId, type, totalCount, onClose, onSel
                 <button
                   key={person.id}
                   onClick={() => { onSelectUser(person.id); onClose() }}
-                  className="group relative flex flex-col overflow-hidden rounded-2xl border border-gray-50 text-left transition-shadow hover:shadow-md"
+                  className="cursor-pointer group relative flex flex-col overflow-hidden rounded-2xl border border-gray-50 text-left transition-shadow hover:shadow-md"
                 >
                   <FollowToggleBadge userId={person.id} />
                   <div className="flex flex-col items-center gap-3 px-4 py-6">
@@ -142,7 +142,7 @@ export function ProfileFollowersModal({ userId, type, totalCount, onClose, onSel
 
           {!isLoading && data?.has_next && !query && (
             <div className="flex justify-center pt-6">
-              <button onClick={() => setPage((p) => p + 1)} className="rounded-full border border-primary-500 px-6 py-2 font-poppins text-body-s font-medium text-primary-500 hover:bg-primary-50">
+              <button onClick={() => setPage((p) => p + 1)} className="cursor-pointer rounded-full border border-primary-500 px-6 py-2 font-poppins text-body-s font-medium text-primary-500 hover:bg-primary-50">
                 Load more
               </button>
             </div>

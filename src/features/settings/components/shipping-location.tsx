@@ -18,24 +18,35 @@ import type { ShippingAddress, ShippingAddressInput } from '@/services/shipping-
 import { COUNTRIES } from '@/features/checkout/data/countries'
 
 // ── 1. Primary Location ─────────────────────────────────────────────────────
-// Same underlying field as Account Details' Location (profiles.location) —
-// shown again here since it's also relevant to shipping/compliance context,
-// a common pattern in settings UIs (e.g. showing "region" in more than one
-// place). Saving here updates the same field either page was opened from.
+// Same underlying fields as Account Details' Country/State/City
+// (profiles.country/state/city) — shown again here since it's also
+// relevant to shipping/compliance context, a common pattern in settings
+// UIs (e.g. showing "region" in more than one place). Saving here updates
+// the same fields either page was opened from.
 
 function LocationSection() {
   const { user } = useAuthStore()
   const { mutate: save, isPending } = useUpdateProfile()
-  const [location, setLocation] = useState('')
+  const [country, setCountry] = useState('')
+  const [state, setState] = useState('')
+  const [city, setCity] = useState('')
 
   useEffect(() => {
-    if (user) setLocation(user.location ?? '')
+    if (user) {
+      setCountry(user.country ?? '')
+      setState(user.state ?? '')
+      setCity(user.city ?? '')
+    }
   }, [user])
 
   const handleSave = () => {
     if (!user) return
-    if (location.trim() === (user.location ?? '')) return
-    save({ location: location.trim() || null })
+    const payload: Partial<{ country: string | null; state: string | null; city: string | null }> = {}
+    if (country !== (user.country ?? '')) payload.country = country || null
+    if (state.trim() !== (user.state ?? '')) payload.state = state.trim() || null
+    if (city.trim() !== (user.city ?? '')) payload.city = city.trim() || null
+    if (Object.keys(payload).length === 0) return
+    save(payload)
   }
 
   return (
@@ -45,13 +56,19 @@ function LocationSection() {
         <p className='font-poppins text-body-xs text-gray-200 tracking-wide'>
           Your primary country and region on Artsony. Used for compliance and platform features — not for shipping.
         </p>
-        <div className='flex items-end gap-x-3'>
-          <Input
-            placeholder='City, Country'
-            value={location}
-            onChange={(e) => setLocation(e.target.value)}
-            className='flex-1'
-          />
+        <div className='grid grid-cols-3 gap-3'>
+          <Select value={country} onValueChange={setCountry}>
+            <SelectTrigger><SelectValue placeholder='Country' /></SelectTrigger>
+            <SelectContent>
+              {COUNTRIES.map((c) => (
+                <SelectItem key={c.code} value={c.code}>{c.name}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <Input placeholder='State / Region' value={state} onChange={(e) => setState(e.target.value)} />
+          <Input placeholder='City' value={city} onChange={(e) => setCity(e.target.value)} />
+        </div>
+        <div className='flex justify-end'>
           <Button size='md' onClick={handleSave} isLoading={isPending} loadingText='Saving…'>Save</Button>
         </div>
       </div>

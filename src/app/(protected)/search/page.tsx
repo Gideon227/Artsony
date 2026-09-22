@@ -42,10 +42,24 @@ function SearchContent() {
   const [selectedPrice, setSelectedPrice] = useState<DropdownOption | null>(null)
   const [selectedColor, setSelectedColor] = useState<DropdownOption | null>(null)
   const [selectedSize, setSelectedSize] = useState<DropdownOption | null>(null)
-  const [selectedLocation, setSelectedLocation] = useState<DropdownOption | null>(null)
-  const [locationQuery, setLocationQuery] = useState('')
+  const [selectedCountry, setSelectedCountry] = useState<DropdownOption | null>(null)
+  const [selectedState, setSelectedState] = useState<DropdownOption | null>(null)
+  const [selectedCity, setSelectedCity] = useState<DropdownOption | null>(null)
+  const [countryQuery, setCountryQuery] = useState('')
+  const [stateQuery, setStateQuery] = useState('')
+  const [cityQuery, setCityQuery] = useState('')
 
-  const { data: locations, isLoading: isLoadingLocations } = useArtworkLocations()
+  const { data: countries, isLoading: isLoadingCountries } = useArtworkLocations('country')
+  const { data: states, isLoading: isLoadingStates } = useArtworkLocations(
+    'state',
+    selectedCountry ? { country: String(selectedCountry.id) } : undefined,
+  )
+  const { data: cities, isLoading: isLoadingCities } = useArtworkLocations(
+    'city',
+    selectedCountry
+      ? { country: String(selectedCountry.id), state: selectedState ? String(selectedState.id) : undefined }
+      : undefined,
+  )
   const { data: featured, isError } = useHeroArtworks(5)
 
   useEffect(() => {
@@ -72,12 +86,19 @@ function SearchContent() {
     return () => clearInterval(timer)
   }, [slides.length])
 
-  const locationOptions: DropdownOption[] = useMemo(() => {
-    const list = (locations ?? []).map((l) => ({ id: l.label, label: l.label }))
-    if (!locationQuery.trim()) return list
-    const q = locationQuery.trim().toLowerCase()
-    return list.filter((c) => c.label.toLowerCase().includes(q))
-  }, [locations, locationQuery])
+  function toSearchableOptions(
+    raw: { label: string; artwork_count: number }[] | undefined,
+    q: string,
+  ): DropdownOption[] {
+    const list = (raw ?? []).map((l) => ({ id: l.label, label: l.label }))
+    if (!q.trim()) return list
+    const lower = q.trim().toLowerCase()
+    return list.filter((c) => c.label.toLowerCase().includes(lower))
+  }
+
+  const countryOptions = useMemo(() => toSearchableOptions(countries, countryQuery), [countries, countryQuery])
+  const stateOptions = useMemo(() => toSearchableOptions(states, stateQuery), [states, stateQuery])
+  const cityOptions = useMemo(() => toSearchableOptions(cities, cityQuery), [cities, cityQuery])
 
   const categoriesOption: DropdownOption[] = useMemo(
     () => INTERESTS.map((item) => ({ id: item.id, icon: item.image, label: item.label })),
@@ -109,8 +130,12 @@ function SearchContent() {
     setSelectedPrice(null)
     setSelectedColor(null)
     setSelectedSize(null)
-    setSelectedLocation(null)
-    setLocationQuery('')
+    setSelectedCountry(null)
+    setSelectedState(null)
+    setSelectedCity(null)
+    setCountryQuery('')
+    setStateQuery('')
+    setCityQuery('')
   }, [])
 
   const filterDropdowns: FilterDropdownConfig[] = useMemo(
@@ -148,18 +173,53 @@ function SearchContent() {
         leftIcon: '/icons/maximize.svg',
       },
       {
-        id: 'location',
-        options: locationOptions,
-        value: selectedLocation,
-        onChange: setSelectedLocation,
+        id: 'country',
+        options: countryOptions,
+        value: selectedCountry,
+        onChange: (opt: DropdownOption | null) => {
+          setSelectedCountry(opt)
+          setSelectedState(null)
+          setSelectedCity(null)
+        },
         searchable: true,
-        searchPlaceholder: 'Search location',
-        searchValue: locationQuery,
-        onSearchChange: setLocationQuery,
-        isLoading: isLoadingLocations,
-        emptyMessage: 'No matching locations',
-        placeholder: 'Location',
+        searchPlaceholder: 'Search country',
+        searchValue: countryQuery,
+        onSearchChange: setCountryQuery,
+        isLoading: isLoadingCountries,
+        emptyMessage: 'No matching countries',
+        placeholder: 'Country',
         leftIcon: '/icons/map-point.svg',
+      },
+      {
+        id: 'state',
+        options: stateOptions,
+        value: selectedState,
+        onChange: (opt: DropdownOption | null) => {
+          setSelectedState(opt)
+          setSelectedCity(null)
+        },
+        disabled: !selectedCountry,
+        searchable: true,
+        searchPlaceholder: 'Search state',
+        searchValue: stateQuery,
+        onSearchChange: setStateQuery,
+        isLoading: isLoadingStates,
+        emptyMessage: selectedCountry ? 'No matching states' : 'Select a country first',
+        placeholder: 'State',
+      },
+      {
+        id: 'city',
+        options: cityOptions,
+        value: selectedCity,
+        onChange: setSelectedCity,
+        disabled: !selectedCountry,
+        searchable: true,
+        searchPlaceholder: 'Search city',
+        searchValue: cityQuery,
+        onSearchChange: setCityQuery,
+        isLoading: isLoadingCities,
+        emptyMessage: selectedCountry ? 'No matching cities' : 'Select a country first',
+        placeholder: 'City',
       },
     ],
     [
@@ -168,10 +228,18 @@ function SearchContent() {
       selectedPrice,
       selectedColor,
       selectedSize,
-      selectedLocation,
-      locationOptions,
-      locationQuery,
-      isLoadingLocations,
+      selectedCountry,
+      selectedState,
+      selectedCity,
+      countryOptions,
+      stateOptions,
+      cityOptions,
+      countryQuery,
+      stateQuery,
+      cityQuery,
+      isLoadingCountries,
+      isLoadingStates,
+      isLoadingCities,
     ]
   )
 
@@ -187,10 +255,12 @@ function SearchContent() {
       search: urlQuery || undefined,
       categories: selectedCategory ? [String(selectedCategory.id)] : undefined,
       size_label: selectedSize ? String(selectedSize.id) : undefined,
-      location: selectedLocation ? String(selectedLocation.id) : undefined,
+      country: selectedCountry ? String(selectedCountry.id) : undefined,
+      state: selectedState ? String(selectedState.id) : undefined,
+      city: selectedCity ? String(selectedCity.id) : undefined,
       ...(selectedPrice ? parsePriceRange(String(selectedPrice.id)) : {}),
     }),
-    [urlQuery, selectedCategory, selectedPrice, selectedSize, selectedLocation]
+    [urlQuery, selectedCategory, selectedPrice, selectedSize, selectedCountry, selectedState, selectedCity]
   )
 
   const { data, isLoading, isFetchingNextPage, hasNextPage, fetchNextPage } =

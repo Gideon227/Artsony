@@ -39,7 +39,7 @@ export function ProfileTabs({ tabs, defaultTab, className }: ProfileTabsProps) {
                   key={tab.id}
                   onClick={() => setActiveTabId(tab.id)}
                   leftIcon={tab.icon}
-                  className={`shrink-0 whitespace-nowrap flex-1 hover:bg-action-hover text-body h-12 ${isActive && 'bg-primary-50 border-primary-500'}`}
+                  className={`shrink-0 whitespace-nowrap flex-1 text-body h-12 ${isActive && 'bg-primary-50 border-primary-500'}`}
                   variant='outline'
                 >
                   {tab.label}

@@ -41,6 +41,10 @@ interface ArtCardProps {
   variant?: 'standard' | 'discover' | 'bland' | 'shop'
   onAction?: (action: string) => void
   alternate?: boolean;
+  /** Fills the parent's box (width + height) instead of the default fixed-cap/aspect-square sizing — used by masonry-style grids that control the card's dimensions externally. */
+  fillContainer?: boolean;
+  /** Discover variant's "Sale" pill — opt-in per usage rather than implied by variant. */
+  showSaleBadge?: boolean;
 }
 
 // Hover Profile Component (Functional layout, no container styling overrides needed)
@@ -146,7 +150,9 @@ export function ArtCard({
   showCat = true,
   variant = 'standard',
   onAction, 
-  alternate= false
+  alternate= false,
+  fillContainer = false,
+  showSaleBadge = false,
 }: ArtCardProps) {
   // SAFETY CHECKS ADDED HERE
   const primaryArtist = artist?.[0]
@@ -168,17 +174,21 @@ export function ArtCard({
     }, 150)
   }
 
+  const wrapperSizing = fillContainer
+    ? 'h-full w-full'
+    : 'max-h-[376px] max-w-[600px] w-full'
+
   const CardWrapper = onCardClick
   ? ({ children }: { children: React.ReactNode }) => (
       <div
         onClick={onCardClick}
-        className="relative max-h-[376px] max-w-[600px] w-full gap-y-4 cursor-pointer block"
+        className={cn('relative gap-y-4 cursor-pointer block', wrapperSizing)}
       >
         {children}
       </div>
     )
   : ({ children }: { children: React.ReactNode }) => (
-      <Link href={cardLink ?? '/404'} className="relative max-h-[376px] max-w-[600px] w-full gap-y-4 cursor-pointer block">
+      <Link href={cardLink ?? '/404'} className={cn('relative gap-y-4 cursor-pointer block', wrapperSizing)}>
         {children}
       </Link>
     )
@@ -186,7 +196,10 @@ export function ArtCard({
   return (
     <CardWrapper>
       {/* --- Image Container --- */}
-      <div className="relative group aspect-square overflow-hidden rounded-2xl bg-neutral-100">
+      <div className={cn(
+        'relative group overflow-hidden rounded-2xl bg-neutral-100',
+        fillContainer ? 'h-full w-full' : 'aspect-square'
+      )}>
         <Image
           src={image}
           alt={title}
@@ -207,7 +220,7 @@ export function ArtCard({
         </div>
 
         {/* Sale Badge (For Discover Variant) */}
-        {variant === 'discover' && (
+        {variant === 'discover' && showSaleBadge && (
           <button className="absolute left-6 top-6 rounded-full border border-white px-4 py-2 text-[14px] font-medium text-white backdrop-blur-md">
             Sale
           </button>

@@ -1,6 +1,6 @@
 'use client'
 
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { Spinner } from '@/components'
 import Footer from '@/components/layout/footer'
 import { Navbar } from '@/components/layout/navbar'
@@ -15,7 +15,7 @@ import FilterComponent, { FilterDropdownConfig } from '@/features/home/component
 import { DropdownOption } from '@/components/ui/dropdown'
 import { INTERESTS } from '@/features/onboarding/data/interests'
 import { COLOR_SWATCHES, findClosestSwatch } from '@/features/home/data/color-swatches'
-import { useFeed, useArtworkLocations } from '@/hooks/use-artwork'
+import { useFeed } from '@/hooks/use-artwork'
 import type { FeedSort } from '@/features/home/types'
 import ArtworkViewOverlay from '@/features/artwork/components/home/artwork-view-overlay'
 import type { Artwork } from '@/types/artwork'
@@ -37,26 +37,53 @@ const HomePage = () => {
 
   const [activeTab, setActiveTab] = useState<FeedSort>('for_you')
   const [selectedCategories, setSelectedCategories] = useState<DropdownOption[]>([])
-  const [selectedLocation, setSelectedLocation] = useState<DropdownOption | null>(null)
+  const [selectedCountry, setSelectedCountry] = useState<DropdownOption | null>(null)
   const [selectedColor, setSelectedColor] = useState<DropdownOption | null>(null)
   const [hexQuery, setHexQuery] = useState('')
-  const [locationQuery, setLocationQuery] = useState('')
+  const [countryQuery, setCountryQuery] = useState('')
   const [isMobileFiltersOpen, setIsMobileFiltersOpen] = useState(false)
   const [activeArtwork, setActiveArtwork] = useState<Artwork | null>(null)
 
-  const { data: locations, isLoading: isLoadingLocations } = useArtworkLocations()
+  // Explicit state for countries fetched from third-party API
+  const [countries, setCountries] = useState<DropdownOption[]>([])
+  const [isLoadingCountries, setIsLoadingCountries] = useState(false)
 
-  const locationOptions: DropdownOption[] = useMemo(() => {
-    const list = (locations ?? []).map((l) => ({ id: l.label, label: l.label }))
-    if (!locationQuery.trim()) return list
-    const q = locationQuery.trim().toLowerCase()
-    return list.filter((c) => c.label.toLowerCase().includes(q))
-  }, [locations, locationQuery])
+  useEffect(() => {
+    const fetchCountries = async () => {
+      setIsLoadingCountries(true)
+      try {
+        const response = await fetch('https://countriesnow.space/api/v0.1/countries')
+        if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`)
+        const resData = await response.json()
+            
+        if (!resData.error && Array.isArray(resData.data)) {
+          const formattedCountries: DropdownOption[] = resData.data.map((item: { country: string }) => ({
+            id: item.country, 
+            label: item.country,
+          }))
+          setCountries(formattedCountries)
+        }
+      } catch (error) {
+        console.error('Failed to load countries selection table:', error)
+      } finally {
+        setIsLoadingCountries(false)
+      }
+    }
+
+    fetchCountries()
+  }, [])
+
+  // Filter fetched countries based on user input query
+  const countryOptions = useMemo(() => {
+    if (!countryQuery.trim()) return countries
+    const q = countryQuery.trim().toLowerCase()
+    return countries.filter((c) => c.label.toLowerCase().includes(q))
+  }, [countries, countryQuery])
 
   const feedQuery = useFeed({
     sort: activeTab,
     categories: selectedCategories.map((c) => String(c.id)),
-    ...(selectedLocation ? { location: selectedLocation.label } : {}),
+    ...(selectedCountry ? { country: String(selectedCountry.id) } : {})
   })
 
   const allArtworks = feedQuery.data?.pages.flatMap((p) => p.data) ?? []
@@ -79,9 +106,9 @@ const HomePage = () => {
 
   const handleClearFilters = () => {
     setSelectedCategories([])
-    setSelectedLocation(null)
+    setSelectedCountry(null)
     setSelectedColor(null)
-    setLocationQuery('')
+    setCountryQuery('')
     setHexQuery('')
   }
 
@@ -117,19 +144,21 @@ const HomePage = () => {
     },
     {
       id: 'location',
-      options: locationOptions,
-      value: selectedLocation,
-      onChange: setSelectedLocation,
+      options: countryOptions,
+      value: selectedCountry,
+      onChange: (opt) => {
+        setSelectedCountry(opt)
+      },
       indicator: 'checkmark',
       searchable: true,
-      searchPlaceholder: 'Search location',
-      searchValue: locationQuery,
-      onSearchChange: setLocationQuery,
-      isLoading: isLoadingLocations,
-      emptyMessage: 'No matching locations',
+      searchPlaceholder: 'Search country',
+      searchValue: countryQuery,
+      onSearchChange: setCountryQuery,
+      isLoading: isLoadingCountries,
+      emptyMessage: 'No matching countries',
       placeholder: 'Location',
       leftIcon: '/icons/map-point.svg',
-    },
+    }
   ]
 
   if (!isHydrated) {
@@ -141,7 +170,7 @@ const HomePage = () => {
   }
 
   return (
-    <div className="min-h-screen bg-white max-lg:mb-20">
+    <div className="min-h-screen bg-white">
       <Navbar />
       <HeroSection />
       <GalleryPulseSection />

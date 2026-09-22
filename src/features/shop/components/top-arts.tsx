@@ -7,24 +7,54 @@ import ArtGrid from './art-grid';
 import { useAuthStore } from '@/store';
 import ArtworkViewOverlay from '@/features/artwork/components/shop/artwork-view-overlay'
 
+// Matches the Figma dropdown exactly: "For You" is the default/current value,
+// the rest are the selectable list. The first 5 are feed *modes* (mutually
+// exclusive ranking/selection algorithms); the last 2 are a format filter,
+// applied on top of whichever mode is active. Kept as one flat single-select
+// list to match the design — see FEED_MODE_BY_OPTION / FORMAT_BY_OPTION below
+// for how each id actually gets fetched.
 const searchOptions: DropdownOption[] = [
-    { 
-        id: 'for-you', 
-        label: 'For You', 
-    },
-    { 
-        id: 'everyone', 
-        label: 'Everyone', 
-    },
+    { id: 'for-you', label: 'For You' },
+    { id: 'trending', label: 'Trending' },
+    { id: 'new-arrivals', label: 'New Arrivals' },
+    { id: 'most-popular', label: 'Most Popular' },
+    { id: 'newbies', label: 'Newbies' },
+    { id: 'digital-only', label: 'Digital Only' },
+    { id: 'physical-only', label: 'Physical Only' },
 ]
+
+// The backend's getFeed() already implements for_you/trending/new/newbies as
+// real distinct queries (see artwork.service.ts) — "Trending" here maps to
+// the genuine recency-decayed hot-right-now ranking (getTrendingArtworks),
+// not getFeed's mode:'trending' (which is really just an all-time
+// like_count sort — that's what "Most Popular" below uses instead).
+// ASSUMPTION flagged for Shallom: this Trending-vs-Most-Popular split is my
+// read of the two distinct ranking implementations already in the codebase,
+// not something stated — flag if "Trending" should mean something else.
+const FEED_MODE_BY_OPTION: Record<string, 'for_you' | 'trending' | 'new' | 'newbies' | null> = {
+    'for-you': 'for_you',
+    'trending': null, // handled via useTrendingArtworks-equivalent call below, not getFeed
+    'new-arrivals': 'new',
+    'most-popular': 'trending', // getFeed's mode:'trending' = sort by all-time like_count
+    'newbies': 'newbies',
+    'digital-only': null,
+    'physical-only': null,
+}
+
+const FORMAT_BY_OPTION: Record<string, 'DIGITAL' | 'PHYSICAL' | undefined> = {
+    'digital-only': 'DIGITAL',
+    'physical-only': 'PHYSICAL',
+}
 
 const TopArt = () => {
     const { user } = useAuthStore()
-    const [selected, setSelected] = useState<DropdownOption | undefined>();
+    const [selected, setSelected] = useState<DropdownOption>(searchOptions[0]!)
     const [artworks, setArtworks] = useState<Artwork[]>([])
     const [isLoading, setIsLoading] = useState<boolean>(true)
     const [error, setError] = useState<string | null>(null)
     const [activeIndex, setActiveIndex] = useState<number | null>(null)
+
+    // console.log('Top Art Artworks: ', artworks, isLoading, error)
 
     useEffect(() => {
         const fetchMarketplaceArtworks = async () => {
@@ -32,11 +62,21 @@ const TopArt = () => {
                 setIsLoading(true)
                 setError(null)
 
-                const response = await artworkService.list({
-                    listing_type: 'MARKETPLACE',
-                    status: 'PUBLISHED',
-                    visibility: 'PUBLIC',
-                    limit: 12
+                const optionId = String(selected.id)
+                const format = FORMAT_BY_OPTION[optionId]
+
+                if (optionId === 'trending') {
+                    const trendingResponse = await artworkService.getTrending(12, 7, 'MARKETPLACE')
+                    setArtworks(trendingResponse.data)
+                    return
+                }
+
+                const mode = FEED_MODE_BY_OPTION[optionId] ?? 'new'
+                const response = await artworkService.getFeed({
+                    sort: mode,
+                    perPage: 12,
+                    listingType: 'MARKETPLACE',
+                    format,
                 })
 
                 if (response.success) {
@@ -52,7 +92,7 @@ const TopArt = () => {
         }
 
         fetchMarketplaceArtworks()
-    }, [])
+    }, [selected, user?.id])
 
     const activeArtwork = activeIndex !== null ? artworks[activeIndex] ?? null : null
 
@@ -65,8 +105,8 @@ const TopArt = () => {
     }
 
     return (
-        <div className='bg-white py-12 px-8 gap-y-6 flex flex-col'>
-            <div className='flex justify-between items-center w-full'>
+        <div className='bg-white py-12 gap-y-6 flex flex-col max-w-[1440px] mx-auto'>
+            <div className='flex px-8 justify-between items-center w-full'>
                 <h2 className='font-raleway font-semibold text-primary-500 text-h4 leading-10 tracking-wide'>Top Art</h2>
                 <Dropdown
                     options={searchOptions}
@@ -77,12 +117,26 @@ const TopArt = () => {
                 />
             </div>
 
-            <ArtGrid 
-                artworks={artworks}
-                artVariant='shop'
-                num={0}
-                onCardClick={(_, index) => setActiveIndex(index)}
-            />
+            {error && !isLoading && (
+                <div className="text-center py-10 text-red-500 font-poppins">
+                    {error}
+                </div>
+            )}
+
+            {!isLoading && !error && artworks.length === 0 && (
+                <div className="text-center py-10 text-gray-500 font-poppins min-h-[200px]">
+                    No marketplace artworks available right now.
+                </div>
+            )}
+
+            {(!isLoading || artworks.length > 0) && !error && (
+                <ArtGrid
+                    artworks={artworks}
+                    artVariant='shop'
+                    num={0}
+                    onCardClick={(_, index) => setActiveIndex(index)}
+                />
+            )}
 
             {activeArtwork && (
                 <ArtworkViewOverlay

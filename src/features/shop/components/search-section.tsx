@@ -1,19 +1,13 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { SearchInput } from '@/components/ui/search-input'
 import { Button } from '@/components'
 import FilterComponent, { FilterDropdownConfig } from '@/features/home/components/filter'
 import { DropdownOption } from '@/components/ui/dropdown'
 import { PriceRangeSlider } from '@/components/ui/price-range-slider'
 import { INTERESTS } from '@/features/onboarding/data/interests'
-import { useCountries } from '@/hooks/use-countries'
-
-// ─── Filter state (UI-facing) ─────────────────────────────────────────────────
-// Kept separate from ArtworkFilters (the API shape) — the shop page converts
-// this to ArtworkFilters when building the query. Color has no backend
-// support yet (no color/tag column on artworks), so it's tracked here for the
-// UI only and intentionally left out of that conversion.
+import { useArtworkLocations } from '@/hooks/use-artwork'
 
 export type ShopFilterState = {
   category: string | null
@@ -21,7 +15,9 @@ export type ShopFilterState = {
   maxPrice: number | null
   color: string | null
   format: 'PHYSICAL' | 'DIGITAL' | null
-  location: string | null
+  country: string | null
+  state: string | null
+  city: string | null
 }
 
 export const EMPTY_SHOP_FILTERS: ShopFilterState = {
@@ -30,7 +26,9 @@ export const EMPTY_SHOP_FILTERS: ShopFilterState = {
   maxPrice: null,
   color: null,
   format: null,
-  location: null,
+  country: null,
+  state: null,
+  city: null,
 }
 
 const CATEGORY_OPTIONS: DropdownOption[] = INTERESTS.map((i) => ({ id: i.id, label: i.label }))
@@ -65,29 +63,98 @@ interface SearchSectionProps {
 
 export function SearchSection({ query, onSearch, filters, onFilterChange, onClearFilters }: SearchSectionProps) {
   const [draftQuery, setDraftQuery] = useState(query)
-  const { countries } = useCountries()
+  const [countryQuery, setCountryQuery] = useState('')
+  const [stateQuery, setStateQuery] = useState('')
+  const [cityQuery, setCityQuery] = useState('')
 
-  // Keep the input in sync when the URL's ?q= changes from elsewhere
-  // (e.g. navbar search, browser back/forward, "Back to Shop").
+  const [countries, setCountries] = useState<DropdownOption[]>([])
+  const [isLoadingCountries, setIsLoadingCountries] = useState(false)
+
+  useEffect(() => {
+    const fetchCountries = async () => {
+      setIsLoadingCountries(true)
+      try {
+        const response = await fetch('https://countriesnow.space/api/v0.1/countries')
+        if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`)
+        const resData = await response.json()
+            
+        if (!resData.error && Array.isArray(resData.data)) {
+          const formattedCountries: DropdownOption[] = resData.data.map((item: { country: string }) => ({
+            id: item.country, 
+            label: item.country,
+          }))
+          setCountries(formattedCountries)
+        }
+      } catch (error) {
+        console.error('Failed to load countries selection table:', error)
+      } finally {
+        setIsLoadingCountries(false)
+      }
+    }
+
+    fetchCountries()
+  }, [])
+
+  const countryOptions = useMemo(() => {
+    if (!countryQuery.trim()) return countries
+    const q = countryQuery.trim().toLowerCase()
+    return countries.filter((c) => c.label.toLowerCase().includes(q))
+  }, [countries, countryQuery])
+
+  // const { data: countries, isLoading: isLoadingCountries } = useArtworkLocations('country')
+  // const { data: states, isLoading: isLoadingStates } = useArtworkLocations(
+  //   'state',
+  //   filters.country ? { country: filters.country } : undefined,
+  // )
+  // const { data: cities, isLoading: isLoadingCities } = useArtworkLocations(
+  //   'city',
+  //   filters.country ? { country: filters.country, state: filters.state ?? undefined } : undefined,
+  // )
+
+
   useEffect(() => {
     setDraftQuery(query)
   }, [query])
 
-  const locationOptions: DropdownOption[] = countries.map((c) => ({ id: c.code, label: c.name }))
+  function toSearchableOptions(
+    raw: { label: string; artwork_count: number }[] | undefined,
+    q: string,
+  ): DropdownOption[] {
+    const list = (raw ?? []).map((l) => ({ id: l.label, label: l.label }))
+    if (!q.trim()) return list
+    const lower = q.trim().toLowerCase()
+    return list.filter((o) => o.label.toLowerCase().includes(lower))
+  }
+
+  // const countryOptions = useMemo(() => toSearchableOptions(countries, countryQuery), [countries, countryQuery])
+  // const stateOptions = useMemo(() => toSearchableOptions(states, stateQuery), [states, stateQuery])
+  // const cityOptions = useMemo(() => toSearchableOptions(cities, cityQuery), [cities, cityQuery])
 
   const priceLabel =
     filters.minPrice !== null || filters.maxPrice !== null
       ? `$${filters.minPrice ?? PRICE_MIN} - $${filters.maxPrice ?? PRICE_MAX}`
       : undefined
 
+  const selectedCategories = useMemo(() => {
+    if (!filters.category) return []
+    const selectedIds = filters.category.split(',')
+    return CATEGORY_OPTIONS.filter((o) => selectedIds.includes(String(o.id)))
+  }, [filters.category])
+
   const dropdowns: FilterDropdownConfig[] = [
     {
       id: 'categories',
       leftIcon: '/icons/widget.svg',
       placeholder: 'Categories',
+      indicator: 'checkmark',
+      maxSelected: 5,
+      multiple: true,
       options: CATEGORY_OPTIONS,
-      value: filters.category ? CATEGORY_OPTIONS.find((o) => o.id === filters.category) : undefined,
-      onChange: (option) => onFilterChange({ category: option ? String(option.id) : null }),
+      values: selectedCategories,
+      onChangeMultiple: (options) =>
+        onFilterChange({
+          category: options.length > 0 ? options.map((o) => o.id).join(',') : null,
+        }),
     },
     {
       id: 'price',
@@ -124,18 +191,26 @@ export function SearchSection({ query, onSearch, filters, onFilterChange, onClea
     },
     {
       id: 'location',
-      leftIcon: '/icons/map-point.svg',
+      options: countryOptions,
+      value: filters.country ? countryOptions.find((o) => String(o.id) === String(filters.country)) : undefined,
+      onChange: (option) =>
+        onFilterChange({ country: option ? String(option.id) : null, state: null, city: null }),
+      searchable: true,
+      indicator: 'checkmark',
+      searchPlaceholder: 'Search country',
+      searchValue: countryQuery,
+      onSearchChange: setCountryQuery,
+      isLoading: isLoadingCountries,
+      emptyMessage: 'No matching countries',
       placeholder: 'Location',
-      options: locationOptions,
-      value: filters.location ? locationOptions.find((o) => o.id === filters.location) : undefined,
-      onChange: (option) => onFilterChange({ location: option ? String(option.id) : null }),
-    },
+      leftIcon: '/icons/map-point.svg',
+    }
   ]
 
   return (
-    <div className="max-w-[1440px] mx-auto px-4 md:px-8 bg-white">
-      <div className="flex justify-between items-center gap-4 pt-8 pb-4">
-        <div className='max-w-[448px] w-full h-12'>
+    <div className="max-w-[1440px] mx-auto px-4 md:px-2 bg-white">
+      <div className="flex justify-between items-center gap-4 pt-12 pb-4 px-6">
+        <div className="max-w-md w-full h-12">
           <SearchInput
             value={draftQuery}
             onChange={setDraftQuery}
@@ -143,7 +218,10 @@ export function SearchSection({ query, onSearch, filters, onFilterChange, onClea
             placeholder="Find your next art obsession"
             leftIconPath={draftQuery ? '/icons/magnifier-red.svg' : 'home/magnifier.svg'}
             rightIconPath={draftQuery ? '/icons/cancel-red.svg' : undefined}
-            onRightIconClick={() => { setDraftQuery(''); onSearch('') }}
+            onRightIconClick={() => {
+              setDraftQuery('')
+              onSearch('')
+            }}
             className={query ? 'border-primary-500' : undefined}
           />
         </div>

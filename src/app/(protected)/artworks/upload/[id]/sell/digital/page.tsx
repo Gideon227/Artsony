@@ -75,6 +75,7 @@ export default function DigitalSellWizardPage() {
             ...(formFields.currency ? { currency: String(formFields.currency) } : {}),
             ...(formFields.max_purchase_quantity ? { max_purchase_quantity: Number(formFields.max_purchase_quantity) } : {}),
             ...(formFields.physical_details ? { physical_details: formFields.physical_details } : {}),
+            ...(formFields.license_type ? { license_type: formFields.license_type } : {}),
         }
     }
 
