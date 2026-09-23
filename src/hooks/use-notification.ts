@@ -30,7 +30,7 @@ export function useNotifications(filter: FilterType = 'all') {
 export function useUnreadCount() {
   return useQuery({
     queryKey: [...QUERY_KEYS.notifications, 'unread-count'],
-    queryFn: () => notificationService.getUnreadCount().then((r) => r.data.count),
+    queryFn: () => notificationService.getUnreadCount().then((r) => r.data.unread_count),
     staleTime: STALE_TIMES.fast,
     refetchInterval: 30_000, // poll every 30s
   })

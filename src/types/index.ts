@@ -130,20 +130,23 @@ export type Comment = Timestamp & {
   parentId: Nullable<ID>
 }
 
-export type Notification = Timestamp & {
+export type NotificationActor = {
+  id: string
+  username: string
+  display_name: string | null
+  avatar_url: string | null
+}
+
+export type Notification = {
   id: ID
-  type: 'like' | 'comment' | 'follow' | 'sale' | 'reply' | 'message'
-  actor_id: string
-  data: {
-    preview: string
-    conversation_id: ID
-  }
+  type: 'like' | 'comment' | 'reply' | 'follow' | 'sale' | 'order_update' | 'system' | 'message' | 'broadcast' | 'mention' | 'review'
+  entity_id: string | null
+  entity_type: 'artwork' | 'artwork_comment' | 'user' | 'order' | 'message' | string | null
+  actor_id: string | null
+  actor: NotificationActor | null
+  data: Record<string, unknown>
   is_read: boolean
-  actor: Pick<User, 'id' | 'username' | 'displayName' | 'avatarUrl'>
-  resourceId: ID
-  resourceType: 'artwork' | 'comment' | 'user'
-  message: string
-  created_at: Date
+  created_at: string
 }
 
 export type CartItem = {

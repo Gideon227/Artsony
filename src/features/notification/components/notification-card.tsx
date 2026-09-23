@@ -1,11 +1,8 @@
 'use client'
 
 import Image from 'next/image'
-import Link from 'next/link'
-import { X } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { cn } from '@/utils'
-import { Avatar } from '@/components/ui/avatar'
 import { NotificationIcon } from './notification-icon'
 import { NOTIFICATION_LABELS, relativeTime } from '@/utils/index'
 import { ROUTES } from '@/constants'
@@ -26,14 +23,18 @@ export function NotificationCard({
   onDelete,
   isDeleting,
 }: NotificationCardProps) {
-  const href = resolveHref(n)
   const router = useRouter()
+  const href = resolveHref(n)
 
   const handleClick = () => {
     if (!n.is_read) onRead(n.id)
+    if (href) router.push(href)
   }
 
-  console.log("notifs data: ", n)
+  const actorName = n.actor?.display_name || n.actor?.username || null
+  const isMessage = n.type === 'message'
+  const preview = typeof n.data?.['preview'] === 'string' ? n.data['preview'] as string : null
+  const conversationId = typeof n.data?.['conversation_id'] === 'string' ? n.data['conversation_id'] as string : null
 
   return (
     <AnimatePresence>
@@ -46,48 +47,60 @@ export function NotificationCard({
           transition={{ duration: 0.25, ease: [0.4, 0, 0.2, 1] }}
           onClick={handleClick}
           className={cn(
-            'group flex items-start gap-4 p-6 border',
+            'group flex items-start gap-4 p-6 border cursor-pointer',
             'transition-colors duration-150',
             n.is_read
               ? 'bg-white border-neutral-100 hover:bg-neutral-50'
               : 'bg-primary-50 border-primary-100 hover:bg-primary-50/80'
           )}
         >
-          <Image src='/icons/logo-var.svg' width={56} height={56} className='w-12 h-12 lg:w-auto lg:h-auto ' alt='icon'/>
-
-          <div className='flex flex-col w-full gap-y-2'>
-            <p className='font-poppins text-body-s text-heading'>{NOTIFICATION_LABELS[n.type]}</p>
-
-            {n.type === 'message' && <p className='font-poppins font-light text-body-xs text-body'>{n.data.preview}</p>}
-            
-            <div className='border border-gray-50 bg-white flex gap-4 py-2 pl-2 pr-4 rounded-m w-full'>
-              <Image src={n.actor.avatarUrl || '/images/image-avatar.svg'} width={72} height={72} className='object-cover rounded-m' alt='sender avatar' />
-              
-              <div className='h-full flex flex-col gap-2'>
-                <p className='font-poppins font-light text-body-xxs'>{n.data.preview}</p>
-                <Button variant='outline' size='md' onClick={() => router.push(`/messages/${n.data.conversation_id}`)}>Send a Message</Button>
-              </div>
-            </div>
-
-            <p className='font-poppins text-text-alt-grey text-body-xxs'>{String(n.created_at)}</p>
+          <div className="relative shrink-0">
+            <Image
+              src={n.actor?.avatar_url || '/images/image-avatar.svg'}
+              width={48}
+              height={48}
+              className="w-12 h-12 rounded-full object-cover"
+              alt={actorName ?? 'Artsony'}
+            />
+            <NotificationIcon type={n.type} className="absolute -bottom-1 -right-1" />
           </div>
 
+          <div className='flex flex-col w-full gap-y-2'>
+            <p className='font-poppins text-body-s text-heading'>
+              {actorName && <span className="font-medium">{actorName} </span>}
+              {NOTIFICATION_LABELS[n.type]}
+            </p>
 
-          
-
-          {/* ── Delete button ────────────────────────────────────────────── */}
-          {/* <button
-            onClick={() => onDelete(n.id)}
-            aria-label="Dismiss notification"
-            className={cn(
-              'shrink-0 w-7 h-7 flex items-center justify-center rounded-full',
-              'text-neutral-400 hover:text-neutral-600 hover:bg-neutral-100',
-              'opacity-0 group-hover:opacity-100 transition-all duration-150',
-              'focus-visible:opacity-100 focus-visible:outline-2 focus-visible:outline-primary-500'
+            {isMessage && preview && (
+              <p className='font-poppins font-light text-body-xs text-body'>{preview}</p>
             )}
-          >
-            <X className="w-3.5 h-3.5" />
-          </button> */}
+
+            {isMessage && conversationId && (
+              <div className='border border-gray-50 bg-white flex gap-4 py-2 pl-2 pr-4 rounded-m w-full'>
+                <Image
+                  src={n.actor?.avatar_url || '/images/image-avatar.svg'}
+                  width={72}
+                  height={72}
+                  className='object-cover rounded-m'
+                  alt='sender avatar'
+                />
+                <div className='h-full flex flex-col gap-2 justify-center'>
+                  <Button
+                    variant='outline'
+                    size='md'
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      router.push(`/messages/${conversationId}`)
+                    }}
+                  >
+                    Send a Message
+                  </Button>
+                </div>
+              </div>
+            )}
+
+            <p className='font-poppins text-text-alt-grey text-body-xxs'>{relativeTime(n.created_at)}</p>
+          </div>
         </motion.div>
       )}
     </AnimatePresence>
@@ -95,10 +108,13 @@ export function NotificationCard({
 }
 
 // ─── Resolve destination href for each notification type ─────────────────────
-
-function resolveHref(n: Notification): string {
-  if (n.resourceType === 'artwork') return ROUTES.artwork(n.resourceId)
-  if (n.resourceType === 'user') return ROUTES.profile(n.actor_id)
-  if (n.resourceType === 'comment') return ROUTES.artwork(n.resourceId)
-  return ROUTES.notifications
+//
+// Only 'user' (follow) notifications resolve to a real page right now —
+// artworks are viewed through ArtworkViewOverlay, opened from a page's own
+// client state (see home/shop/profile pages), not a standalone route, so
+// there's no URL to send a comment/like notification to yet. Falls back to
+// no navigation (still marks as read) rather than linking somewhere broken.
+function resolveHref(n: Notification): string | null {
+  if (n.entity_type === 'user' && n.actor_id) return ROUTES.profile(n.actor_id)
+  return null
 }

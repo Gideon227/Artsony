@@ -81,7 +81,12 @@ export const NOTIFICATION_LABELS: Record<Notification['type'], string> = {
   reply: 'replied to your comment',
   follow: 'started following you',
   sale: 'purchased your artwork',
-  message: 'New Message'
+  message: 'New Message',
+  order_update: 'updated your order',
+  system: 'Artsony',
+  broadcast: 'Artsony',
+  mention: 'mentioned you',
+  review: 'left a review',
 }
 
 // ─── Icon SVG paths for each type (used in NotificationIcon component) ────────
@@ -109,7 +114,7 @@ export function groupNotifications(notifications: Notification[]): NotificationG
   const earlier: Notification[]  = []
 
   for (const n of notifications) {
-    const age = now - new Date(n.createdAt).getTime()
+    const age = now - new Date(n.created_at).getTime()
     if (age < DAY)       today.push(n)
     else if (age < WEEK) week.push(n)
     else                 earlier.push(n)

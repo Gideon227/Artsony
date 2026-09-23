@@ -1,4 +1,4 @@
-import { Heart, MessageCircle, UserPlus, ShoppingBag, Reply } from 'lucide-react'
+import { Heart, MessageCircle, UserPlus, ShoppingBag, Reply, Package, Bell, AtSign, Star } from 'lucide-react'
 import { cn } from '@/utils'
 import type { Notification } from '@/types'
 
@@ -9,6 +9,11 @@ const ICON_MAP: Record<Notification['type'], React.ElementType> = {
   reply: Reply,
   follow: UserPlus,
   sale: ShoppingBag,
+  order_update: Package,
+  system: Bell,
+  broadcast: Bell,
+  mention: AtSign,
+  review: Star,
 }
 
 type NotificationIconProps = {
@@ -18,7 +23,8 @@ type NotificationIconProps = {
 
 /** Small orange circle with a white icon — shown bottom-right of avatar. */
 export function NotificationIcon({ type, className }: NotificationIconProps) {
-  const Icon = ICON_MAP[type]
+  // Fall back to Bell if the type is undefined or unmapped
+  const Icon = ICON_MAP[type] ?? Bell
 
   return (
     <span

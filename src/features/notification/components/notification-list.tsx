@@ -5,11 +5,9 @@ import { Loader2 } from 'lucide-react'
 import { motion } from 'framer-motion'
 import { NotificationCard } from './notification-card'
 import { NotificationSkeleton } from './notification-skeleton'
-import { groupNotifications } from '@/utils/index'
 import type { Notification } from '@/types'
 
 type NotificationListProps = {
-  // 1. Fixed the type to match the flat array from the parent
   notifications: Notification[] 
   isLoading: boolean
   isFetchingNextPage: boolean
@@ -55,9 +53,8 @@ export function NotificationList({
   
   return (
     <div className="flex flex-col gap-2">
-      {/* 2. Map directly over the flat array instead of notifications[0]?.items */}
       {notifications.map((notif, i) => (
-        <section key={notif.id} className='flex flex-col gap-2'>
+        <section key={notif.id ? `${notif.id}-${i}` : i} className='flex flex-col gap-2'>
           <motion.div
             initial={{ opacity: 0, y: 8 }}
             animate={{ opacity: 1, y: 0 }}
@@ -90,8 +87,6 @@ export function NotificationList({
     </div>
   )
 }
-
-// ─── Empty State ──────────────────────────────────────────────────────────────
 
 function EmptyState() {
   return (

@@ -156,7 +156,7 @@ export const ROUTES = {
   home: '/',
   discover: '/discover',
   artwork: (id: string) => `/artwork/${id}`,
-  profile: (username: string) => `/@${username}`,
+  profile: (id: string) => `/profile/${id}`,
   shop: '/shop',
   cart: '/cart',
   checkout: '/checkout',

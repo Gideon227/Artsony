@@ -15,5 +15,5 @@ export const notificationService = {
     apiClient.delete(`/api/notifications/${id}`),
 
   getUnreadCount: () =>
-    apiClient.get<ApiResponse<{ count: number }>>('/api/notifications/unread-count'),
+    apiClient.get<ApiResponse<{ unread_count: number }>>('/api/notifications/unread-count'),
 }
