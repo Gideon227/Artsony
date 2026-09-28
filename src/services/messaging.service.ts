@@ -85,6 +85,18 @@ export const messagingService = {
     )
   },
 
+  markUnread: async (conversationId: string): Promise<void> => {
+    await apiClient.post<ApiResponse<void>>(`/api/conversations/${conversationId}/unread`)
+  },
+
+  setMuted: async (conversationId: string, muted: boolean): Promise<void> => {
+    await apiClient.post<ApiResponse<void>>(`/api/conversations/${conversationId}/mute`, { muted })
+  },
+
+  leaveConversation: async (conversationId: string): Promise<void> => {
+    await apiClient.delete<ApiResponse<void>>(`/api/conversations/${conversationId}`)
+  },
+
   // ── User search (for New Chat) ─────────────────────────────────────────────
 
   searchUsers: async (q: string): Promise<UserSearchResult[]> => {

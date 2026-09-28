@@ -53,7 +53,7 @@ interface FilterComponentProps {
 
 const FilterComponent: React.FC<FilterComponentProps> = ({ dropdowns, onClear, hideClearButton = false }) => {
   return (
-    <div className='max-md:hidden py-6 px-6 flex gap-x-26.5 flex-1 items-center bg-white max-w-[1440px] mx-auto'>
+    <div className='max-md:hidden py-6 px-6 flex gap-x-26.5 flex-1 items-center bg-white'>
       <div className='flex flex-1 gap-x-4 items-center'>
         {dropdowns?.map((item) => (
           <Dropdown

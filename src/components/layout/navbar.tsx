@@ -3,7 +3,7 @@
 import React, { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion"; // Added for animations
 import { cn } from "@/lib/utils";
 import { SearchInput } from "../ui/search-input";
@@ -11,6 +11,8 @@ import UserMenuOverlay from "@/features/home/components/user-menu-overlay";
 import { Input } from "../ui/input";
 import NotificationModal from "@/features/notification/components/notification-modal";
 import UploadModal from "@/features/upload/components/upload-modal";
+import { Button } from "../ui/button";
+import { useAuthStore, selectIsAuthenticated, selectUser } from "@/store";
 
 const IconButton = ({
   icon,
@@ -37,6 +39,9 @@ const IconButton = ({
 
 export function Navbar({ hideSearchBar = false }: { hideSearchBar?: boolean }) {
   const router = useRouter();
+  const pathname = usePathname();
+  const isAuthenticated = useAuthStore(selectIsAuthenticated);
+  const user = useAuthStore(selectUser);
   const [isMenuOpen, setIsMenuOpen] = useState(false); 
   const [isNotificationOpen, setIsNotificationOpen] = useState(false)
   const [showPostArtwork, setShowPostArtwork] = useState(false)
@@ -46,6 +51,24 @@ export function Navbar({ hideSearchBar = false }: { hideSearchBar?: boolean }) {
     const trimmed = query.trim();
     if (!trimmed) return;
     router.push(`/search?q=${encodeURIComponent(trimmed)}`);
+  };
+
+  // Guests can browse almost everything, but actions tied to an account
+  // (uploading, notifications) still need a session. Instead of the page
+  // being gated, we send them to /login with a `next` back to where they
+  // were — same pattern the gated routes use.
+  const goToLogin = () => {
+    router.push(`/login?next=${encodeURIComponent(pathname)}`);
+  };
+
+  const handleUploadClick = () => {
+    if (!isAuthenticated) return goToLogin();
+    setShowPostArtwork(true);
+  };
+
+  const handleNotificationClick = () => {
+    if (!isAuthenticated) return goToLogin();
+    setIsNotificationOpen((prev) => !prev);
   };
 
   return (
@@ -73,39 +96,61 @@ export function Navbar({ hideSearchBar = false }: { hideSearchBar?: boolean }) {
 
           {/* RIGHT SECTION */}
           <div className="flex items-center gap-2 shrink-0">
-            <div className="flex items-center gap-2 lg:gap-3">
-              <IconButton onClick={() => setShowPostArtwork(true)} icon='/home/upload-square.svg' hideOnMobile />
-              <Link href='/my-orders'>
-                <IconButton icon='/home/delivery.svg' hideOnMobile />
-              </Link>
-              <IconButton onClick={() => setIsNotificationOpen(prev => !prev)} icon='/home/notification-bell.svg' />
-              <Link href='/cart'>
-                <IconButton icon='/home/cart.svg' hideOnMobile />
-              </Link>
-              <Link href='/messages'>
-                <IconButton icon='/home/message.svg' hideOnMobile />
-              </Link>
-            </div>
+            {isAuthenticated ? (
+              <>
+                <div className="flex items-center gap-2 lg:gap-3">
+                  <IconButton onClick={handleUploadClick} icon='/home/upload-square.svg' hideOnMobile />
+                  <Link href='/my-orders'>
+                    <IconButton icon='/home/delivery.svg' hideOnMobile />
+                  </Link>
+                  <IconButton onClick={handleNotificationClick} icon='/home/notification-bell.svg' />
+                  <Link href='/cart'>
+                    <IconButton icon='/home/cart.svg' hideOnMobile />
+                  </Link>
+                  <Link href='/messages'>
+                    <IconButton icon='/home/message.svg' hideOnMobile />
+                  </Link>
+                </div>
 
-            {/* User Profile Button - CLICK TRIGGERS MENU */}
-            <button 
-              onClick={() => setIsMenuOpen(true)}
-              className="hidden lg:flex items-center gap-2 ml-2 group cursor-pointer"
-            >
-              <div className="relative w-10 h-10 rounded-full border border-neutral-200 overflow-hidden">
-                <Image src="/images/image-avatar.svg" alt="User Avatar" fill className="object-cover" />
+                {/* User Profile Button - CLICK TRIGGERS MENU */}
+                <button 
+                  onClick={() => setIsMenuOpen(true)}
+                  className="hidden lg:flex items-center gap-2 ml-2 group cursor-pointer"
+                >
+                  <div className="relative w-10 h-10 rounded-full border border-neutral-200 overflow-hidden">
+                    <Image src={user?.avatarUrl ?? "/images/image-avatar.svg"} alt="User Avatar" fill className="object-cover" />
+                  </div>
+                  <Image src='/icons/arrow-down.svg' width={14} height={8} alt="arrow down" />
+                </button>
+              </>
+            ) : (
+              // GUEST NAVBAR — no cart/messages/notifications/upload/account
+              // menu, just a way into an account. Cart is intentionally kept
+              // since guests are allowed to view/build a cart.
+              <div className="flex items-center gap-2 lg:gap-3">
+                <Link href='/cart'>
+                  <IconButton icon='/home/cart.svg' hideOnMobile />
+                </Link>
+
+                <Button
+                  onClick={() => router.push(`/login?next=${encodeURIComponent(pathname)}`)}
+                  className="px-6 py-3 w-[101px] h-12 rounded-2xl text-body-s text-white"
+                >
+                  Join Us
+                </Button>
               </div>
-              <Image src='/icons/arrow-down.svg' width={14} height={8} alt="arrow down" />
-            </button>
+            )}
           </div>
         </div>
       </header>
 
-      <UploadModal isOpen={showPostArtwork} onClose={() => setShowPostArtwork(false)} />
+      {isAuthenticated && (
+        <UploadModal isOpen={showPostArtwork} onClose={() => setShowPostArtwork(false)} />
+      )}
 
       {/* --- MENU OVERLAY SYSTEM --- */}
       <AnimatePresence>
-        {isMenuOpen && (
+        {isMenuOpen && isAuthenticated && (
           <>
             <motion.div
               initial={{ opacity: 0 }}
@@ -131,7 +176,7 @@ export function Navbar({ hideSearchBar = false }: { hideSearchBar?: boolean }) {
           </>
         )}
 
-        {isNotificationOpen && (
+        {isNotificationOpen && isAuthenticated && (
           <>
             <motion.div
               initial={{ opacity: 0 }}

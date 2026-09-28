@@ -2,9 +2,11 @@ import { useEffect, useRef, useCallback } from 'react'
 import { useInfiniteQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { v4 as uuidv4 } from 'uuid'
 import { messagingService } from '@/services/messaging.service'
+import { blockService } from '@/services/block.service'
 import { useMessagingStore } from '@/store/messaging.store'
+import { useToast } from '@/components/ui/toaster'
 import { QUERY_KEYS } from '@/constants'
-import type { MessageWithSender, CursorPage, SendMessageInput, WsNewMessageEvent, WsMessageReadEvent } from '@/types/messaging'
+import type { MessageWithSender, CursorPage, ConversationSummary, SendMessageInput, WsNewMessageEvent, WsMessageReadEvent } from '@/types/messaging'
 
 // ── useMessages: infinite cursor-paginated messages with WS live updates ──────
 
@@ -155,6 +157,86 @@ export function useMarkRead() {
       }
     })
   }, [sendRaw, status, queryClient])
+}
+
+// ── Conversation list item actions (mute, unread, leave/delete, block) ────────
+
+function patchConversation(
+  queryClient: ReturnType<typeof useQueryClient>,
+  conversationId: string,
+  patch: Partial<ConversationSummary>,
+) {
+  queryClient.setQueriesData({ queryKey: ['conversations'] }, (old: any) => {
+    if (!old?.items) return old
+    return {
+      ...old,
+      items: old.items.map((c: ConversationSummary) =>
+        c.id === conversationId ? { ...c, ...patch } : c
+      ),
+    }
+  })
+}
+
+export function useMuteConversation() {
+  const queryClient = useQueryClient()
+  const { error } = useToast()
+
+  return useMutation({
+    mutationFn: ({ conversationId, muted }: { conversationId: string; muted: boolean }) =>
+      messagingService.setMuted(conversationId, muted),
+    onMutate: async ({ conversationId, muted }) => {
+      patchConversation(queryClient, conversationId, { is_muted: muted })
+    },
+    onError: (_err, { conversationId, muted }) => {
+      patchConversation(queryClient, conversationId, { is_muted: !muted })
+      error('Failed to update notification setting')
+    },
+  })
+}
+
+export function useMarkConversationUnread() {
+  const queryClient = useQueryClient()
+  const { error } = useToast()
+
+  return useMutation({
+    mutationFn: (conversationId: string) => messagingService.markUnread(conversationId),
+    onMutate: async (conversationId) => {
+      patchConversation(queryClient, conversationId, { unread_count: 1 })
+    },
+    onError: (_err, conversationId) => {
+      patchConversation(queryClient, conversationId, { unread_count: 0 })
+      error('Failed to mark conversation as unread')
+    },
+  })
+}
+
+export function useLeaveConversation() {
+  const queryClient = useQueryClient()
+  const { error } = useToast()
+
+  return useMutation({
+    mutationFn: (conversationId: string) => messagingService.leaveConversation(conversationId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['conversations'] })
+    },
+    onError: () => {
+      error('Failed to delete chat', 'Please try again.')
+    },
+  })
+}
+
+export function useBlockUser() {
+  const { success, error } = useToast()
+
+  return useMutation({
+    mutationFn: (userId: string) => blockService.blockUser(userId),
+    onSuccess: () => {
+      success('User blocked')
+    },
+    onError: () => {
+      error('Failed to block user', 'Please try again.')
+    },
+  })
 }
 
 // ── useUserSearch ─────────────────────────────────────────────────────────────

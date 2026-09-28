@@ -8,6 +8,7 @@ import { INTERESTS } from '@/features/onboarding/data/interests'
 import { InterestPill } from '@/features/onboarding/components/interest-pill'
 import { Button } from '@/components'
 import { useCompleteOnboarding } from '@/hooks/use-auth-mutations'
+import AuthFooter from '@/components/layout/auth-footer'
 
 const MIN_INTERESTS = 3
 
@@ -92,12 +93,7 @@ export default function OnboardingPage() {
       </footer>
 
       {/* Desktop footer links */}
-      <div className="hidden lg:flex absolute bottom-6 left-0 right-0 justify-center items-center gap-6 text-sm text-neutral-400 font-medium">
-        {[['Privacy', '/privacy'], ['Terms & Conditions', '/terms'], ['FAQ', '/faq'], ['About', '/about']].map(([label, href]) => (
-          <Link key={label} href={href!} className="hover:text-neutral-700 transition-colors">{label}</Link>
-        ))}
-        <button type="button" className="hover:text-neutral-700 transition-colors">Language</button>
-      </div>
+      <AuthFooter />
     </div>
   )
 }

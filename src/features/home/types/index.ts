@@ -15,6 +15,7 @@ export type HeroArtwork = {
   title: string
   description: string
   thumbnail_url: string | null
+  original_url: string | null
   view_count: number
   like_count: number
   purchase_count: number

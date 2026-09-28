@@ -185,7 +185,7 @@ const Dropdown = ({
       >
         {leftIcon && (
           <span className="mr-3 shrink-0">
-            <Image width={20} height={20} src={leftIcon} alt="icon" className="w-auto h-auto" />
+            <Image width={20} height={20} src={leftIcon} alt="icon" className="w-auto h-auto " />
           </span>
         )}
 
@@ -379,16 +379,15 @@ const Dropdown = ({
                             {option.icon && (
                               <div
                                 className={cn(
-                                  "flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-neutral-100",
+                                  "flex relative h-9 w-9 shrink-0 items-center justify-center rounded-full overflow-hidden bg-neutral-100",
                                   selected && !multiple && resolvedIndicator === "checkbox" && "bg-white/20"
                                 )}
                               >
                                 <Image
-                                  width={20}
-                                  height={20}
+                                  fill
                                   src={option.icon}
                                   alt="icon"
-                                  className="w-auto h-auto"
+                                  className="object-cover"
                                 />
                               </div>
                             )}

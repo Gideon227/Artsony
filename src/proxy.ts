@@ -1,31 +1,48 @@
 import { NextResponse, type NextRequest } from 'next/server'
 
 // ─── Architecture note ────────────────────────────────────────────────────────
-// The httpOnly RT cookie is NOT reliably readable in all middleware edge cases —
-// specifically after a client-side login where the Set-Cookie response from the
-// login API hasn't been committed before the next navigation fires in middleware.
+// This middleware does NOT gate the whole app anymore. Guests can browse
+// freely — home, discover, shop, search, artwork pages, other users'
+// profiles, and cart all render without a session. Only routes that are
+// inherently the signed-in user's own data are gated here; everything else
+// is open, with pages/components adapting their own UI based on auth state
+// (see Navbar/Footer, which read the auth store directly).
 //
-// Solution: backend sets TWO cookies on login/refresh/logout:
-//   1. artsony_rt       → httpOnly, secure — the actual refresh token (API use only)
-//   2. artsony_session  → NOT httpOnly, SameSite=Strict — plain "session exists" flag
+// The httpOnly RT cookie is NOT reliably readable in all middleware edge cases
+// — specifically after a client-side login where the Set-Cookie response from
+// the login API hasn't been committed before the next navigation fires in
+// middleware.
 //
-// Middleware reads artsony_session (no sensitive data in it).
-// The client also sets artsony_session after a successful login mutation so the
-// flag is available immediately on the next navigation without waiting on backend.
+// Solution: backend sets a companion, non-httpOnly "session exists" flag
+// cookie alongside the real (httpOnly) refresh token cookie. Middleware reads
+// only this flag (no sensitive data in it); the client also sets it right
+// after a successful login/register mutation so it's available immediately
+// on the very next navigation without waiting on the backend response.
 // ─────────────────────────────────────────────────────────────────────────────
 
-const SESSION_COOKIE  = 'artsony_session'   // non-httpOnly, set by backend + client
-const ONBOARDED_COOKIE = 'artsony_onboarded' // non-httpOnly, set by backend + client
-const VISITED_COOKIE  = 'artsony_visited'   // set by this middleware
+const SESSION_COOKIE = 'artsony_session' // non-httpOnly, set by backend + client
 
-const PUBLIC_AUTH_PATHS = ['/login', '/signup', '/forgot-password', '/reset-password', '/oauth/callback']
+// Routes that require a signed-in user because they're the user's own
+// account data (orders, wallet, messages, settings, seller tools, etc).
+// Matched as an exact path or any /prefix/... sub-route.
+const GATED_PREFIXES = [
+  '/checkout',
+  '/my-orders',
+  '/all-orders',
+  '/notification',
+  '/moodboards',
+  '/messages',
+  '/settings',
+  '/seller-registration',
+  '/artsony-studio',
+  '/artworks/upload',
+]
 
-function isPublicAuth(p: string) {
-  return PUBLIC_AUTH_PATHS.some((r) => p === r || p.startsWith(r + '/'))
-}
-
-function isOnboardingPath(p: string) {
-  return p === '/onboarding' || p.startsWith('/onboarding/')
+function isGatedPath(pathname: string): boolean {
+  // Own profile ("/profile") is account data — gated. Other users' profiles
+  // ("/profile/[id]") are public browsing and stay open.
+  if (pathname === '/profile') return true
+  return GATED_PREFIXES.some((p) => pathname === p || pathname.startsWith(`${p}/`))
 }
 
 function isStaticOrApi(p: string) {
@@ -44,60 +61,26 @@ export function proxy(request: NextRequest) {
 
   if (isStaticOrApi(pathname)) return NextResponse.next()
 
-  const hasSession  = Boolean(request.cookies.get(SESSION_COOKIE)?.value)
-  const isOnboarded = request.cookies.get(ONBOARDED_COOKIE)?.value === '1'
-  const hasVisited  = Boolean(request.cookies.get(VISITED_COOKIE)?.value)
-
-  const redirect = (to: string, preserveNext = false) => {
+  // "/" is just a URL alias for the real homepage — not an auth check.
+  // The actual homepage content lives at /home for both guests and members.
+  if (pathname === '/') {
     const url = request.nextUrl.clone()
-    url.pathname = to
-    url.search = ''
-    if (preserveNext && !isPublicAuth(pathname) && pathname !== '/') {
-      url.searchParams.set('next', pathname)
-    }
+    url.pathname = '/home'
     return NextResponse.redirect(url)
   }
 
-  // ── Root ───────────────────────────────────────────────────────────────────
-  if (pathname === '/') {
-    if (!hasSession) return redirect(hasVisited ? '/login' : '/signup')
-    if (!isOnboarded) return redirect('/onboarding')
-    return redirect('/home')
+  if (isGatedPath(pathname)) {
+    const hasSession = Boolean(request.cookies.get(SESSION_COOKIE)?.value)
+    if (!hasSession) {
+      const url = request.nextUrl.clone()
+      url.pathname = '/login'
+      url.search = ''
+      url.searchParams.set('next', pathname)
+      return NextResponse.redirect(url)
+    }
   }
 
-  // ── No session ─────────────────────────────────────────────────────────────
-  if (!hasSession) {
-    if (isPublicAuth(pathname)) return NextResponse.next()
-    return redirect(hasVisited ? '/login' : '/signup', true)
-  }
-
-  // ── Has session on an auth page → redirect into app ───────────────────────
-  if (isPublicAuth(pathname)) {
-    return redirect(isOnboarded ? '/home' : '/onboarding')
-  }
-
-  // ── Not onboarded yet ──────────────────────────────────────────────────────
-  if (!isOnboarded && !isOnboardingPath(pathname)) {
-    return redirect('/onboarding')
-  }
-
-  // ── Already onboarded, revisiting onboarding ──────────────────────────────
-  if (isOnboarded && isOnboardingPath(pathname)) {
-    return redirect('/home')
-  }
-
-  // ── Authenticated and on a valid route ────────────────────────────────────
-  const res = NextResponse.next()
-  if (!hasVisited) {
-    res.cookies.set(VISITED_COOKIE, '1', {
-      httpOnly: false,
-      sameSite: 'strict',
-      secure: process.env.NODE_ENV === 'production',
-      path: '/',
-      maxAge: 365 * 24 * 60 * 60,
-    })
-  }
-  return res
+  return NextResponse.next()
 }
 
 export const config = {

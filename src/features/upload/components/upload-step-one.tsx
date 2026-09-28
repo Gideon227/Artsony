@@ -2,12 +2,15 @@
 import React, { useState, useMemo } from 'react'
 import Image from 'next/image'
 import { X } from 'lucide-react'
-import { Button, Input, Textarea } from '@/components'
+import { Button, Input, Label, Textarea } from '@/components'
 import { Dropdown, DropdownOption } from '@/components/ui/dropdown'
 import { useArtworkStore } from '@/store/artwork.store'
 import { INTERESTS } from '@/features/onboarding/data/interests'
 import Router from 'next/router'
 import UploadHeader from './upload-header'
+import { DynamicTooltip } from '@/components/ui/dynamic-tooltip'
+import { FormLabel } from '@/components/ui/form-label'
+import { LabelTooltip } from '@/components/forms/form-field'
 
 interface UploadStepOneProps {
   id?: string; // no longer used for store lookup, keep for layout key if needed
@@ -112,7 +115,7 @@ const UploadStepOne = ({ onNext, onSaveAndExit, steps, number }: UploadStepOnePr
           {/* Artwork Name */}
           <div className='flex flex-col gap-2 relative'>
             <label className='font-poppins font-medium text-black text-[14px] leading-6 tracking-wide'>
-              Artwork name
+              <span className='text-primary-500 mr-1'>*</span> Artwork name
             </label>
             <Input
               value={draft?.title ?? ''}
@@ -125,7 +128,7 @@ const UploadStepOne = ({ onNext, onSaveAndExit, steps, number }: UploadStepOnePr
           {/* Artwork Description */}
           <div className='flex flex-col gap-2 relative'>
             <label className='font-poppins font-medium text-black text-body-s leading-6 tracking-wide'>
-              Artwork description
+              <span className='text-primary-500 mr-1'>*</span> Artwork description
             </label>
             <Textarea
               value={draft.description ?? ''}
@@ -142,7 +145,7 @@ const UploadStepOne = ({ onNext, onSaveAndExit, steps, number }: UploadStepOnePr
           {/* Categories */}
           <div className='flex flex-col gap-2 relative'>
             <label className='font-poppins font-medium text-black text-body-s leading-6 tracking-wide'>
-              Categories / Interests
+              <span className='text-primary-500 mr-1'>*</span> Categories / Interests
             </label>
 
             {categories.length > 0 && (
@@ -184,10 +187,14 @@ const UploadStepOne = ({ onNext, onSaveAndExit, steps, number }: UploadStepOnePr
           {/* Keywords */}
           <div className='flex flex-col gap-2 relative'>
             <label className='font-poppins font-medium flex text-black text-body-s leading-6 tracking-wide gap-1 items-center'>
-              Keywords
-              <button type="button">
+              <span className='text-primary-500 mr-1'>*</span>Keywords 
+              <DynamicTooltip
+                // title="Keywords" 
+                content="Add relevant words or phrases that describe your artwork. Keywords help people discover your work when searching on Artsony. You can add up to 10 keywords." 
+              />
+              {/* <button type="button">
                 <Image src='/icons/question-circle.svg' width={20} height={20} alt='help' />
-              </button>
+              </button> */}
             </label>
 
             {keywords.length > 0 && (

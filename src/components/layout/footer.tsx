@@ -167,31 +167,35 @@ const Footer = () => {
               </ul>
             </div>
 
-            {/* Profile Quote Section */}
-            <div className="flex flex-col items-start justify-start">
-              <div className="h-10 flex items-center mb-6">
-                <div className="flex items-center gap-3 group cursor-pointer w-fit">
-                  <Image 
-                    src={user?.avatarUrl ?? "/images/image-avatar.svg"} 
-                    alt={user?.username ?? "User"} 
-                    width={40} 
-                    height={40} 
-                    className="object-cover border border-gray-50 rounded-full h-10 w-10" 
-                  />
-                  
-                  <div className="flex items-center gap-2">
-                    <span className="text-white text-[12px] font-poppins font-medium tracking-tight">
-                      {user?.username ?? "Guest"}
-                    </span>
-                    <ChevronsRight className="text-white/70 w-5 h-5 transition-transform group-hover:translate-x-1" />
-                  </div>
+            {/* Profile Quote Section — only shown for signed-in users. Guests
+                don't have an account to reflect here, so the block is left
+                out entirely rather than showing a "Guest" placeholder. */}
+            {user && (
+              <div className="flex flex-col items-start justify-start">
+                <div className="h-10 flex items-center mb-6">
+                  <Link href="/profile" className="flex items-center gap-3 group cursor-pointer w-fit">
+                    <Image 
+                      src={user.avatarUrl ?? "/images/image-avatar.svg"} 
+                      alt={user.username ?? "User"} 
+                      width={40} 
+                      height={40} 
+                      className="object-cover border border-gray-50 rounded-full h-10 w-10" 
+                    />
+                    
+                    <div className="flex items-center gap-2">
+                      <span className="text-white text-[12px] font-poppins font-medium tracking-tight">
+                        {user.username}
+                      </span>
+                      <ChevronsRight className="text-white/70 w-5 h-5 transition-transform group-hover:translate-x-1" />
+                    </div>
+                  </Link>
                 </div>
-              </div>
 
-              <p className="text-[14px] font-poppins leading-6 italic tracking-wide text-white">
-                {truncate((user?.bio || "I paint like I'm remembering something I've never seen before."), 120)}
-              </p>
-            </div>
+                <p className="text-[14px] font-poppins leading-6 italic tracking-wide text-white">
+                  {truncate((user.bio || "I paint like I'm remembering something I've never seen before."), 120)}
+                </p>
+              </div>
+            )}
 
           </div>
 

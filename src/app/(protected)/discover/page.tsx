@@ -70,8 +70,6 @@ export default function DiscoverPage() {
         total={total}
         sort={sort}
         onSortChange={setSort}
-        location={location}
-        onLocationChange={setLocation}
       />
 
       {isLoading ? (

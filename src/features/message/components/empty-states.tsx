@@ -20,7 +20,7 @@ export function EmptyInbox({ onNewChat }: { onNewChat: () => void }) {
           <h2 className="font-poppins text-h6 mb-4 font-medium text-heading text-center tracking-wide">
             Your inbox is empty
           </h2>
-          <p style={{ width: '552px' }} className="max-w-[340px] mb-6 text-body-m text-center text-wrap leading-7 text-body font-normal font-poppins ">
+          <p style={{ width: '552px' }} className="w-full mb-6 text-body-m text-center text-wrap leading-7 text-body font-normal font-poppins ">
             When someone sends you a message, it will appear here. Start a
             conversation to ask about an artwork or connect with an artist.
           </p>

@@ -5,6 +5,7 @@ import { motion } from 'framer-motion'
 import { Button } from '@/components/ui/button'
 import { ArtCard } from '@/components/ui/art-card'
 import { ArtworkGridSkeleton } from './artwork-grid-skeleton'
+import { getDisplayThumbnail } from '@/utils'
 import type { Artwork } from '@/types/artwork'
 
 interface FeedContinuationProps {
@@ -21,7 +22,7 @@ export function FeedContinuation({ artworks, isLoading, hasNextPage, isFetchingN
 
   return (
     <section className="w-full py-6 md:py-10">
-      <div className="max-w-[1440px] mx-auto px-4 md:px-8">
+      <div className="px-4 md:px-8">
         {isLoading ? (
           <ArtworkGridSkeleton count={4} />
         ) : (
@@ -35,7 +36,7 @@ export function FeedContinuation({ artworks, isLoading, hasNextPage, isFetchingN
                 className="flex justify-center"
               >
                 <ArtCard
-                  image={artwork.assets[0]?.thumbnail_url ?? artwork.assets[0]?.optimized_url ?? artwork.assets[0]?.original_url ?? ''}
+                  image={getDisplayThumbnail(artwork.assets)}
                   title={artwork.title}
                   // artworkId={artwork.id}
                   onCardClick={() => onArtworkClick(artwork)}

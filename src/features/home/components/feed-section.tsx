@@ -2,7 +2,7 @@
 
 import React from 'react'
 import { motion } from 'framer-motion'
-import { cn } from '@/utils'
+import { cn, getDisplayThumbnail } from '@/utils'
 import { ArtCard } from '@/components/ui/art-card'
 import { Dropdown, type DropdownOption } from '@/components/ui/dropdown'
 import { ArtworkGridSkeleton } from './artwork-grid-skeleton'
@@ -26,7 +26,7 @@ export function FeedSection({ activeTab, onTabChange, artworks, isLoading, onOpe
 
   return (
     <section className="w-full py-6 md:py-14">
-      <div className="max-w-[1440px] mx-auto px-4 md:px-8">
+      <div className="px-4 md:px-8">
 
         {/* Mobile header */}
         <div className="flex justify-between items-center md:hidden mb-6">
@@ -80,7 +80,7 @@ export function FeedSection({ activeTab, onTabChange, artworks, isLoading, onOpe
                 className="flex justify-center"
               >
                 <ArtCard
-                  image={artwork.assets[0]?.thumbnail_url ?? artwork.assets[0]?.optimized_url ?? artwork.assets[0]?.original_url ?? ''}
+                  image={getDisplayThumbnail(artwork.assets)}
                   title={artwork.title}
                   // artworkId={artwork.id}
                   onCardClick={() => onArtworkClick(artwork)}

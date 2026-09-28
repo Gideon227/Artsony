@@ -36,7 +36,8 @@ export type ArtworkAsset = {
 
 export type PhysicalDetails = {
   length: number
-  width: number
+  width?: number
+  weight?: number
   height: number
   unit: 'cm' | 'in'
   available_quantity: number

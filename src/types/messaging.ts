@@ -26,6 +26,7 @@ export type ParticipantProfile = {
   joined_at: string
   left_at: string | null
   email: string
+  username: string
   display_name: string | null
   avatar_url: string | null
 }
@@ -37,6 +38,7 @@ export type ConversationSummary = {
   last_activity_at: string
   last_message_id: string | null
   unread_count: number
+  is_muted: boolean
   last_message?: MessagePreview | null
   other_user?: ParticipantProfile | null
 }

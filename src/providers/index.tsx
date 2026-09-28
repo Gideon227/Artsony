@@ -57,9 +57,10 @@ function SessionBootstrap() {
         })
 
         if (!res.ok) {
-          // No active session — clear any stale Zustand-persisted user
+          // Refresh endpoint actively rejected us — no active session (or it
+          // genuinely expired/was revoked). Clear any stale Zustand-persisted
+          // user and drop the session flag so middleware agrees.
           clearAuth()
-          // Also clear the session indicator so middleware agrees
           document.cookie = 'artsony_session=; max-age=0; path=/; SameSite=Strict'
           return
         }
@@ -76,8 +77,12 @@ function SessionBootstrap() {
         // Ensure session indicator is present for middleware on any subsequent navigation
         document.cookie = `artsony_session=1; path=/; SameSite=Strict; max-age=${365 * 24 * 60 * 60}`
       } catch {
-        clearAuth()
-        document.cookie = 'artsony_session=; max-age=0; path=/; SameSite=Strict'
+        // A thrown error here means the request itself failed (offline, DNS,
+        // timeout, slow network) — NOT that the session is invalid. Don't
+        // clear auth or the session cookie on a transport failure; that was
+        // logging people out just because their connection was slow. Leave
+        // any persisted user/session alone so the next mount or request can
+        // succeed normally once the network recovers.
       } finally {
         setHydrated()
       }

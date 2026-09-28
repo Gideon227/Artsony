@@ -5,12 +5,10 @@ import { Artwork } from '@/types/artwork'
 import { ArtCard } from '@/components/ui/art-card'
 import ArtworkViewOverlay from '@/features/artwork/components/shop/artwork-view-overlay'
 import { useTopPicks } from '@/hooks/use-artwork'
-import { useQuickAddToCart } from '@/hooks/use-cart-actions'
 
 const TopPicks = () => {
     const { data: artworks = [], isLoading, isError } = useTopPicks('all', 8, 'MARKETPLACE')
     const error = isError ? 'Failed to load top picks.' : null
-    const { quickAdd } = useQuickAddToCart()
 
     // Overlay state
     const [activeArtwork, setActiveArtwork] = useState<Artwork | null>(null)
@@ -76,7 +74,7 @@ const TopPicks = () => {
     return (
         <div className='bg-secondary-100'>
 
-            <div className="max-w-[1440px] mx-auto py-12 px-8 gap-y-14 flex flex-col relative w-full overflow-hidden">
+            <div className="py-12 px-8 gap-y-14 flex flex-col relative w-full overflow-hidden">
                 {/* Header Area */}
                 <div className="flex flex-col gap-y-6">
                     <h2 className="font-raleway font-semibold text-h4 leading-10 text-primary-500 tracking-wide">
@@ -115,13 +113,19 @@ const TopPicks = () => {
                             disabled={!canScrollLeft}
                             className={`absolute left-4 top-[40%] -translate-y-1/2 z-10 w-12 h-12 rounded-full flex items-center justify-center transition-all duration-300
                                 ${!canScrollLeft 
-                                    ? 'bg-black/10 text-gray-400 cursor-not-allowed border border-gray-300 backdrop-blur-sm' 
-                                    : 'bg-white text-gray-800 shadow-lg hover:bg-gray-50'}`}
+                                    ? 'cursor-not-allowed border border-gray-300 backdrop-blur-sm' 
+                                    : 'bg-primary-500 hover:bg-primary-600'}`}
                             aria-label="Scroll left"
                         >
-                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                                <path d="M15 18l-6-6 6-6" />
-                            </svg>
+                            {canScrollLeft ? 
+                                <svg width="8" height="14" viewBox="0 0 8 14" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                    <path d="M0.164852 7.37041L6.79533 13.8001C7.20906 14.2013 8 13.9581 8 13.4297L8 0.570303C8 0.0418882 7.20906 -0.201306 6.79533 0.199896L0.164852 6.62959C-0.0549501 6.84274 -0.0549501 7.15726 0.164852 7.37041Z" fill="white"/>
+                                </svg>
+                                : 
+                                <svg width="8" height="14" viewBox="0 0 8 14" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                    <path d="M0.164852 7.37041L6.79533 13.8001C7.20906 14.2013 8 13.9581 8 13.4297L8 0.570303C8 0.0418882 7.20906 -0.201306 6.79533 0.199896L0.164852 6.62959C-0.0549501 6.84274 -0.0549501 7.15726 0.164852 7.37041Z" fill="#788191"/>
+                                </svg>
+                            }
                         </button>
 
                         {/* Scrollable Track */}
@@ -132,38 +136,12 @@ const TopPicks = () => {
                             style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
                         >
                             {artworks.map((artwork, index) => {
-                                const primaryAsset = artwork.assets?.[0]
-                                const imageUrl = primaryAsset?.optimized_url || primaryAsset?.original_url || '/placeholder.png'
-
                                 return (
                                     <div key={artwork.id} className="flex-none w-[320px] snap-start">
                                         <ArtCard
-                                            image={imageUrl}
-                                            title={artwork.title}
+                                            artwork={artwork}
                                             variant="shop"
                                             onCardClick={() => handleOpenArtwork(index)}
-                                            showCart={true}
-                                            showHeart={true}
-                                            onAction={(action) => {
-                                                if (action === 'cart') quickAdd(artwork)
-                                            }}
-                                            stats={{
-                                                likes: artwork.like_count.toString(),
-                                                views: artwork.view_count.toString()
-                                            }}
-                                            artist={[
-                                                {
-                                                    id: artwork.creator_id,
-                                                    name: artwork.creator?.profile?.display_name || artwork.creator?.username || 'Unknown Artist',
-                                                    avatarUrl: artwork.creator?.profile?.avatar_url || '/default-avatar.png',
-                                                    role: 'Artist',
-                                                    stats: {
-                                                        followers: artwork.creator?.profile?.followers_count?.toString() ?? '0',
-                                                        likes: artwork.like_count.toString(),
-                                                        following: artwork.creator?.profile?.following_count?.toString() ?? '0',
-                                                    }
-                                                }
-                                            ]}
                                         />
                                     </div>
                                 )
@@ -176,13 +154,19 @@ const TopPicks = () => {
                             disabled={!canScrollRight}
                             className={`absolute right-4 top-[40%] -translate-y-1/2 z-10 w-12 h-12 rounded-full flex items-center justify-center transition-all duration-300
                                 ${!canScrollRight 
-                                    ? 'bg-black/10 text-gray-400 cursor-not-allowed border border-gray-300 backdrop-blur-sm' 
-                                    : 'bg-[#FF6A3D] text-white shadow-lg hover:bg-[#E55A2D]'}`}
+                                    ? 'cursor-not-allowed border border-gray-300 backdrop-blur-sm' 
+                                    : 'bg-primary-500 hover:bg-primary-600'}`}
                             aria-label="Scroll right"
                         >
-                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                                <path d="M9 18l6-6-6-6" />
-                            </svg>
+                            {canScrollRight ?
+                                <svg width="8" height="14" viewBox="0 0 8 14" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                    <path d="M7.83515 7.37041L1.20467 13.8001C0.790939 14.2013 5.852e-07 13.9581 5.62102e-07 13.4297L0 0.570304C-2.30978e-08 0.0418892 0.790938 -0.201306 1.20467 0.199897L7.83515 6.62959C8.05495 6.84274 8.05495 7.15726 7.83515 7.37041Z" fill="white"/>
+                                </svg>
+                                : 
+                                <svg width="8" height="14" viewBox="0 0 8 14" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                    <path d="M7.83515 7.37041L1.20467 13.8001C0.790939 14.2013 5.852e-07 13.9581 5.62102e-07 13.4297L0 0.570304C-2.30978e-08 0.0418892 0.790938 -0.201306 1.20467 0.199897L7.83515 6.62959C8.05495 6.84274 8.05495 7.15726 7.83515 7.37041Z" fill="#525965"/>
+                                </svg>
+                            }
                         </button>
                     </div>
                 )}

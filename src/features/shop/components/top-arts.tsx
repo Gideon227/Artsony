@@ -105,7 +105,7 @@ const TopArt = () => {
     }
 
     return (
-        <div className='bg-white py-12 gap-y-6 flex flex-col max-w-[1440px] mx-auto'>
+        <div className='bg-white py-12 gap-y-6 flex flex-col'>
             <div className='flex px-8 justify-between items-center w-full'>
                 <h2 className='font-raleway font-semibold text-primary-500 text-h4 leading-10 tracking-wide'>Top Art</h2>
                 <Dropdown

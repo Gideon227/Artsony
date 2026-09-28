@@ -8,6 +8,7 @@ import DimensionsRow from "@/components/ui/dimension-input";
 import { StepperInput } from "@/components/ui/quantity-input";
 import { useArtworkStore } from "@/store/artwork.store";
 import type { PhysicalDetails } from "@/types/artwork";
+import { DynamicTooltip } from "@/components/ui/dynamic-tooltip";
 
 interface PhysicalArtDimensionProps {
   id?: string;
@@ -16,7 +17,7 @@ interface PhysicalArtDimensionProps {
   steps: string;
   onBack: () => void;
   number: string;
-  hideVariationSection?: boolean
+  hideVariationSection?: boolean;
 }
 
 export default function PhysicalArtDimension({
@@ -25,55 +26,81 @@ export default function PhysicalArtDimension({
   steps,
   onBack,
   number,
-  hideVariationSection
+  hideVariationSection,
 }: PhysicalArtDimensionProps) {
-  const draft = useArtworkStore((state) => state.draft)
-  const setDraftField = useArtworkStore((state) => state.setDraftField)
-  const setDraftStep  = useArtworkStore((state) => state.setDraftStep)
+  const draft = useArtworkStore((state) => state.draft);
+  const setDraftField = useArtworkStore((state) => state.setDraftField);
+  const setDraftStep = useArtworkStore((state) => state.setDraftStep);
 
-  const price = draft.price ? String(draft.price) : ""
-  const hasVariants = draft.has_variants ?? false
+  const price = draft.price ? String(draft.price) : "";
+  const hasVariants = draft.has_variants ?? false;
 
   // physical_details holds dimensions + available_quantity
-  const physicalDetails: Partial<PhysicalDetails> = draft.physical_details ?? {}
+  const physicalDetails: Partial<PhysicalDetails> = draft.physical_details ?? {};
 
   const earnings = React.useMemo(() => {
-    const numPrice = parseFloat(price) || 0
+    const numPrice = parseFloat(price) || 0;
     return (numPrice * 0.86).toLocaleString("en-NG", {
       minimumFractionDigits: 2,
       maximumFractionDigits: 2,
-    })
-  }, [price])
+    });
+  }, [price]);
 
+  // Form Validation check
+  const isFormValid = React.useMemo(() => {
+    const hasPrice = typeof draft.price === "number" && draft.price > 0;
+
+    const { length, weight, height } = physicalDetails;
+    const hasDimensions =
+      typeof length === "number" &&
+      length > 0 &&
+      typeof weight === "number" &&
+      weight > 0 &&
+      typeof height === "number" &&
+      height > 0;
+
+    const hasAvailableQty =
+      typeof physicalDetails.available_quantity === "number" &&
+      physicalDetails.available_quantity > 0;
+
+    return hasPrice && hasDimensions && hasAvailableQty;
+  }, [draft.price, physicalDetails]);
+  
   // Merge a single dimension key into physical_details
   const handleDimensionChange = (key: string, val: number) => {
     setDraftField("physical_details", {
       ...physicalDetails,
       [key]: val,
-    } as PhysicalDetails)
-  }
+    } as PhysicalDetails);
+  };
 
   // Merge available_quantity into physical_details
   const handleAvailableQtyChange = (val: number) => {
     setDraftField("physical_details", {
       ...physicalDetails,
       available_quantity: val,
-    } as PhysicalDetails)
-  }
+    } as PhysicalDetails);
+  };
 
   return (
     <div className="w-full max-w-2xl bg-white border border-neutral-100 rounded-[40px] overflow-hidden shadow-sm">
-
       {/* HEADER */}
       <div className="flex justify-between px-6 py-4 items-center border-b border-gray-50">
         <div className="flex gap-4 items-center">
-          <h6 className="font-raleway font-semibold text-primary-500 text-h5 leading-8 tracking-wide">Step</h6>
           <h6 className="font-raleway font-semibold text-primary-500 text-h5 leading-8 tracking-wide">
-            {number}<span className="text-gray-500">/{steps}</span>
+            Step
+          </h6>
+          <h6 className="font-raleway font-semibold text-primary-500 text-h5 leading-8 tracking-wide">
+            {number}
+            <span className="text-gray-500">/{steps}</span>
           </h6>
         </div>
         <div className="flex gap-4 items-center">
-          <Button variant="outline" className="py-3 px-6 leading-6 text-sm font-medium" onClick={onSaveAndExit}>
+          <Button
+            variant="outline"
+            className="py-3 px-6 leading-6 text-sm font-medium"
+            onClick={onSaveAndExit}
+          >
             Save Draft
           </Button>
           <button
@@ -88,19 +115,22 @@ export default function PhysicalArtDimension({
 
       {/* CONTENT */}
       <div className="p-6 space-y-6">
-
         {/* PRICE — draft.price: number */}
         <section className="space-y-2">
           <div className="flex items-center gap-3">
             <label className="text-body-s font-medium font-poppins text-gray-500 tracking-wide">
               <span className="text-primary-600 mr-1">*</span>Price per Unit
             </label>
-            <CircleHelp size={18} className="text-[#30A2FF] cursor-help" fill="#30A2FF" color="white" />
+            <DynamicTooltip
+              title="Price per Unit"
+              content="Enter the amount buyers will pay for one unit of your artwork. Artsony deducts its applicable platform fee from each completed sale."
+            />
           </div>
           <p className="font-poppins font-normal text-body-xs leading-4 text-gray-100 tracking-wide">
             Enter the amount buyers will pay per unit.{" "}
             <span className="text-primary-500 font-semibold">Artsony</span> takes a{" "}
-            <span className="text-primary-600 font-semibold">14%</span> fee from each sale — your earning is shown below.
+            <span className="text-primary-600 font-semibold">14%</span> fee from each sale —
+            your earning is shown below.
           </p>
           <div className="space-y-3">
             <PriceInput
@@ -125,7 +155,10 @@ export default function PhysicalArtDimension({
             <label className="text-body-s font-medium font-poppins text-gray-500 tracking-wide">
               <span className="text-primary-600 mr-1">*</span>Dimensions
             </label>
-            <CircleHelp size={18} className="text-[#30A2FF] cursor-help" fill="#30A2FF" color="white" />
+            <DynamicTooltip
+              title="Dimensions"
+              content="Enter the artwork's physical dimensions and weight. Accurate measurements help buyers understand the size of the piece and support shipping and delivery calculations."
+            />
           </div>
           <DimensionsRow
             values={physicalDetails}
@@ -151,7 +184,8 @@ export default function PhysicalArtDimension({
               <span className="text-primary-600 mr-1">*</span>Max Purchase Quantity
             </label>
             <p className="text-sm text-gray-200 font-poppins">
-              Set the maximum number of units a single buyer can purchase in one order — leave blank for no limit.
+              Set the maximum number of units a single buyer can purchase in one order —
+              leave blank for no limit.
             </p>
             <StepperInput
               placeholder="00"
@@ -164,21 +198,23 @@ export default function PhysicalArtDimension({
         </section>
 
         {/* VARIATIONS — draft.has_variants: boolean */}
-        {!hideVariationSection && <section className="pt-4 space-y-3">
-          <div className="flex items-center justify-between">
-            <h3 className="font-medium text-body-s text-gray-500 font-poppins">
-              Does this artwork have variations?
-            </h3>
-            <Switch
-              checked={hasVariants}
-              onCheckedChange={(val) => setDraftField("has_variants", val)}
-            />
-          </div>
-          <p className="text-sm text-gray-200 font-poppins max-w-lg">
-            Enable this if your artwork is available in different forms (e.g., size or material). If not, keep off and sell as a single version.
-          </p>
-        </section>}
-
+        {!hideVariationSection && (
+          <section className="pt-4 space-y-3">
+            <div className="flex items-center justify-between">
+              <h3 className="font-medium text-body-s text-gray-500 font-poppins">
+                Does this artwork have variations?
+              </h3>
+              <Switch
+                checked={hasVariants}
+                onCheckedChange={(val) => setDraftField("has_variants", val)}
+              />
+            </div>
+            <p className="text-sm text-gray-200 font-poppins max-w-lg">
+              Enable this if your artwork is available in different forms (e.g., size or
+              material). If not, keep off and sell as a single version.
+            </p>
+          </section>
+        )}
       </div>
 
       {/* FOOTER */}
@@ -189,16 +225,27 @@ export default function PhysicalArtDimension({
           onClick={onBack}
           className="rounded-full py-4 border-primary-500 text-primary-500 flex items-center justify-center gap-2 hover:bg-primary-50"
         >
-          <Image src="/icons/alt-arrow-left-double-red.svg" width={18} height={18} alt="back icon" />
+          <Image
+            src="/icons/alt-arrow-left-double-red.svg"
+            width={18}
+            height={18}
+            alt="back icon"
+          />
           Back
         </Button>
         <Button
           fullWidth
+          disabled={!isFormValid}
           onClick={onNext}
-          className="rounded-full py-4 bg-primary-500 text-white flex items-center justify-center gap-2 hover:bg-primary-600 shadow-lg shadow-primary-500/20"
+          className="rounded-full py-4 bg-primary-500 text-white flex items-center justify-center gap-2 hover:bg-primary-600 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-primary-500"
         >
           Next
-          <Image src="/icons/alt-arrow-right-double.svg" width={18} height={18} alt="next icon" />
+          <Image
+            src="/icons/alt-arrow-right-double.svg"
+            width={18}
+            height={18}
+            alt="next icon"
+          />
         </Button>
       </div>
     </div>

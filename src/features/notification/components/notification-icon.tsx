@@ -23,7 +23,6 @@ type NotificationIconProps = {
 
 /** Small orange circle with a white icon — shown bottom-right of avatar. */
 export function NotificationIcon({ type, className }: NotificationIconProps) {
-  // Fall back to Bell if the type is undefined or unmapped
   const Icon = ICON_MAP[type] ?? Bell
 
   return (

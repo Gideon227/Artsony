@@ -14,6 +14,7 @@ import { ForgotPasswordArtworkGrid } from '@/features/auth/components/forgot-pas
 import { MobileAuthHero } from '@/features/auth/components/mobile-auth-hero'
 import { useResetPassword } from '@/hooks/use-auth-mutations'
 import { cn } from '@/lib/utils'
+import AuthFooter from '@/components/layout/auth-footer'
 
 function InvalidLinkPanel() {
   return (
@@ -164,11 +165,7 @@ function ResetPasswordContent() {
                   : <InvalidLinkPanel />
                 }
 
-                <div className="hidden lg:flex mt-10 justify-center gap-6 text-sm text-neutral-500 font-medium">
-                  {[['Privacy', '/privacy'], ['Terms & Conditions', '/terms'], ['FAQ', '/faq'], ['About', '/about']].map(([label, href]) => (
-                    <Link key={label} href={href!} className="hover:text-neutral-800 transition-colors">{label}</Link>
-                  ))}
-                </div>
+                <AuthFooter />
               </div>
             </div>
           </div>

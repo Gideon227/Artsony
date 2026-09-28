@@ -18,11 +18,6 @@ interface HeroSlide {
   bio: string;
 }
 
-// Shown whenever there aren't yet enough qualifying featured artworks to fill
-// every hero slot — early on that's most/all of them. As real artworks pick
-// up views, likes, and sales, GET /api/artworks/featured returns more real
-// slides and these get displaced automatically; nothing here needs to change
-// when that happens.
 const PLACEHOLDER_SLIDES: HeroSlide[] = [
   {
     id: 'placeholder-1',
@@ -43,8 +38,6 @@ const PLACEHOLDER_SLIDES: HeroSlide[] = [
 ];
 
 function toHeroSlide(artwork: HeroArtwork): HeroSlide | null {
-  // No thumbnail means nothing to show behind the slide — skip rather than
-  // rendering a broken/blank hero background.
   if (!artwork.thumbnail_url) return null;
 
   return {
@@ -76,9 +69,9 @@ export function buildSlides(featured: HeroArtwork[] | undefined): HeroSlide[] {
 export const HeroSection = () => {
   const [index, setIndex] = useState(0);
 
-  // Public, decorative data — a fetch failure should never block or error
-  // the hero, it should just fall back to placeholder slides.
   const { data: featured, isError } = useHeroArtworks(HERO_SLIDE_COUNT);
+  console.log("Featred Artworks: ", featured)
+
 
   useEffect(() => {
     if (isError) {
@@ -107,7 +100,8 @@ export const HeroSection = () => {
   if (!currentSlide) return <div className="h-screen w-full bg-black" />;
 
   return (
-    <div className="relative h-[80vh] md:h-screen w-full overflow-hidden bg-black">
+    <div className="relative h-[75vh] md:h-screen w-full overflow-hidden bg-black">
+      {/* Dynamic Animated Content (Background Image + Artist Info) */}
       <AnimatePresence mode="wait">
         <motion.div
           key={currentSlide.id}
@@ -129,68 +123,49 @@ export const HeroSection = () => {
             <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent" />
           </motion.div>
 
-          {/* Content Layout */}
-          <div className="relative z-10 h-full flex flex-col justify-center px-4 md:px-8">
-            
-            <motion.div
-              initial={{ y: 20, opacity: 0 }}
-              animate={{ y: 0, opacity: 1 }}
-              transition={{ delay: 0.5, duration: 0.8 }}
-              className="max-w-5xl mx-auto flex justify-center"
+          {/* Artist Info */}
+          <div className="absolute bottom-8 left-8 z-10 max-w-2xl">
+            <motion.div 
+              initial={{ x: -20, opacity: 0 }}
+              animate={{ x: 0, opacity: 1 }}
+              transition={{ delay: 0.8, duration: 0.6 }}
+              className="flex items-center gap-2 mb-4 group cursor-pointer w-fit"
             >
-              <h1 className="text-white font-raleway font-semibold text-[64px] max-md:text-[32px] max-md:leading-10 leading-18 text-center tracking-wide">
-                {currentSlide.title}
-              </h1>
+              <Image 
+                src={currentSlide.artistAvatar} 
+                alt={currentSlide.artistName}
+                width={40}
+                height={40} 
+                className="w-10 h-10 rounded-full border border-white/30 object-cover"
+              />
+              <div className="flex items-center gap-2">
+                <span className="text-white text-body-xs font-poppins font-medium tracking-tight">
+                  {currentSlide.artistName}
+                </span>
+                <ChevronsRight className="text-white/70 w-5 h-5 transition-transform group-hover:translate-x-1" />
+              </div>
             </motion.div>
 
-            {/* Artist Info */}
-            <div className="absolute bottom-8 left-8 max-w-2xl" style={{ bottom: 32, left: 32 }}>
-              <motion.div 
-                initial={{ x: -20, opacity: 0 }}
-                animate={{ x: 0, opacity: 1 }}
-                transition={{ delay: 0.8, duration: 0.6 }}
-                className="flex items-center gap-2 mb-4 group cursor-pointer w-fit"
-              >
-                <Image 
-                  src={currentSlide.artistAvatar} 
-                  alt={currentSlide.artistName}
-                  width={40}
-                  height={40} 
-                  className="w-10 h-10 rounded-full border border-white/30 object-cover"
-                />
-                <div className="flex items-center gap-2">
-                  <span className="text-white text-[12px] font-poppins font-medium tracking-tight">
-                    {currentSlide.artistName}
-                  </span>
-                  <ChevronsRight className="text-white/70 w-5 h-5 transition-transform group-hover:translate-x-1" />
-                </div>
-              </motion.div>
-
-              <motion.p 
-                initial={{ y: 10, opacity: 0 }}
-                animate={{ y: 0, opacity: 1 }}
-                transition={{ delay: 1, duration: 0.6 }}
-                className="text-white/80 text-[12px] md:text-[14px] font-medium italic leading-relaxed max-w-lg"
-              >
-                “{currentSlide.bio}”
-              </motion.p>
-            </div>
+            <motion.p 
+              initial={{ y: 10, opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              transition={{ delay: 1, duration: 0.6 }}
+              className="line-clamp-2 text-white/80 text-body-xs md:text-body-s font-medium italic leading-relaxed max-w-lg"
+            >
+              “{currentSlide.bio}”
+            </motion.p>
           </div>
         </motion.div>
       </AnimatePresence>
 
-      {/* Slide Indicators */}
-      {/* <div className="absolute bottom-10 right-10 z-20 flex gap-3">
-        {slides.map((_, i) => (
-          <button
-            key={i}
-            onClick={() => setIndex(i)}
-            className={`h-1 transition-all duration-500 rounded-full ${
-              i === index ? 'w-12 bg-white' : 'w-4 bg-white/30'
-            }`}
-          />
-        ))}
-      </div> */}
+      {/* Static Title Layer (Stays fixed during slide changes) */}
+      <div className="absolute inset-0 z-20 flex flex-col justify-center px-4 md:px-8 pointer-events-none">
+        <div className="max-w-5xl mx-auto flex justify-center">
+          <h1 className="text-white font-raleway font-semibold text-h1 max-md:text-h4 max-md:leading-10 leading-22 text-center tracking-wide pointer-events-auto">
+            Buy What You Love.<br />Sell What You Make.
+          </h1>
+        </div>
+      </div>
     </div>
   );
 };

@@ -5,9 +5,10 @@ import {
   useQueryClient,
 } from '@tanstack/react-query'
 import { notificationService } from '@/services/notification.service'
+import type { NotificationPage } from '@/services/notification.service'
 import { QUERY_KEYS, STALE_TIMES } from '@/constants'
 import { useToast } from '@/components/ui/toaster'
-import type { Notification, PaginatedResponse } from '@/types'
+import type { ApiResponse } from '@/types'
 
 type FilterType = 'all' | 'unread'
 
@@ -16,11 +17,11 @@ type FilterType = 'all' | 'unread'
 export function useNotifications(filter: FilterType = 'all') {
   return useInfiniteQuery({
     queryKey: [...QUERY_KEYS.notifications, filter],
-    queryFn: ({ pageParam = 1 }) =>
-      notificationService.getAll({ page: pageParam as number, perPage: 20, filter }),
-    getNextPageParam: (last: PaginatedResponse<Notification>) =>
-      last.hasNextPage ? last.page + 1 : undefined,
-    initialPageParam: 1,
+    queryFn: ({ pageParam }: { pageParam: string | undefined }) =>
+      notificationService.getAll({ cursor: pageParam, limit: 20, unreadOnly: filter === 'unread' }),
+    getNextPageParam: (last: ApiResponse<NotificationPage>) =>
+      last.data.has_more ? (last.data.next_cursor ?? undefined) : undefined,
+    initialPageParam: undefined as string | undefined,
     staleTime: STALE_TIMES.fast,
   })
 }
@@ -50,7 +51,7 @@ export function useMarkRead() {
 
       const previousData = qc.getQueryData(QUERY_KEYS.notifications)
 
-      qc.setQueriesData<{ pages: { data: Notification[] }[] }>(
+      qc.setQueriesData<{ pages: ApiResponse<NotificationPage>[] }>(
         { queryKey: QUERY_KEYS.notifications },
         (old) => {
           if (!old) return old
@@ -58,9 +59,12 @@ export function useMarkRead() {
             ...old,
             pages: old.pages.map((page) => ({
               ...page,
-              data: page.data.map((n) =>
-                n.id === id ? { ...n, isRead: true } : n
-              ),
+              data: {
+                ...page.data,
+                items: page.data.items.map((n) =>
+                  n.id === id ? { ...n, is_read: true } : n
+                ),
+              },
             })),
           }
         }
@@ -93,7 +97,7 @@ export function useMarkAllRead() {
     onMutate: async () => {
       await qc.cancelQueries({ queryKey: QUERY_KEYS.notifications })
 
-      qc.setQueriesData<{ pages: { data: Notification[] }[] }>(
+      qc.setQueriesData<{ pages: ApiResponse<NotificationPage>[] }>(
         { queryKey: QUERY_KEYS.notifications },
         (old) => {
           if (!old) return old
@@ -101,7 +105,10 @@ export function useMarkAllRead() {
             ...old,
             pages: old.pages.map((page) => ({
               ...page,
-              data: page.data.map((n) => ({ ...n, isRead: true })),
+              data: {
+                ...page.data,
+                items: page.data.items.map((n) => ({ ...n, is_read: true })),
+              },
             })),
           }
         }
@@ -132,7 +139,7 @@ export function useDeleteNotification() {
     onMutate: async (id: string) => {
       await qc.cancelQueries({ queryKey: QUERY_KEYS.notifications })
 
-      qc.setQueriesData<{ pages: { data: Notification[] }[] }>(
+      qc.setQueriesData<{ pages: ApiResponse<NotificationPage>[] }>(
         { queryKey: QUERY_KEYS.notifications },
         (old) => {
           if (!old) return old
@@ -140,7 +147,10 @@ export function useDeleteNotification() {
             ...old,
             pages: old.pages.map((page) => ({
               ...page,
-              data: page.data.filter((n) => n.id !== id),
+              data: {
+                ...page.data,
+                items: page.data.items.filter((n) => n.id !== id),
+              },
             })),
           }
         }

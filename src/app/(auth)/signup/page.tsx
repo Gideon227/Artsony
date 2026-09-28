@@ -14,6 +14,7 @@ import { MobileAuthHero } from '@/features/auth/components/mobile-auth-hero'
 import { useRegister } from '@/hooks/use-auth-mutations'
 import { signUpSchema, type SignUpInput } from '@/features/auth/schemas/signup.schema'
 import { cn } from '@/lib/utils'
+import AuthFooter from '@/components/layout/auth-footer'
 
 const OAUTH_PROVIDERS = ['google', 'apple', 'facebook'] as const
 const OAUTH_LABELS: Record<(typeof OAUTH_PROVIDERS)[number], string> = {
@@ -121,7 +122,7 @@ export default function SignUpPage() {
                     variant={touchedFields.username && errors.username ? 'error' : 'default'}
                   />
                   {touchedFields.username && errors.username && (
-                    <p className="mt-1 pl-4 text-sm text-error-600">{errors.username.message}</p>
+                    <p className="mt-1 pl-4 text-body-xs font-poppins text-error-500">{errors.username.message}</p>
                   )}
                 </div>
 
@@ -135,7 +136,7 @@ export default function SignUpPage() {
                     variant={touchedFields.email && errors.email ? 'error' : 'default'}
                   />
                   {touchedFields.email && errors.email && (
-                    <p className="mt-1 pl-4 text-sm text-error-600">{errors.email.message}</p>
+                    <p className="mt-1 pl-4 text-body-xs font-poppins text-error-500">{errors.email.message}</p>
                   )}
                 </div>
 
@@ -149,12 +150,12 @@ export default function SignUpPage() {
                     variant={touchedFields.password && errors.password ? 'error' : 'default'}
                   />
                   {touchedFields.password && errors.password && (
-                    <p className="mt-1 pl-4 text-sm text-error-600">{errors.password.message}</p>
+                    <p className="mt-1 pl-4 text-body-xs font-poppins text-error-500">{errors.password.message}</p>
                   )}
                 </div>
 
                 {/* Checkbox via Controller so RHF gets the boolean value correctly */}
-                <div className="flex items-start justify-start gap-3 pt-1">
+                <div className="flex items-center justify-start gap-3 pt-1">
                   <Controller
                     name="termsAccepted"
                     control={control}
@@ -170,16 +171,16 @@ export default function SignUpPage() {
                   <div>
                     <label
                       htmlFor="termsAccepted"
-                      className="text-body-xs  text-neutral-500 cursor-pointer"
+                      className="text-body-xs font-poppins text-body cursor-pointer"
                     >
                       I hereby agree to Artsony&apos;s{' '}
-                      <Link href="/terms" className="font-semibold text-body hover:underline">
+                      <Link href="/terms" className="font-semibold text-body hover:underline hover:text-primary-500">
                         terms and conditions
                       </Link>
                       .
                     </label>
                     {errors.termsAccepted && (
-                      <p className="mt-0.5 text-xs text-error-600">{errors.termsAccepted.message}</p>
+                      <p className="mt-0.5 text-body-xxs font-poppins text-error-500">{errors.termsAccepted.message}</p>
                     )}
                   </div>
                 </div>
@@ -189,7 +190,7 @@ export default function SignUpPage() {
                   fullWidth
                   isLoading={isPending}
                   loadingText="Setting up your account…"
-                  className="cursor-pointer font-poppins font-medium text-[14px] leading-6 tracking-wide h-14 rounded-full"
+                  className="cursor-pointer font-poppins font-medium text-[14px] leading-6 tracking-wide rounded-full"
                 >
                   Let&apos;s have fun!
                 </Button>
@@ -237,23 +238,7 @@ export default function SignUpPage() {
               </Link>
             </div>
 
-            <footer className="hidden font-poppins lg:flex lg:justify-center mt-10 gap-6 text-[14px] font-medium tracking-wide text-gray-400">
-              {['Privacy', 'Terms & Conditions', 'FAQ', 'About'].map((label) => (
-                <Link
-                  key={label}
-                  href={`/${label.toLowerCase().replace(/ & /g, '-').replace(/ /g, '-')}`}
-                  className="p-2 text-nowrap hover:text-neutral-700 transition-colors"
-                >
-                  {label}
-                </Link>
-              ))}
-              <button
-                type="button"
-                className="p-2 text-nowrap hover:text-neutral-700 transition-colors"
-              >
-                Language
-              </button>
-            </footer>
+            <AuthFooter />
           </div>
         </div>
       </section>

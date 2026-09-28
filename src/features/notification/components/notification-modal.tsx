@@ -19,8 +19,8 @@ const NotificationModal = ({ onClose }: { onClose?: () => void }) => {
 
     const { data: unreadCount = 0 } = useUnreadCount()
 
-    const notifications: any = useMemo(
-        () => data?.pages.map((p) => p.data) ?? [],
+    const notifications = useMemo(
+        () => data?.pages.flatMap((p) => p.data.items) ?? [],
         [data]
     )
 

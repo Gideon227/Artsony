@@ -123,18 +123,32 @@ async function request<T>(path: string, options: RequestOptions = {}): Promise<T
         headers: { ...headers, Authorization: `Bearer ${newToken}` }
       })
     } catch (err) {
+      // Only treat this as "the session is actually over" when the refresh
+      // endpoint itself rejected us (HttpError — expired/revoked refresh
+      // token). A network hiccup, timeout, or offline moment throws a plain
+      // fetch error here, not an HttpError — that must NOT log the user out.
+      // Previously any flaky connection during a refresh wiped a perfectly
+      // valid session; now we just fail this one request and leave the
+      // token/session alone so the next attempt can succeed normally.
+      const sessionActuallyEnded = err instanceof HttpError
+
       processRefreshQueue(null, err)
-      setMemoryToken(null)
-      // Import dynamically to avoid circular dep with store
-      const { useAuthStore } = await import('@/store/auth.store')
-      useAuthStore.getState().clearAuth()
-      // Only hard-redirect to /login if the user was previously authenticated
-      // (they had an access token that expired). Do NOT redirect guests — they
-      // have no token and the middleware already handles routing them to /signup
-      // or /login. Redirecting guests here causes an infinite reload loop.
-      if (typeof window !== 'undefined' && token) {
-        window.location.href = '/login'
+
+      if (sessionActuallyEnded) {
+        setMemoryToken(null)
+        // Import dynamically to avoid circular dep with store
+        const { useAuthStore } = await import('@/store/auth.store')
+        useAuthStore.getState().clearAuth()
+        // Keep middleware in sync so a gated route bounces to /login on the
+        // next navigation — but don't force-navigate the user right now.
+        // They simply become a guest on whatever (likely open) page they're
+        // already on, exactly like the "remove all redirects" browsing model
+        // everywhere else in the app.
+        if (typeof window !== 'undefined') {
+          document.cookie = 'artsony_session=; max-age=0; path=/; SameSite=Strict'
+        }
       }
+
       throw err
     } finally {
       isRefreshing = false

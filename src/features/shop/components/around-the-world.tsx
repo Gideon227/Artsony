@@ -98,7 +98,7 @@ export default function AroundTheWorld() {
 
     return (
         <section className="w-full bg-[#ECF3F4] py-12 px-8 overflow-hidden">
-            <div className="max-w-[1440px] mx-auto grid grid-cols-1 lg:grid-cols-12 gap-[116px]">
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-[116px]">
                 
                 {/* --- Left Column: Context & City Selector --- */}
                 <div className="lg:col-span-3 flex flex-col gap-y-4 justify-center">

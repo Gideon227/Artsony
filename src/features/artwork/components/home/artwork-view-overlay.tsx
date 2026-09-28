@@ -28,6 +28,7 @@ import { SaveToMoodboardDialog } from '@/features/moodboards/components/save-to-
 import { ArtworkCreatorWorks } from './artwork-creator-works'
 import { ArtworkComments } from '../shop/artwork-comments'
 import Link from 'next/link'
+import { ShareModal } from '../../modals/share-modal'
 
 // ── Formatting ────────────────────────────────────────────────────────────────
 function formatCount(n: number): string {
@@ -398,7 +399,9 @@ export default function ArtworkViewOverlay({ artwork: artworkProp, onClose, onNa
 
       <div className="relative">
         <button
-          onClick={() => setShareOpen((v) => !v)}
+          onClick={() => {
+            setShareOpen(true)
+          }}
           aria-label="Share"
           className="flex cursor-pointer h-[46px] w-[46px] items-center justify-center rounded-full border-gray-50 border-2 transition-colors hover:bg-gray-100"
         >
@@ -407,13 +410,8 @@ export default function ArtworkViewOverlay({ artwork: artworkProp, onClose, onNa
           </svg>
         </button>
 
-        {shareOpen && (
-          <div className="absolute bottom-full left-0 mb-2 w-[180px] rounded-[16px] border border-gray-100 bg-white p-2 shadow-[0_8px_30px_rgba(0,0,0,0.12)]">
-            <button onClick={() => handleShare('whatsapp')} className="flex cursor-pointer w-full items-center rounded-[10px] px-3 py-2 text-left font-poppins text-[14px] text-gray-700 hover:bg-gray-50">WhatsApp</button>
-            <button onClick={() => handleShare('copy')} className="flex cursor-pointer w-full items-center rounded-[10px] px-3 py-2 text-left font-poppins text-[14px] text-gray-700 hover:bg-gray-50">Copy link</button>
-            <button onClick={() => handleShare('dribbble')} className="flex cursor-pointer w-full items-center rounded-[10px] px-3 py-2 text-left font-poppins text-[14px] text-gray-700 hover:bg-gray-50">Dribbble</button>
-          </div>
-        )}
+        {shareOpen && <ShareModal isOpen={shareOpen} onClose={() => setShareOpen(false)} />}
+
       </div>
 
       <button
@@ -732,7 +730,7 @@ export default function ArtworkViewOverlay({ artwork: artworkProp, onClose, onNa
           </button>
 
           {/* LEFT: scrolls independently of the right panel */}
-          <div ref={leftColRef} className="flex flex-col pt-14 lg:h-full lg:w-2/3 lg:overflow-y-auto lg:pt-0">
+          <div ref={leftColRef} className="flex flex-col pt-14 lg:h-full lg:w-full flex-1 lg:overflow-y-auto lg:pt-0">
             {heroMedia}
 
             <div className=" pb-20 lg:pb-0">
@@ -803,7 +801,7 @@ export default function ArtworkViewOverlay({ artwork: artworkProp, onClose, onNa
           </div>
 
           {/* ================= RIGHT: details panel, content-height (desktop only) === */}
-          <div className="hidden h-full lg:flex lg:w-1/3 lg:flex-col lg:self-start lg:border-l lg:border-gray-50 lg:px-6 lg:py-8">
+          <div className="hidden h-full lg:flex lg:w-[348px] lg:flex-col lg:self-start lg:border-l lg:border-gray-50 lg:px-6 lg:py-8">
             <div className="mb-6 pr-8">{profileHeader}</div>
             <div className="mb-6">{likeFollowRow}</div>
             <div className="mb-4">{artworkInfoStats}</div>
@@ -813,7 +811,7 @@ export default function ArtworkViewOverlay({ artwork: artworkProp, onClose, onNa
                 {formControls}
               </>
             )}
-            <div className="mt-8">
+            <div className="mt-4">
               {footerIcons}
             </div>
             <div className='mt-auto'>
@@ -834,7 +832,7 @@ export default function ArtworkViewOverlay({ artwork: artworkProp, onClose, onNa
         </button>
       </div>
     </div>
-
+    
     <SaveToMoodboardDialog artworkId={artwork.id} open={saveDialogOpen} onOpenChange={setSaveDialogOpen} />
     </>
   )

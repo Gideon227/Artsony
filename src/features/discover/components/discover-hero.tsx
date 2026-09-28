@@ -1,51 +1,3 @@
-// import Image from 'next/image'
-// import { ChevronsRight } from 'lucide-react'
-
-// // Placeholder featured-artist chip, same treatment as the homepage hero's
-// // artist badge. There's no "creator of the day" endpoint yet — wire this to
-// // real data (or drop it) whenever one exists.
-// const FEATURED_ARTIST = {
-//   name: 'Ivan Kovačević',
-//   avatarUrl: '/images/image-avatar.svg',
-// }
-
-// export function DiscoverHero() {
-//   return (
-//     <section
-//       className="relative mx-4 mt-6 h-[260px] w-auto overflow-hidden rounded-[24px] bg-neutral-900 md:mx-8"
-//     >
-//       <div
-//         className="absolute inset-0 bg-cover bg-center"
-//         style={{ backgroundImage: "url('/images/discover-hero-bg.jpg')" }}
-//       />
-//       <div className="absolute inset-0 bg-gradient-to-r from-black/70 via-black/45 to-black/70" />
-
-//       <div className="relative z-10 flex h-full flex-col items-center justify-center px-6 text-center">
-//         <h1 className="font-raleway text-[28px] font-semibold leading-tight text-white md:text-[36px]">
-//           Discover What the World is Creating
-//         </h1>
-//         <p className="mt-3 max-w-xl font-poppins text-[13px] leading-6 text-white/80 md:text-[14px]">
-//           Explore new uploads, trending art, and standout creators — all in one stream,
-//           all in real time. Your next favorite piece might be a scroll away.
-//         </p>
-//       </div>
-
-//       <div className="absolute bottom-5 left-6 flex items-center gap-2">
-//         <Image
-//           src={FEATURED_ARTIST.avatarUrl}
-//           alt={FEATURED_ARTIST.name}
-//           width={32}
-//           height={32}
-//           className="h-8 w-8 rounded-full border border-white/40 object-cover"
-//         />
-//         <span className="font-poppins text-[13px] font-medium text-white">{FEATURED_ARTIST.name}</span>
-//         <ChevronsRight className="h-4 w-4 text-white/70" />
-//       </div>
-//     </section>
-//   )
-// }
-
-
 'use client'
 
 import React, { useState, useEffect, useMemo } from 'react';
@@ -156,6 +108,7 @@ export const DiscoverHero = () => {
 
   return (
     <div className="relative h-120 w-full overflow-hidden bg-black">
+      {/* Animated Backgrounds & Artist Info (Changes every 6s) */}
       <AnimatePresence mode="wait">
         <motion.div
           key={currentSlide.id}
@@ -177,51 +130,52 @@ export const DiscoverHero = () => {
             <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent" />
           </motion.div>
 
-          {/* Content Layout */}
-          <div className="relative z-10 h-full flex flex-col justify-center px-4 md:px-8">
-            
-            <motion.div
-              initial={{ y: 20, opacity: 0 }}
-              animate={{ y: 0, opacity: 1 }}
-              transition={{ delay: 0.5, duration: 0.8 }}
-              className="max-w-5xl mx-auto flex flex-col gap-y-4 justify-center"
+          {/* Artist Info */}
+          <div className="absolute bottom-16 left-6 md:left-8 lg:left-12 max-w-2xl z-10" style={{ bottom: 32 }}>
+            <motion.div 
+              initial={{ x: -20, opacity: 0 }}
+              animate={{ x: 0, opacity: 1 }}
+              transition={{ delay: 0.8, duration: 0.6 }}
+              className="flex items-center gap-2 mb-4 group cursor-pointer w-fit"
             >
-              <h1 className="text-white font-raleway font-semibold text-h3 max-md:text-h4 max-md:leading-10 leading-12 text-center tracking-wide">
-                {currentSlide.title}
-              </h1>
-
-              <p className='font-poppins text-white text-body-s leading-6 tracking-wide text-center'>{currentSlide.text}</p>
+              <Image 
+                src={currentSlide.artistAvatar} 
+                alt={currentSlide.artistName}
+                width={40}
+                height={40} 
+                className="w-10 h-10 rounded-full border border-white/30 object-cover"
+              />
+              <div className="flex items-center gap-2">
+                <span className="text-white text-[12px] font-poppins font-medium tracking-tight">
+                  {currentSlide.artistName}
+                </span>
+                <ChevronsRight className="text-white/70 w-5 h-5 transition-transform group-hover:translate-x-1" />
+              </div>
             </motion.div>
-
-            {/* Artist Info */}
-            <div className="absolute bottom-16 left-6 md:left-8 lg:left-12 max-w-2xl" style={{ bottom: 32 }}>
-              <motion.div 
-                initial={{ x: -20, opacity: 0 }}
-                animate={{ x: 0, opacity: 1 }}
-                transition={{ delay: 0.8, duration: 0.6 }}
-                className="flex items-center gap-2 mb-4 group cursor-pointer w-fit"
-              >
-                <Image 
-                  src={currentSlide.artistAvatar} 
-                  alt={currentSlide.artistName}
-                  width={40}
-                  height={40} 
-                  className="w-10 h-10 rounded-full border border-white/30 object-cover"
-                />
-                <div className="flex items-center gap-2">
-                  <span className="text-white text-[12px] font-poppins font-medium tracking-tight">
-                    {currentSlide.artistName}
-                  </span>
-                  <ChevronsRight className="text-white/70 w-5 h-5 transition-transform group-hover:translate-x-1" />
-                </div>
-              </motion.div>
-            </div>
           </div>
         </motion.div>
       </AnimatePresence>
 
+      {/* Static Center Text (Outside AnimatePresence so it never re-renders/animates out) */}
+      <div className="absolute inset-0 z-20 flex flex-col justify-center px-4 md:px-8 pointer-events-none">
+        <motion.div
+          initial={{ y: 20, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          transition={{ delay: 0.5, duration: 0.8 }}
+          className="max-w-5xl mx-auto flex flex-col gap-y-4 justify-center items-center pointer-events-auto"
+        >
+          <h1 className="text-white font-raleway font-semibold text-h3 max-md:text-h4 max-md:leading-10 leading-12 text-center tracking-wide">
+            Discover What the World is Creating
+          </h1>
+
+          <p className="font-poppins max-w-[557px] text-white text-body-s leading-6 tracking-wide text-center">
+            Explore new uploads, trending art, and standout creators — all in one stream, all in real time. Your next favorite piece might be a scroll away.
+          </p>
+        </motion.div>
+      </div>
+
       {/* Slide Indicators */}
-      {/* <div className="absolute bottom-10 right-10 z-20 flex gap-3">
+      {/* <div className="absolute bottom-10 right-10 z-30 flex gap-3">
         {slides.map((_, i) => (
           <button
             key={i}

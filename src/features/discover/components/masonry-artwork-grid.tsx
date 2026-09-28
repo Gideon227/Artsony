@@ -44,7 +44,7 @@ export function MasonryArtworkGrid({ artworks, onArtworkClick }: MasonryArtworkG
   const { quickAdd } = useQuickAddToCart()
 
   return (
-    <div className="max-w-[1440px] mx-auto px-4 md:px-8">
+    <div className="py-12 px-4 md:px-8">
       <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
         {artworks.map((artwork, i) => {
           const asset = artwork.assets?.[0]

@@ -6,6 +6,7 @@ import { Search } from 'lucide-react'
 import type { ConversationSummary } from '@/types/messaging'
 import { getConvDisplayName, getConvAvatar, formatMessageDate } from '../utils/messaging.utils'
 import { Input } from '@/components'
+import { ConversationOptionsMenu } from './conversation-options-menu'
 
 interface ConversationListProps {
   conversations: ConversationSummary[]
@@ -30,14 +31,13 @@ export function ConversationList({
     <aside className="flex shrink-0 flex-col border-r border-gray-100" style={{ width: '40%' }}>
 
       {/* Search */}
-      <div className="px-4 pb-4">
-        <Input 
+      <div className="py-4 px-6 border-b border-gray-50">
+        <Input
           value={searchQuery}
           onChange={(e) => onSearchChange(e.target.value)}
           placeholder="Search Profile"
           leftIcon='/home/magnifier.svg'
         />
-
       </div>
 
       {/* List */}
@@ -45,6 +45,12 @@ export function ConversationList({
         {isLoading ? (
           <div className="flex items-center justify-center py-10">
             <div className="h-6 w-6 animate-spin rounded-full border-b-2 border-primary-500" />
+          </div>
+        ) : conversations.length === 0 ? (
+          <div className="flex flex-col items-center justify-center gap-1 py-16 px-6 text-center">
+            <p className="text-[13px] font-medium text-neutral-500">
+              {searchQuery ? 'No conversations match your search' : 'No conversations yet'}
+            </p>
           </div>
         ) : (
           conversations.map((conv) => (
@@ -74,38 +80,41 @@ function ConversationItem({ conv, myId, isSelected, onSelect }: ConversationItem
   const avatar = getConvAvatar(conv)
 
   return (
-    <button
-      onClick={onSelect}
-      className={`relative flex w-full items-center gap-3 border-l-[3px] p-4 cursor-pointer text-left transition-colors ${
+    <div
+      className={`group relative flex w-full items-center gap-3 border-l-[3px] p-4 text-left transition-colors ${
         isSelected
           ? 'border-l-primary-500 bg-[#FFF1EE]'
           : 'border-l-transparent hover:bg-primary-50'
       }`}
     >
-      <ConversationAvatar name={name} avatar={avatar} />
+      <button onClick={onSelect} className="flex min-w-0 flex-1 items-center gap-3 cursor-pointer text-left">
+        <ConversationAvatar name={name} avatar={avatar} />
 
-      <div className="min-w-0 flex-1">
-        <div className="flex items-baseline justify-between gap-2">
-          <span className="truncate text-[14px] font-semibold text-gray-900">{name}</span>
-          {conv.last_message && (
-            <span className="shrink-0 text-[11px] text-gray-400">
-              {formatMessageDate(conv.last_message.created_at)}
-            </span>
-          )}
+        <div className="min-w-0 flex-1">
+          <div className="flex items-baseline justify-between gap-2">
+            <span className="truncate text-[14px] font-semibold text-gray-900">{name}</span>
+            {conv.last_message && (
+              <span className="shrink-0 text-[11px] text-gray-400">
+                {formatMessageDate(conv.last_message.created_at)}
+              </span>
+            )}
+          </div>
+          <p className="mt-0.5 truncate text-[12px] text-gray-500">
+            {conv.last_message?.deleted_at
+              ? 'Message deleted'
+              : (conv.last_message?.body ?? '')}
+          </p>
         </div>
-        <p className="mt-0.5 truncate text-[12px] text-gray-500">
-          {conv.last_message?.deleted_at
-            ? 'Message deleted'
-            : (conv.last_message?.body ?? '')}
-        </p>
-      </div>
 
-      {conv.unread_count > 0 && (
-        <span className="ml-1 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-primary-500 text-[10px] font-bold text-white">
-          {conv.unread_count > 99 ? '99+' : conv.unread_count}
-        </span>
-      )}
-    </button>
+        {conv.unread_count > 0 && (
+          <span className="ml-1 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-primary-500 text-[10px] font-bold text-white">
+            {conv.unread_count > 99 ? '99+' : conv.unread_count}
+          </span>
+        )}
+      </button>
+
+      <ConversationOptionsMenu conversation={conv} />
+    </div>
   )
 }
 

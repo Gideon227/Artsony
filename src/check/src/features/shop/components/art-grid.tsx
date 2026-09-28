@@ -1,0 +1,50 @@
+import { ArtCard, Artist } from '@/components/ui/art-card'
+import { Artwork } from '@/types'
+import { getDisplayThumbnail } from '@/utils'
+import React from 'react'
+
+interface Props {
+    artworks: Artwork[]
+    num: number
+    artVariant: "standard" | "discover" | "bland" | "shop"
+    onCardClick?: (artwork: Artwork, index: number) => void
+}
+
+const ArtGrid = ({ artworks, num, artVariant, onCardClick }: Props) => {
+    return (
+        <div className='py-12 px-8 gap-x-4 gap-y-12 grid grid-cols-4 max-w-[1440px] mx-auto'>
+            {artworks.slice(num)?.map((art, index) => {
+                
+                const mappedArtists: Artist[] = art.creator ? [{
+                    id: art.creator.id,
+                    name: art.creator.profile?.display_name || art.creator.username || 'Unknown Artist',
+                    avatarUrl: art.creator.profile?.avatar_url || '/default-avatar.png',
+                    role: art.creator.role || 'Artist',
+                    stats: {
+                        followers: art.creator.profile?.followers_count?.toString() || '0',
+                        likes: art.like_count?.toString() || '0',
+                        following: art.creator.profile?.following_count?.toString() || '0'
+                    }
+                }] : [];
+
+                return (
+                    <ArtCard 
+                        key={art.id || index}
+                        variant={artVariant}
+                        image={getDisplayThumbnail(art.assets)} 
+                        title={art.title}
+                        // artworkId={art.id}
+                        onCardClick={onCardClick ? () => onCardClick(art, index) : undefined}
+                        artist={mappedArtists}
+                        stats={{
+                            likes: art.like_count?.toString() || '0',
+                            views: art.view_count?.toString() || '0'
+                        }}
+                    />
+                )
+            })}
+        </div>
+    )
+}
+
+export default ArtGrid

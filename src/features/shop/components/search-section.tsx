@@ -64,8 +64,6 @@ interface SearchSectionProps {
 export function SearchSection({ query, onSearch, filters, onFilterChange, onClearFilters }: SearchSectionProps) {
   const [draftQuery, setDraftQuery] = useState(query)
   const [countryQuery, setCountryQuery] = useState('')
-  const [stateQuery, setStateQuery] = useState('')
-  const [cityQuery, setCityQuery] = useState('')
 
   const [countries, setCountries] = useState<DropdownOption[]>([])
   const [isLoadingCountries, setIsLoadingCountries] = useState(false)
@@ -101,17 +99,6 @@ export function SearchSection({ query, onSearch, filters, onFilterChange, onClea
     return countries.filter((c) => c.label.toLowerCase().includes(q))
   }, [countries, countryQuery])
 
-  // const { data: countries, isLoading: isLoadingCountries } = useArtworkLocations('country')
-  // const { data: states, isLoading: isLoadingStates } = useArtworkLocations(
-  //   'state',
-  //   filters.country ? { country: filters.country } : undefined,
-  // )
-  // const { data: cities, isLoading: isLoadingCities } = useArtworkLocations(
-  //   'city',
-  //   filters.country ? { country: filters.country, state: filters.state ?? undefined } : undefined,
-  // )
-
-
   useEffect(() => {
     setDraftQuery(query)
   }, [query])
@@ -125,11 +112,7 @@ export function SearchSection({ query, onSearch, filters, onFilterChange, onClea
     const lower = q.trim().toLowerCase()
     return list.filter((o) => o.label.toLowerCase().includes(lower))
   }
-
-  // const countryOptions = useMemo(() => toSearchableOptions(countries, countryQuery), [countries, countryQuery])
-  // const stateOptions = useMemo(() => toSearchableOptions(states, stateQuery), [states, stateQuery])
-  // const cityOptions = useMemo(() => toSearchableOptions(cities, cityQuery), [cities, cityQuery])
-
+  
   const priceLabel =
     filters.minPrice !== null || filters.maxPrice !== null
       ? `$${filters.minPrice ?? PRICE_MIN} - $${filters.maxPrice ?? PRICE_MAX}`
@@ -208,7 +191,7 @@ export function SearchSection({ query, onSearch, filters, onFilterChange, onClea
   ]
 
   return (
-    <div className="max-w-[1440px] mx-auto px-4 md:px-2 bg-white">
+    <div className="px-4 md:px-2 bg-white">
       <div className="flex justify-between items-center gap-4 pt-12 pb-4 px-6">
         <div className="max-w-md w-full h-12">
           <SearchInput

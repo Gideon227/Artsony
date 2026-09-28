@@ -12,6 +12,8 @@ import { LoginArtworkGrid } from '@/features/auth/components/login-artwork-grid'
 import { MobileAuthHero } from '@/features/auth/components/mobile-auth-hero'
 import { useLogin } from '@/hooks/use-auth-mutations'
 import { loginSchema, type LoginInput } from "@/features/auth/schemas/login.schema";
+import AuthFooter from '@/components/layout/auth-footer'
+import { Button } from '@/components'
 
 function LoginContent() {
   const router = useRouter()
@@ -82,17 +84,17 @@ function LoginContent() {
                   <span className="text-sm text-error-600 pl-4">{errors.password.message}</span>
                 )}
               </div>
+              
 
-              <button
+              <Button
                 type="submit"
-                disabled={isPending}
-                className="w-full h-[52px] cursor-pointer mt-4 bg-primary-500 hover:bg-primary-600 active:scale-[0.98] text-white rounded-full font-medium text-[15px] transition-all flex items-center justify-center disabled:opacity-70 disabled:pointer-events-none"
+                fullWidth
+                isLoading={isPending}
+                loadingText="Signing in…"
+                className="cursor-pointer font-poppins font-medium text-[14px] leading-6 tracking-wide rounded-full"
               >
-                {isPending
-                  ? <span className="flex items-center gap-2"><span className="animate-spin h-5 w-5 border-2 border-white border-t-transparent rounded-full inline-block" />Signing in…</span>
-                  : 'Step Into the Studio'
-                }
-              </button>
+                Step Into the Studio
+              </Button>
             </form>
 
             <div className="mt-4 flex justify-center items-center gap-x-1">
@@ -122,12 +124,7 @@ function LoginContent() {
             </Link>
           </div>
 
-          <footer className="hidden font-poppins lg:flex mt-auto mx-auto pt-10 gap-6 text-[14px] font-medium tracking-wide text-gray-400 hover:text-action-hover">
-            {[['Privacy', '/privacy'], ['Terms & Conditions', '/terms'], ['FAQ', '/faq'], ['About', '/about']].map(([label, href]) => (
-              <Link key={label} href={href!} className="p-2 text-nowrap hover:text-neutral-700 transition-colors">{label}</Link>
-            ))}
-            <button type="button" className="p-2 text-nowrap hover:text-neutral-700 transition-colors">Language</button>
-          </footer>
+          <AuthFooter />
         </div>
       </section>
     </main>

@@ -36,7 +36,7 @@ const ProfileAboutTab = ({ user }: { user: User }) => {
         <div className='flex w-full flex-col items-center justify-center bg-white'>
             <div className='flex w-full flex-col gap-8 px-4 py-10 md:px-8 md:py-12 lg:flex-row lg:gap-[132px] lg:px-[148px]'>
                 {/* LEFT COLUMN */}
-                <div className='flex w-1/2 flex-1 flex-col gap-6'>
+                <div className='flex w-full md:w-1/2 flex-1 flex-col gap-6'>
 
                     {/* BIO SECTION */}
                     <div className='flex w-full flex-col gap-6'>
@@ -87,7 +87,7 @@ const ProfileAboutTab = ({ user }: { user: User }) => {
                 </div>
 
                 {/* RIGHT COLUMN */}
-                <div className='flex w-1/2 flex-1 flex-col gap-6'>
+                <div className='flex w-full md:w-1/2 flex-1 flex-col gap-6'>
 
                     {/* STATS */}
                     <div className='flex w-full flex-col gap-6'>

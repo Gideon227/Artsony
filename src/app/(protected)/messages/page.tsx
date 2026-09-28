@@ -63,7 +63,7 @@ export default function MessagesPage() {
   if (!isLoading && conversations.length === 0) {
     return (
       <>
-        <Navbar />
+        {/* <Navbar /> */}
         <EmptyInbox onNewChat={() => setIsNewChatOpen(true)} />
         {isNewChatOpen && (
           <NewChatModal
@@ -79,53 +79,53 @@ export default function MessagesPage() {
   }
 
   return (
-    <div className="relative flex flex-col min-h-screen w-full overflow-hidden bg-white font-poppins">
-        <Navbar />
-        {/* Reconnecting banner */}
-        {!isConnected && status !== 'idle' && (
-            <div className="absolute top-0 left-0 z-50 w-full bg-amber-500 py-1.5 text-center text-xs font-semibold text-white">
-            {status === 'connecting' ? 'Connecting...' : 'Reconnecting to messaging server...'}
-            </div>
-        )}
-
-        <div className='flex justify-between items-center mb-6 px-8 pt-12'>
-            <h2 className='font-raleway font-semibold text-h4 text-body leading-10'>Messages</h2>
-            <Button onClick={() => setIsNewChatOpen(true)} leftIcon='/icons/plus-white-bg.svg'>New Chat</Button>
+    <div className="relative flex flex-col h-full min-h-screen w-full overflow-hidden bg-white font-poppins">
+      <Navbar />
+      {/* Reconnecting banner */}
+      {!isConnected && status !== 'idle' && (
+        <div className="absolute top-0 left-0 z-50 w-full bg-amber-500 py-1.5 text-center text-xs font-semibold text-white">
+        {status === 'connecting' ? 'Connecting...' : 'Reconnecting to messaging server...'}
         </div>
+      )}
 
-        <div className='flex justify-between flex-1'>
-            <ConversationList
-                conversations={filtered}
-                selectedId={selectedConvId}
-                myId={myId}
-                isLoading={isLoading}
-                searchQuery={searchQuery}
-                onSearchChange={setSearchQuery}
-                onSelect={setSelectedConvId}
+      <div className='flex justify-between items-center mb-6 px-8 pt-12'>
+        <h2 className='font-raleway font-semibold text-h4 text-body leading-10'>Messages</h2>
+        <Button onClick={() => setIsNewChatOpen(true)} leftIcon='/icons/plus-white-bg.svg'>New Chat</Button>
+      </div>
+
+      <div className='flex border border-gray-50 rounded-xl justify-between flex-1 mx-8'>
+        <ConversationList
+          conversations={filtered}
+          selectedId={selectedConvId}
+          myId={myId}
+          isLoading={isLoading}
+          searchQuery={searchQuery}
+          onSearchChange={setSearchQuery}
+          onSelect={setSelectedConvId}
+        />
+
+        <main className="relative flex flex-1 flex-col overflow-hidden">
+          {!selectedConvId ? (
+            <NoConversationSelected />
+          ) : (
+            <ChatThread
+              conversationId={selectedConvId}
+              conversation={activeConv}
+              myId={myId}
             />
+          )}
+        </main>
+      </div>
 
-            <main className="relative flex flex-1 flex-col overflow-hidden">
-                {!selectedConvId ? (
-                    <NoConversationSelected />
-                ) : (
-                    <ChatThread
-                        conversationId={selectedConvId}
-                        conversation={activeConv}
-                        myId={myId}
-                    />
-                )}
-            </main>
-        </div>
-
-        {isNewChatOpen && (
-            <NewChatModal
-                onClose={() => setIsNewChatOpen(false)}
-                onStartConversation={(id) => {
-                    setSelectedConvId(id)
-                    setIsNewChatOpen(false)
-                }}
-            />
-        )}
+      {isNewChatOpen && (
+        <NewChatModal
+          onClose={() => setIsNewChatOpen(false)}
+          onStartConversation={(id) => {
+            setSelectedConvId(id)
+            setIsNewChatOpen(false)
+          }}
+        />
+      )}
     </div>
   )
 }
