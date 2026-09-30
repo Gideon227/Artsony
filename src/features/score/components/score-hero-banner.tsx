@@ -5,13 +5,18 @@ import { HelpCircle } from 'lucide-react'
 import { CircularGauge } from '../ui/charts'
 import { useScoreOverview } from '@/hooks/queries/use-score'
 import { getRatingTier, RATING_TIER_META } from '@/lib/score/format'
+import { StudioCardError } from '@/features/studio/components/studio-card-error'
 
 function BannerSkeleton() {
   return <div className="h-[340px] w-full animate-pulse rounded-2xl bg-gray-50" />
 }
 
 export function ScoreHeroBanner() {
-  const { data: overview, isLoading } = useScoreOverview()
+  const { data: overview, isLoading, isError, error, refetch, isRefetching } = useScoreOverview()
+
+  if (isError && !overview) {
+    return <StudioCardError error={error} onRetry={() => void refetch()} isRetrying={isRefetching} className="h-60 flex-none" />
+  }
 
   if (isLoading || !overview) return <BannerSkeleton />
 

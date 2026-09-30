@@ -23,7 +23,7 @@ export type InputProps = Omit<React.InputHTMLAttributes<HTMLInputElement>, 'pref
 const variantBase: Record<InputVariant, { wrapper: string; input: string }> = {
   default: {
     wrapper: '',
-    input: 'border-neutral-200 bg-white hover:border-gray-50 focus-visible:ring-2 focus-visible:ring-[#FFFFFF] focus-visible:border-gray-50',
+    input: 'border-neutral-200 bg-white hover:border-gray-50 focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-[#FFFFFF] focus-visible:border-gray-50',
   },
   error: {
     wrapper: '',
@@ -101,7 +101,7 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>(
             onChange={handleChange}
             disabled={isDisabled}
             className={cn(
-              'flex h-14 w-full rounded-full border px-6 py-3 transition-all',
+              'flex h-12 w-full rounded-full border px-6 py-3 transition-all',
               'text-base font-medium text-neutral-800 placeholder:text-neutral-400',
               leftIcon && 'pl-14',
               (rightIcon || isPassword || error) && 'pr-14',

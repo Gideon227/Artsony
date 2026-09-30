@@ -1,10 +1,9 @@
 'use client'
 
-import { useState } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
 import { useMarketplaceArtworks } from '@/hooks/use-artwork'
-import ArtworkViewOverlay from '@/features/artwork/components/shop/artwork-view-overlay'
+import { useOpenArtwork } from '@/hooks/use-artwork-viewer'
 import type { Artwork } from '@/types/artwork'
 
 function resolveThumbnail(artwork: Artwork) {
@@ -15,7 +14,7 @@ function resolveThumbnail(artwork: Artwork) {
 export function AlsoLikeSection() {
   const { data, isLoading } = useMarketplaceArtworks(4)
   const artworks = data?.data ?? []
-  const [activeArtwork, setActiveArtwork] = useState<Artwork | null>(null)
+  const openArtwork = useOpenArtwork()
 
   if (!isLoading && artworks.length === 0) return null
 
@@ -47,7 +46,7 @@ export function AlsoLikeSection() {
                 <button
                   key={artwork.id}
                   type="button"
-                  onClick={() => setActiveArtwork(artwork)}
+                  onClick={() => openArtwork(artwork, { siblings: artworks, variant: 'shop' })}
                   className="group relative aspect-square overflow-hidden rounded-[24px] bg-gray-50 text-left"
                 >
                   <Image
@@ -78,10 +77,6 @@ export function AlsoLikeSection() {
               )
             })}
       </div>
-
-      {activeArtwork && (
-        <ArtworkViewOverlay artwork={activeArtwork} onClose={() => setActiveArtwork(null)} />
-      )}
     </section>
   )
 }

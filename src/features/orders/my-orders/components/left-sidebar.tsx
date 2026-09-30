@@ -36,13 +36,13 @@ export function LeftSideBar({ view, selectedId, onViewChange, onSelect }: Props)
             </button>
             <h4 className="font-raleway font-semibold text-h5 text-body tracking-wide leading-10">My Orders</h4>
           </div>
-          <Link
+          {/* <Link
             href="/my-orders/downloads"
             className="flex items-center gap-x-1.5 px-3 py-2 rounded-full border border-gray-50 font-poppins text-body-xs text-body shrink-0"
           >
             <Download size={14} />
             Downloads
-          </Link>
+          </Link> */}
         </div>
 
         <div className="flex items-center gap-x-2 w-full">

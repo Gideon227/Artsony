@@ -13,7 +13,7 @@ import TopArt from '@/features/shop/components/top-arts'
 import TopPicks from '@/features/shop/components/top-picks'
 import { useInfiniteArtworkResults } from '@/hooks/use-artwork'
 import type { ArtworkFilters } from '@/types/artwork'
-import ArtworkViewOverlay from '@/features/artwork/components/shop/artwork-view-overlay'
+import { useOpenArtwork } from '@/hooks/use-artwork-viewer'
 import { ShopResultsGrid } from '@/features/shop/components/shop-result-grid'
 import Footer from '@/components/layout/footer'
 
@@ -70,16 +70,11 @@ function ShopContent() {
   const artworks = useMemo(() => data?.pages.flatMap((p) => p.data) ?? [], [data])
   const total = data?.pages[0]?.total
 
-  const [activeGridIndex, setActiveGridIndex] = useState<number | null>(null)
-  const activeGridArtwork = activeGridIndex !== null ? artworks[activeGridIndex] ?? null : null
+  const openArtwork = useOpenArtwork()
 
-  const handleGridNavigate = (direction: 'prev' | 'next') => {
-    if (activeGridIndex === null) return
-    const nextIndex =
-      direction === 'next'
-        ? Math.min(activeGridIndex + 1, artworks.length - 1)
-        : Math.max(activeGridIndex - 1, 0)
-    if (nextIndex !== activeGridIndex) setActiveGridIndex(nextIndex)
+  const handleGridClick = (index: number) => {
+    const artwork = artworks[index]
+    if (artwork) openArtwork(artwork, { siblings: artworks, variant: 'shop' })
   }
 
   return (
@@ -114,16 +109,8 @@ function ShopContent() {
             artworks={artworks}
             num={0}
             artVariant="shop"
-            onCardClick={(_, index) => setActiveGridIndex(index)}
+            onCardClick={(_, index) => handleGridClick(index)}
           />
-
-          {activeGridArtwork && (
-            <ArtworkViewOverlay
-              artwork={activeGridArtwork}
-              onClose={() => setActiveGridIndex(null)}
-              onNavigate={handleGridNavigate}
-            />
-          )}
 
           <div className="flex justify-center pb-16">
             {hasNextPage && (

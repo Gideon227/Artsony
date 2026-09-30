@@ -11,7 +11,7 @@ import { CategoryPills } from '@/features/discover/components/category-pills'
 import { DiscoverResultsHeader } from '@/features/discover/components/discover-results-header'
 import { MasonryArtworkGrid } from '@/features/discover/components/masonry-artwork-grid'
 import { LoadMoreButton } from '@/features/discover/components/load-more-button'
-import ArtworkViewOverlay from '@/features/artwork/components/home/artwork-view-overlay'
+import { useOpenArtwork } from '@/hooks/use-artwork-viewer'
 import type { Artwork } from '@/types/artwork'
 import type { FeedSort } from '@/features/home/types'
 import type { LocationFilterValue } from '@/components/filters/location-cascade-filter'
@@ -21,7 +21,7 @@ const EMPTY_LOCATION: LocationFilterValue = { country: null, state: null, city: 
 export default function DiscoverPage() {
   const [category, setCategory] = useState<string | null>(null)
   const [sort, setSort] = useState<FeedSort | 'all'>('all')
-  const [activeArtwork, setActiveArtwork] = useState<Artwork | null>(null)
+  const openArtwork = useOpenArtwork()
   const [location, setLocation] = useState<LocationFilterValue>(EMPTY_LOCATION)
 
   const {
@@ -46,16 +46,8 @@ export default function DiscoverPage() {
     ? (INTERESTS.find((interest) => interest.id === category)?.label ?? 'Today')
     : 'Today'
 
-  const activeArtworkIndex = activeArtwork ? artworks.findIndex((a) => a.id === activeArtwork.id) : -1
-
-  const handleNavigateArtwork = (direction: 'prev' | 'next') => {
-    if (activeArtworkIndex === -1) return
-    const nextIndex = direction === 'next'
-      ? Math.min(activeArtworkIndex + 1, artworks.length - 1)
-      : Math.max(activeArtworkIndex - 1, 0)
-    if (nextIndex === activeArtworkIndex) return
-    setActiveArtwork(artworks[nextIndex] as Artwork)
-  }
+  const handleArtworkClick = (artwork: Artwork) =>
+    openArtwork(artwork, { siblings: artworks, variant: 'home' })
 
   return (
     <div className="min-h-screen bg-white">
@@ -92,7 +84,7 @@ export default function DiscoverPage() {
         </div>
       ) : (
         <>
-          <MasonryArtworkGrid artworks={artworks} onArtworkClick={setActiveArtwork} />
+          <MasonryArtworkGrid artworks={artworks} onArtworkClick={handleArtworkClick} />
           {hasNextPage && (
             <LoadMoreButton onClick={() => fetchNextPage()} isLoading={isFetchingNextPage} />
           )}
@@ -100,14 +92,6 @@ export default function DiscoverPage() {
       )}
 
       <Footer />
-
-      {activeArtwork && (
-        <ArtworkViewOverlay
-          artwork={activeArtwork}
-          onClose={() => setActiveArtwork(null)}
-          onNavigate={handleNavigateArtwork}
-        />
-      )}
     </div>
   )
 }

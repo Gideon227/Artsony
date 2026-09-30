@@ -11,7 +11,7 @@ import { SearchInput } from '@/components/ui/search-input'
 import { ResultsGrid } from '@/features/search/components/results-grid'
 import { useArtworkLocations, useHeroArtworks, useInfiniteArtworkResults } from '@/hooks/use-artwork'
 import type { Artwork, ArtworkFilters } from '@/types'
-import ArtworkViewOverlay from '@/features/artwork/components/home/artwork-view-overlay'
+import { useOpenArtwork } from '@/hooks/use-artwork-viewer'
 import FilterComponent, { FilterDropdownConfig } from '@/features/home/components/filter'
 import { DropdownOption } from '@/components/ui/dropdown'
 import { INTERESTS } from '@/features/onboarding/data/interests'
@@ -31,7 +31,7 @@ function SearchContent() {
   const urlQuery = searchParams.get('q') ?? ''
   const [localQuery, setLocalQuery] = useState(urlQuery)
   const [index, setIndex] = useState(0)
-  const [activeArtwork, setActiveArtwork] = useState<Artwork | null>(null)
+  const openArtwork = useOpenArtwork()
 
   useEffect(() => {
     setLocalQuery(urlQuery)
@@ -269,17 +269,8 @@ function SearchContent() {
   const artworks: Artwork[] = useMemo(() => data?.pages.flatMap((p) => p.data) ?? [], [data])
   const total = data?.pages[0]?.total
 
-  const activeArtworkIndex = activeArtwork ? artworks.findIndex((a) => a.id === activeArtwork.id) : -1
-
-  const handleNavigateArtwork = (direction: 'prev' | 'next') => {
-    if (activeArtworkIndex === -1) return
-    const nextIndex =
-      direction === 'next'
-        ? Math.min(activeArtworkIndex + 1, artworks.length - 1)
-        : Math.max(activeArtworkIndex - 1, 0)
-    if (nextIndex === activeArtworkIndex) return
-    setActiveArtwork(artworks[nextIndex] as Artwork)
-  }
+  const handleArtworkClick = (artwork: Artwork) =>
+    openArtwork(artwork, { siblings: artworks, variant: 'home' })
 
   if (!currentSlide) return <div className="h-screen w-full bg-black" />
 
@@ -388,21 +379,13 @@ function SearchContent() {
           fetchNextPage={fetchNextPage}
           query={urlQuery}
           total={total}
-          onArtworkClick={setActiveArtwork}
+          onArtworkClick={handleArtworkClick}
         />
       </main>
 
       <FilterComponent dropdowns={filterDropdowns} onClear={handleClearFilters} />
 
       <Footer />
-
-      {activeArtwork && (
-        <ArtworkViewOverlay
-          artwork={activeArtwork}
-          onClose={() => setActiveArtwork(null)}
-          onNavigate={handleNavigateArtwork}
-        />
-      )}
     </div>
   )
 }

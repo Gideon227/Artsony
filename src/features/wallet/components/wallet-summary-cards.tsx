@@ -8,6 +8,7 @@ import { Dropdown, type DropdownOption } from '@/components/ui/dropdown'
 import { formatUsd } from '@/lib/wallet/format'
 import type { WalletMetric, WalletPeriod, WalletSummary } from '@/types/wallet'
 import Image from 'next/image'
+import { StudioCardError } from '@/features/studio/components/studio-card-error'
 
 const PERIOD_OPTIONS: DropdownOption[] = [
   { id: 'TODAY', label: 'Today' },
@@ -88,9 +89,17 @@ export function TrendIndicator({ metric }: { metric: WalletMetric }) {
 export type WalletSummaryCardsProps = {
   summary: WalletSummary | undefined
   isLoading: boolean
+  isError?: boolean
+  error?: unknown
+  onRetry?: () => void
+  isRetrying?: boolean
 }
 
-export function WalletSummaryCards({ summary, isLoading }: WalletSummaryCardsProps) {
+export function WalletSummaryCards({ summary, isLoading, isError = false, error, onRetry, isRetrying }: WalletSummaryCardsProps) {
+  if (isError && !summary && onRetry) {
+    return <StudioCardError error={error} onRetry={onRetry} isRetrying={isRetrying ?? false} className="flex-none" />
+  }
+
   if (isLoading || !summary) {
     return (
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">

@@ -5,7 +5,7 @@ import { Artwork } from '@/types';
 import React, { useEffect, useState } from 'react'
 import ArtGrid from './art-grid';
 import { useAuthStore } from '@/store';
-import ArtworkViewOverlay from '@/features/artwork/components/shop/artwork-view-overlay'
+import { useOpenArtwork } from '@/hooks/use-artwork-viewer'
 
 // Matches the Figma dropdown exactly: "For You" is the default/current value,
 // the rest are the selectable list. The first 5 are feed *modes* (mutually
@@ -52,7 +52,7 @@ const TopArt = () => {
     const [artworks, setArtworks] = useState<Artwork[]>([])
     const [isLoading, setIsLoading] = useState<boolean>(true)
     const [error, setError] = useState<string | null>(null)
-    const [activeIndex, setActiveIndex] = useState<number | null>(null)
+    const openArtwork = useOpenArtwork()
 
     // console.log('Top Art Artworks: ', artworks, isLoading, error)
 
@@ -94,14 +94,9 @@ const TopArt = () => {
         fetchMarketplaceArtworks()
     }, [selected, user?.id])
 
-    const activeArtwork = activeIndex !== null ? artworks[activeIndex] ?? null : null
-
-    const handleNavigate = (direction: 'prev' | 'next') => {
-        if (activeIndex === null) return
-        const nextIndex = direction === 'next'
-            ? Math.min(activeIndex + 1, artworks.length - 1)
-            : Math.max(activeIndex - 1, 0)
-        if (nextIndex !== activeIndex) setActiveIndex(nextIndex)
+    const handleOpenArtwork = (index: number) => {
+        const target = artworks[index]
+        if (target) openArtwork(target, { siblings: artworks, variant: 'shop' })
     }
 
     return (
@@ -134,15 +129,7 @@ const TopArt = () => {
                     artworks={artworks}
                     artVariant='shop'
                     num={0}
-                    onCardClick={(_, index) => setActiveIndex(index)}
-                />
-            )}
-
-            {activeArtwork && (
-                <ArtworkViewOverlay
-                    artwork={activeArtwork}
-                    onClose={() => setActiveIndex(null)}
-                    onNavigate={handleNavigate}
+                    onCardClick={(_, index) => handleOpenArtwork(index)}
                 />
             )}
         </div>

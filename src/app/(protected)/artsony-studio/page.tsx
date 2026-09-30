@@ -4,14 +4,16 @@ import React, { Suspense } from 'react'
 
 const ArtsonyStudioPage = () => {
     return (
-        <>
-            <Navbar />
-            <div className="bg-white rounded-2xl px-8 py-6 flex gap-x-4 w-full">
+        <div className="flex min-h-dvh flex-col md:h-dvh md:overflow-hidden">
+            <div className="shrink-0">
+                <Navbar />
+            </div>
+            <main className="flex min-h-0 w-full flex-1 gap-x-4 rounded-2xl bg-white px-8 py-6">
                 <Suspense fallback={null}>
                     <StudioPageContent />
                 </Suspense>
-            </div>
-        </>
+            </main>
+        </div>
     )
 }
 

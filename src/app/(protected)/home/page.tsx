@@ -17,7 +17,7 @@ import { INTERESTS } from '@/features/onboarding/data/interests'
 import { COLOR_SWATCHES, findClosestSwatch } from '@/features/home/data/color-swatches'
 import { useFeed } from '@/hooks/use-artwork'
 import type { FeedSort } from '@/features/home/types'
-import ArtworkViewOverlay from '@/features/artwork/components/home/artwork-view-overlay'
+import { useOpenArtwork } from '@/hooks/use-artwork-viewer'
 import type { Artwork } from '@/types/artwork'
 
 const MAX_CATEGORIES = 5
@@ -42,7 +42,7 @@ const HomePage = () => {
   const [hexQuery, setHexQuery] = useState('')
   const [countryQuery, setCountryQuery] = useState('')
   const [isMobileFiltersOpen, setIsMobileFiltersOpen] = useState(false)
-  const [activeArtwork, setActiveArtwork] = useState<Artwork | null>(null)
+  const openArtwork = useOpenArtwork()
 
   // Explicit state for countries fetched from third-party API
   const [countries, setCountries] = useState<DropdownOption[]>([])
@@ -91,18 +91,8 @@ const HomePage = () => {
   const firstHalf = allArtworks.slice(0, midpoint)
   const secondHalf = allArtworks.slice(midpoint)
 
-  const activeArtworkIndex = activeArtwork
-    ? allArtworks.findIndex((a) => a.id === activeArtwork.id)
-    : -1
-
-  const handleNavigateArtwork = (direction: 'prev' | 'next') => {
-    if (activeArtworkIndex === -1) return
-    const nextIndex = direction === 'next'
-      ? Math.min(activeArtworkIndex + 1, allArtworks.length - 1)
-      : Math.max(activeArtworkIndex - 1, 0)
-    if (nextIndex === activeArtworkIndex) return
-    setActiveArtwork(allArtworks[nextIndex] as Artwork)
-  }
+  const handleArtworkClick = (artwork: Artwork) =>
+    openArtwork(artwork, { siblings: allArtworks, variant: 'home' })
 
   const handleClearFilters = () => {
     setSelectedCategories([])
@@ -183,7 +173,7 @@ const HomePage = () => {
         artworks={firstHalf}
         isLoading={feedQuery.isLoading}
         onOpenMobileFilters={() => setIsMobileFiltersOpen(true)}
-        onArtworkClick={setActiveArtwork}
+        onArtworkClick={handleArtworkClick}
       />
 
       <CreatorCTASection />
@@ -194,7 +184,7 @@ const HomePage = () => {
         hasNextPage={feedQuery.hasNextPage}
         isFetchingNextPage={feedQuery.isFetchingNextPage}
         onLoadMore={() => feedQuery.fetchNextPage()}
-        onArtworkClick={setActiveArtwork}
+        onArtworkClick={handleArtworkClick}
       />
 
       <Footer />
@@ -205,14 +195,6 @@ const HomePage = () => {
         dropdowns={filterDropdowns}
         onClear={handleClearFilters}
       />
-
-      {activeArtwork && (
-        <ArtworkViewOverlay
-          artwork={activeArtwork}
-          onClose={() => setActiveArtwork(null)}
-          onNavigate={handleNavigateArtwork}
-        />
-      )}
     </div>
   )
 }

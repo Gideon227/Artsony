@@ -29,6 +29,7 @@ import { ArtworkCreatorWorks } from './artwork-creator-works'
 import { ArtworkComments } from '../shop/artwork-comments'
 import Link from 'next/link'
 import { ShareModal } from '../../modals/share-modal'
+import ReportModal from '../../modals/report-modal'
 
 // ── Formatting ────────────────────────────────────────────────────────────────
 function formatCount(n: number): string {
@@ -47,9 +48,10 @@ interface ArtworkViewOverlayProps {
   artwork: Artwork
   onClose: () => void
   onNavigate?: (direction: 'prev' | 'next') => void
+  onSwapArtwork?: (artwork: Artwork) => void
 }
 
-export default function ArtworkViewOverlay({ artwork: artworkProp, onClose, onNavigate }: ArtworkViewOverlayProps) {
+export default function ArtworkViewOverlay({ artwork: artworkProp, onClose, onNavigate, onSwapArtwork }: ArtworkViewOverlayProps) {
   // Clicking a related work in "Also by" / "For sale by" swaps the displayed
   // artwork in place, without needing a navigation-index prop threaded through
   // every parent (TopPicks, TopArt, ResultsGrid, ArtGrid). Resets whenever the
@@ -72,6 +74,7 @@ export default function ArtworkViewOverlay({ artwork: artworkProp, onClose, onNa
   const [cartError, setCartError] = useState<string | null>(null)
   const [shareOpen, setShareOpen] = useState(false)
   const [saveDialogOpen, setSaveDialogOpen] = useState(false)
+  const [reportDialogOpen, setReportDialogOpen] = useState(false)
 
   // Fixed-size centered dialog on desktop (90% viewport width, 90vh tall) —
   // the left and right columns each scroll independently inside it. Mobile
@@ -416,6 +419,7 @@ export default function ArtworkViewOverlay({ artwork: artworkProp, onClose, onNa
 
       <button
         aria-label="Report artwork"
+        onClick={() => setReportDialogOpen(true)}
         className="flex cursor-pointer h-[46px] w-[46px] items-center justify-center rounded-full border-gray-50 border-2 transition-colors hover:bg-gray-100"
       >
         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -775,7 +779,7 @@ export default function ArtworkViewOverlay({ artwork: artworkProp, onClose, onNa
                       creatorName={creatorName}
                       excludeArtworkId={artwork.id}
                       scope="all"
-                      onSelectArtwork={(work) => setViewOverride(work)}
+                      onSelectArtwork={(work) => (onSwapArtwork ? onSwapArtwork(work) : setViewOverride(work))}
                     />
                   </div>
                   <ArtworkCreatorWorks
@@ -784,7 +788,7 @@ export default function ArtworkViewOverlay({ artwork: artworkProp, onClose, onNa
                     creatorName={creatorName}
                     excludeArtworkId={artwork.id}
                     scope="marketplace"
-                    onSelectArtwork={(work) => setViewOverride(work)}
+                    onSelectArtwork={(work) => (onSwapArtwork ? onSwapArtwork(work) : setViewOverride(work))}
                   />
                 </>
               )}
@@ -833,7 +837,8 @@ export default function ArtworkViewOverlay({ artwork: artworkProp, onClose, onNa
       </div>
     </div>
     
-    <SaveToMoodboardDialog artworkId={artwork.id} open={saveDialogOpen} onOpenChange={setSaveDialogOpen} />
+      <SaveToMoodboardDialog artworkId={artwork.id} open={saveDialogOpen} onOpenChange={setSaveDialogOpen} />
+      <ReportModal artworkId={artwork.id} open={reportDialogOpen} onOpenChange={setReportDialogOpen} />
     </>
   )
 }

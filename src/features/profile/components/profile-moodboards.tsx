@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import Image from 'next/image'
 import { Plus } from 'lucide-react'
+import { Button } from '@/components/ui/button'
 import { useMoodboards } from '@/hooks/use-moodboards'
 import { CreateMoodboardDialog } from '@/features/moodboards/components/create-moodboard-dialog'
 import { ProfileMoodboardDetail } from './profile-moodboard-detail'
@@ -14,7 +15,7 @@ interface Props {
 }
 
 export function ProfileMoodboards({ isOwnProfile, onArtworkClick }: Props) {
-  const { data: moodboards, isLoading } = useMoodboards()
+  const { data: moodboards, isLoading, isError, refetch, isRefetching } = useMoodboards()
   const [showCreate, setShowCreate] = useState(false)
   const [activeBoardId, setActiveBoardId] = useState<string | null>(null)
 
@@ -51,23 +52,35 @@ export function ProfileMoodboards({ isOwnProfile, onArtworkClick }: Props) {
             <div key={i} className="aspect-square animate-pulse rounded-2xl bg-gray-50" />
           ))}
         </div>
+      ) : isError ? (
+        <div role="alert" className="flex flex-col items-center gap-3 py-16 text-center">
+          <p className="font-poppins text-body-s text-gray-400">We couldn&apos;t load your moodboards.</p>
+          <Button variant="outline" onClick={() => void refetch()} isLoading={isRefetching}>
+            Retry
+          </Button>
+        </div>
       ) : (
         <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
           {moodboards?.map((board) => {
-            // MoodboardSummary (the list endpoint's shape) only carries
-            // id/title/artwork_count — no thumbnail. Fetching each board's
-            // full detail just to render a cover image would be an N+1 query
-            // for a grid; flagging this as a backend enhancement (a
-            // `cover_thumbnail_url` on the list response) rather than faking it.
             return (
               <button
                 key={board.id}
                 onClick={() => setActiveBoardId(board.id)}
                 className="group relative flex aspect-square flex-col justify-end overflow-hidden rounded-2xl bg-gray-50 text-left"
               >
-                <div className="absolute inset-0 flex items-center justify-center">
-                  <Image src="/icons/moodboard-grey.svg" width={32} height={32} alt="" className="opacity-40" />
-                </div>
+                {board.cover_thumbnail_url ? (
+                  <Image
+                    src={board.cover_thumbnail_url}
+                    alt=""
+                    fill
+                    sizes="(min-width: 1024px) 25vw, (min-width: 640px) 33vw, 50vw"
+                    className="object-cover transition-transform duration-300 group-hover:scale-105"
+                  />
+                ) : (
+                  <div className="absolute inset-0 flex items-center justify-center">
+                    <Image src="/icons/moodboard-grey.svg" width={32} height={32} alt="" className="opacity-40" />
+                  </div>
+                )}
                 <div className="relative flex items-center justify-between bg-gradient-to-t from-black/70 via-black/10 to-transparent px-4 py-3 text-white">
                   <span className="truncate font-poppins text-[14px] font-medium">{board.title}</span>
                   <span className="shrink-0 font-poppins text-[13px]">{board.artwork_count}</span>

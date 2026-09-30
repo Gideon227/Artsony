@@ -7,6 +7,7 @@ import { walletPeriodFromSearchParams } from '@/lib/wallet/url-filters'
 import { useStatsSummary } from '@/hooks/queries/use-stats'
 import { MetricCard, MetricCardGrid, MetricCardSkeleton } from '@/components/ui/metric-card'
 import type { StatsSummary } from '@/types/stats'
+import { StudioCardError } from '@/features/studio/components/studio-card-error'
 
 type CardConfig = {
   key: keyof Omit<StatsSummary, 'period'>
@@ -27,7 +28,11 @@ const CARDS: CardConfig[] = [
 export function StatsSummaryCards() {
   const searchParams = useSearchParams()
   const period = React.useMemo(() => walletPeriodFromSearchParams(searchParams), [searchParams])
-  const { data: summary, isLoading } = useStatsSummary(period)
+  const { data: summary, isLoading, isError, error, refetch, isRefetching } = useStatsSummary(period)
+
+  if (isError && !summary) {
+    return <StudioCardError error={error} onRetry={() => void refetch()} isRetrying={isRefetching} />
+  }
 
   if (isLoading || !summary) {
     return (

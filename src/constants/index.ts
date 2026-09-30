@@ -155,7 +155,7 @@ export const STALE_TIMES = {
 export const ROUTES = {
   home: '/',
   discover: '/discover',
-  artwork: (id: string) => `/artwork/${id}`,
+  artwork: (slug: string) => `/artwork/${encodeURIComponent(slug)}`,
   profile: (id: string) => `/profile/${id}`,
   shop: '/shop',
   cart: '/cart',

@@ -3,6 +3,7 @@ import { useInfiniteQuery, useMutation, useQueryClient } from '@tanstack/react-q
 import { v4 as uuidv4 } from 'uuid'
 import { messagingService } from '@/services/messaging.service'
 import { blockService } from '@/services/block.service'
+import { BLOCK_KEYS } from '@/hooks/use-blocks'
 import { useMessagingStore } from '@/store/messaging.store'
 import { useToast } from '@/components/ui/toaster'
 import { QUERY_KEYS } from '@/constants'
@@ -226,11 +227,13 @@ export function useLeaveConversation() {
 }
 
 export function useBlockUser() {
+  const queryClient = useQueryClient()
   const { success, error } = useToast()
 
   return useMutation({
     mutationFn: (userId: string) => blockService.blockUser(userId),
     onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: BLOCK_KEYS.list() })
       success('User blocked')
     },
     onError: () => {

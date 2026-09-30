@@ -8,6 +8,7 @@ import { TrendIndicator } from '@/components/ui/metric-card'
 import { useMiniStat } from '@/hooks/queries/use-stats'
 import { formatUsd } from '@/lib/wallet/format'
 import type { MiniStatPeriod } from '@/types/stats'
+import { StudioCardError } from '@/features/studio/components/studio-card-error'
 
 const PERIOD_OPTIONS: DropdownOption[] = [
   { id: 'TODAY', label: 'Today' },
@@ -42,7 +43,11 @@ function MiniStatSkeleton() {
 
 export function MiniStatCard({ metric, label, defaultPeriod = 'WEEK' }: MiniStatCardProps) {
   const [period, setPeriod] = React.useState<MiniStatPeriod>(defaultPeriod)
-  const { data, isLoading } = useMiniStat(metric, period)
+  const { data, isLoading, isError, error, refetch, isRefetching } = useMiniStat(metric, period)
+
+  if (isError && !data) {
+    return <StudioCardError error={error} onRetry={() => void refetch()} isRetrying={isRefetching} />
+  }
 
   if (isLoading || !data) return <MiniStatSkeleton />
 

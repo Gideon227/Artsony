@@ -59,7 +59,7 @@ const buttonVariants = cva(
         xl: 'h-16 px-8 py-4 leading-8 text-[20px] rounded-2xl ',
         icon: 'h-10 w-10 rounded-[var(--radius-md)]',
         'icon-sm': 'h-8 w-8 rounded-[var(--radius-sm)]',
-        'icon-lg': 'h-12 w-12 rounded-[var(--radius-lg)]',
+        'icon-lg': 'h-12 w-48 rounded-2xl',
       },
       fullWidth: {
         true: 'w-full rounded-full h-12 ',

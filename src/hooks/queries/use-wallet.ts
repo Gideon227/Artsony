@@ -1,3 +1,4 @@
+import { studioRetry } from '@/lib/studio/query'
 import { useMutation, useQuery, useQueryClient, keepPreviousData } from '@tanstack/react-query'
 import { walletService } from '@/services/wallet.service'
 import { useToast } from '@/components/ui/toaster'
@@ -9,7 +10,7 @@ export function useWalletSummary(period: WalletPeriod) {
     queryFn: () => walletService.getSummary(period),
     placeholderData: keepPreviousData,
     staleTime: 30_000,
-    retry: 2,
+    retry: studioRetry,
   })
 }
 
@@ -24,7 +25,7 @@ export function useWalletActivity() {
     queryFn: () => walletService.getActivity(),
     placeholderData: keepPreviousData,
     staleTime: 15_000,
-    retry: 2,
+    retry: studioRetry,
   })
 }
 

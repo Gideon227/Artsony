@@ -48,12 +48,12 @@ export function useArtwork(id: string) {
   })
 }
 
-export function useArtworkBySlug(slug: string) {
+export function useArtworkBySlug(slug: string, enabled = true) {
   return useQuery({
     queryKey:  ART_KEYS.bySlug(slug),
-    queryFn:   () => artworkService.getBySlug(slug).then((r) => r.data),
+    queryFn:   () => artworkService.getBySlug(encodeURIComponent(slug)).then((r) => r.data),
     staleTime: STALE_TIMES.medium,
-    enabled:   Boolean(slug),
+    enabled:   enabled && Boolean(slug),
   })
 }
 

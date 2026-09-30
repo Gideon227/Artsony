@@ -85,7 +85,7 @@ const ImageSection = ({ draft, setField }: Props) => {
         <div className='gap-y-2 flex flex-col w-full'>
           <p className='font-poppins font-medium text-body-s text-heading leading-6 tracking-wide'>Profile Background</p>
 
-          <div className='rounded-m relative bg-gray-400 overflow-hidden' style={{ width: 800, height: 308 }}>
+          <div className='rounded-m relative bg-gray-400 overflow-hidden w0full' style={{ height: 308 }}>
             {draft.backgroundUrl && (
               <Image src={draft.backgroundUrl} alt='profile background' fill className='object-cover' />
             )}

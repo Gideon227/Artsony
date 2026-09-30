@@ -43,39 +43,57 @@ export function WalletPageContent() {
     [filters, updateSearchParams]
   )
 
-  const { data: summary, isLoading: isSummaryLoading } = useWalletSummary(period)
+  const {
+    data: summary,
+    isLoading: isSummaryLoading,
+    isError: isSummaryError,
+    error: summaryError,
+    refetch: refetchSummary,
+    isRefetching: isSummaryRefetching,
+  } = useWalletSummary(period)
   const { data: activity = [], isLoading: isActivityLoading, isError, refetch } = useWalletActivity()
 
   const { data: pageData, total, totalPages } = React.useMemo(() => applyWalletFilters(activity, filters), [activity, filters])
 
   return (
-    <div style={{ backgroundColor: '#F5FAFA' }} className="flex p-4 flex-col gap-y-4 bg-secondary-50 rounded-2xl">
-      <WalletSummaryHeader period={period} onPeriodChange={handlePeriodChange} onWithdrawClick={() => setIsWithdrawOpen(true)} />
+    <div style={{ backgroundColor: '#F5FAFA' }} className="flex h-full min-h-0 flex-col gap-y-4 overflow-y-auto rounded-2xl bg-secondary-50 p-4">
+      <div className="flex shrink-0 flex-col gap-y-4">
+        <WalletSummaryHeader period={period} onPeriodChange={handlePeriodChange} onWithdrawClick={() => setIsWithdrawOpen(true)} />
 
-      <WalletSummaryCards summary={summary} isLoading={isSummaryLoading} />
-
-      <WalletFilterBar
-        filters={filters}
-        onFiltersChange={updateFilters}
-        resultCount={total}
-        isFiltered={hasActiveWalletFilters(filters)}
-      />
-
-      <WalletActivityTable
-        activity={pageData}
-        isLoading={isActivityLoading}
-        isError={isError}
-        onRetry={() => refetch()}
-      />
-
-      {!isActivityLoading && !isError && pageData.length > 0 && (
-        <Pagination
-          page={filters.page}
-          totalPages={totalPages}
-          onPageChange={(page) => updateFilters((prev) => ({ ...prev, page }))}
-          className="pb-2"
+        <WalletSummaryCards
+          summary={summary}
+          isLoading={isSummaryLoading}
+          isError={isSummaryError}
+          error={summaryError}
+          onRetry={() => void refetchSummary()}
+          isRetrying={isSummaryRefetching}
         />
-      )}
+
+        <WalletFilterBar
+          filters={filters}
+          onFiltersChange={updateFilters}
+          resultCount={total}
+          isFiltered={hasActiveWalletFilters(filters)}
+        />
+      </div>
+
+      <div className="flex min-h-[240px] flex-1 flex-col gap-y-4 overflow-y-auto">
+        <WalletActivityTable
+          activity={pageData}
+          isLoading={isActivityLoading}
+          isError={isError}
+          onRetry={() => refetch()}
+        />
+
+        {!isActivityLoading && !isError && pageData.length > 0 && (
+          <Pagination
+            page={filters.page}
+            totalPages={totalPages}
+            onPageChange={(page) => updateFilters((prev) => ({ ...prev, page }))}
+            className="pb-2"
+          />
+        )}
+      </div>
 
       <WithdrawModal
         open={isWithdrawOpen}

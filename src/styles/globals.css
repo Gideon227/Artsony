@@ -251,3 +251,20 @@
     overflow: hidden;
   }
 }
+
+@media (width < 48rem) {
+  .art-card-reveal {
+    -webkit-mask-image: linear-gradient(
+      to bottom,
+      #000 0px,
+      #000 var(--reveal-solid, -48px),
+      transparent var(--reveal-end, 0px)
+    );
+    mask-image: linear-gradient(
+      to bottom,
+      #000 0px,
+      #000 var(--reveal-solid, -48px),
+      transparent var(--reveal-end, 0px)
+    );
+  }
+}

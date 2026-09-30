@@ -1,3 +1,4 @@
+import { studioRetry } from '@/lib/studio/query'
 import { useQuery, keepPreviousData } from '@tanstack/react-query'
 import { statsService } from '@/services/stats.service'
 import type { WalletPeriod } from '@/types/wallet'
@@ -9,7 +10,7 @@ export function useStatsSummary(period: WalletPeriod) {
     queryFn: () => statsService.getSummary(period),
     placeholderData: keepPreviousData,
     staleTime: 30_000,
-    retry: 2,
+    retry: studioRetry,
   })
 }
 
@@ -19,7 +20,7 @@ export function useMiniStat(metric: 'CR' | 'AOV', period: MiniStatPeriod) {
     queryFn: () => statsService.getMiniStat(metric, period),
     placeholderData: keepPreviousData,
     staleTime: 30_000,
-    retry: 2,
+    retry: studioRetry,
   })
 }
 
@@ -29,7 +30,7 @@ export function useFeaturedArtworks(sort: ArtworkRankSort) {
     queryFn: () => statsService.getFeaturedArtworks(sort),
     placeholderData: keepPreviousData,
     staleTime: 30_000,
-    retry: 2,
+    retry: studioRetry,
   })
 }
 
@@ -39,6 +40,6 @@ export function useEarningsOverview(range: EarningsOverviewRange) {
     queryFn: () => statsService.getEarningsOverview(range),
     placeholderData: keepPreviousData,
     staleTime: 30_000,
-    retry: 2,
+    retry: studioRetry,
   })
 }

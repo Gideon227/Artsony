@@ -1,9 +1,8 @@
 'use client'
 
 import React, { useEffect, useState, useRef, useCallback } from 'react'
-import { Artwork } from '@/types/artwork'
 import { ArtCard } from '@/components/ui/art-card'
-import ArtworkViewOverlay from '@/features/artwork/components/shop/artwork-view-overlay'
+import { useOpenArtwork } from '@/hooks/use-artwork-viewer'
 import { useTopPicks } from '@/hooks/use-artwork'
 
 const TopPicks = () => {
@@ -11,8 +10,7 @@ const TopPicks = () => {
     const error = isError ? 'Failed to load top picks.' : null
 
     // Overlay state
-    const [activeArtwork, setActiveArtwork] = useState<Artwork | null>(null)
-    const [activeIndex, setActiveIndex] = useState<number | null>(null)
+    const openArtwork = useOpenArtwork()
 
     // Carousel state & refs
     const scrollContainerRef = useRef<HTMLDivElement>(null)
@@ -44,31 +42,9 @@ const TopPicks = () => {
     }, [checkScrollPosition])
 
     // ── Overlay handlers ──────────────────────────────────────────────────────
-    const handleCloseOverlay = () => {
-        setActiveArtwork(null)
-        setActiveIndex(null)
-    }
-
     const handleOpenArtwork = (index: number) => {
         const target = artworks[index]
-        if (!target) return
-        setActiveIndex(index)
-        setActiveArtwork(target)
-    }
-
-    const handleNavigate = (direction: 'prev' | 'next') => {
-        if (activeIndex === null) return
-        const nextIndex = direction === 'next'
-            ? Math.min(activeIndex + 1, artworks.length - 1)
-            : Math.max(activeIndex - 1, 0)
-
-        if (nextIndex === activeIndex) return
-
-        const target = artworks[nextIndex]
-        if (!target) return
-
-        setActiveIndex(nextIndex)
-        setActiveArtwork(target)
+        if (target) openArtwork(target, { siblings: artworks, variant: 'shop' })
     }
 
     return (
@@ -169,15 +145,6 @@ const TopPicks = () => {
                             }
                         </button>
                     </div>
-                )}
-
-                {/* Artwork View Overlay */}
-                {activeArtwork && (
-                    <ArtworkViewOverlay
-                        artwork={activeArtwork}
-                        onClose={handleCloseOverlay}
-                        onNavigate={handleNavigate}
-                    />
                 )}
             </div>
         </div>

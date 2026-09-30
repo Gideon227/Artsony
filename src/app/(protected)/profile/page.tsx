@@ -1,6 +1,6 @@
 'use client'
 
-import { useMemo, useState } from 'react'
+import { useCallback, useMemo, useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import Footer from '@/components/layout/footer'
 import { Navbar } from '@/components/layout/navbar'
@@ -10,7 +10,7 @@ import ProfileHeader from '@/features/profile/components/profile-header'
 import { ProfileMoodboards } from '@/features/profile/components/profile-moodboards'
 import { ProfileTabs, TabItem } from '@/features/profile/components/profile-tabs'
 import UploadModal from '@/features/upload/components/upload-modal'
-import ArtworkViewOverlay from '@/features/artwork/components/home/artwork-view-overlay'
+import { useOpenArtwork } from '@/hooks/use-artwork-viewer'
 import { artworkService } from '@/services'
 import { useAuthStore } from '@/store'
 import { User } from '@/types'
@@ -19,8 +19,7 @@ import type { Artwork } from '@/types/artwork'
 const PersonalProfilePage = () => {
     const { user } = useAuthStore()
     const [showPostArtwork, setShowPostArtwork] = useState(false)
-    const [activeArtwork, setActiveArtwork] = useState<Artwork | null>(null)
-    const [artworkList, setArtworkList] = useState<Artwork[]>([])
+    const openArtwork = useOpenArtwork()
 
     // Draft tab only shows if there's actually something in it.
     const { data: draftCheck } = useQuery({
@@ -30,18 +29,10 @@ const PersonalProfilePage = () => {
     })
     const hasDrafts = (draftCheck?.total ?? 0) > 0
 
-    const handleArtworkClick = (artwork: Artwork, siblings: Artwork[]) => {
-        setArtworkList(siblings)
-        setActiveArtwork(artwork)
-    }
-
-    const activeIndex = activeArtwork ? artworkList.findIndex((a) => a.id === activeArtwork.id) : -1
-    const handleNavigateArtwork = (direction: 'prev' | 'next') => {
-        if (activeIndex === -1) return
-        const nextIndex = direction === 'next' ? Math.min(activeIndex + 1, artworkList.length - 1) : Math.max(activeIndex - 1, 0)
-        if (nextIndex === activeIndex) return
-        setActiveArtwork(artworkList[nextIndex] as Artwork)
-    }
+    const handleArtworkClick = useCallback(
+        (artwork: Artwork, siblings: Artwork[]) => openArtwork(artwork, { siblings, variant: 'home' }),
+        [openArtwork],
+    )
 
     const profileTabs: TabItem[] = useMemo(() => {
         if (!user) return []
@@ -92,7 +83,7 @@ const PersonalProfilePage = () => {
         }
 
         return tabs
-    }, [user, hasDrafts])
+    }, [user, hasDrafts, handleArtworkClick])
 
     if (!user) return null
 
@@ -104,14 +95,6 @@ const PersonalProfilePage = () => {
             <Footer />
 
             <UploadModal isOpen={showPostArtwork} onClose={() => setShowPostArtwork(false)} />
-
-            {activeArtwork && (
-                <ArtworkViewOverlay
-                    artwork={activeArtwork}
-                    onClose={() => setActiveArtwork(null)}
-                    onNavigate={artworkList.length > 1 ? handleNavigateArtwork : undefined}
-                />
-            )}
         </div>
     )
 }

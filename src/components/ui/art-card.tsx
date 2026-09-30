@@ -14,16 +14,9 @@ import { useIsFollowing, useToggleFollow } from '@/hooks/use-follow'
 import { useUsersByIds } from '@/hooks/use-user'
 import { useLikeArtwork } from '@/hooks/use-artwork'
 import { useQuickAddToCart } from '@/hooks/use-cart-actions'
+import { useOpenArtwork } from '@/hooks/use-artwork-viewer'
+import { useScrollReveal } from '@/hooks/use-scroll-reveal'
 import type { Artwork } from '@/types/artwork'
-import dynamic from 'next/dynamic'
-
-// Dynamic import to avoid a circular dependency: ArtworkViewOverlay renders
-// artwork-creator-works.tsx, which itself imports ArtCard from this file. A
-// static import here would form a cycle.
-const ArtworkViewOverlay = dynamic(
-  () => import('@/features/artwork/components/home/artwork-view-overlay'),
-  { ssr: false }
-)
 
 export interface Artist {
   id: string
@@ -314,7 +307,8 @@ export function ArtCard({
   const [isPlayingVideo, setIsPlayingVideo] = useState(false)
   const [moodboardSheetOpen, setMoodboardSheetOpen] = useState(false)
   const [deleteSheetOpen, setDeleteSheetOpen] = useState(false)
-  const [overlayOpen, setOverlayOpen] = useState(false)
+  const openArtwork = useOpenArtwork()
+  const revealRef = useScrollReveal<HTMLDivElement>()
 
   const { mutate: toggleLike, isPending: isLiking } = useLikeArtwork()
   const { quickAdd, pendingId } = useQuickAddToCart()
@@ -357,7 +351,7 @@ export function ArtCard({
       onCardClick()
       return
     }
-    if (artwork) setOverlayOpen(true)
+    if (artwork) openArtwork(artwork)
   }
 
   const handleViewArtwork = () => {
@@ -365,7 +359,7 @@ export function ArtCard({
       onCardClick()
       return
     }
-    setOverlayOpen(true)
+    if (artwork) openArtwork(artwork)
   }
 
   const CardWrapper = (onCardClick || artwork)
@@ -387,7 +381,7 @@ export function ArtCard({
     <>
       <CardWrapper>
         {/* --- Image Container --- */}
-        <div className={cn(
+        <div ref={revealRef} className={cn(
           'relative group overflow-hidden rounded-2xl bg-neutral-100',
           fillContainer ? 'h-full w-full' : 'aspect-square max-h-[376px]'
         )}>
@@ -415,31 +409,95 @@ export function ArtCard({
             </div>
           )}
 
-          {/* --- Hover/Active Overlay --- */}
-          <div className="absolute inset-0 bg-black/40 opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
+          {/* Hover state layer: masked by scroll position on mobile */}
+          <div className="art-card-reveal absolute inset-0">
+            {/* --- Hover/Active Overlay --- */}
+            <div className="absolute inset-0 bg-black/40 opacity-0 transition-opacity duration-300 max-md:opacity-100 group-hover:opacity-100" />
 
-          {/* Top Actions (Visible on Hover) */}
-          <div className="absolute left-6 top-6 flex gap-2 opacity-0 transition-all duration-300 group-hover:opacity-100">
-            {effectiveShowCat && <IconButton icon='/icons/folder.svg' onClick={() => handleAction('collect')} />}
-            {effectiveShowHeart && (
-              <IconButton
-                icon='/icons/heart.svg'
-                onClick={() => handleAction('like')}
-                active={artwork?.is_liked}
-                loading={isLiking}
-              />
-            )}
-            {effectiveShowCart && (
-              <IconButton
-                icon='/icons/cart.svg'
-                onClick={() => handleAction('cart')}
-                loading={artwork ? pendingId === artwork.id : false}
-              />
-            )}
-            {effectiveShowVideo && (
-              <IconButton icon='/icons/play-icon.svg' onClick={() => handleAction('play')} active={isPlayingVideo} />
-            )}
-            {effectiveShowTrash && <IconButton icon='/icons/trash.svg' onClick={() => handleAction('delete')} />}
+            {/* Top Actions (Visible on Hover) */}
+            <div className="absolute left-6 top-6 flex gap-2 opacity-0 transition-all duration-300 max-md:pointer-events-none max-md:opacity-100 max-md:group-data-[reveal-top=true]:pointer-events-auto group-hover:opacity-100">
+              {effectiveShowCat && <IconButton icon='/icons/folder.svg' onClick={() => handleAction('collect')} />}
+              {effectiveShowHeart && (
+                <IconButton
+                  icon='/icons/heart.svg'
+                  onClick={() => handleAction('like')}
+                  active={artwork?.is_liked}
+                  loading={isLiking}
+                />
+              )}
+              {effectiveShowCart && (
+                <IconButton
+                  icon='/icons/cart.svg'
+                  onClick={() => handleAction('cart')}
+                  loading={artwork ? pendingId === artwork.id : false}
+                />
+              )}
+              {effectiveShowVideo && (
+                <IconButton icon='/icons/play-icon.svg' onClick={() => handleAction('play')} active={isPlayingVideo} />
+              )}
+              {effectiveShowTrash && <IconButton icon='/icons/trash.svg' onClick={() => handleAction('delete')} />}
+            </div>
+
+            {/* Bottom Title/Overlay Info */}
+            <div className="absolute bottom-6 left-6 right-6 opacity-0 max-md:pointer-events-none max-md:opacity-100 max-md:group-data-[reveal-bottom=true]:pointer-events-auto group-hover:opacity-100">
+              <div className="space-y-2">
+                <div className='flex items-center justify-between '>
+                  <h3 className="text-[14px] font-medium font-poppins tracking-wide leading-6 text-white ">{derivedTitle}</h3>
+
+                  {!effectiveShowHeart && (
+                    <IconButton
+                      icon='/icons/heart.svg'
+                      onClick={() => handleAction('like')}
+                      active={artwork?.is_liked}
+                      loading={isLiking}
+                    />
+                  )}
+                </div>
+
+                {alternate && (
+                  <div className='flex items-center justify-between w-full'>
+                    <div
+                      className='flex gap-2 items-center min-w-0 flex-1 mr-1'
+                      onMouseEnter={handleMouseEnter}
+                      onMouseLeave={handleMouseLeave}
+                    >
+                      <div className="shrink-0">
+                        <AvatarGroup images={artistImages} />
+                      </div>
+                      <span className="text-[12px] truncate leading-4 tracking-wide font-poppins font-medium text-white">{primaryArtist?.name} {artistCount > 1 && `+ ${artistCount - 1}`}</span>
+                    </div>
+
+                    <div className='flex gap-x-2'>
+                      <div className='flex gap-x-1'>
+                        <Image src='/icons/heart-red.svg' alt='heart icon' width={16} height={16} className="object-contain" />
+                        <span className="text-[12px] leading-4 tracking-wide font-poppins font-medium text-white">{derivedStats?.likes}</span>
+                      </div>
+
+                      <div className='flex gap-x-1'>
+                        <Image src='/icons/eye-red.svg' alt='heart icon' width={16} height={16} className="object-contain" />
+                        <span className="text-[12px] leading-4 tracking-wide font-poppins font-medium text-white">{derivedStats?.views}</span>
+                      </div>
+                    </div>
+                  </div>
+
+                )}
+
+                {/* Inline Artist (Discover Variant Only) */}
+                {variant === 'discover' && (
+                  <div
+                    className="flex items-center gap-2"
+                    onMouseEnter={handleMouseEnter}
+                    onMouseLeave={handleMouseLeave}
+                  >
+                    <div className="relative h-8 w-8 overflow-hidden rounded-full border border-white/20">
+                      <AvatarGroup images={artistImages} />
+                    </div>
+                      <span className="text-[12px] truncate leading-4 tracking-wide font-poppins font-medium text-white">{primaryArtist?.name} {artistCount > 1 && `+ ${artistCount - 1}`}</span>
+                  </div>
+                )}
+              </div>
+
+            </div>
           </div>
 
           {/* Sale Badge (For Discover Variant) */}
@@ -449,66 +507,6 @@ export function ArtCard({
             </button>
           )}
 
-          {/* Bottom Title/Overlay Info */}
-          <div className="absolute bottom-6 left-6 right-6 opacity-0 group-hover:opacity-100">
-            <div className="space-y-2">
-              <div className='flex items-center justify-between '>
-                <h3 className="text-[14px] font-medium font-poppins tracking-wide leading-6 text-white ">{derivedTitle}</h3>
-
-                {!effectiveShowHeart && (
-                  <IconButton
-                    icon='/icons/heart.svg'
-                    onClick={() => handleAction('like')}
-                    active={artwork?.is_liked}
-                    loading={isLiking}
-                  />
-                )}
-              </div>
-
-              {alternate && (
-                <div className='flex items-center justify-between w-full'>
-                  <div
-                    className='flex gap-2 items-center min-w-0 flex-1 mr-1'
-                    onMouseEnter={handleMouseEnter}
-                    onMouseLeave={handleMouseLeave}
-                  >
-                    <div className="shrink-0">
-                      <AvatarGroup images={artistImages} />
-                    </div>
-                    <span className="text-[12px] truncate leading-4 tracking-wide font-poppins font-medium text-white">{primaryArtist?.name} {artistCount > 1 && `+ ${artistCount - 1}`}</span>
-                  </div>
-
-                  <div className='flex gap-x-2'>
-                    <div className='flex gap-x-1'>
-                      <Image src='/icons/heart-red.svg' alt='heart icon' width={16} height={16} className="object-contain" />
-                      <span className="text-[12px] leading-4 tracking-wide font-poppins font-medium text-white">{derivedStats?.likes}</span>
-                    </div>
-
-                    <div className='flex gap-x-1'>
-                      <Image src='/icons/eye-red.svg' alt='heart icon' width={16} height={16} className="object-contain" />
-                      <span className="text-[12px] leading-4 tracking-wide font-poppins font-medium text-white">{derivedStats?.views}</span>
-                    </div>
-                  </div>
-                </div>
-
-              )}
-
-              {/* Inline Artist (Discover Variant Only) */}
-              {variant === 'discover' && (
-                <div
-                  className="flex items-center gap-2"
-                  onMouseEnter={handleMouseEnter}
-                  onMouseLeave={handleMouseLeave}
-                >
-                  <div className="relative h-8 w-8 overflow-hidden rounded-full border border-white/20">
-                    <AvatarGroup images={artistImages} />
-                  </div>
-                    <span className="text-[12px] truncate leading-4 tracking-wide font-poppins font-medium text-white">{primaryArtist?.name} {artistCount > 1 && `+ ${artistCount - 1}`}</span>
-                </div>
-              )}
-            </div>
-
-          </div>
         </div>
 
         {/* --- External Footer (Standard Variant & Mobile) --- */}
@@ -579,13 +577,6 @@ export function ArtCard({
           artworkTitle={artwork.title}
           open={deleteSheetOpen}
           onOpenChange={setDeleteSheetOpen}
-        />
-      )}
-
-      {artwork && overlayOpen && (
-        <ArtworkViewOverlay
-          artwork={artwork}
-          onClose={() => setOverlayOpen(false)}
         />
       )}
     </>

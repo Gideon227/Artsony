@@ -6,6 +6,7 @@ import { Dropdown, type DropdownOption } from '@/components/ui/dropdown'
 import { AreaChart } from '@/components/ui/charts'
 import { useEarningsOverview } from '@/hooks/queries/use-stats'
 import type { EarningsOverviewRange } from '@/types/stats'
+import { StudioCardError } from '@/features/studio/components/studio-card-error'
 
 const RANGE_OPTIONS: DropdownOption[] = [
   { id: 'MONTHLY', label: 'Monthly' },
@@ -23,7 +24,7 @@ function ChartSkeleton() {
 
 export function EarningsOverviewCard() {
   const [range, setRange] = React.useState<EarningsOverviewRange>('YEARLY')
-  const { data, isLoading } = useEarningsOverview(range)
+  const { data, isLoading, isError, error, refetch, isRefetching } = useEarningsOverview(range)
 
   return (
     <div className="rounded-2xl border border-gray-50 bg-white p-5">
@@ -43,7 +44,13 @@ export function EarningsOverviewCard() {
         />
       </div>
 
-      {isLoading || !data ? <ChartSkeleton /> : <AreaChart data={data} formatY={formatYAxis} className="mt-4" />}
+      {isError && !data ? (
+        <StudioCardError error={error} onRetry={() => void refetch()} isRetrying={isRefetching} className="mt-4 h-[260px] border-0 bg-gray-50/40" />
+      ) : isLoading || !data ? (
+        <ChartSkeleton />
+      ) : (
+        <AreaChart data={data} formatY={formatYAxis} className="mt-4" />
+      )}
     </div>
   )
 }

@@ -33,6 +33,14 @@ export type FollowUser = {
   followers_count: number
 }
 
+export type BlockedUser = {
+  id: string
+  username: string
+  display_name: string | null
+  avatar_url: string | null
+  blocked_at: string
+}
+
 export type PaginatedResponse<T> = {
   success: boolean
   data: T[]

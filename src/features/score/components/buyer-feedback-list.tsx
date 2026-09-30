@@ -36,8 +36,8 @@ export function BuyerFeedbackList() {
   const { data: feedback, isLoading, isError, refetch } = useBuyerFeedback(sort, dateFrom, dateTo)
 
   return (
-    <div className="rounded-2xl border border-gray-50 bg-white">
-      <div className="flex flex-col gap-4 p-4 sm:flex-row sm:items-center sm:justify-between">
+    <div className="flex min-h-0 flex-1 flex-col rounded-2xl border border-gray-50 bg-white">
+      <div className="flex shrink-0 flex-col gap-4 p-4 sm:flex-row sm:items-center sm:justify-between">
         <h2 className="font-raleway text-h5 font-semibold text-heading">Buyer Feedback</h2>
 
         <div className="flex flex-col gap-3 sm:flex-row">
@@ -70,7 +70,7 @@ export function BuyerFeedbackList() {
           No feedback yet for this range.
         </div>
       ) : (
-        <div className="max-h-[420px] divide-y divide-gray-50 overflow-y-auto border-t border-gray-50">
+        <div className="min-h-0 flex-1 divide-y divide-gray-50 overflow-y-auto border-t border-gray-50">
           {feedback.map((item) => (
             <div key={item.id} className="flex items-center gap-4 px-6 py-4">
               <div className="relative h-10 w-10 shrink-0 overflow-hidden rounded-full">

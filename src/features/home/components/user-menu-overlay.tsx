@@ -11,7 +11,7 @@ const FALLBACK_AVATAR = "/images/image-avatar.svg";
 const NAV_LINKS = [
   { label: "Visit Profile", href: "/profile" },
   { label: "Artsony Studio", href: "/artsony-studio" },
-  { label: "Orders", href: "/my-orders" },
+  { label: "Orders", href: "/all-orders" },
   { label: "Wallet", href: "/artsony-studio?section=wallet" },
   { label: "Settings", href: "/settings/profile-customization" },
 ] as const;

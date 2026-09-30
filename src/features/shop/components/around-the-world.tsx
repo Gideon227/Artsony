@@ -7,7 +7,7 @@ import { ArtCard, Artist } from '@/components/ui/art-card'
 import { artworkService } from '@/services'
 import { Artwork } from '@/types'
 import { cn } from '@/utils'
-import ArtworkViewOverlay from '@/features/artwork/components/shop/artwork-view-overlay'
+import { useOpenArtwork } from '@/hooks/use-artwork-viewer'
 
 const POPULAR_CITIES = [
     { id: 'berlin', name: 'Berlin', queryParams: { city: 'Berlin', country: 'Germany' } },
@@ -26,17 +26,11 @@ export default function AroundTheWorld() {
     const [artworks, setArtworks] = useState<Artwork[]>([])
     const [isLoading, setIsLoading] = useState(true)
     const [error, setError] = useState<string | null>(null)
-    const [activeIndex, setActiveIndex] = useState<number | null>(null)
+    const openArtwork = useOpenArtwork()
 
-    const activeArtwork = activeIndex !== null ? artworks[activeIndex] ?? null : null
-    const handleNavigate: any = (direction: 'prev' | 'next') => {
-        setActiveIndex((current) => {
-            if (current === null) return current
-            const nextIndex = direction === 'next'
-                ? Math.min(current + 1, artworks.length - 1)
-                : Math.max(current - 1, 0)
-            return nextIndex
-        })
+    const handleOpenArtwork = (index: number) => {
+        const target = artworks[index]
+        if (target) openArtwork(target, { siblings: artworks, variant: 'shop' })
     }
 
     const carouselRef = useRef<HTMLDivElement>(null)
@@ -228,7 +222,7 @@ export default function AroundTheWorld() {
                                                 stats={{ likes: String(art.like_count ?? 0), views: String(art.view_count ?? 0) }}
                                                 showHeart={true}
                                                 showCat={false}
-                                                onCardClick={() => setActiveIndex(index)}
+                                                onCardClick={() => handleOpenArtwork(index)}
                                             />
                                         </div>
                                     )
@@ -238,14 +232,6 @@ export default function AroundTheWorld() {
                     </div>
                 </div>
             </div>
-
-            {activeArtwork && (
-                <ArtworkViewOverlay
-                    artwork={activeArtwork}
-                    onClose={() => setActiveIndex(null)}
-                    onNavigate={handleNavigate}
-                />
-            )}
         </section>
     )
 }

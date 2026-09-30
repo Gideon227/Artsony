@@ -29,6 +29,7 @@ import { SaveToMoodboardDialog } from '@/features/moodboards/components/save-to-
 import { ArtworkCreatorWorks } from './artwork-creator-works'
 import { ArtworkComments } from './artwork-comments'
 import Link from 'next/link'
+import ReportModal from '../../modals/report-modal'
 
 // ── Formatting ────────────────────────────────────────────────────────────────
 function formatCount(n: number): string {
@@ -47,9 +48,10 @@ interface ArtworkViewOverlayProps {
   artwork: Artwork
   onClose: () => void
   onNavigate?: (direction: 'prev' | 'next') => void
+  onSwapArtwork?: (artwork: Artwork) => void
 }
 
-export default function ArtworkViewOverlay({ artwork: artworkProp, onClose, onNavigate }: ArtworkViewOverlayProps) {
+export default function ArtworkViewOverlay({ artwork: artworkProp, onClose, onNavigate, onSwapArtwork }: ArtworkViewOverlayProps) {
   // Clicking a related work in "Also by" / "For sale by" swaps the displayed
   // artwork in place, without needing a navigation-index prop threaded through
   // every parent (TopPicks, TopArt, ResultsGrid, ArtGrid). Resets whenever the
@@ -72,6 +74,7 @@ export default function ArtworkViewOverlay({ artwork: artworkProp, onClose, onNa
   const [cartError, setCartError] = useState<string | null>(null)
   const [shareOpen, setShareOpen] = useState(false)
   const [saveDialogOpen, setSaveDialogOpen] = useState(false)
+  const [reportDialogOpen, setReportDialogOpen] = useState(false)
 
   const [isClosing, setIsClosing] = useState(false)
 
@@ -470,6 +473,7 @@ export default function ArtworkViewOverlay({ artwork: artworkProp, onClose, onNa
 
       <button
         aria-label="Report artwork"
+        onClick={() => setReportDialogOpen(true)}
         className="flex h-[46px] w-[46px] items-center justify-center rounded-full bg-[#F3F4F6] text-[#9CA3AF] transition-colors hover:bg-gray-200 hover:text-gray-600"
       >
         <Flag size={20} strokeWidth={2.5} />
@@ -774,7 +778,7 @@ export default function ArtworkViewOverlay({ artwork: artworkProp, onClose, onNa
                       creatorName={creatorName}
                       excludeArtworkId={artwork.id}
                       scope="all"
-                      onSelectArtwork={(work) => setViewOverride(work)}
+                      onSelectArtwork={(work) => (onSwapArtwork ? onSwapArtwork(work) : setViewOverride(work))}
                     />
                     <ArtworkCreatorWorks
                       title="For sale by "
@@ -782,7 +786,7 @@ export default function ArtworkViewOverlay({ artwork: artworkProp, onClose, onNa
                       creatorName={creatorName}
                       excludeArtworkId={artwork.id}
                       scope="marketplace"
-                      onSelectArtwork={(work) => setViewOverride(work)}
+                      onSelectArtwork={(work) => (onSwapArtwork ? onSwapArtwork(work) : setViewOverride(work))}
                     />
                   </>
                 )}
@@ -827,6 +831,7 @@ export default function ArtworkViewOverlay({ artwork: artworkProp, onClose, onNa
       </div>
 
       <SaveToMoodboardDialog artworkId={artwork.id} open={saveDialogOpen} onOpenChange={setSaveDialogOpen} />
+      <ReportModal artworkId={artwork.id} open={reportDialogOpen} onOpenChange={setReportDialogOpen} />
     </>
   )
 }

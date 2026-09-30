@@ -1,3 +1,4 @@
+import { studioRetry } from '@/lib/studio/query'
 import { useQuery, keepPreviousData } from '@tanstack/react-query'
 import { scoreService } from '@/services/score.service'
 import type { BuyerFeedbackSort } from '@/types/score'
@@ -7,7 +8,7 @@ export function useScoreOverview() {
     queryKey: ['score-overview'],
     queryFn: () => scoreService.getOverview(),
     staleTime: 60_000,
-    retry: 2,
+    retry: studioRetry,
   })
 }
 
@@ -16,7 +17,7 @@ export function useScoreMetrics() {
     queryKey: ['score-metrics'],
     queryFn: () => scoreService.getMetrics(),
     staleTime: 60_000,
-    retry: 2,
+    retry: studioRetry,
   })
 }
 
@@ -26,6 +27,6 @@ export function useBuyerFeedback(sort: BuyerFeedbackSort, from: Date | null, to:
     queryFn: () => scoreService.getBuyerFeedback(sort, from, to),
     placeholderData: keepPreviousData,
     staleTime: 15_000,
-    retry: 2,
+    retry: studioRetry,
   })
 }

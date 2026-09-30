@@ -7,6 +7,7 @@ import { useScoreMetrics } from '@/hooks/queries/use-score'
 import { getRatingTier, RATING_TIER_META, starRatingToPercent } from '@/lib/score/format'
 import type { ScoreMetric } from '@/types/score'
 import Image from 'next/image'
+import { StudioCardError } from '@/features/studio/components/studio-card-error'
 
 function ScoreCardSkeleton() {
   return (
@@ -56,7 +57,11 @@ function ScoreCard({ metric }: { metric: ScoreMetric }) {
 }
 
 export function ScoreMetricCards() {
-  const { data: metrics, isLoading } = useScoreMetrics()
+  const { data: metrics, isLoading, isError, error, refetch, isRefetching } = useScoreMetrics()
+
+  if (isError && !metrics) {
+    return <StudioCardError error={error} onRetry={() => void refetch()} isRetrying={isRefetching} />
+  }
 
   if (isLoading || !metrics) {
     return (

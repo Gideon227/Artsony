@@ -43,12 +43,12 @@ export default function StudioPageContent() {
   }
 
   return (
-    <div className='grid grid-cols-4 gap-4 flex-1'>
-      <div className='col-span-1'>
+    <div className='grid h-full min-h-0 flex-1 grid-cols-4 gap-4'>
+      <div className='col-span-1 min-h-0'>
         <StudioLeftSidebar activeSection={activeSection} onChangeSection={handleChangeSection} />
       </div>
 
-      <div style={{ gridColumn: 'span 3 / span 3' }} className='col-span-3'>
+      <div style={{ gridColumn: 'span 3 / span 3' }} className='col-span-3 min-h-0'>
         {activeSection === 'wallet' && <WalletPageContent />}
         {activeSection === 'stats' && <StatsPageContent />}
         {activeSection === 'score' && <ScorePageContent />}

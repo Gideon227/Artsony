@@ -9,6 +9,7 @@ import { TrendIndicator } from '@/components/ui/metric-card'
 import { useFeaturedArtworks } from '@/hooks/queries/use-stats'
 import { formatUsd } from '@/lib/wallet/format'
 import type { ArtworkRankSort } from '@/types/stats'
+import { StudioCardError } from '@/features/studio/components/studio-card-error'
 
 const SORT_OPTIONS: DropdownOption[] = [
   { id: 'EARNINGS', label: 'By Earnings' },
@@ -33,11 +34,24 @@ function TpaSkeleton() {
 export function FeaturedArtworkCard() {
   const [sort, setSort] = React.useState<ArtworkRankSort>('EARNINGS')
   const [index, setIndex] = React.useState(0)
-  const { data: artworks, isLoading } = useFeaturedArtworks(sort)
+  const { data: artworks, isLoading, isError, error, refetch, isRefetching } = useFeaturedArtworks(sort)
 
   React.useEffect(() => setIndex(0), [sort])
 
-  if (isLoading || !artworks || artworks.length === 0) return <TpaSkeleton />
+  if (isError && !artworks) {
+    return <StudioCardError error={error} onRetry={() => void refetch()} isRetrying={isRefetching} />
+  }
+
+  if (isLoading || !artworks) return <TpaSkeleton />
+
+  if (artworks.length === 0) {
+    return (
+      <div className="flex flex-1 flex-col items-center justify-center gap-y-2 rounded-2xl border border-gray-50 bg-white p-5 text-center">
+        <p className="text-body-s font-medium text-heading">No top artworks yet</p>
+        <p className="text-body-xs text-body">Your best performing artworks will appear here once you make sales.</p>
+      </div>
+    )
+  }
 
   const safeIndex = Math.min(index, artworks.length - 1)
   const artwork = artworks[safeIndex]!
