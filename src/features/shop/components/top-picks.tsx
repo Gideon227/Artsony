@@ -48,7 +48,7 @@ const TopPicks = () => {
     }
 
     return (
-        <div className='bg-secondary-100'>
+        <div className='bg-secondary-100 z-0'>
 
             <div className="py-12 px-8 gap-y-14 flex flex-col relative w-full overflow-hidden">
                 {/* Header Area */}

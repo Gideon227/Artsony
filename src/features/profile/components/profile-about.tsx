@@ -64,7 +64,7 @@ const ProfileAboutTab = ({ user }: { user: User }) => {
                             <p className='font-raleway font-semibold text-gray-500 text-body-xl leading-8 tracking-wide'>Art Focus</p>
                             <div className='flex w-full flex-col gap-3'>
                                 {user.interests.map((item, index) => (
-                                    <div key={index} className='w-full rounded-2xl border border-gray-50 px-6 py-3 flex items-center justify-center '>
+                                    <div key={index} className='w-full rounded-2xl border border-gray-50 px-6 py-3 h-12 flex items-center justify-center '>
                                         <p className='font-poppins font-medium text-body-s text-primary-500 leading-6 tracking-wide'>{item.charAt(0).toUpperCase() + item.slice(1)}</p>
                                     </div>
                                 ))}

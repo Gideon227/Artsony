@@ -103,7 +103,7 @@ const ProfileArtwork = ({ userId, tabType, isOwnProfile, onArtworkClick, onPostA
                     )}
                 </div>
             ) : (
-                <div className='grid grid-cols-1 gap-x-4 gap-y-6 px-4 py-12 sm:grid-cols-2 md:grid-cols-3 md:px-8 lg:grid-cols-4'>
+                <div className='grid grid-cols-1 gap-x-4 gap-y-12 px-4 py-12 sm:grid-cols-2 md:grid-cols-3 md:px-8 lg:grid-cols-4'>
                     {artworks.map((art) => (
                         <ArtCard
                             key={art.id}

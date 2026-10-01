@@ -82,7 +82,7 @@ export function NewChatModal({ onClose, onStartConversation }: NewChatModalProps
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center w-full h-full bg-black/40">
-      <div className="relative rounded-2xl bg-white px-10 py-16" style={{ width: 564, height: 632 }}>
+      <div className="relative rounded-2xl bg-white px-10 py-16 overflow-y-auto" style={{ width: 564, height: 632 }}>
         {/* Close */}
         <button
           onClick={onClose}
