@@ -793,7 +793,7 @@ export default function ArtworkViewOverlay({ artwork: artworkProp, onClose, onNa
                 </>
               )}
 
-              <div className="grid grid-cols-1 gap-8 px-6 border-t border-gray-50 py-12 lg:grid-cols-[1fr_240px]">
+              <div className="grid grid-cols-1 gap-4 px-6 border-t border-gray-50 py-12 lg:grid-cols-[1fr_308px]">
                 <ArtworkComments
                   artworkId={artwork.id}
                   creatorId={artwork.creator_id}

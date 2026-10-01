@@ -343,8 +343,8 @@ export function ArtCard({
   const videoSrc = videoAsset?.optimized_url || videoAsset?.original_url
 
   const wrapperSizing = fillContainer
-  ? 'h-full w-full'
-  : 'max-w-[600px] w-full'
+    ? 'h-full w-full'
+    : 'w-full max-w-[376px]'
 
   const handleCardClick = () => {
     if (onCardClick) {
@@ -363,27 +363,27 @@ export function ArtCard({
   }
 
   const CardWrapper = (onCardClick || artwork)
-  ? ({ children }: { children: React.ReactNode }) => (
-      <div
-        onClick={handleCardClick}
-        className={cn('relative gap-y-4 cursor-pointer block', wrapperSizing)}
-      >
-        {children}
-      </div>
-    )
-  : ({ children }: { children: React.ReactNode }) => (
-      <Link href={cardLink ?? '/404'} className={cn('relative gap-y-4 cursor-pointer block', wrapperSizing)}>
-        {children}
-      </Link>
-    )
+    ? ({ children }: { children: React.ReactNode }) => (
+        <div
+          onClick={handleCardClick}
+          className={cn('relative gap-y-4 cursor-pointer block', wrapperSizing)}
+        >
+          {children}
+        </div>
+      )
+    : ({ children }: { children: React.ReactNode }) => (
+        <Link href={cardLink ?? '/404'} className={cn('relative gap-y-4 cursor-pointer block', wrapperSizing)}>
+          {children}
+        </Link>
+      )
 
   return (
     <>
       <CardWrapper>
         {/* --- Image Container --- */}
         <div ref={revealRef} className={cn(
-          'relative group overflow-hidden rounded-2xl bg-neutral-100',
-          fillContainer ? 'h-full w-full' : 'aspect-square max-h-[376px]'
+          'relative group overflow-hidden rounded-2xl bg-neutral-100 w-full',
+          fillContainer ? 'h-full' : 'aspect-square'
         )}>
           {isPlayingVideo && videoSrc ? (
             <video
@@ -543,7 +543,7 @@ export function ArtCard({
           </div>
         )}
 
-        {/* Global Hover Profile Wrapper: Safely placed at the bottom so it isn't clipped by the footer's overflow-hidden styling */}
+        {/* Global Hover Profile Wrapper */}
         <AnimatePresence>
           {isHoveringArtist && artistCount > 0 && primaryArtist && (
             <div
