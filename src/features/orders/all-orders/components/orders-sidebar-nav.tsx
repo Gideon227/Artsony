@@ -28,7 +28,7 @@ const GROUP_ICONS: Record<OrderStatusGroup, string> = {
 
 function OrdersSidebarNav({ activeGroup, onChangeGroup, counts, className }: OrdersSidebarNavProps) {
     const items: NavItem[] = [
-        { id: 'ALL', label: 'All Orders', icon: '/icons/box.svg', count: counts.ALL },
+        { id: 'ALL', label: 'All Orders', icon: '/home/box-black.svg', count: counts.ALL },
         ...STATUS_GROUP_VALUES.map((group) => ({
             id: group,
             label: STATUS_GROUP_META[group].sidebarLabel,
@@ -38,7 +38,7 @@ function OrdersSidebarNav({ activeGroup, onChangeGroup, counts, className }: Ord
     ]
 
     return (
-        <nav aria-label="Order Management" style={{ backgroundColor: '#F5FAFA' }} className={cn('py-8 px-4 rounded-2xl flex flex-col gap-y-8', className)}>
+        <nav aria-label="Order Management" style={{ backgroundColor: '#F5FAFA' }} className={cn('py-8 px-4 rounded-2xl h-full flex flex-col gap-y-8', className)}>
             <div className='flex gap-x-4 items-center'>
                 <span className='border border-gray-50 rounded-full flex justify-center p-2 items-center w-8 h-8'>
                     <ArrowLeft size={16}/>
@@ -57,7 +57,7 @@ function OrdersSidebarNav({ activeGroup, onChangeGroup, counts, className }: Ord
                                 aria-current={isActive ? 'page' : undefined}
                                 style={{ borderRadius: 16 }}
                                 className={cn(
-                                    'flex w-full items-center gap-4 rounded-m px-4 py-6 text-left text-body-s font-poppins transition-colors',
+                                    'flex cursor-pointer w-full items-center gap-4 rounded-m px-4 py-6 text-left text-body-s font-poppins transition-colors',
                                     // 'focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary-500',
                                     isActive
                                         ? 'border border-gray-50 bg-primary-50 text-primary-500 ring-2 ring-offset-2 ring-primary-500'

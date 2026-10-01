@@ -27,7 +27,7 @@ export type OrdersTableProps = {
 function OrdersTable({ orders, isLoading, isError, onRetry, getDetailHref }: OrdersTableProps) {
     if (isError) {
         return (
-            <div className="flex flex-col items-center justify-center gap-4 rounded-2xl border border-gray-50 py-20 text-center">
+            <div className="flex flex-col items-center flex-1 h-full justify-center gap-4 rounded-2xl border border-gray-50 py-20 text-center">
                 <p className="font-poppins text-body-m font-semibold text-heading">Couldn't load your orders</p>
                 <p className="max-w-sm text-body-s text-body">Check your connection and try again. If this keeps happening, refresh the page.</p>
                 <button
@@ -70,7 +70,7 @@ function OrdersTable({ orders, isLoading, isError, onRetry, getDetailHref }: Ord
 
     if (orders.length === 0) {
         return (
-            <div className="flex flex-col items-center justify-center gap-3 rounded-2xl py-20 text-center">
+            <div className="flex flex-col flex-1 h-full items-center justify-center gap-3 rounded-2xl py-20 text-center">
                 <Package className="h-10 w-10 text-text-alt-grey" strokeWidth={1.5} />
                 <p className="font-poppins text-body-m font-semibold text-heading">No orders match your filters</p>
                 <p className="max-w-sm text-body-s text-body">Try adjusting or clearing your filters to see more results.</p>

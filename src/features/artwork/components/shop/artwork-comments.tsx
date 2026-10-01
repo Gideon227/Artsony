@@ -41,7 +41,7 @@ export function ArtworkComments({ artworkId, creatorId, allowComments }: Artwork
   }
 
   return (
-    <div className="flex flex-col gap-8 border border-border p-6 rounded-xl">
+    <div className="flex flex-col gap-8 border border-border p-6 rounded-xl h-[688px]">
       {/* Composer */}
       {canComment ? (
         <div className="flex gap-4">

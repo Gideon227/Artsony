@@ -43,10 +43,15 @@ function OrderManagementContent() {
   const statusCounts = React.useMemo(() => getStatusCounts(orders), [orders])
 
   return (
-    <>
+    <div className="h-screen flex flex-col overflow-hidden bg-white w-full">
+      {/* Fixed top Navbar */}
       <Navbar />
-      <div className="grid grid-cols-4 gap-4 py-6 px-8 bg-white w-full">
-        <div className="col-span-1">
+
+      {/* Main Container taking up remaining height */}
+      <div className="flex-1 grid grid-cols-4 gap-4 py-6 px-8 bg-white w-full min-h-0 overflow-hidden">
+        
+        {/* Left Sidebar - Independent scroll if content overflows */}
+        <div className="col-span-1 h-full overflow-y-auto min-h-0">
           <OrdersSidebarNav
             activeGroup={filters.statusGroup}
             onChangeGroup={(statusGroup) => updateFilters((prev) => ({ ...prev, statusGroup, page: 1 }))}
@@ -54,7 +59,11 @@ function OrderManagementContent() {
           />
         </div>
 
-        <div style={{ backgroundColor: '#F5FAFA', gridColumn: 'span 3 / span 3' }} className="col-span-3 rounded-2xl p-4 flex flex-col gap-y-12">
+        {/* Right Main Content Panel - Scrollable container for table and controls */}
+        <div
+          style={{ backgroundColor: '#F5FAFA' }}
+          className="col-span-3 h-full overflow-y-auto min-h-0 rounded-2xl p-6 flex flex-col gap-y-6"
+        >
           <OrdersFilterBar
             filters={filters}
             onFiltersChange={updateFilters}
@@ -62,7 +71,7 @@ function OrderManagementContent() {
             isFiltered={hasActiveFilters(filters)}
           />
 
-          <div>
+          <div className="flex-1">
             <OrdersTable
               orders={pageData}
               isLoading={isLoading}
@@ -77,12 +86,12 @@ function OrderManagementContent() {
               page={filters.page}
               totalPages={totalPages}
               onPageChange={(page) => updateFilters((prev) => ({ ...prev, page }))}
-              className="mt-6"
+              className="mt-auto pt-4"
             />
           )}
         </div>
       </div>
-    </>
+    </div>
   )
 }
 
