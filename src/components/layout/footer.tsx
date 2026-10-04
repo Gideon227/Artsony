@@ -64,7 +64,7 @@ const Footer = () => {
   ]
 
   return (
-    <footer className="relative w-full text-white pt-32 pb-10 overflow-hidden max-md:hidden">
+    <footer className="relative w-full text-white pt-34 pb-8 h-[680px] flex-1 overflow-hidden max-md:hidden">
       {/* Background Mural Image with Overlay */}
       <div className="absolute inset-0 z-0 bg-white">
         <Image 
@@ -76,7 +76,7 @@ const Footer = () => {
         <div className="absolute inset-0" />
       </div>
 
-      <div className="relative z-10 max-w-full 2xl:max-w-[95%] mx-auto px-6 lg:px-8">
+      <div className="relative flex flex-col h-full z-10 max-w-full mx-auto px-6 lg:px-8">
         {/* Main Content Grid - 100% Height Matching */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-16 mb-16 w-full">
           
@@ -202,7 +202,7 @@ const Footer = () => {
         </div>
 
         {/* Divider */}
-        <hr className="w-full h-px text-primary-500 mb-8" />
+        <hr className="w-full h-px text-primary-500 mb-8 mt-auto" />
 
         {/* Footer Bottom */}
         <div className="flex flex-col md:flex-row items-center justify-between gap-8">

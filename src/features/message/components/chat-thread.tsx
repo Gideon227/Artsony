@@ -79,7 +79,7 @@ export function ChatThread({ conversationId, conversation, myId }: ChatThreadPro
         <div className="flex items-center gap-3">
           <ConversationAvatar name={displayName} avatar={avatar} size="sm" />
           <div>
-            <h2 className="text-[15px] font-semibold text-gray-900">{displayName}</h2>
+            <h2 className="text-[15px] font-semibold text-heading">{displayName}</h2>
             {typingUsers.length > 0 && (
               <p className="text-[12px] italic text-gray-400">typing...</p>
             )}

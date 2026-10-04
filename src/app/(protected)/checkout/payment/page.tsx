@@ -58,7 +58,7 @@ function PaymentContent() {
 
   return (
     <div className="mx-auto flex max-w-xl flex-col gap-8 px-6 py-16">
-      <h1 className="font-raleway text-h4 font-semibold text-gray-900">Complete Payment</h1>
+      <h1 className="font-raleway text-h4 font-semibold text-heading">Complete Payment</h1>
 
       {isLoading && !order ? (
         <div className="flex justify-center py-20">
@@ -95,14 +95,14 @@ function PaymentContent() {
           <div className="flex flex-col gap-4 rounded-2xl bg-secondary-50 p-6">
             <div className="flex items-center justify-between">
               <span className="font-poppins text-[14px] text-gray-500">Amount due</span>
-              <span className="font-raleway text-[22px] font-semibold text-primary-500">
+              <span className="font-raleway text-h5 font-semibold text-primary-500">
                 {instructions.amount.toLocaleString('en-US')} {instructions.currency}
               </span>
             </div>
 
             <div className="flex items-center justify-between">
               <span className="font-poppins text-[14px] text-gray-500">Network</span>
-              <span className="font-poppins text-[14px] font-medium text-gray-900">
+              <span className="font-poppins text-[14px] font-medium text-heading">
                 {instructions.network}
               </span>
             </div>

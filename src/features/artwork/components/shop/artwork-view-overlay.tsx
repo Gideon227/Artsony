@@ -483,7 +483,7 @@ export default function ArtworkViewOverlay({ artwork: artworkProp, onClose, onNa
 
   const descriptionSection = (
     <div className="py-6">
-      <h3 className="mb-4 font-poppins text-[22px] font-semibold text-gray-800">Description</h3>
+      <h3 className="mb-4 font-poppins text-h5 font-semibold text-gray-800">Description</h3>
       <p className="whitespace-pre-line font-poppins text-[14px] leading-6 text-gray-500">{artwork.description}</p>
     </div>
   )
@@ -723,7 +723,7 @@ export default function ArtworkViewOverlay({ artwork: artworkProp, onClose, onNa
             <div className="flex flex-col lg:w-full flex-1">
               {mobileHeaderBar}
 
-              <h1 className="px-5 pt-5 font-raleway text-[22px] font-semibold text-gray-900 lg:hidden">
+              <h1 className="px-5 pt-5 font-raleway text-h5 font-semibold text-heading lg:hidden">
                 {displayTitle}
               </h1>
 

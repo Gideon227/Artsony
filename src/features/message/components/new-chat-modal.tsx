@@ -106,7 +106,7 @@ export function NewChatModal({ onClose, onStartConversation }: NewChatModalProps
                 <div className="flex h-7 w-7 items-center justify-center overflow-hidden rounded-full bg-indigo-200 text-[11px] font-bold text-indigo-600">
                   {selectedUser.username.charAt(0).toUpperCase()}
                 </div>
-                <span className="text-[14px] font-semibold text-gray-900">
+                <span className="text-[14px] font-semibold text-heading">
                   {selectedUser.username}
                 </span>
                 <button onClick={handleClearUser}>
@@ -145,7 +145,7 @@ export function NewChatModal({ onClose, onStartConversation }: NewChatModalProps
                       <div className="flex h-10 w-10 items-center justify-center overflow-hidden rounded-full bg-indigo-100 font-semibold text-indigo-500">
                         {user.username.charAt(0).toUpperCase()}
                       </div>
-                      <span className="text-[14px] font-semibold text-gray-900">
+                      <span className="text-[14px] font-semibold text-heading">
                         {user.username}
                       </span>
                     </button>

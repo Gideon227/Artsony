@@ -10,7 +10,7 @@ export function DeliveryOptions({ control }: { control: Control<ShippingInfoInpu
   return (
     <div className="flex flex-col gap-4 rounded-2xl border border-gray-50 p-6">
       <div className="flex items-center gap-2">
-        <h2 className="font-raleway text-[20px] font-semibold text-gray-900">Delivery Options</h2>
+        <h2 className="font-raleway text-[20px] font-semibold text-heading">Delivery Options</h2>
         <HelpCircle size={16} className="text-blue-500" />
       </div>
 

@@ -130,7 +130,7 @@ export default function PreviewPhysicalArt({ user } : { user: User | null}) {
                         />
                     </div>
                     <div className="absolute bottom-2 left-2">
-                        <h4 className="text-gray-900 font-extrabold text-[15px] uppercase leading-none tracking-wide">
+                        <h4 className="text-heading font-extrabold text-[15px] uppercase leading-none tracking-wide">
                             {hasRealAsset ? `ASSET 0${idx+1}` : DEFAULT_TITLES[idx]}
                         </h4>
                         <p className="text-[9px] text-gray-800 font-bold uppercase mt-0.5 tracking-[0.2em]">

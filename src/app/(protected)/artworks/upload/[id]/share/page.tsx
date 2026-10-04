@@ -245,7 +245,6 @@ export default function ShareArtworkWizardPage() {
         <div className="min-h-screen bg-white w-screen">
             <Navbar />
             {portfolioFlowComponents[stepIndex]}
-            <Footer />
         </div>
     )
 }

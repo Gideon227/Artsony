@@ -77,7 +77,7 @@ const LeftSideBarComp = () => {
 
                         <span
                             className={clsx(
-                            'font-poppins text-[22px] leading-none flex-1',
+                            'font-poppins text-h5 leading-none flex-1',
                             nav.isSelected
                                 ? 'text-primary-500'
                                 : 'text-[#525965]'

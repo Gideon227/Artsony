@@ -83,7 +83,7 @@ export default function NotificationsPage() {
           </button>
 
           <div className="flex-1 min-w-0">
-            <h1 className="font-raleway font-semibold text-[22px] md:text-[26px] text-neutral-700 leading-tight">
+            <h1 className="font-raleway font-semibold text-h5 md:text-[26px] text-neutral-700 leading-tight">
               Notifications
             </h1>
           </div>

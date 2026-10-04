@@ -35,11 +35,11 @@ export function CheckoutSummary({
 
   return (
     <div className="flex flex-col gap-5 rounded-2xl bg-secondary-50 p-6">
-      <h2 className="font-raleway text-[20px] font-semibold text-gray-900">Summary</h2>
+      <h2 className="font-raleway text-[20px] font-semibold text-heading">Summary</h2>
 
       <div className="flex items-center justify-between">
         <span className="font-poppins text-[14px] text-gray-500">Subtotal</span>
-        <span className="font-poppins text-[14px] font-medium text-gray-900">
+        <span className="font-poppins text-[14px] font-medium text-heading">
           $ {subtotal.toLocaleString('en-US')} {currency}
         </span>
       </div>
@@ -47,7 +47,7 @@ export function CheckoutSummary({
       {hasPhysical && (
         <div className="flex items-center justify-between border-t border-secondary-200 pt-4">
           <span className="font-poppins text-[14px] text-gray-500">Shipping</span>
-          <span className="font-poppins text-[14px] font-medium text-gray-900">
+          <span className="font-poppins text-[14px] font-medium text-heading">
             $ {(shippingFee ?? 0).toLocaleString('en-US')} {currency}
           </span>
         </div>
@@ -60,13 +60,13 @@ export function CheckoutSummary({
             <HelpCircle size={14} className="text-blue-500" />
           </span>
         </span>
-        <span className="font-poppins text-[14px] font-medium text-gray-900">
+        <span className="font-poppins text-[14px] font-medium text-heading">
           $ {ESTIMATED_NETWORK_FEE.toFixed(2)} {currency}
         </span>
       </div>
 
       <div className="flex items-center justify-between border-t border-secondary-200 pt-4">
-        <span className="font-raleway text-[18px] font-semibold text-gray-900">Total</span>
+        <span className="font-raleway text-[18px] font-semibold text-heading">Total</span>
         <span className="font-raleway text-[20px] font-semibold text-primary-500">
           $ {total.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} {currency}
         </span>

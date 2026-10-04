@@ -216,7 +216,6 @@ export default function DigitalSellWizardPage() {
         <div className="min-h-screen bg-white w-screen">
             <Navbar />
             {digitalFlowComponents[stepIndex]}
-            <Footer />
         </div>
     )
 }

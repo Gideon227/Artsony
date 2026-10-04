@@ -19,19 +19,39 @@ const GuestCartPrompt = () => {
   const pathname = usePathname()
 
   return (
-    <div className='my-[85px] mb-14 flex justify-center items-center bg-white'>
-      <div className='w-[509px] h-[590px]'>
-        <div className='flex flex-col justify-center item-center gap-y-12'>
-          <Image src='/images/empty-cart.svg' width={448} height={378} alt='empty cart icon' />
+    <div className='py-[85px] mb-14 flex justify-center items-center bg-white h-screen'>
+      {/* Changed w-[509px] to w-full max-w-[509px] and added px-4 for mobile padding */}
+      <div className='w-full max-w-[509px] px-4 lg:h-[590px]'>
+        
+        {/* Fixed typo: changed 'item-center' to 'items-center' */}
+        <div className='flex flex-col justify-center items-center gap-y-12 w-full'>
+          
+          {/* Added mx-auto just to ensure the image block centers within its container */}
+          <div className="relative mx-auto h-[168px] w-[203px] lg:h-[378px] lg:w-[448px]">
+            <Image
+              src='/images/empty-cart.svg'
+              fill
+              className="object-cover"
+              alt='empty cart icon'
+            />
+          </div>
+          
           <div className='flex flex-col gap-y-4 justify-center items-center text-center'>
-            <p className='font-poppins font-medium text-xl leading-8 tracking-wide text-heading'>Sign in to see what&apos;s in your cart</p>
-            <p className='max-w-[509px] font-poppins text-body-m text-body tracking-wide text-center leading-6'>Your cart is tied to your account — log in to add pieces and check out.</p>
+            <p className='font-poppins font-medium max-lg:text-body-m lg:text-xl leading-8 tracking-wide text-heading'>
+              Sign in to see what&apos;s in your cart
+            </p>
+            <p className='max-w-[509px] font-poppins max-lg:text-body-xs lg:text-body-m text-body tracking-wide text-center leading-6'>
+              Your cart is tied to your account — log in to add pieces and check out.
+            </p>
             <Button
               onClick={() => router.push(`/login?next=${encodeURIComponent(pathname)}`)}
               variant='primary'
               size='lg'
               rightIcon='/icons/alt-arrow-right-double.svg'
-            >Log in</Button>
+              className='px-6'
+            >
+              Log in
+            </Button>
           </div>
         </div>
       </div>

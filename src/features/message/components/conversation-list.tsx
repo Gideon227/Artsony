@@ -92,7 +92,7 @@ function ConversationItem({ conv, myId, isSelected, onSelect }: ConversationItem
 
         <div className="min-w-0 flex-1">
           <div className="flex items-baseline justify-between gap-2">
-            <span className="truncate text-[14px] font-semibold text-gray-900">{name}</span>
+            <span className="truncate text-[14px] font-semibold text-heading">{name}</span>
             {conv.last_message && (
               <span className="shrink-0 text-[11px] text-gray-400">
                 {formatMessageDate(conv.last_message.created_at)}

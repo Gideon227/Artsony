@@ -318,7 +318,6 @@ export default function PhysicalSellWizardPage() {
         <div className="min-h-screen bg-white w-screen pb-4">
             <Navbar />
             {previewArt ? <PreviewPhysicalArt user={user} /> : physicalFlowComponents[stepIndex]}
-            <Footer />
         </div>
     )
 }
