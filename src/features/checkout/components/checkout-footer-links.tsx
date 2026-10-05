@@ -9,7 +9,7 @@ const LINKS: [string, string][] = [
 
 export function CheckoutFooterLinks() {
   return (
-    <div className="flex items-center justify-center gap-6 border-t border-gray-50 py-8 font-poppins text-[13px] text-gray-400">
+    <div className="hidden items-center justify-center gap-6 border-t border-gray-50 py-8 font-poppins text-[13px] text-gray-400 lg:flex">
       {LINKS.map(([label, href]) => (
         <Link key={href} href={href} className="hover:text-gray-600 transition-colors">
           {label}

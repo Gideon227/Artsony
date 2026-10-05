@@ -2,11 +2,11 @@ import { apiClient } from '@/lib/api-client'
 
 export type ShippingAddress = {
   id: string
-  label: string | null
+  label?: string | null
   full_name: string
   phone: string
   address_line_1: string
-  address_line_2: string | null
+  address_line_2?: string | null
   city: string
   state: string
   postal_code: string

@@ -5,9 +5,27 @@ import { useState, useEffect, useRef } from 'react'
 import { Toaster } from '@/components/ui/toaster'
 import { authService } from '@/services/auth.service'
 import { useAuthStore } from '@/store/auth.store'
-import { setMemoryToken } from '@/lib/api-client'
+import { HttpError, isSessionEndedError, refreshAccessToken } from '@/lib/api-client'
+import { setClientCookie } from '@/hooks/use-auth-mutations'
 
-const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? ''
+const ME_MAX_ATTEMPTS = 3
+const ME_RETRY_BASE_DELAY_MS = 500
+
+function isTransientError(err: unknown): boolean {
+  if (!(err instanceof HttpError)) return true
+  return err.statusCode === 429 || err.statusCode >= 500
+}
+
+async function loadCurrentUser() {
+  for (let attempt = 1; ; attempt++) {
+    try {
+      return await authService.me()
+    } catch (err) {
+      if (!isTransientError(err) || attempt >= ME_MAX_ATTEMPTS) throw err
+      await new Promise((resolve) => setTimeout(resolve, ME_RETRY_BASE_DELAY_MS * 2 ** (attempt - 1)))
+    }
+  }
+}
 
 function makeQueryClient() {
   return new QueryClient({
@@ -38,12 +56,10 @@ function getQueryClient() {
 }
 
 function SessionBootstrap() {
-  const setUser       = useAuthStore((s) => s.setUser)
-  const setAccessToken = useAuthStore((s) => s.setAccessToken)
-  const clearAuth     = useAuthStore((s) => s.clearAuth)
-  const setHydrated   = useAuthStore((s) => s.setHydrated)
-  const isHydrated    = useAuthStore((s) => s.isHydrated)
-  const done          = useRef(false)
+  const setUser     = useAuthStore((s) => s.setUser)
+  const setHydrated = useAuthStore((s) => s.setHydrated)
+  const isHydrated  = useAuthStore((s) => s.isHydrated)
+  const done        = useRef(false)
 
   useEffect(() => {
     if (done.current || isHydrated) return
@@ -51,38 +67,23 @@ function SessionBootstrap() {
 
     ;(async () => {
       try {
-        const res = await fetch(`${API_BASE}/api/auth/refresh`, {
-          method: 'POST',
-          credentials: 'include',
-        })
+        // Shares one in-flight request with any API call that 401s while the
+        // page is loading, and clears the session itself only when the server
+        // answers 401 (refresh token missing, expired or revoked).
+        await refreshAccessToken()
 
-        if (!res.ok) {
-          // Refresh endpoint actively rejected us — no active session (or it
-          // genuinely expired/was revoked). Clear any stale Zustand-persisted
-          // user and drop the session flag so middleware agrees.
-          clearAuth()
-          document.cookie = 'artsony_session=; max-age=0; path=/; SameSite=Strict'
-          return
-        }
+        // The refresh succeeded, so the session is proven valid — restore the
+        // proxy flag now rather than after /me, which may fail transiently.
+        setClientCookie('artsony_session', '1')
 
-        const body = (await res.json()) as { data: { accessToken: string } }
-        const accessToken = body.data.accessToken
-
-        setMemoryToken(accessToken)
-        setAccessToken(accessToken)
-
-        const meRes = await authService.me()
+        const meRes = await loadCurrentUser()
         setUser(meRes.data)
-
-        // Ensure session indicator is present for middleware on any subsequent navigation
-        document.cookie = `artsony_session=1; path=/; SameSite=Strict; max-age=${365 * 24 * 60 * 60}`
-      } catch {
-        // A thrown error here means the request itself failed (offline, DNS,
-        // timeout, slow network) — NOT that the session is invalid. Don't
-        // clear auth or the session cookie on a transport failure; that was
-        // logging people out just because their connection was slow. Leave
-        // any persisted user/session alone so the next mount or request can
-        // succeed normally once the network recovers.
+      } catch (err) {
+        // A transport failure, 429 or 5xx says nothing about the session:
+        // keep the persisted user and flag so the next request can recover.
+        if (!isSessionEndedError(err)) {
+          console.error('[SessionBootstrap] Could not restore session:', err)
+        }
       } finally {
         setHydrated()
       }

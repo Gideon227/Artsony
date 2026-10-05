@@ -12,11 +12,19 @@ const COUNTRIES = [
   { name: "Kenya", code: "+254", flag: "🇰🇪" },
 ];
 
-const PhoneInput = React.forwardRef<HTMLInputElement, React.InputHTMLAttributes<HTMLInputElement>>(
-  ({ className, ...props }, ref) => {
+type PhoneInputProps = React.InputHTMLAttributes<HTMLInputElement> & {
+  onDialCodeChange?: (dialCode: string) => void;
+};
+
+const PhoneInput = React.forwardRef<HTMLInputElement, PhoneInputProps>(
+  ({ className, onDialCodeChange, ...props }, ref) => {
     const [isOpen, setIsOpen] = React.useState(false);
     const [selectedCountry, setSelectedCountry] = React.useState(COUNTRIES[0]);
     const dropdownRef = React.useRef<HTMLDivElement>(null);
+
+    React.useEffect(() => {
+      if (selectedCountry) onDialCodeChange?.(selectedCountry.code);
+    }, [selectedCountry, onDialCodeChange]);
 
     // Close dropdown when clicking outside
     React.useEffect(() => {

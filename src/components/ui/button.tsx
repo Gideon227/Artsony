@@ -53,12 +53,12 @@ const buttonVariants = cva(
         ],
       },
       size: {
-        sm: 'h-12 px-6 py-3 text-body-s text-white rounded-[var(--radius-sm)]',
+        sm: 'h-12 px-6 py-3 text-body-s text-white rounded-2xl',
         md: 'h-12 w-42 px-12 text-[14px] rounded-[var(--radius-2xl)]',
         lg: 'h-12 px-6 py-3 leading-8 text-[14px] font-poppins rounded-2xl ',
         xl: 'h-16 px-8 py-4 leading-8 text-[20px] rounded-2xl ',
         icon: 'h-10 w-10 rounded-[var(--radius-md)]',
-        'icon-sm': 'h-8 w-8 rounded-[var(--radius-sm)]',
+        'icon-sm': 'h-8 w-8 rounded-2xl',
         'icon-lg': 'h-12 w-48 rounded-2xl',
       },
       fullWidth: {

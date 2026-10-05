@@ -67,6 +67,8 @@ export function MobileNav({ variant, className }: MobileNavProps) {
     setIsOpen(false)
   }, [pathname])
 
+  if (pathname.startsWith('/checkout')) return null
+
   return (
     <div
       className={cn(

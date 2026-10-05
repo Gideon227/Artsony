@@ -54,7 +54,7 @@ const EditCartItem = ({
               animate={{ y: 0 }}
               exit={{ y: '100%' }}
               transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-              className="pointer-events-auto flex flex-col gap-y-12 p-6 lg:p-8 bg-white border border-gray-50 rounded-2xl w-[343px] lg:w-md shadow-xl"
+              className="pointer-events-auto flex flex-col gap-y-12 pt-6 px-6 pb-8 lg:p-8 bg-white border border-gray-50 rounded-2xl w-[90%] max-md:overflow-y-auto scrollbar-hide max-md:h-[75%] md:w-[343px] lg:w-md shadow-xl"
             >
               <div className='flex flex-col gap-y-8'>
                 <div className='flex flex-col gap-y-4'>

@@ -1,364 +1,579 @@
 'use client'
 
+import React, { useEffect, useState } from 'react'
 import { Button, Input } from '@/components'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { MapPin, Pencil, Plus, Star, Trash2 } from 'lucide-react'
-import React, { useEffect, useState } from 'react'
+import { Trash2 } from 'lucide-react'
 import { useAuthStore } from '@/store'
 import { useUpdateProfile } from '@/hooks/use-auth-mutations'
 import {
   useShippingAddresses,
   useCreateShippingAddress,
   useUpdateShippingAddress,
-  useSetDefaultShippingAddress,
   useDeleteShippingAddress,
 } from '@/hooks/use-shipping-addresses'
 import { useMySellerRegistration, useUpdateDispatchAddress } from '@/hooks/use-seller'
-import type { ShippingAddress, ShippingAddressInput } from '@/services/shipping-address.service'
-import { COUNTRIES } from '@/features/checkout/data/countries'
 
-// ── 1. Primary Location ─────────────────────────────────────────────────────
-// Same underlying fields as Account Details' Country/State/City
-// (profiles.country/state/city) — shown again here since it's also
-// relevant to shipping/compliance context, a common pattern in settings
-// UIs (e.g. showing "region" in more than one place). Saving here updates
-// the same fields either page was opened from.
+interface CountryOption {
+  name: string
+  code: string
+}
 
-function LocationSection() {
+interface StateOption {
+  name: string
+  code: string
+}
+
+// ── Custom Hooks for API Fetching ──────────────────────────────────────────
+
+function useCountries() {
+  const [countries, setCountries] = useState<CountryOption[]>([])
+  const [isLoading, setIsLoading] = useState(false)
+
+  useEffect(() => {
+    const fetchCountries = async () => {
+      setIsLoading(true)
+      try {
+        const res = await fetch('https://countriesnow.space/api/v0.1/countries')
+        const data = await res.json()
+        if (!data.error && data.data) {
+          const formatted = data.data.map((c: any) => ({
+            name: c.country,
+            code: c.iso2 || c.country,
+          }))
+          setCountries(formatted)
+        }
+      } catch (err) {
+        console.error('Failed to load countries:', err)
+      } finally {
+        setIsLoading(false)
+      }
+    }
+
+    fetchCountries()
+  }, [])
+
+  return { countries, isLoadingCountries: isLoading }
+}
+
+function useStates(selectedCountryVal: string, countriesList: CountryOption[]) {
+  const [states, setStates] = useState<StateOption[]>([])
+  const [isLoading, setIsLoading] = useState(false)
+
+  useEffect(() => {
+    if (!selectedCountryVal) {
+      setStates([])
+      return
+    }
+
+    // Determine country name (handles ISO code or full country name)
+    const matchedCountry = countriesList.find(
+      (c) =>
+        c.code.toLowerCase() === selectedCountryVal.toLowerCase() ||
+        c.name.toLowerCase() === selectedCountryVal.toLowerCase()
+    )
+    const countryName = matchedCountry ? matchedCountry.name : selectedCountryVal
+
+    const fetchStates = async () => {
+      setIsLoading(true)
+      try {
+        const res = await fetch('https://countriesnow.space/api/v0.1/countries/states', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ country: countryName }),
+        })
+        const data = await res.json()
+
+        if (!data.error && data.data?.states) {
+          const formatted = data.data.states.map((s: any) => ({
+            name: s.name,
+            code: s.state_code || s.name,
+          }))
+          setStates(formatted)
+        } else {
+          setStates([])
+        }
+      } catch (err) {
+        console.error('Failed to load states:', err)
+        setStates([])
+      } finally {
+        setIsLoading(false)
+      }
+    }
+
+    fetchStates()
+  }, [selectedCountryVal, countriesList])
+
+  return { states, isLoadingStates: isLoading }
+}
+
+// ── Main Page Component ─────────────────────────────────────────────────────
+
+export default function ShippingLocation() {
   const { user } = useAuthStore()
-  const { mutate: save, isPending } = useUpdateProfile()
-  const [country, setCountry] = useState('')
-  const [state, setState] = useState('')
-  const [city, setCity] = useState('')
+  const { countries, isLoadingCountries } = useCountries()
+
+  // ── 1. Primary Location State ──────────────────────────────────────────────
+  const { mutate: updateProfile, isPending: isUpdatingProfile } = useUpdateProfile()
+  const [primaryCountry, setPrimaryCountry] = useState('')
+  const [primaryState, setPrimaryState] = useState('')
+
+  const { states: primaryStates, isLoadingStates: isLoadingPrimaryStates } = useStates(
+    primaryCountry,
+    countries
+  )
 
   useEffect(() => {
     if (user) {
-      setCountry(user.country ?? '')
-      setState(user.state ?? '')
-      setCity(user.city ?? '')
+      setPrimaryCountry(user.country ?? '')
+      setPrimaryState(user.state ?? '')
     }
   }, [user])
 
-  const handleSave = () => {
-    if (!user) return
-    const payload: Partial<{ country: string | null; state: string | null; city: string | null }> = {}
-    if (country !== (user.country ?? '')) payload.country = country || null
-    if (state.trim() !== (user.state ?? '')) payload.state = state.trim() || null
-    if (city.trim() !== (user.city ?? '')) payload.city = city.trim() || null
-    if (Object.keys(payload).length === 0) return
-    save(payload)
+  // Reset state if primary country changes manually
+  const handlePrimaryCountryChange = (val: string) => {
+    setPrimaryCountry(val)
+    setPrimaryState('')
   }
 
-  return (
-    <div className='flex flex-col gap-y-6'>
-      <p className='font-poppins font-semibold text-body-m text-primary-500 leading-8 tracking-wide'>Primary Location</p>
-      <div className='bg-secondary-50 p-6 gap-y-4 flex flex-col rounded-xl'>
-        <p className='font-poppins text-body-xs text-gray-200 tracking-wide'>
-          Your primary country and region on Artsony. Used for compliance and platform features — not for shipping.
-        </p>
-        <div className='grid grid-cols-3 gap-3'>
-          <Select value={country} onValueChange={setCountry}>
-            <SelectTrigger><SelectValue placeholder='Country' /></SelectTrigger>
-            <SelectContent>
-              {COUNTRIES.map((c) => (
-                <SelectItem key={c.code} value={c.code}>{c.name}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-          <Input placeholder='State / Region' value={state} onChange={(e) => setState(e.target.value)} />
-          <Input placeholder='City' value={city} onChange={(e) => setCity(e.target.value)} />
-        </div>
-        <div className='flex justify-end'>
-          <Button size='md' onClick={handleSave} isLoading={isPending} loadingText='Saving…'>Save</Button>
-        </div>
-      </div>
-    </div>
-  )
-}
+  // ── 2. Delivery Address State ─────────────────────────────────────────────
+  const { data: addresses } = useShippingAddresses()
+  const { mutate: createAddress, isPending: isCreatingAddress } = useCreateShippingAddress()
+  const { mutate: updateAddress, isPending: isUpdatingAddress } = useUpdateShippingAddress()
+  const { mutate: deleteAddress, isPending: isDeletingAddress } = useDeleteShippingAddress()
 
-// ── 2. Delivery Addresses ───────────────────────────────────────────────────
+  const defaultDelivery = addresses?.[0]
 
-const emptyAddressForm: ShippingAddressInput = {
-  label: '',
-  full_name: '',
-  phone: '',
-  address_line_1: '',
-  address_line_2: '',
-  city: '',
-  state: '',
-  postal_code: '',
-  country_code: '',
-}
-
-function AddressForm({
-  initial,
-  onCancel,
-  onSubmit,
-  isPending,
-}: {
-  initial?: ShippingAddress
-  onCancel: () => void
-  onSubmit: (input: ShippingAddressInput) => void
-  isPending: boolean
-}) {
-  const [form, setForm] = useState<ShippingAddressInput>(
-    initial
-      ? {
-          label: initial.label ?? '',
-          full_name: initial.full_name,
-          phone: initial.phone,
-          address_line_1: initial.address_line_1,
-          address_line_2: initial.address_line_2 ?? '',
-          city: initial.city,
-          state: initial.state,
-          postal_code: initial.postal_code,
-          country_code: initial.country_code,
-        }
-      : emptyAddressForm,
-  )
-
-  const setField = <K extends keyof ShippingAddressInput>(key: K, value: ShippingAddressInput[K]) =>
-    setForm((f) => ({ ...f, [key]: value }))
-
-  const isValid =
-    form.full_name.trim() && form.phone.trim() && form.address_line_1.trim() &&
-    form.city.trim() && form.state.trim() && form.postal_code.trim() && form.country_code
-
-  return (
-    <div className='bg-white border border-gray-50 rounded-xl p-4 flex flex-col gap-y-3'>
-      <Input placeholder='Label (e.g. Home, Studio)' value={form.label ?? ''} onChange={(e) => setField('label', e.target.value)} />
-      <div className='grid grid-cols-2 gap-3'>
-        <Input placeholder='Full Name' value={form.full_name} onChange={(e) => setField('full_name', e.target.value)} />
-        <Input placeholder='Phone Number' value={form.phone} onChange={(e) => setField('phone', e.target.value)} />
-      </div>
-      <Input placeholder='Address Line 1' value={form.address_line_1} onChange={(e) => setField('address_line_1', e.target.value)} />
-      <Input placeholder='Address Line 2 (optional)' value={form.address_line_2 ?? ''} onChange={(e) => setField('address_line_2', e.target.value)} />
-      <div className='grid grid-cols-2 gap-3'>
-        <Input placeholder='City' value={form.city} onChange={(e) => setField('city', e.target.value)} />
-        <Input placeholder='State / Region' value={form.state} onChange={(e) => setField('state', e.target.value)} />
-      </div>
-      <div className='grid grid-cols-2 gap-3'>
-        <Input placeholder='Postal Code' value={form.postal_code} onChange={(e) => setField('postal_code', e.target.value)} />
-        <Select value={form.country_code} onValueChange={(v) => setField('country_code', v)}>
-          <SelectTrigger><SelectValue placeholder='Country' /></SelectTrigger>
-          <SelectContent>
-            {COUNTRIES.map((c) => (
-              <SelectItem key={c.code} value={c.code}>{c.name}</SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </div>
-      <div className='flex items-center justify-end gap-x-3 pt-2'>
-        <Button variant='outline' size='sm' onClick={onCancel} disabled={isPending}>Cancel</Button>
-        <Button
-          size='sm'
-          disabled={!isValid}
-          isLoading={isPending}
-          loadingText='Saving…'
-          onClick={() => onSubmit(form)}
-        >
-          Save Address
-        </Button>
-      </div>
-    </div>
-  )
-}
-
-function DeliveryAddressesSection() {
-  const { data: addresses, isLoading } = useShippingAddresses()
-  const { mutate: create, isPending: isCreating } = useCreateShippingAddress()
-  const { mutate: update, isPending: isUpdating } = useUpdateShippingAddress()
-  const { mutate: setDefault } = useSetDefaultShippingAddress()
-  const { mutate: remove, isPending: isDeleting, variables: deletingId } = useDeleteShippingAddress()
-
-  const [isAdding, setIsAdding] = useState(false)
-  const [editingId, setEditingId] = useState<string | null>(null)
-
-  return (
-    <div className='flex flex-col gap-y-6'>
-      <div className='flex items-center justify-between'>
-        <p className='font-poppins font-semibold text-body-m text-primary-500 leading-8 tracking-wide'>Delivery Addresses</p>
-        {!isAdding && (
-          <Button variant='outline' size='sm' onClick={() => setIsAdding(true)}>
-            <Plus size={16} className='mr-1' /> Add Address
-          </Button>
-        )}
-      </div>
-
-      <div className='bg-secondary-50 p-6 rounded-xl flex flex-col gap-y-3'>
-        {isLoading && <p className='font-poppins text-body-s text-gray-200 text-center py-4'>Loading…</p>}
-
-        {!isLoading && addresses?.length === 0 && !isAdding && (
-          <div className='flex flex-col items-center gap-y-2 py-8'>
-            <MapPin size={32} className='text-gray-200' />
-            <p className='font-poppins text-body-s text-body'>No saved delivery addresses yet</p>
-          </div>
-        )}
-
-        {addresses?.map((addr) =>
-          editingId === addr.id ? (
-            <AddressForm
-              key={addr.id}
-              initial={addr}
-              isPending={isUpdating}
-              onCancel={() => setEditingId(null)}
-              onSubmit={(input) => update({ id: addr.id, input }, { onSuccess: () => setEditingId(null) })}
-            />
-          ) : (
-            <div key={addr.id} className='bg-white rounded-xl p-4 border border-gray-50 flex items-start justify-between gap-x-4'>
-              <div className='min-w-0'>
-                <div className='flex items-center gap-x-2 mb-1'>
-                  <p className='font-poppins font-medium text-body-s text-heading truncate'>
-                    {addr.label || addr.full_name}
-                  </p>
-                  {addr.is_default && (
-                    <span className='font-poppins text-body-xxs text-primary-500 bg-primary-50 px-2 py-0.5 rounded-full'>Default</span>
-                  )}
-                </div>
-                <p className='font-poppins text-body-xs text-gray-200'>
-                  {addr.full_name} · {addr.phone}
-                </p>
-                <p className='font-poppins text-body-xs text-gray-200'>
-                  {addr.address_line_1}{addr.address_line_2 ? `, ${addr.address_line_2}` : ''}, {addr.city}, {addr.state} {addr.postal_code}, {addr.country_code}
-                </p>
-              </div>
-              <div className='flex items-center gap-x-2 shrink-0'>
-                {!addr.is_default && (
-                  <button
-                    type='button'
-                    aria-label='Set as default'
-                    onClick={() => setDefault(addr.id)}
-                    className='w-9 h-9 border border-gray-50 rounded-full flex items-center justify-center hover:bg-primary-50'
-                  >
-                    <Star size={16} className='text-gray-200' />
-                  </button>
-                )}
-                <button
-                  type='button'
-                  aria-label='Edit address'
-                  onClick={() => setEditingId(addr.id)}
-                  className='w-9 h-9 border border-gray-50 rounded-full flex items-center justify-center hover:bg-primary-50'
-                >
-                  <Pencil size={16} className='text-gray-200' />
-                </button>
-                <button
-                  type='button'
-                  aria-label='Delete address'
-                  disabled={isDeleting && deletingId === addr.id}
-                  onClick={() => remove(addr.id)}
-                  className='w-9 h-9 border border-gray-50 rounded-full flex items-center justify-center hover:bg-error-50 disabled:opacity-50'
-                >
-                  <Trash2 size={16} className='text-error-500' />
-                </button>
-              </div>
-            </div>
-          ),
-        )}
-
-        {isAdding && (
-          <AddressForm
-            isPending={isCreating}
-            onCancel={() => setIsAdding(false)}
-            onSubmit={(input) => create(input, { onSuccess: () => setIsAdding(false) })}
-          />
-        )}
-      </div>
-    </div>
-  )
-}
-
-// ── 3. Seller Dispatch Address ──────────────────────────────────────────────
-// Only shown for an APPROVED seller — the backend endpoint this saves to is
-// scoped the same way, so this section simply doesn't render for anyone
-// else rather than showing a form that would always fail to save.
-
-function DispatchAddressSection() {
-  const { data: registration } = useMySellerRegistration()
-  const { mutate: save, isPending } = useUpdateDispatchAddress()
-
-  const [form, setForm] = useState({
-    phone_number: '',
+  const [deliveryForm, setDeliveryForm] = useState({
     address: '',
-    state: '',
     country: '',
-    postal_code: '',
+    city: '',
+    state: '',
+    postalCode: '',
   })
+
+  const { states: deliveryStates, isLoadingStates: isLoadingDeliveryStates } = useStates(
+    deliveryForm.country,
+    countries
+  )
+
+  useEffect(() => {
+    if (defaultDelivery) {
+      setDeliveryForm({
+        address: defaultDelivery.address_line_1 ?? '',
+        country: defaultDelivery.country_code ?? '',
+        city: defaultDelivery.city ?? '',
+        state: defaultDelivery.state ?? '',
+        postalCode: defaultDelivery.postal_code ?? '',
+      })
+    }
+  }, [defaultDelivery])
+
+  const setDeliveryField = (field: keyof typeof deliveryForm, value: string) => {
+    setDeliveryForm((prev) => {
+      const updated = { ...prev, [field]: value }
+      if (field === 'country') updated.state = '' // Reset state on country change
+      return updated
+    })
+  }
+
+  const handleClearDeliveryAddress = () => {
+    if (defaultDelivery?.id) {
+      deleteAddress(defaultDelivery.id)
+    }
+    setDeliveryForm({
+      address: '',
+      country: '',
+      city: '',
+      state: '',
+      postalCode: '',
+    })
+  }
+
+  // ── 3. Shipping Address (Seller Dispatch) State ───────────────────────────
+  const { data: registration } = useMySellerRegistration()
+  const { mutate: updateDispatch, isPending: isUpdatingDispatch } = useUpdateDispatchAddress()
+
+  const [isAutoLocation, setIsAutoLocation] = useState(false)
+  const [isDetectingLocation, setIsDetectingLocation] = useState(false)
+  const [shippingForm, setShippingForm] = useState({
+    address: '',
+    country: '',
+    city: '',
+    state: '',
+    postalCode: '',
+  })
+
+  const { states: shippingStates, isLoadingStates: isLoadingShippingStates } = useStates(
+    shippingForm.country,
+    countries
+  )
 
   useEffect(() => {
     if (registration) {
-      setForm({
-        phone_number: registration.phone_number,
-        address: registration.address,
-        state: registration.state,
-        country: registration.country,
-        postal_code: registration.postal_code ?? '',
+      setShippingForm({
+        address: registration.address ?? '',
+        country: registration.country ?? '',
+        city: registration.city ?? '',
+        state: registration.state ?? '',
+        postalCode: registration.postal_code ?? '',
       })
     }
   }, [registration])
 
-  if (!registration || registration.status !== 'APPROVED') return null
+  const setShippingField = (field: keyof typeof shippingForm, value: string) => {
+    setShippingForm((prev) => {
+      const updated = { ...prev, [field]: value }
+      if (field === 'country') updated.state = ''
+      return updated
+    })
+  }
 
-  const setField = (key: keyof typeof form, value: string) => setForm((f) => ({ ...f, [key]: value }))
+  const handleToggleAutoLocation = async () => {
+    const nextVal = !isAutoLocation
+    setIsAutoLocation(nextVal)
 
-  const handleSave = () => {
-    const changed: Partial<typeof form> = {}
-    for (const key of Object.keys(form) as (keyof typeof form)[]) {
-      const original = key === 'postal_code' ? (registration.postal_code ?? '') : registration[key]
-      if (form[key] !== original) changed[key] = form[key]
+    if (nextVal) {
+      setIsDetectingLocation(true)
+      try {
+        const res = await fetch('https://ipapi.co/json/')
+        const data = await res.json()
+        if (data && !data.error) {
+          setShippingForm({
+            address: data.city ? `${data.city}` : '',
+            country: data.country_name || data.country_code || '',
+            city: data.city || '',
+            state: data.region || '',
+            postalCode: data.postal || '',
+          })
+        }
+      } catch (err) {
+        console.error('Failed to detect auto location:', err)
+      } finally {
+        setIsDetectingLocation(false)
+      }
     }
-    if (Object.keys(changed).length === 0) return
-    save(changed)
+  }
+
+  // ── Global Save Handler ───────────────────────────────────────────────────
+  const isSaving = isUpdatingProfile || isCreatingAddress || isUpdatingAddress || isUpdatingDispatch
+
+  const handleSaveAll = () => {
+    // 1. Primary Location
+    if (user && (primaryCountry !== user.country || primaryState !== user.state)) {
+      updateProfile({ country: primaryCountry || null, state: primaryState || null })
+    }
+
+    // 2. Delivery Address
+    if (deliveryForm.address && deliveryForm.country) {
+      const payload = {
+        full_name: user?.username || 'Primary User',
+        phone: '',
+        address_line_1: deliveryForm.address,
+        city: deliveryForm.city,
+        state: deliveryForm.state,
+        postal_code: deliveryForm.postalCode,
+        country_code: deliveryForm.country,
+      }
+
+      if (defaultDelivery?.id) {
+        updateAddress({ id: defaultDelivery.id, input: payload })
+      } else {
+        createAddress(payload)
+      }
+    }
+
+    // 3. Seller Dispatch Address
+    if (registration?.status === 'APPROVED') {
+      updateDispatch({
+        address: shippingForm.address,
+        country: shippingForm.country,
+        state: shippingForm.state,
+        postal_code: shippingForm.postalCode,
+      })
+    }
   }
 
   return (
-    <div className='flex flex-col gap-y-6'>
-      <p className='font-poppins font-semibold text-body-m text-primary-500 leading-8 tracking-wide'>Seller Dispatch Address</p>
-      <div className='bg-secondary-50 p-6 gap-y-4 flex flex-col rounded-xl'>
-        <p className='font-poppins text-body-xs text-gray-200 tracking-wide'>
-          Where your physical inventory ships from. This is shown to couriers, not to buyers.
-        </p>
+    <div className='border border-gray-50 rounded-2xl bg-white w-full pb-8 shadow-sm'>
+      {/* Header */}
+      <div className='px-8 py-5 flex justify-between items-center border-b border-gray-50'>
+        <h5 className='font-raleway font-semibold text-h5 text-primary-500 leading-10 tracking-wide'>
+          Shipping & Location
+        </h5>
+        <Button
+          size='md'
+          onClick={handleSaveAll}
+          isLoading={isSaving}
+          loadingText='Saving...'
+          className='px-6 rounded-full bg-primary-500 text-white font-medium hover:bg-primary-600 transition-colors'
+        >
+          Save
+        </Button>
+      </div>
 
-        <div className='grid grid-cols-2 gap-3'>
-          <Input placeholder='Phone Number' value={form.phone_number} onChange={(e) => setField('phone_number', e.target.value)} />
-          <Input placeholder='Postal Code' value={form.postal_code} onChange={(e) => setField('postal_code', e.target.value)} />
-        </div>
-        <Input placeholder='Address' value={form.address} onChange={(e) => setField('address', e.target.value)} />
-        <div className='grid grid-cols-2 gap-3'>
-          <Input placeholder='State / Region' value={form.state} onChange={(e) => setField('state', e.target.value)} />
-          <Select value={form.country} onValueChange={(v) => setField('country', v)}>
-            <SelectTrigger><SelectValue placeholder='Country' /></SelectTrigger>
-            <SelectContent>
-              {COUNTRIES.map((c) => (
-                <SelectItem key={c.code} value={c.code}>{c.name}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+      <div className='pt-8 px-8 flex flex-col gap-y-12'>
+        {/* ── 1. Primary Location ─────────────────────────────────────── */}
+        <div className='flex flex-col gap-y-4'>
+          <p className='font-poppins font-semibold text-body-m text-primary-500 leading-8 tracking-wide'>
+            Location
+          </p>
+          <p className='font-poppins text-body-xs text-gray-200 tracking-wide'>
+            This is your primary country and region on Artsony. It's used for compliance, payouts, and platform features — not for shipping.
+          </p>
+          <div className='bg-secondary-50 p-6 flex flex-col gap-y-4 rounded-xl'>
+            {/* Dynamic Country Select */}
+            <Select value={primaryCountry} onValueChange={handlePrimaryCountryChange}>
+              <SelectTrigger className='h-12 bg-white rounded-xl border-gray-100'>
+                <SelectValue placeholder={isLoadingCountries ? 'Loading countries...' : 'Country'} />
+              </SelectTrigger>
+              <SelectContent className='max-h-60 overflow-y-auto'>
+                {countries.map((c) => (
+                  <SelectItem key={c.code || c.name} value={c.name}>
+                    {c.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+
+            {/* Dynamic State Select */}
+            <Select
+              value={primaryState}
+              onValueChange={setPrimaryState}
+              disabled={!primaryCountry || isLoadingPrimaryStates}
+            >
+              <SelectTrigger className='h-12 bg-white rounded-xl border-gray-100 disabled:opacity-60'>
+                <SelectValue
+                  placeholder={
+                    isLoadingPrimaryStates
+                      ? 'Loading states...'
+                      : !primaryCountry
+                      ? 'Select country first'
+                      : 'State/Province'
+                  }
+                />
+              </SelectTrigger>
+              <SelectContent className='max-h-60 overflow-y-auto'>
+                {primaryStates.length > 0 ? (
+                  primaryStates.map((s) => (
+                    <SelectItem key={s.code || s.name} value={s.name}>
+                      {s.name}
+                    </SelectItem>
+                  ))
+                ) : (
+                  <SelectItem value='none' disabled>
+                    No states found
+                  </SelectItem>
+                )}
+              </SelectContent>
+            </Select>
+          </div>
         </div>
 
-        <div className='flex justify-end pt-2'>
-          <Button size='sm' onClick={handleSave} isLoading={isPending} loadingText='Saving…'>Save</Button>
+        {/* ── 2. Delivery Address ─────────────────────────────────────── */}
+        <div className='flex flex-col gap-y-4'>
+          <div className='flex items-center justify-between'>
+            <p className='font-poppins font-semibold text-body-m text-primary-500 leading-8 tracking-wide'>
+              Delivery Address
+            </p>
+            <button
+              type='button'
+              aria-label='Delete address'
+              onClick={handleClearDeliveryAddress}
+              disabled={isDeletingAddress}
+              className='p-2 rounded-full hover:bg-gray-100 text-gray-400 hover:text-gray-600 transition-colors'
+            >
+              <Trash2 size={20} />
+            </button>
+          </div>
+          <p className='font-poppins text-body-xs text-gray-200 tracking-wide'>
+            Used only for delivering physical artworks. You can save and manage addresses anytime.
+          </p>
+
+          <div className='bg-secondary-50 p-6 flex flex-col gap-y-4 rounded-xl'>
+            <Input
+              placeholder='Address'
+              value={deliveryForm.address}
+              onChange={(e) => setDeliveryField('address', e.target.value)}
+              className='h-12 bg-white rounded-xl border-gray-100'
+            />
+
+            {/* Dynamic Country Select */}
+            <Select
+              value={deliveryForm.country}
+              onValueChange={(v) => setDeliveryField('country', v)}
+            >
+              <SelectTrigger className='h-12 bg-white rounded-xl border-gray-100'>
+                <SelectValue placeholder={isLoadingCountries ? 'Loading countries...' : 'Country'} />
+              </SelectTrigger>
+              <SelectContent className='max-h-60 overflow-y-auto'>
+                {countries.map((c) => (
+                  <SelectItem key={c.code || c.name} value={c.name}>
+                    {c.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+
+            <Input
+              placeholder='City/Town'
+              value={deliveryForm.city}
+              onChange={(e) => setDeliveryField('city', e.target.value)}
+              className='h-12 bg-white rounded-xl border-gray-100'
+            />
+
+            <div className='grid grid-cols-[1fr_192px] gap-4 w-full'>
+              {/* Dynamic State Select */}
+              <Select
+                value={deliveryForm.state}
+                onValueChange={(v) => setDeliveryField('state', v)}
+                disabled={!deliveryForm.country || isLoadingDeliveryStates}
+              >
+                <SelectTrigger className='h-12 bg-white rounded-xl border-gray-100 disabled:opacity-60'>
+                  <SelectValue
+                    placeholder={
+                      isLoadingDeliveryStates
+                        ? 'Loading states...'
+                        : !deliveryForm.country
+                        ? 'Select country first'
+                        : 'State/Province'
+                    }
+                  />
+                </SelectTrigger>
+                <SelectContent className='max-h-60 overflow-y-auto'>
+                  {deliveryStates.length > 0 ? (
+                    deliveryStates.map((s) => (
+                      <SelectItem key={s.code || s.name} value={s.name}>
+                        {s.name}
+                      </SelectItem>
+                    ))
+                  ) : (
+                    <SelectItem value='none' disabled>
+                      No states found
+                    </SelectItem>
+                  )}
+                </SelectContent>
+              </Select>
+
+              <Input
+                placeholder='Postal Code'
+                value={deliveryForm.postalCode}
+                onChange={(e) => setDeliveryField('postalCode', e.target.value)}
+                className='h-12 bg-white rounded-xl border-gray-100'
+              />
+            </div>
+          </div>
+        </div>
+
+        {/* ── 3. Shipping Address (Seller Dispatch) ──────────────────── */}
+        <div className='flex flex-col gap-y-4'>
+          <div className='flex items-center justify-between'>
+            <p className='font-poppins font-semibold text-body-m text-primary-500 leading-8 tracking-wide'>
+              Shipping Address
+            </p>
+            <div className='flex items-center gap-x-3'>
+              <span className='font-poppins text-body-xs text-gray-400'>
+                {isDetectingLocation ? 'Detecting location...' : 'Set Automatically by location'}
+              </span>
+              <button
+                type='button'
+                onClick={handleToggleAutoLocation}
+                disabled={isDetectingLocation}
+                className={`relative inline-flex h-6 w-11 cursor-pointer items-center rounded-full transition-colors duration-200 focus:outline-none ${
+                  isAutoLocation ? 'bg-primary-500' : 'bg-gray-200'
+                }`}
+              >
+                <span
+                  className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform duration-200 ease-in-out ${
+                    isAutoLocation ? 'translate-x-6' : 'translate-x-1'
+                  }`}
+                />
+              </button>
+            </div>
+          </div>
+          <p className='font-poppins text-body-xs text-gray-200 tracking-wide'>
+            Make sure this address matches where your artworks are stored, it's used to generate shipping labels and pickup requests.
+          </p>
+
+          <div className='bg-secondary-50 p-6 flex flex-col gap-y-4 rounded-xl'>
+            <Input
+              placeholder='Address'
+              value={shippingForm.address}
+              disabled={isAutoLocation || isDetectingLocation}
+              onChange={(e) => setShippingField('address', e.target.value)}
+              className='h-12 bg-white rounded-xl border-gray-100 disabled:opacity-60'
+            />
+
+            {/* Dynamic Country Select */}
+            <Select
+              value={shippingForm.country}
+              disabled={isAutoLocation || isDetectingLocation}
+              onValueChange={(v) => setShippingField('country', v)}
+            >
+              <SelectTrigger className='h-12 bg-white rounded-xl border-gray-100 disabled:opacity-60'>
+                <SelectValue placeholder={isLoadingCountries ? 'Loading countries...' : 'Country'} />
+              </SelectTrigger>
+              <SelectContent className='max-h-60 overflow-y-auto'>
+                {countries.map((c) => (
+                  <SelectItem key={c.code || c.name} value={c.name}>
+                    {c.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+
+            <Input
+              placeholder='City/Town'
+              value={shippingForm.city}
+              disabled={isAutoLocation || isDetectingLocation}
+              onChange={(e) => setShippingField('city', e.target.value)}
+              className='h-12 bg-white rounded-xl border-gray-100 disabled:opacity-60'
+            />
+
+            <div className='grid grid-cols-[1fr_192px] gap-4 w-full'>
+              {/* Dynamic State Select */}
+              <Select
+                value={shippingForm.state}
+                disabled={isAutoLocation || !shippingForm.country || isLoadingShippingStates || isDetectingLocation}
+                onValueChange={(v) => setShippingField('state', v)}
+              >
+                <SelectTrigger className='h-12 bg-white rounded-xl border-gray-100 disabled:opacity-60'>
+                  <SelectValue
+                    placeholder={
+                      isLoadingShippingStates
+                        ? 'Loading states...'
+                        : !shippingForm.country
+                        ? 'Select country first'
+                        : 'State/Province'
+                    }
+                  />
+                </SelectTrigger>
+                <SelectContent className='max-h-60 overflow-y-auto'>
+                  {shippingStates.length > 0 ? (
+                    shippingStates.map((s) => (
+                      <SelectItem key={s.code || s.name} value={s.name}>
+                        {s.name}
+                      </SelectItem>
+                    ))
+                  ) : (
+                    <SelectItem value='none' disabled>
+                      No states found
+                    </SelectItem>
+                  )}
+                </SelectContent>
+              </Select>
+
+              <Input
+                placeholder='Postal Code'
+                value={shippingForm.postalCode}
+                disabled={isAutoLocation || isDetectingLocation}
+                onChange={(e) => setShippingField('postalCode', e.target.value)}
+                className='h-12 bg-white rounded-xl border-gray-100 disabled:opacity-60'
+              />
+            </div>
+          </div>
         </div>
       </div>
     </div>
   )
 }
-
-// ── Page ─────────────────────────────────────────────────────────────────────
-
-const ShippingLocation = () => {
-  return (
-    <div className='border border-gray-50 rounded-2xl bg-white w-full pb-8'>
-      <div className='px-8 py-4 flex justify-between items-center border-b border-gray-50 '>
-        <h5 className='font-raleway font-semibold text-h5 text-primary-500 leading-10 tracking-wide'>Shipping & Location</h5>
-      </div>
-
-      <div className='pt-12 px-8 overflow-y-scroll gap-y-16 flex flex-col' style={{ gap: 64 }}>
-        <LocationSection />
-        <DeliveryAddressesSection />
-        <DispatchAddressSection />
-      </div>
-    </div>
-  )
-}
-
-export default ShippingLocation

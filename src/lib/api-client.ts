@@ -19,32 +19,6 @@ type RequestOptions = RequestInit & {
   _retry?: boolean
 }
 
-type QueueEntry = {
-  resolve: (token: string) => void
-  reject: (err: unknown) => void
-}
-
-let isRefreshing = false
-let refreshQueue: QueueEntry[] = []
-
-function processRefreshQueue(token: string | null, err: unknown = null) {
-  refreshQueue.forEach((entry) => {
-    if (token) entry.resolve(token)
-    else entry.reject(err)
-  })
-  refreshQueue = []
-}
-
-async function getNewAccessToken(): Promise<string> {
-  const res = await fetch(`${BASE_URL}/api/auth/refresh`, {
-    method: 'POST',
-    credentials: 'include', // sends httpOnly refresh cookie
-  })
-  if (!res.ok) throw new HttpError(res.status, 'REFRESH_FAILED', 'Session expired')
-  const body = (await res.json()) as { data: { accessToken: string } }
-  return body.data.accessToken
-}
-
 // ─── Access token store (in-memory, never localStorage for security) ──────────
 
 let _memoryAccessToken: string | null = null
@@ -55,6 +29,73 @@ export function setMemoryToken(token: string | null) {
 
 export function getMemoryToken(): string | null {
   return _memoryAccessToken
+}
+
+// ─── Session refresh ──────────────────────────────────────────────────────────
+// Every caller that needs a fresh access token (the page-load bootstrap and
+// the 401 interceptor) goes through refreshAccessToken(), which shares one
+// in-flight request. The refresh token rotates on use, so two parallel refresh
+// requests from the same page would race each other on the server.
+
+const REFRESH_PATH = '/api/auth/refresh'
+
+let refreshInFlight: Promise<string> | null = null
+
+// Only a 401 from the refresh endpoint means the refresh token is missing,
+// expired or revoked. Anything else (429, 5xx, a dropped connection) says
+// nothing about the session, which is still valid once the server or network
+// recovers.
+export function isSessionEndedError(err: unknown): boolean {
+  return err instanceof HttpError && err.statusCode === 401
+}
+
+async function requestNewAccessToken(): Promise<string> {
+  const res = await fetch(`${BASE_URL}${REFRESH_PATH}`, {
+    method: 'POST',
+    credentials: 'include', // sends httpOnly refresh cookie
+  })
+
+  if (!res.ok) {
+    let code: string | undefined
+    try {
+      code = ((await res.json()) as { code?: string }).code
+    } catch {
+      // non-JSON error body (gateway/proxy page) — status alone decides
+    }
+    throw new HttpError(res.status, code ?? 'REFRESH_FAILED', 'Unable to refresh session')
+  }
+
+  const body = (await res.json()) as { data: { accessToken: string } }
+  return body.data.accessToken
+}
+
+async function endSession(): Promise<void> {
+  setMemoryToken(null)
+  // Dynamic import avoids a circular dependency with the auth store
+  const { useAuthStore } = await import('@/store/auth.store')
+  useAuthStore.getState().clearAuth()
+  // Keep the proxy in sync so a gated route bounces to /login on the next
+  // navigation without force-navigating the user away from where they are.
+  if (typeof document !== 'undefined') {
+    document.cookie = 'artsony_session=; max-age=0; path=/; SameSite=Strict'
+  }
+}
+
+export function refreshAccessToken(): Promise<string> {
+  refreshInFlight ??= (async () => {
+    try {
+      const token = await requestNewAccessToken()
+      setMemoryToken(token)
+      return token
+    } catch (err) {
+      if (isSessionEndedError(err)) await endSession()
+      throw err
+    } finally {
+      refreshInFlight = null
+    }
+  })()
+
+  return refreshInFlight
 }
 
 // ─── URL builder ──────────────────────────────────────────────────────────────
@@ -73,6 +114,12 @@ function buildUrl(path: string, params?: RequestOptions['params']): string {
 
 async function request<T>(path: string, options: RequestOptions = {}): Promise<T> {
   const { params, headers, _retry, ...init } = options
+
+  // A refresh is already restoring the token (page load) — wait for it instead
+  // of sending a guaranteed 401. Its failure is handled by whoever started it.
+  if (!getMemoryToken() && refreshInFlight) {
+    await refreshInFlight.catch(() => undefined)
+  }
 
   const token = getMemoryToken()
   const authHeaders: Record<string, string> = token
@@ -98,61 +145,13 @@ async function request<T>(path: string, options: RequestOptions = {}): Promise<T
 
   // ── Silent token refresh on 401 ──────────────────────────────────────────
   if (response.status === 401 && !_retry) {
-    if (isRefreshing) {
-      // Wait for the in-flight refresh to complete, then replay
-      return new Promise<T>((resolve, reject) => {
-        refreshQueue.push({
-          resolve: (newToken) => {
-            resolve(request<T>(path, { ...options, _retry: true,
-              headers: { ...headers, Authorization: `Bearer ${newToken}` }
-            }))
-          },
-          reject,
-        })
-      })
-    }
-
-    isRefreshing = true
-    try {
-      const newToken = await getNewAccessToken()
-      setMemoryToken(newToken)
-      // Notify waiting requests
-      processRefreshQueue(newToken)
-      // Replay original request with new token
-      return request<T>(path, { ...options, _retry: true,
-        headers: { ...headers, Authorization: `Bearer ${newToken}` }
-      })
-    } catch (err) {
-      // Only treat this as "the session is actually over" when the refresh
-      // endpoint itself rejected us (HttpError — expired/revoked refresh
-      // token). A network hiccup, timeout, or offline moment throws a plain
-      // fetch error here, not an HttpError — that must NOT log the user out.
-      // Previously any flaky connection during a refresh wiped a perfectly
-      // valid session; now we just fail this one request and leave the
-      // token/session alone so the next attempt can succeed normally.
-      const sessionActuallyEnded = err instanceof HttpError
-
-      processRefreshQueue(null, err)
-
-      if (sessionActuallyEnded) {
-        setMemoryToken(null)
-        // Import dynamically to avoid circular dep with store
-        const { useAuthStore } = await import('@/store/auth.store')
-        useAuthStore.getState().clearAuth()
-        // Keep middleware in sync so a gated route bounces to /login on the
-        // next navigation — but don't force-navigate the user right now.
-        // They simply become a guest on whatever (likely open) page they're
-        // already on, exactly like the "remove all redirects" browsing model
-        // everywhere else in the app.
-        if (typeof window !== 'undefined') {
-          document.cookie = 'artsony_session=; max-age=0; path=/; SameSite=Strict'
-        }
-      }
-
-      throw err
-    } finally {
-      isRefreshing = false
-    }
+    const currentToken = getMemoryToken()
+    const newToken = currentToken && currentToken !== token
+      ? currentToken
+      : await refreshAccessToken()
+    return request<T>(path, { ...options, _retry: true,
+      headers: { ...headers, Authorization: `Bearer ${newToken}` }
+    })
   }
 
   if (!response.ok) {

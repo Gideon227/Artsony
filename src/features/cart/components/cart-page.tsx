@@ -10,7 +10,8 @@ import { CartItemRow } from './cart-item-row'
 import { SellerDivider } from './cart-summary-bar'
 import { AlsoLikeSection } from './also-like-section'
 import type { CartItemWithArtwork } from '@/types/cart'
-import { Button } from '@/components'
+import { buttonVariants } from '@/components/ui/button'
+import { cn } from '@/utils'
 
 export default function CartPage() {
   const cart = useCartStore((s) => s.cart)
@@ -66,12 +67,12 @@ export default function CartPage() {
                   </Link>
 
                   {/* Mobile Button */}
-                  <Button
-                    fullWidth 
-                    className='hidden max-lg:block'
+                  <Link
+                    href={checkoutHref}
+                    className={cn(buttonVariants({ fullWidth: true }), 'lg:hidden')}
                   >
                     Checkout
-                  </Button>
+                  </Link>
                 </div>
               </div>
 

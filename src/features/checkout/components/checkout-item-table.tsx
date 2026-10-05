@@ -1,13 +1,20 @@
 'use client'
 
 import Image from 'next/image'
+import { cn } from '@/utils'
 import type { CartItemWithArtwork } from '@/types/cart'
 
 const COLUMNS = ['Artworks', 'Artwork Price', 'Variant', 'Quantity', 'Total']
 
-export function CheckoutItemTable({ items }: { items: CartItemWithArtwork[] }) {
+export function CheckoutItemTable({
+  items,
+  className,
+}: {
+  items: CartItemWithArtwork[]
+  className?: string
+}) {
   return (
-    <div className="flex flex-col">
+    <div className={cn('flex flex-col', className)}>
       {/* Column headers */}
       <div className="grid grid-cols-[2fr_1fr_1fr_1fr_1fr] rounded-full border border-gray-50 bg-white">
         {COLUMNS.map((col) => (

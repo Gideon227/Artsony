@@ -205,7 +205,7 @@ const Dropdown = ({
       {/* DROPDOWN MENU */}
       {isOpen && !disabled && (
         <div
-          className="absolute top-[calc(100%+8px)] flex flex-col gap-y-2 left-0 w-full z-40 bg-white border border-neutral-200 rounded-b-2xl shadow-xl overflow-hidden animate-in fade-in zoom-in-95 duration-100"
+          className="absolute top-[calc(100%+8px)] flex flex-col gap-y-2 left-0 w-full z-[499] bg-white border border-neutral-200 rounded-b-2xl shadow-xl overflow-hidden animate-in fade-in zoom-in-95 duration-100"
           style={{ borderBottomLeftRadius: 32, borderBottomRightRadius: 32 }}
         >
           {customBody ? (

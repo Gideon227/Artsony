@@ -9,7 +9,7 @@ const EmptyCartPage = () => {
     const router = useRouter()
     
     return (
-        <div className='py-[85px] mb-14 flex justify-center items-center h-screen bg-white'>
+        <div className='pt-[85px] pb-14 flex justify-center items-center min-h-screen bg-white'>
             
             <div className='w-full max-w-[509px] px-4 lg:h-[590px]'>
                 <div className='flex flex-col justify-center items-center gap-y-12 w-full'>

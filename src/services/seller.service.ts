@@ -9,6 +9,7 @@ export type SellerRegistration = {
   email: string
   phone_number: string
   address: string
+  city?: string
   state: string
   country: string
   postal_code: string | null

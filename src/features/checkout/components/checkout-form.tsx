@@ -6,12 +6,10 @@ import { useAuthStore, selectUser } from '@/store'
 import { useCheckout } from '@/hooks/use-order'
 import type { CartItemWithArtwork } from '@/types/cart'
 import type { CheckoutInput, ShippingAddressSnapshot } from '@/types/order'
-import {
-  shippingInfoSchema,
-  type ShippingInfoInput,
-} from '../schemas/shipping-info.schema'
+import { createCheckoutInfoSchema, type CheckoutInfoInput } from '../schemas/shipping-info.schema'
 import { DELIVERY_OPTIONS } from '../data/countries'
 import { CheckoutItemTable } from './checkout-item-table'
+import { CheckoutItemList } from './checkout-item-list'
 import { ShippingInformationForm } from './shipping-information-form'
 import { DeliveryOptions } from './delivery-options'
 import { CheckoutSummary } from './checkout-summary'
@@ -21,25 +19,26 @@ export function CheckoutForm({ items }: { items: CartItemWithArtwork[] }) {
   const hasPhysical = items.some((i) => i.artwork.artwork_format === 'PHYSICAL')
   const { mutate: checkout, isPending } = useCheckout()
 
+  const schema = useMemo(() => createCheckoutInfoSchema(hasPhysical), [hasPhysical])
+
   const {
     register,
     control,
     handleSubmit,
     watch,
+    setValue,
     formState: { errors },
-  } = useZodForm<ShippingInfoInput>(shippingInfoSchema, {
+  } = useZodForm<CheckoutInfoInput>(schema, {
     defaultValues: {
       full_name: user?.displayName ?? '',
       email: user?.email ?? '',
+      phone_dial_code: '',
       phone: '',
-      // Address fields are disabled + irrelevant for digital-only orders —
-      // pre-filled with harmless placeholders so validation passes without
-      // ever surfacing to the buyer or being sent to the backend.
-      address_line_1: hasPhysical ? '' : 'N/A',
+      address_line_1: '',
       address_line_2: '',
-      city: hasPhysical ? '' : 'N/A',
-      state: hasPhysical ? '' : 'N/A',
-      postal_code: hasPhysical ? '' : '00000',
+      city: '',
+      state: '',
+      postal_code: '',
       country_code: 'NG',
       save_address: false,
       delivery_speed: 'STANDARD',
@@ -54,27 +53,24 @@ export function CheckoutForm({ items }: { items: CartItemWithArtwork[] }) {
 
   const deliverySpeed = watch('delivery_speed')
   const shippingFee = hasPhysical
-    ? DELIVERY_OPTIONS.find((o) => o.id === deliverySpeed)?.price ?? DELIVERY_OPTIONS[0]!.price
+    ? (DELIVERY_OPTIONS.find((o) => o.id === deliverySpeed) ?? DELIVERY_OPTIONS[0]!).price
     : null
 
   const onSubmit = handleSubmit((values) => {
+    const phone = [values.phone_dial_code, values.phone].filter(Boolean).join(' ').slice(0, 30)
+
     const shippingAddress: Partial<ShippingAddressSnapshot> = hasPhysical
       ? {
           full_name: values.full_name,
-          phone: values.phone,
-          address_line_1: values.address_line_1,
+          phone,
+          address_line_1: values.address_line_1 ?? '',
           address_line_2: values.address_line_2 || null,
-          city: values.city,
-          state: values.state,
-          postal_code: values.postal_code,
-          country_code: values.country_code.toUpperCase(),
+          city: values.city ?? '',
+          state: values.state ?? '',
+          postal_code: values.postal_code ?? '',
+          country_code: (values.country_code ?? '').toUpperCase(),
         }
-      : {
-          // Digital orders don't ship — only contact fields are sent so the
-          // backend's optional shipping_address.* validators still pass.
-          full_name: values.full_name,
-          phone: values.phone,
-        }
+      : { full_name: values.full_name, phone }
 
     const selectedOption = DELIVERY_OPTIONS.find((o) => o.id === values.delivery_speed)
 
@@ -93,15 +89,23 @@ export function CheckoutForm({ items }: { items: CartItemWithArtwork[] }) {
   })
 
   return (
-    <div className="flex flex-col gap-10 px-8 pb-16">
-      <CheckoutItemTable items={items} />
+    <div className="flex flex-col gap-6 px-4 pb-10 lg:gap-10 lg:px-8 lg:pb-16">
+      <CheckoutItemList items={items} className="lg:hidden" />
+      <CheckoutItemTable items={items} className="hidden lg:flex" />
 
-      <div className={hasPhysical ? 'grid grid-cols-1 gap-6 lg:grid-cols-3' : 'grid grid-cols-1 gap-6 lg:grid-cols-2'}>
+      <div
+        className={
+          hasPhysical
+            ? 'grid grid-cols-1 gap-6 lg:grid-cols-3'
+            : 'grid grid-cols-1 gap-6 lg:grid-cols-2'
+        }
+      >
         <ShippingInformationForm
           register={register}
           control={control}
           errors={errors}
-          addressDisabled={!hasPhysical}
+          setValue={setValue}
+          requiresShipping={hasPhysical}
         />
 
         {hasPhysical && <DeliveryOptions control={control} />}
