@@ -16,8 +16,12 @@ import UploadPreview from '@/features/upload/components/upload-preview'
 import UploadFlowLayout from '@/features/upload/components/upload-flow-layout'
 
 import { useArtworkStore } from '@/store/artwork.store'
+import { useQueryClient } from '@tanstack/react-query'
 import { artworkService } from '@/services'
 import type { ArtworkStatus, CreateArtworkPayload } from '@/types/artwork'
+import { describeSaveError, sanitizeAssets } from '@/features/upload/lib/artwork-draft'
+import { useDraftHydration } from '@/features/upload/hooks/use-draft-hydration'
+import DraftLoadState from '@/features/upload/components/draft-load-state'
 
 export default function DigitalSellWizardPage() {
     const router = useRouter()
@@ -25,11 +29,14 @@ export default function DigitalSellWizardPage() {
 
     const draft = useArtworkStore((state) => state.draft)
     const clearDraft = useArtworkStore((state) => state.clearDraft)
+    const queryClient = useQueryClient()
+    const hydration = useDraftHydration(urlArtworkId)
 
     const [stepIndex, setStepIndex] = useState<number>(0)
     const [isSubmitting, setIsSubmitting] = useState<boolean>(false)
 
     if (!draft) return null
+    if (hydration.status !== 'ready') return <DraftLoadState state={hydration} />
 
     const preparePayload = (rawDraft: typeof draft, targetStatus: ArtworkStatus): CreateArtworkPayload & { status: ArtworkStatus } => {
         const {
@@ -53,7 +60,7 @@ export default function DigitalSellWizardPage() {
             artwork_format: formFields.artwork_format ?? 'DIGITAL',
             visibility: formFields.visibility ?? 'PUBLIC',
             has_variants: formFields.has_variants ?? false,
-            assets: formFields.assets ?? [],
+            assets: sanitizeAssets(formFields.assets),
             variants: formFields.variants ?? [],
             categories: formFields.categories ?? [],
             keywords: formFields.keywords ?? [],
@@ -85,11 +92,12 @@ export default function DigitalSellWizardPage() {
             const finalizedPayload = preparePayload(draft, 'PUBLISHED')
             await artworkService.create(finalizedPayload)
 
+            void queryClient.invalidateQueries({ queryKey: ['artworks'] })
             clearDraft()
-            router.push('/artworks')
+            router.push('/profile')
         } catch (error) {
             console.error('[Workflow Execution Failure]:', error)
-            alert(error instanceof Error ? error.message : 'An unexpected error occurred.')
+            alert(describeSaveError(error, 'An unexpected error occurred.'))
         } finally {
             setIsSubmitting(false)
         }
@@ -98,20 +106,15 @@ export default function DigitalSellWizardPage() {
     const handleSaveAndExit = async () => {
         setIsSubmitting(true)
         try {
-            if (!draft.title || draft.title.trim().length === 0) {
-                clearDraft()
-                router.push('/profile')
-                return
-            }
-
             const finalizedPayload = preparePayload(draft, 'DRAFT')
             await artworkService.create(finalizedPayload)
 
+            void queryClient.invalidateQueries({ queryKey: ['artworks'] })
             clearDraft()
             router.push('/profile')
         } catch (error) {
             console.error('[Save Progress Background Attempt Blocked]:', error)
-            alert('Something went wrong while saving your draft.')
+            alert(describeSaveError(error, 'Something went wrong while saving your draft.'))
         } finally {
             setIsSubmitting(false)
         }

@@ -40,7 +40,7 @@ const UploadCard = ({ iconSrc, text, onClick }: { iconSrc: string, text: string,
 
 const UploadType = ({ title, subText, cardOne, cardTwo, backButton = false, onBackHandle, onClose }: Props) => {
     return (
-        <div className='md:min-h-screen min-h-full relative bg-white flex flex-col gap-y-8 max-md:gap-y-12 items-center justify-center overflow-hidden'>
+        <div className='h-full relative bg-white flex flex-col gap-y-8 max-md:gap-y-12 items-center justify-center overflow-hidden'>
             <div className='absolute max-md:-right-10 max-md:-top-10 rotate-90 md:-left-20 md:-top-20 md:rotate-90'>
                 <Image src='/upload/vector.svg' width={250} height={250} alt='vector icon' className='md:w-62.5 w-31.25'/>
             </div>

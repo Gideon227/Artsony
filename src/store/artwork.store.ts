@@ -43,10 +43,12 @@ type ArtworkActions = {
   setDraft: (partial: ArtworkDraft) => void
   setDraftStep: (step: number) => void
   clearDraft: () => void
+  loadDraft: (draft: ArtworkDraft) => void
 
   // ── Asset management within draft ───────────────────────────────────────────
   addDraftAsset:    (asset: Omit<ArtworkAsset, 'id'>) => void
   removeDraftAsset: (index: number) => void
+  insertDraftAssets: (index: number, assets: Omit<ArtworkAsset, 'id'>[]) => void
   reorderDraftAssets: (fromIndex: number, toIndex: number) => void
 
   // ── Variant management within draft ─────────────────────────────────────────
@@ -109,6 +111,13 @@ export const useArtworkStore = create<ArtworkState & ArtworkActions>()(
         setDraftStep: (step) =>
           set((s) => { s.draftStep = step }),
 
+        loadDraft: (draft) =>
+          set((s) => {
+            s.draft     = { ...EMPTY_DRAFT, ...draft }
+            s.draftStep = 0
+            s.isDirty   = false
+          }),
+
         clearDraft: () =>
           set((s) => {
             s.draft     = { ...EMPTY_DRAFT }
@@ -135,9 +144,19 @@ export const useArtworkStore = create<ArtworkState & ArtworkActions>()(
             s.isDirty = true
           }),
 
+        insertDraftAssets: (index, incoming) =>
+          set((s) => {
+            const assets = [...(s.draft.assets ?? [])]
+            const at = Math.min(Math.max(index, 0), assets.length)
+            assets.splice(at, 0, ...incoming)
+            s.draft.assets = assets.map((a, i) => ({ ...a, ordering_index: i }))
+            s.isDirty = true
+          }),
+
         reorderDraftAssets: (fromIndex, toIndex) =>
           set((s) => {
             const assets = [...(s.draft.assets ?? [])]
+            if (fromIndex < 0 || fromIndex >= assets.length) return
             const [moved] = assets.splice(fromIndex, 1)
             if (moved) assets.splice(toIndex, 0, moved)
             s.draft.assets = assets.map((a, i) => ({ ...a, ordering_index: i }))

@@ -12,8 +12,12 @@ import UploadPreview from '@/features/upload/components/upload-preview'
 import UploadFlowLayout from '@/features/upload/components/upload-flow-layout'
 
 import { useArtworkStore } from '@/store/artwork.store'
+import { useQueryClient } from '@tanstack/react-query'
 import { artworkService } from '@/services'
 import type { ArtworkStatus, CreateArtworkPayload } from '@/types/artwork'
+import { describeSaveError, sanitizeAssets } from '@/features/upload/lib/artwork-draft'
+import { useDraftHydration } from '@/features/upload/hooks/use-draft-hydration'
+import DraftLoadState from '@/features/upload/components/draft-load-state'
 
 export default function ShareArtworkWizardPage() {
     const router = useRouter()
@@ -21,11 +25,14 @@ export default function ShareArtworkWizardPage() {
 
     const draft = useArtworkStore((state) => state.draft)
     const clearDraft = useArtworkStore((state) => state.clearDraft)
+    const queryClient = useQueryClient()
+    const hydration = useDraftHydration(urlArtworkId)
 
     const [stepIndex, setStepIndex] = useState<number>(0)
     const [isSubmitting, setIsSubmitting] = useState<boolean>(false)
 
     if (!draft) return null
+    if (hydration.status !== 'ready') return <DraftLoadState state={hydration} />
 
     // ── HELPER TO INFER MEDIA TYPE FOR BACKEND VALIDATION 
     function inferMediaType(mimeType: string): 'IMAGE' | 'VIDEO' | 'THREE_D' | 'EXTERNAL_LINK' {
@@ -71,36 +78,12 @@ export default function ShareArtworkWizardPage() {
         //     duration_secs: asset.duration_secs ? Number(asset.duration_secs) : null,
         // }));
 
-        const sanitizedAssets = (draft.assets || []).map((asset: any, index: number) => {
-            const isHttps = asset.original_url?.startsWith('https://');
-            const safeUrl = isHttps ? asset.original_url : 'https://placehold.co/600x400.jpg';
-
-            const mediaType = ['IMAGE', 'VIDEO', 'THREE_D', 'EXTERNAL_LINK'].includes(asset.media_type) 
-                ? asset.media_type 
-                : 'IMAGE';
-
-            const cleanAsset: any = {
-                original_url: asset.original_url,
-                media_type: mediaType,
-                mime_type: asset.mime_type || 'image/jpeg',
-                file_size_bytes: Math.max(1, parseInt(asset.file_size_bytes) || 1024),
-                ordering_index: index,
-            };
-
-            if (asset.width) cleanAsset.width = parseInt(asset.width);
-            if (asset.height) cleanAsset.height = parseInt(asset.height);
-
-            if (mediaType === 'VIDEO' && asset.duration_secs !== null && asset.duration_secs !== undefined) {
-                cleanAsset.duration_secs = parseInt(asset.duration_secs);
-            }
-
-            return cleanAsset;
-        });
+        const sanitizedAssets = sanitizeAssets(formFields.assets)
 
         return {
             // Only include ID if it's a validated sequence
             ...(verifiedId ? { id: verifiedId } : {}),
-            title: formFields.title?.trim() ?? 'Untitled Artwork',
+            title: formFields.title?.trim() ?? '',
             description: formFields.description?.trim() ?? '',
             listing_type: formFields.listing_type || 'PORTFOLIO',
             artwork_format: formFields.artwork_format || 'DIGITAL',
@@ -129,46 +112,37 @@ export default function ShareArtworkWizardPage() {
 
     const handleFinishUpload = async () => {
         setIsSubmitting(true)
-        console.log("Draft: ", draft)
         try {
-            // Create the record in the backend, explicitly flagging it as PUBLISHED
             const finalizedPayload = preparePayload(draft, 'PUBLISHED')
-            const data = await artworkService.create(finalizedPayload)
+            await artworkService.create(finalizedPayload)
 
-            // Wipe local progress and redirect to main gallery
-            console.log("NEW ART CREATED: ", data )
+            void queryClient.invalidateQueries({ queryKey: ['artworks'] })
             clearDraft()
             router.push('/profile')
-        } catch (error: any) {
-            console.error('[Workflow Execution Failure]:', error, error.field)
-            alert(error instanceof Error ? error.message : 'An unexpected error occurred.')
+        } catch (error) {
+            console.error('[Workflow Execution Failure]:', error)
+            alert(describeSaveError(error, 'An unexpected error occurred.'))
         } finally {
             setIsSubmitting(false)
         }
     }
 
     /**
-     * Preserves the incomplete progress as a backend draft
+     * Saves whatever the draft currently holds, however little, under the
+     * wizard's artwork id. Saving again updates the same draft.
      */
     const handleSaveAndExit = async () => {
         setIsSubmitting(true)
         try {
-            if (!draft.title || draft.title.trim().length === 0) {
-                alert('You need to select a artwork title to save in draft')
-                // clearDraft()
-                // router.push('/profile')
-                return
-            }
-
-            // Create the record in the backend, explicitly flagging it as DRAFT
             const finalizedPayload = preparePayload(draft, 'DRAFT')
             await artworkService.create(finalizedPayload)
 
+            void queryClient.invalidateQueries({ queryKey: ['artworks'] })
             clearDraft()
             router.push('/profile')
         } catch (error) {
             console.error('[Save Progress Background Attempt Blocked]:', error)
-            alert('Something went wrong while saving your draft.')
+            alert(describeSaveError(error, 'Something went wrong while saving your draft.'))
         } finally {
             setIsSubmitting(false)
         }

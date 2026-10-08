@@ -6,6 +6,7 @@ import { Button } from '@/components'
 import { ArtCard } from '@/components/ui/art-card'
 import { artworkService } from '@/services'
 import { Artwork, ArtworkStatus } from '@/types/artwork'
+import { getAssetDisplaySrc } from '@/utils'
 
 interface ProfileArtworkProps {
     userId: string;
@@ -107,8 +108,8 @@ const ProfileArtwork = ({ userId, tabType, isOwnProfile, onArtworkClick, onPostA
                     {artworks.map((art) => (
                         <ArtCard
                             key={art.id}
-                            image={art.assets?.[0]?.optimized_url || art.assets?.[0]?.original_url || '/placeholder.jpg'}
-                            title={art.title}
+                            image={getAssetDisplaySrc(art.assets?.[0]) || '/placeholder.jpg'}
+                            title={art.title || (tabType === 'draft' ? 'Untitled draft' : '')}
                             // artworkId={art.id}
                             onCardClick={() => onArtworkClick(art, artworks)}
                             showVideo={art.assets?.[0]?.media_type === 'VIDEO'}

@@ -23,6 +23,8 @@ import { useToast } from '@/components/ui/toaster'
 import { useInteractionPermissions } from '@/hooks/use-user'
 import { useViewArtwork } from '@/hooks/use-artwork'
 import { cn } from '@/lib/utils'
+import { getAssetDisplaySrc } from '@/utils'
+import { AssetOpenLink } from '../asset-open-link'
 import type { Artwork, ArtworkAsset, Variant } from '@/types/artwork'
 import { Dropdown } from '@/components/ui/dropdown'
 import { SaveToMoodboardDialog } from '@/features/moodboards/components/save-to-moodboard-dialog'
@@ -30,6 +32,8 @@ import { ArtworkCreatorWorks } from './artwork-creator-works'
 import { ArtworkComments } from './artwork-comments'
 import Link from 'next/link'
 import ReportModal from '../../modals/report-modal'
+import { StepperInput } from '@/components/ui/quantity-input'
+import { Button } from '@/components'
 
 // ── Formatting ────────────────────────────────────────────────────────────────
 function formatCount(n: number): string {
@@ -133,7 +137,7 @@ export default function ArtworkViewOverlay({ artwork: artworkProp, onClose, onNa
   // ── Derived data ─────────────────────────────────────────────────────────
   const assets: ArtworkAsset[] = artwork.assets ?? []
   const activeAsset = assets[activeAssetIndex]
-  const mainImageSrc = activeAsset?.optimized_url || activeAsset?.original_url || null
+  const mainImageSrc = getAssetDisplaySrc(activeAsset)
 
   const displayTitle = artwork.title
   const displayFormat = artwork.artwork_format === 'PHYSICAL' ? 'Physical Artwork' : 'Digital Artwork'
@@ -285,42 +289,55 @@ export default function ArtworkViewOverlay({ artwork: artworkProp, onClose, onNa
 
   // Mobile-only header bar: close, creator identity, save-to-moodboard, more.
   const mobileHeaderBar = (
-    <div className="flex items-center gap-3 border-b border-gray-50 px-5 py-4 lg:hidden">
-      <button
-        onClick={requestClose}
-        aria-label="Close"
-        className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-gray-100 text-gray-600"
-      >
-        <Image src="/icons/cancel.svg" width={16} height={16} alt="close" />
-      </button>
+    <div className='flex lg:hidden flex-col gap-4 border-b border-gray-50 px-4 pt-6 pb-4'>
+      <div className="flex items-center gap-2">
+        <button
+          onClick={requestClose}
+          aria-label="Close"
+          className="flex "
+        >
+          <svg width="40" height="40" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <mask id="path-1-inside-1_10683_10857" fill="white">
+              <path d="M0 20C0 8.95431 8.95431 0 20 0C31.0457 0 40 8.95431 40 20C40 31.0457 31.0457 40 20 40C8.95431 40 0 31.0457 0 20Z"/>
+            </mask>
+            <path d="M0 20M40 20M40 20M0 20M20 0M40 20M20 40M0 20M20 40V38C10.0589 38 2 29.9411 2 20H0H-2C-2 32.1503 7.84974 42 20 42V40ZM40 20H38C38 29.9411 29.9411 38 20 38V40V42C32.1503 42 42 32.1503 42 20H40ZM20 0V2C29.9411 2 38 10.0589 38 20H40H42C42 7.84974 32.1503 -2 20 -2V0ZM20 0V-2C7.84974 -2 -2 7.84974 -2 20H0H2C2 10.0589 10.0589 2 20 2V0Z" fill="#E6E8EB" mask="url(#path-1-inside-1_10683_10857)"/>
+            <path fill-rule="evenodd" clip-rule="evenodd" d="M30 20C30 25.5228 25.5228 30 20 30C14.4772 30 10 25.5228 10 20C10 14.4772 14.4772 10 20 10C25.5228 10 30 14.4772 30 20ZM16.9696 16.9696C17.2625 16.6768 17.7374 16.6768 18.0303 16.9696L20 18.9393L21.9696 16.9697C22.2625 16.6768 22.7374 16.6768 23.0303 16.9697C23.3232 17.2626 23.3232 17.7374 23.0303 18.0303L21.0606 20L23.0303 21.9696C23.3232 22.2625 23.3232 22.7374 23.0303 23.0303C22.7374 23.3232 22.2625 23.3232 21.9696 23.0303L20 21.0607L18.0303 23.0303C17.7374 23.3232 17.2625 23.3232 16.9696 23.0303C16.6768 22.7374 16.6768 22.2625 16.9696 21.9697L18.9393 20L16.9696 18.0303C16.6767 17.7374 16.6767 17.2625 16.9696 16.9696Z" fill="#525965"/>
+          </svg>
+        </button>
 
-      <Link href={`/profile/${artwork.creator_id}`} className="flex min-w-0 flex-1 items-center gap-2">
-        <span className="relative h-8 w-8 shrink-0 overflow-hidden rounded-full bg-gray-100">
-          <Image
-            src={artwork.creator?.profile?.avatar_url || '/images/image-avatar.svg'}
-            alt={creatorName}
-            fill
-            className="object-cover"
-          />
-        </span>
-        <span className="truncate font-poppins text-[14px] font-medium text-gray-800">
-          {artwork.creator?.username ?? creatorName}
-        </span>
-      </Link>
+        <Link href={`/profile/${artwork.creator_id}`} className="flex min-w-0 flex-1 items-center gap-2">
+          <span className="relative h-8 w-8 shrink-0 overflow-hidden rounded-full bg-gray-100">
+            <Image
+              src={artwork.creator?.profile?.avatar_url || '/images/image-avatar.svg'}
+              alt={creatorName}
+              fill
+              className="object-cover"
+            />
+          </span>
+          <span className="truncate font-poppins text-body-xs font-medium text-body">
+            {artwork.creator?.username ?? creatorName}
+          </span>
+        </Link>
 
-      <button
-        onClick={() => setSaveDialogOpen(true)}
-        aria-label="Save to moodboard"
-        className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-gray-100 text-gray-600"
-      >
-        <FolderPlus size={16} strokeWidth={2.5} />
-      </button>
-      <button
-        aria-label="More options"
-        className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-gray-100 text-gray-600"
-      >
-        <MoreHorizontal size={16} strokeWidth={2.5} />
-      </button>
+        {/* <button
+          onClick={() => setSaveDialogOpen(true)}
+          aria-label="Save to moodboard"
+          className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-gray-100 text-gray-600"
+        >
+          <FolderPlus size={16} strokeWidth={2.5} />
+        </button> */}
+        <button
+          aria-label="More options"
+          className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-gray-100 text-gray-600"
+        >
+          <MoreHorizontal size={16} strokeWidth={2.5} />
+        </button>
+      </div>
+
+      <div className='flex items-center justify-between'>
+        <p className='font-poppins font-medium text-heading text-body-m tracking-wide'>{artwork.title}</p>
+        <p className='font-poppins font-medium text-primary-500 text-body-m tracking-wide'>{artwork.price}</p>
+      </div>
     </div>
   )
 
@@ -328,26 +345,55 @@ export default function ArtworkViewOverlay({ artwork: artworkProp, onClose, onNa
   // purchase panel (matches the mobile mockup — desktop shows the creator
   // in the sticky right-hand panel instead, via profileHeader).
   const mobileCreatorBlock = artwork.creator && (
-    <Link href={`/profile/${artwork.creator_id}`} className="flex flex-col items-center gap-3 text-center">
-      <span className="relative h-20 w-20 overflow-hidden rounded-full bg-gray-100 ring-4 ring-primary-100">
-        <Image src={artwork.creator.profile?.avatar_url || '/images/image-avatar.svg'} alt={creatorName} fill className="object-cover" />
-      </span>
-      <span className="font-poppins text-[15px] font-medium text-gray-800">{creatorName}</span>
-    </Link>
+    <div className="mt-12 flex flex-col items-center gap-3 text-center">
+      <div className="relative w-36 h-36 flex items-center justify-center shrink-0">
+        <Image
+          src="/home/profile-ring.svg"
+          alt="Profile Ring"
+          width={144}
+          height={144}
+          className="absolute object-contain"
+          priority
+        />
+        
+        {/* The actual User Avatar */}
+        <div className="relative w-26 h-26 rounded-full overflow-hidden z-10 bg-gray-50">
+          <Image
+            src={artwork.creator.profile?.avatar_url || '/images/image-avatar.svg'}
+            alt={artwork.creator?.username ? `${artwork.creator.username}'s profile` : 'User avatar'}
+            width={104}
+            height={104}
+            className="h-full w-full object-cover"
+          />
+        </div>
+      </div>
+
+      <span className="font-raleway text-h6 font-medium text-black tracking-wide">{creatorName}</span>
+    </div>
   )
 
   const mobileLikeRow = (
-    <button
+    // <button
+    //   onClick={handleLike}
+    //   disabled={isLiking}
+    //   className={cn(
+    //     'flex w-full cursor-pointer items-center justify-center gap-2 rounded-full border p-4 font-poppins text-body-s font-medium transition-colors disabled:opacity-60',
+    //     isLiked ? 'border-primary-500 bg-primary-50 text-primary-500' : 'border-primary-500 text-primary-500 hover:bg-primary-50'
+    //   )}
+    // >
+    //   <Heart size={18} fill={isLiked ? 'currentColor' : 'none'} />
+    //   Like
+    // </button>
+
+    <Button
       onClick={handleLike}
       disabled={isLiking}
-      className={cn(
-        'flex w-full cursor-pointer items-center justify-center gap-2 rounded-full border p-3 font-poppins text-body-s font-medium transition-colors disabled:opacity-60',
-        isLiked ? 'border-primary-500 bg-primary-50 text-primary-500' : 'border-primary-500 text-primary-500 hover:bg-primary-50'
-      )}
+      leftIcon='/icons/heart-red.svg'
+      fullWidth
+      variant='outline'
     >
-      <Heart size={18} fill={isLiked ? 'currentColor' : 'none'} />
       Like
-    </button>
+    </Button>
   )
 
   const artworkInfoStats = (
@@ -380,10 +426,10 @@ export default function ArtworkViewOverlay({ artwork: artworkProp, onClose, onNa
   )
 
   const purchasingDetails = (
-    <div className="flex flex-col gap-y-2 border-t border-gray-50 pt-4">
+    <div className="flex flex-col gap-y-2 pt-6">
       <div className="flex items-center gap-x-2">
         <Globe size={14} className="text-body" />
-        <p className={cn('font-poppins font-light text-body-xs leading-4 tracking-wide', isAvailableInRegion ? 'text-info-500' : 'text-gray-400')}>
+        <p className={cn('font-poppins font-light text-body-xxs leading-4 tracking-wide', isAvailableInRegion ? 'text-info-500' : 'text-gray-400')}>
           {isAvailableInRegion ? 'Available in your Region' : 'This artwork is not available in your region'}
         </p>
       </div>
@@ -394,14 +440,14 @@ export default function ArtworkViewOverlay({ artwork: artworkProp, onClose, onNa
         </div>
       )}
 
-      <div className="font-poppins font-medium text-body-m leading-6 tracking-wide text-body">
+      {/* <div className="font-poppins font-medium text-body-m leading-6 tracking-wide text-body">
         Price: <span className="ml-2 text-primary-500">{price}</span>
-      </div>
+      </div> */}
     </div>
   )
 
   const formControls = (
-    <div className="mt-4 flex flex-col gap-5">
+    <div className="mt-4 flex flex-col gap-4">
       {artwork.has_variants && variants.length > 0 && (
         <Dropdown
           options={variants.map((variant) => ({ id: variant.id, label: variant.name }))}
@@ -411,8 +457,8 @@ export default function ArtworkViewOverlay({ artwork: artworkProp, onClose, onNa
       )}
 
       {artwork.artwork_format === 'PHYSICAL' && (
-        <div className="flex items-center justify-between">
-          <div className="flex w-[150px] items-center justify-between rounded-full border-2 border-gray-100 px-1 py-1">
+        <div className="flex items-center gap-4">
+          {/* <div className="flex w-[150px] items-center justify-between rounded-full border-2 border-gray-100 px-1 py-1">
             <button onClick={decreaseQty} className="flex h-10 w-10 items-center justify-center rounded-full text-gray-500 transition-colors hover:bg-gray-50 hover:text-gray-800">
               <ChevronLeft size={18} strokeWidth={3} />
             </button>
@@ -420,21 +466,28 @@ export default function ArtworkViewOverlay({ artwork: artworkProp, onClose, onNa
             <button onClick={increaseQty} className="flex h-10 w-10 items-center justify-center rounded-full text-gray-500 transition-colors hover:bg-gray-50 hover:text-gray-800">
               <ChevronRight size={18} strokeWidth={3} />
             </button>
-          </div>
-          <div className="flex items-center gap-1.5 text-[14px] font-semibold text-gray-400">
+          </div> */}
+          <StepperInput 
+            min={1}
+            max={maxQty}
+            value={quantity}
+            onValueChange={setQuantity}
+            className='w-48'
+          />
+          <div className="flex items-center gap-1.5 text-body-s font-semibold text-text-disabled">
             Max Qty <span className="text-primary-500">( {maxQty} )</span>
           </div>
         </div>
       )}
 
-      <button
+      <Button
         onClick={handleAddToCart}
         disabled={isAddingToCart || !canPurchase}
-        className="mt-2 flex w-full cursor-pointer items-center justify-center gap-2 rounded-full bg-primary-500 py-4 text-[16px] font-bold text-white transition-colors hover:bg-primary-600 disabled:cursor-not-allowed disabled:opacity-60"
+        fullWidth
+        leftIcon='/icons/cart.svg'
       >
-        <ShoppingCart size={20} strokeWidth={2.5} />
         {isAddingToCart ? 'Adding...' : canPurchase ? 'Add to Cart' : 'Purchases restricted'}
-      </button>
+      </Button>
 
       {cartError && <p className="text-center font-poppins text-[13px] text-red-500">{cartError}</p>}
     </div>
@@ -484,15 +537,15 @@ export default function ArtworkViewOverlay({ artwork: artworkProp, onClose, onNa
   const descriptionSection = (
     <div className="py-6">
       <h3 className="mb-4 font-poppins text-h5 font-semibold text-gray-800">Description</h3>
-      <p className="whitespace-pre-line font-poppins text-[14px] leading-6 text-gray-500">{artwork.description}</p>
+      <p className="whitespace-pre-line font-poppins font-light text-body-xs leading-6 text-body">{artwork.description}</p>
     </div>
   )
 
   const categoriesTagsLicense = (
-    <div className="flex flex-col gap-6">
+    <div className="flex flex-col gap-6 border border-gray-50 h-[448px] lg:h-[688px] rounded-2xl p-6">
       {artwork.categories.length > 0 && (
         <div>
-          <h4 className="mb-3 font-poppins text-[15px] font-semibold text-gray-800">Categories</h4>
+          <h4 className="mb-6 font-poppins text-body-m font-semibold text-heading">Categories</h4>
           <div className="flex flex-wrap gap-2">
             {artwork.categories.map((category) => (
               <span key={category} className="rounded-full border border-primary-500 px-4 py-1.5 font-poppins text-[13px] text-primary-500">
@@ -504,7 +557,7 @@ export default function ArtworkViewOverlay({ artwork: artworkProp, onClose, onNa
       )}
 
       <div>
-        <h4 className="mb-3 font-poppins text-[15px] font-semibold text-gray-800">Tags</h4>
+        <h4 className="mb-6 font-poppins text-body-m font-semibold text-heading">Tags</h4>
         {tags.length > 0 ? (
           <div className="flex flex-wrap gap-x-2 gap-y-1 font-poppins text-[13px] text-gray-500">
             {tags.map((tag) => <span key={tag}>#{tag}</span>)}
@@ -514,7 +567,7 @@ export default function ArtworkViewOverlay({ artwork: artworkProp, onClose, onNa
         )}
       </div>
 
-      <div>
+      <div className='mt-auto'>
         <h4 className="mb-3 flex items-center gap-2 font-poppins text-[15px] font-semibold text-gray-800">
           License
           <span
@@ -558,10 +611,11 @@ export default function ArtworkViewOverlay({ artwork: artworkProp, onClose, onNa
             <Image src="/icons/play-icon.svg" width={16} height={16} alt="Video" />
           </span>
         )}
+        {activeAsset && <AssetOpenLink asset={activeAsset} />}
       </div>
 
       {assets.length > 1 && (
-        <div className="relative flex items-center gap-4 bg-gray-50 px-6 py-6 lg:gap-6 lg:px-20">
+        <div className="relative flex items-center gap-4 bg-secondary-50 px-6 py-6 lg:gap-6 lg:px-20">
           <button
             onClick={handlePrevAsset}
             disabled={activeAssetIndex === 0}
@@ -572,7 +626,7 @@ export default function ArtworkViewOverlay({ artwork: artworkProp, onClose, onNa
 
           <div className="flex w-full items-center gap-4 overflow-x-auto scroll-smooth px-10 py-4 scrollbar-hide lg:gap-6 lg:px-12">
             {assets.map((asset, idx) => {
-              const thumbSrc = asset.optimized_url || asset.original_url
+              const thumbSrc = getAssetDisplaySrc(asset) || '/placeholder.png'
               const isActive = idx === activeAssetIndex
               const isVideo = asset.media_type === 'VIDEO'
               return (
@@ -606,7 +660,7 @@ export default function ArtworkViewOverlay({ artwork: artworkProp, onClose, onNa
       )}
 
       {assets.length > 1 && (
-        <div className="flex items-center justify-center gap-1.5 bg-gray-50 pb-4 lg:hidden">
+        <div className="flex items-center justify-center gap-1.5 bg-secondary-50 pb-4 lg:hidden">
           {assets.map((asset, idx) => (
             <button
               key={asset.id}
@@ -633,7 +687,7 @@ export default function ArtworkViewOverlay({ artwork: artworkProp, onClose, onNa
     <div className="flex flex-col">
       {assets.length > 0 ? (
         assets.map((asset, idx) => {
-          const src = asset.optimized_url || asset.original_url
+          const src = getAssetDisplaySrc(asset)
           const isVideo = asset.media_type === 'VIDEO'
           return (
             <div key={asset.id} className="relative h-[70vh] max-h-[640px] w-full overflow-hidden bg-secondary-100 lg:h-[60vh]">
@@ -658,6 +712,7 @@ export default function ArtworkViewOverlay({ artwork: artworkProp, onClose, onNa
                   <Image src="/icons/play-icon.svg" width={16} height={16} alt="Video" />
                 </span>
               )}
+              <AssetOpenLink asset={asset} />
             </div>
           )
         })
@@ -675,7 +730,7 @@ export default function ArtworkViewOverlay({ artwork: artworkProp, onClose, onNa
     <>
       <div
         ref={backdropRef}
-        className="fixed inset-0 z-50 overflow-y-auto bg-black/40"
+        className="fixed inset-0 z-50 overflow-y-auto scrollbar-hide bg-black/40"
       >
         {/* Global prev/next artwork arrows — desktop only; mobile navigates
             via the thumbnail strip instead, there's no room for these. */}
@@ -708,7 +763,7 @@ export default function ArtworkViewOverlay({ artwork: artworkProp, onClose, onNa
             animate={{ y: isClosing ? '100%' : 0 }}
             transition={{ type: 'spring', damping: 32, stiffness: 320 }}
             onAnimationComplete={() => { if (isClosing) onClose() }}
-            className="relative flex min-h-screen w-full flex-col bg-white shadow-2xl lg:my-auto lg:min-h-0 lg:max-h-[90vh] lg:w-[90%] lg:max-w-[1400px] lg:flex-row lg:overflow-hidden lg:rounded-2xl"
+            className="relative flex min-h-screen w-full flex-col max-lg:pb-20 bg-white shadow-2xl lg:my-auto lg:min-h-0 lg:max-h-[90vh] lg:w-[90%] lg:max-w-[1400px] lg:flex-row lg:overflow-hidden lg:rounded-2xl"
           >
             {/* Close button — desktop only; mobile's close lives in mobileHeaderBar */}
             <button
@@ -716,43 +771,43 @@ export default function ArtworkViewOverlay({ artwork: artworkProp, onClose, onNa
               aria-label="Close"
               className="absolute right-6 top-8 z-[70] hidden h-10 w-10 items-center justify-center rounded-full border-2 border-gray-50 bg-white transition-colors hover:bg-gray-50 lg:flex"
             >
-              <Image src="/icons/cancel.svg" width={20} height={20} alt="close" />
+              <Image src="/icons/cancel.svg" width={24} height={24} alt="close" />
             </button>
 
             {/* ================= LEFT: everything scrollable ================= */}
-            <div className="flex flex-col lg:w-full flex-1">
+            <div className="flex flex-col lg:w-full overflow-y-auto flex-1">
               {mobileHeaderBar}
 
-              <h1 className="px-5 pt-5 font-raleway text-h5 font-semibold text-heading lg:hidden">
+              {/* <h1 className="px-4 pt-4 font-raleway text-h5 font-semibold text-heading max-lg:hidden">
                 {displayTitle}
-              </h1>
+              </h1> */}
 
               {heroMedia}
 
-              <div className="px-5 lg:px-8">
+              <div className="px-4 lg:px-8">
                 {/* Mobile-only order: description → price/cart → creator →
                     like → stats. Matches the mobile mockup exactly. */}
                 <div className="lg:hidden">
                   {descriptionSection}
                   {isForSale && (
-                    <div className="border-t border-gray-50 py-6">
+                    <div className="py-6">
                       {purchasingDetails}
                       {formControls}
                     </div>
                   )}
-                  <div className="flex flex-col items-center gap-4 border-t border-gray-50 py-6">
+                  <div className="flex flex-col items-center py-6">
                     {mobileCreatorBlock}
-                    <div className="w-full">{mobileLikeRow}</div>
+                    <div className="w-full mt-6">{mobileLikeRow}</div>
                     {isForSale && (
-                      <span className="font-poppins font-light text-body-xs leading-4 tracking-wide text-info-500">
+                      <span className="font-poppins font-light text-body-xs leading-4 tracking-wide mt-6 text-info-500">
                         {displayFormat}
                       </span>
                     )}
-                    <span className="font-poppins font-light text-body-xs leading-4 tracking-wide text-text-disabled">
+                    <span className="mt-4 font-poppins font-light text-body-xs leading-4 tracking-wide text-text-disabled">
                       Published: {formatDate(artwork.created_at)}
                     </span>
                     {artwork.show_engagement_stats !== false && (
-                      <div className="flex items-center justify-center gap-4">
+                      <div className="flex items-center justify-center gap-4 mt-2">
                         <span className="flex items-center gap-2 font-poppins text-body-s text-body">
                           <Heart size={20} className="text-primary-500" fill="currentColor" /> {formatCount(likeCount)}
                         </span>
@@ -772,22 +827,26 @@ export default function ArtworkViewOverlay({ artwork: artworkProp, onClose, onNa
 
                 {artwork.creator?.id && (
                   <>
-                    <ArtworkCreatorWorks
-                      title="Also by "
-                      creatorId={artwork.creator.id}
-                      creatorName={creatorName}
-                      excludeArtworkId={artwork.id}
-                      scope="all"
-                      onSelectArtwork={(work) => (onSwapArtwork ? onSwapArtwork(work) : setViewOverride(work))}
-                    />
-                    <ArtworkCreatorWorks
-                      title="For sale by "
-                      creatorId={artwork.creator.id}
-                      creatorName={creatorName}
-                      excludeArtworkId={artwork.id}
-                      scope="marketplace"
-                      onSelectArtwork={(work) => (onSwapArtwork ? onSwapArtwork(work) : setViewOverride(work))}
-                    />
+                    <div className='bg-secondary-100'>
+                      <ArtworkCreatorWorks
+                        title="Also by "
+                        creatorId={artwork.creator.id}
+                        creatorName={creatorName}
+                        excludeArtworkId={artwork.id}
+                        scope="all"
+                        onSelectArtwork={(work) => (onSwapArtwork ? onSwapArtwork(work) : setViewOverride(work))}
+                      />
+                    </div>
+                    <div className='hidden lg:flex'>
+                      <ArtworkCreatorWorks
+                        title="For sale by "
+                        creatorId={artwork.creator.id}
+                        creatorName={creatorName}
+                        excludeArtworkId={artwork.id}
+                        scope="marketplace"
+                        onSelectArtwork={(work) => (onSwapArtwork ? onSwapArtwork(work) : setViewOverride(work))}
+                      />
+                    </div>
                   </>
                 )}
 
@@ -819,7 +878,7 @@ export default function ArtworkViewOverlay({ artwork: artworkProp, onClose, onNa
         </div>
 
         {/* Mobile-only fixed action bar */}
-        <div className="fixed inset-x-0 bottom-0 z-[65] flex items-center justify-around border-t border-gray-100 bg-white px-4 py-3 lg:hidden">
+        {/* <div className="fixed inset-x-0 bottom-0 z-[65] flex items-center justify-around border-t border-gray-100 bg-white px-4 py-3 lg:hidden">
           {footerIcons}
           <button
             aria-label="More options"
@@ -827,7 +886,7 @@ export default function ArtworkViewOverlay({ artwork: artworkProp, onClose, onNa
           >
             <MoreHorizontal size={20} strokeWidth={2.5} />
           </button>
-        </div>
+        </div> */}
       </div>
 
       <SaveToMoodboardDialog artworkId={artwork.id} open={saveDialogOpen} onOpenChange={setSaveDialogOpen} />

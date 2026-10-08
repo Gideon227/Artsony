@@ -1,6 +1,5 @@
 // upload-art/modals/link-modals.tsx
-// EmbedModal and ThreeDModal share the same URL-input layout.
-// Extracted into a single reusable UrlInputModal to avoid duplication.
+// EmbedModal URL-input layout.
 'use client'
 
 import React, { useState } from 'react'
@@ -23,15 +22,25 @@ function UrlInputModal({ title, description, placeholder, helpText, onClose, onS
   const [error, setError] = useState<string | null>(null)
 
   const handleSave = () => {
-    if (!url.trim()) { setError('Please enter a URL.'); return }
+    const trimmed = url.trim()
+    if (!trimmed) { setError('Please enter a URL.'); return }
+
+    let parsed: URL
     try {
-      new URL(url.trim())
-      setError(null)
-      onSaved(url.trim())
-      onClose()
+      parsed = new URL(trimmed)
     } catch {
       setError('Please enter a valid URL (e.g. https://example.com).')
+      return
     }
+
+    if (parsed.protocol !== 'https:') {
+      setError('Only secure links starting with https:// are supported.')
+      return
+    }
+
+    setError(null)
+    onSaved(trimmed)
+    onClose()
   }
 
   return (
@@ -43,7 +52,8 @@ function UrlInputModal({ title, description, placeholder, helpText, onClose, onS
       <div className='space-y-6 flex flex-col items-center justify-center'>
         <Textarea
           placeholder={description}
-          onChange={(e) => setUrl(e.target.value)}
+          value={url}
+          onChange={(e) => { setUrl(e.target.value); setError(null) }}
         />
 
         <div className='flex flex-col justify-center items-center gap-1 text-center'>
@@ -55,7 +65,7 @@ function UrlInputModal({ title, description, placeholder, helpText, onClose, onS
       {error && <ErrorMsg message={error} />}
 
       <div className='flex items-center justfify-center'>
-        <Button rightIcon='/icons/alt-arrow-right-double.svg' disabled={!url} >Save</Button>
+        <Button rightIcon='/icons/alt-arrow-right-double.svg' onClick={handleSave} disabled={!url.trim()}>Save</Button>
       </div>
     </div>
   )
@@ -70,19 +80,6 @@ export function EmbedModal({ onClose, onSaved }: { onClose: () => void; onSaved:
       description="Paste Embed Code Here"
       placeholder="https://sketchfab.com/models/…"
       helpText="Paste a valid embed link (YouTube, Vimeo, SoundCloud, Behance, etc.). Make sure your link is public and shareable."
-      onClose={onClose}
-      onSaved={onSaved}
-    />
-  )
-}
-
-export function ThreeDModal({ onClose, onSaved }: { onClose: () => void; onSaved: (url: string) => void }) {
-  return (
-    <UrlInputModal
-      title="Upload 3D Model"
-      description="Paste 3D Code Here"
-      placeholder="https://sketchfab.com/3d-models/…"
-      helpText="Paste a Sketchfab or supported 3D viewer link to showcase interactive models. Ensure the model is optimized for smooth viewing."
       onClose={onClose}
       onSaved={onSaved}
     />

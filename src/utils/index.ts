@@ -42,6 +42,21 @@ export function getDisplayThumbnail(
   return primary.thumbnail_url ?? primary.optimized_url ?? primary.original_url ?? fallback
 }
 
+/**
+ * Source for painting an asset in a viewer. IMAGE and VIDEO assets render
+ * their own file; every other type (PDF, 3D model, external link) can only be
+ * shown through its generated thumbnail, and has none when it was never made.
+ */
+export function getAssetDisplaySrc(
+  asset: ThumbnailableAsset | null | undefined,
+): string | null {
+  if (!asset) return null
+  if (asset.media_type === 'IMAGE' || asset.media_type === 'VIDEO') {
+    return asset.optimized_url ?? asset.original_url ?? null
+  }
+  return asset.thumbnail_url ?? null
+}
+
 export function formatPrice(amount: number, currency = 'USD'): string {
   return new Intl.NumberFormat('en-US', {
     style: 'currency',

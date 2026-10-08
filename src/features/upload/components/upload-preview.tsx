@@ -9,6 +9,7 @@ import { ChevronLeft, ChevronRight, ChevronsRight } from 'lucide-react'
 import UploadHeader from './upload-header'
 import { useAuthStore } from '@/store'
 import { useUsersByIds } from '@/hooks/use-user'
+import { getAssetDisplaySrc } from '@/utils'
 
 interface UploadPreviewProps {
   id?: string;
@@ -35,7 +36,7 @@ const UploadPreview = ({ id, onNext, onBack, onSaveAndExit, steps, number, previ
 
   // -- Derived Card Data --
   const currentAsset = assets[currentSlide]
-  const previewImage = currentAsset?.original_url || '/placeholder.png' // Fallback image
+  const previewImage = getAssetDisplaySrc(currentAsset) || '/placeholder.png' // Fallback image
   const displayTitle = draft?.title || 'Untitled Artwork'
 
   const currentUser: Artist = {

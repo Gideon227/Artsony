@@ -28,6 +28,7 @@ export const MEDIA_TYPE_LABELS: Record<string, string> = {
   VIDEO: 'Video',
   THREE_D: '3D Model',
   EXTERNAL_LINK: 'External Link',
+  PDF: 'PDF',
 }
 
 // Visibility display labels

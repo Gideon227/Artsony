@@ -18,17 +18,20 @@ export default function UploadFlowLayout({
     const ActiveStepComponent = flowComponents || null;
 
     return (
-        <div className="h-full bg-white w-full flex flex-col justify-center items-center">
+        // 1. Added `overflow-hidden` to prevent the whole page from expanding and scrolling
+        // 2. Removed `justify-center items-center` so the flex container behaves correctly for full-height layouts
+        <div className="h-full w-full bg-white flex flex-col overflow-hidden">
             
-            <div className="w-full px-8 py-8 flex gap-8 items-start h-full">
+            {/* 3. Removed `items-start` to let children stretch to the full container height naturally */}
+            <div className="h-full w-full px-8 py-8 flex gap-8 overflow-hidden">
                 
                 {/* Left Workspace */}
-                <div className="w-full h-full flex-1">
+                <div className="h-screen w-full min-w-0 flex-1 overflow-y-auto scrollbar-hide">
                     {!leftWorkspace ? <UploadArtIndex /> : leftWorkspace }
                 </div>
                 
                 {/* Right Form Context Panel */}
-                <div className="w-md h-full overflow-y-auto shrink-0 pb-12 scrollbar-hide">
+                <div className="h-screen w-md shrink-0 overflow-y-auto scrollbar-hide pb-12">
                     {ActiveStepComponent}
                 </div>
 

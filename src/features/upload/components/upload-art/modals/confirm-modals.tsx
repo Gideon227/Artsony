@@ -3,6 +3,7 @@
 'use client'
 
 import React from 'react'
+import { Trash2 } from 'lucide-react'
 import { ModalCloseBtn, OrangeBtn, OutlineBtn } from './modal-primitives'
 
 // ── Shared confirm card ────────────────────────────────────────────────────────
@@ -85,6 +86,21 @@ export function PublishModal({ onClose, onConfirm, loading }: { onClose: () => v
           <path d="M2 12V13.5C2 13.7761 2.22386 14 2.5 14H13.5C13.7761 14 14 13.7761 14 13.5V12" stroke="white" strokeWidth="1.5" strokeLinecap="round" />
         </svg>
       }
+    />
+  )
+}
+
+export function DeleteMediaModal({ onClose, onConfirm }: { onClose: () => void; onConfirm: () => void }) {
+  return (
+    <ConfirmModal
+      onClose={onClose}
+      onConfirm={onConfirm}
+      loading={false}
+      title="Delete this media?"
+      description="It will be removed from your artwork. This can't be undone, but you can upload it again."
+      confirmLabel="Delete"
+      icon={<Trash2 size={26} color="#F25B38" aria-hidden />}
+      confirmIcon={<Trash2 size={16} color="#fff" aria-hidden />}
     />
   )
 }

@@ -50,7 +50,7 @@ export default function DiscoverPage() {
     openArtwork(artwork, { siblings: artworks, variant: 'home' })
 
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-screen bg-white max-lg:pb-16">
       <Navbar />
 
       <DiscoverHero />

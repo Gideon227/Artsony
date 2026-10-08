@@ -1,7 +1,7 @@
 // upload-art/modals/image-modal.tsx
 'use client'
 
-import React, { useState, useRef, useCallback } from 'react'
+import React, { useState, useRef, useCallback, useEffect } from 'react'
 import { artworkService } from '@/services/artwork.service'
 import { useDragOver } from '../hooks/use-drag-over'
 import {
@@ -29,10 +29,26 @@ export function ImageModal({ onClose, onSaved }: ImageModalProps) {
   const [files, setFiles] = useState<UploadedFile[]>([])
   const [error, setError] = useState<string | null>(null)
   const [uploading, setUploading] = useState(false)
+  const [progress, setProgress] = useState<{ index: number; total: number; percent: number } | null>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
+  const uploadingRef = useRef(false)
+  const filesRef = useRef<UploadedFile[]>([])
+  const savedRef = useRef(false)
   const { isDragging, handlers } = useDragOver()
 
+  filesRef.current = files
+
+  // Files uploaded in this modal but never handed to the draft (modal closed
+  // without saving) would otherwise stay in Cloudinary forever.
+  useEffect(() => () => {
+    if (savedRef.current) return
+    filesRef.current.forEach((uf) => {
+      if (uf.uploadedAsset) void artworkService.deleteUploadedAsset('IMAGE', uf.uploadedAsset.public_id)
+    })
+  }, [])
+
   const processFiles = useCallback(async (rawFiles: FileList | File[]) => {
+    if (uploadingRef.current) return
     setError(null)
     const arr = Array.from(rawFiles)
 
@@ -47,12 +63,14 @@ export function ImageModal({ onClose, onSaved }: ImageModalProps) {
       previewUrl: URL.createObjectURL(f),
     }))
 
+    uploadingRef.current = true
     setUploading(true)
+    const uploaded: UploadedFile[] = []
     try {
-      const uploaded: UploadedFile[] = []
-      for (const uf of newFiles) {
-        // ── Actual server upload ──────────────────────────────────────────────
-        const asset = await artworkService.uploadAsset(uf.file)
+      for (const [index, uf] of newFiles.entries()) {
+        const asset = await artworkService.uploadAsset(uf.file, 'IMAGE', {
+          onProgress: (percent: any) => setProgress({ index, total: newFiles.length, percent }),
+        })
         uploaded.push({ ...uf, uploadedAsset: asset })
       }
       setFiles((prev) => [...prev, ...uploaded])
@@ -63,10 +81,16 @@ export function ImageModal({ onClose, onSaved }: ImageModalProps) {
         ? err.message
         : 'Upload failed. Please try again.'
       setError(message)
+      // The batch is discarded, so the files that did upload are removed too
+      uploaded.forEach((uf) => {
+        if (uf.uploadedAsset) void artworkService.deleteUploadedAsset('IMAGE', uf.uploadedAsset.public_id)
+      })
       // Revoke blob URLs for failed uploads
       newFiles.forEach((f) => URL.revokeObjectURL(f.previewUrl))
     } finally {
+      uploadingRef.current = false
       setUploading(false)
+      setProgress(null)
     }
   }, [])
 
@@ -80,6 +104,8 @@ export function ImageModal({ onClose, onSaved }: ImageModalProps) {
   }
 
   const handleRemove = (idx: number) => {
+    const removed = files[idx]
+    if (removed?.uploadedAsset) void artworkService.deleteUploadedAsset('IMAGE', removed.uploadedAsset.public_id)
     setFiles((prev) => {
       const next = [...prev]
       URL.revokeObjectURL(next[idx]!.previewUrl)
@@ -90,9 +116,14 @@ export function ImageModal({ onClose, onSaved }: ImageModalProps) {
   }
 
   const handleSave = () => {
+    savedRef.current = true
     onSaved(files)
     onClose()
   }
+
+  const uploadingLabel = progress
+    ? `Uploading${progress.total > 1 ? ` ${progress.index + 1} of ${progress.total}` : ''}… ${progress.percent}%`
+    : 'Uploading…'
 
   // ── Icons ─────────────────────────────────────────────────────────────────
   const uploadIcon = (
@@ -143,7 +174,7 @@ export function ImageModal({ onClose, onSaved }: ImageModalProps) {
           onChange={handleInputChange}
         />
 
-        {uploading && <UploadingSpinner label="Uploading…" />}
+        {uploading && <UploadingSpinner label={uploadingLabel} />}
         {/* {error && <ErrorMsg message={error} />} */}
 
         <div onClick={() => fileInputRef.current?.click()}  className='flex items-center justfify-center'>

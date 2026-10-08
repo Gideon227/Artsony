@@ -191,7 +191,7 @@ export function SearchSection({ query, onSearch, filters, onFilterChange, onClea
   ]
 
   return (
-    <div className="w-full max-w-full overflow-x-hidden px-4 py-6 md:px-2 bg-white box-border">
+    <div className="w-full max-w-full overflow-hidden px-4 py-6 md:px-2 bg-white box-border">
       <div className="flex justify-between items-center gap-3 sm:gap-4 lg:pt-12 lg:pb-4 lg:px-6 w-full max-w-full min-w-0">
         <div className="max-w-md w-full flex-1 min-w-0 h-12">
           <SearchInput

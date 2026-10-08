@@ -6,7 +6,7 @@ import { User } from "."
 
 export type ListingType = 'MARKETPLACE' | 'PORTFOLIO'
 export type ArtworkFormat = 'DIGITAL' | 'PHYSICAL'
-export type ArtworkMediaType = 'IMAGE' | 'VIDEO' | 'THREE_D' | 'EXTERNAL_LINK'
+export type ArtworkMediaType = 'IMAGE' | 'VIDEO' | 'THREE_D' | 'EXTERNAL_LINK' | 'PDF'
 export type ArtworkVisibility = 'PUBLIC' | 'PRIVATE' | 'UNLISTED'
 export type ArtworkStatus = 'DRAFT' | 'PUBLISHED' | 'ARCHIVED' | 'UNDER_REVIEW' | 'PAUSED'
 export type ModerationStatus = 'PENDING' | 'APPROVED' | 'REJECTED' | 'FLAGGED'
@@ -22,6 +22,7 @@ export type LicenseType =
 
 export type ArtworkAsset = {
   id: string
+  public_id?: string | null
   original_url: string
   optimized_url: string | null
   thumbnail_url: string | null

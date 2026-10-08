@@ -28,14 +28,6 @@ export const userService = {
   getInteractionPermissions: (userId: string) =>
     apiClient.get<ApiResponse<InteractionPermissions>>(`/api/users/${userId}/permissions`),
 
-  updateAvatar: async (file: File): Promise<ApiResponse<{ avatarUrl: string }>> => {
-    const form = new FormData()
-    form.append('avatar', file)
-    const res = await fetch('/api/users/me/avatar', { method: 'POST', body: form })
-    if (!res.ok) throw new Error('Avatar upload failed')
-    return res.json() as Promise<ApiResponse<{ avatarUrl: string }>>
-  },
-
   getArtworks: (username: string, params?: { page?: number }) =>
     apiClient.get<PaginatedResponse<Artwork>>(`/api/users/${username}/artworks`, { params }),
 

@@ -128,10 +128,10 @@ export function GalleryPulseSection() {
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-29 items-center w-full">
         <div className="lg:col-span-4 flex flex-col space-y-8">
           <div className="space-y-6">
-            <h2 className="text-h3 font-semibold font-raleway leading-8 tracking-wide">
+            <h2 className="text-h6 lg:text-h3 font-semibold font-raleway leading-8 tracking-wide">
               <span className="text-primary-500">Gallery</span> <span className="text-gray-500">Pulse</span>
             </h2>
-            <p className="text-gray-400 font-poppins text-body-m tracking-wide max-w-[332px]">
+            <p className="text-body font-poppins text-body-xs lg:text-body-m tracking-wide max-w-[332px]">
               These are the artworks that captured the most hearts and eyes this week — across every corner of the gallery.
             </p>
           </div>

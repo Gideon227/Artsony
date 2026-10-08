@@ -1,4 +1,6 @@
-import { apiClient, getMemoryToken } from '@/lib/api-client'
+import { apiClient } from '@/lib/api-client'
+import { deleteUploadedMedia, uploadMedia, type UploadedMedia, type UploadOptions } from '@/lib/media-upload'
+import type { MediaKind } from '@/lib/media-rules'
 import type {
   Artwork,
   ArtworkFilters,
@@ -183,94 +185,11 @@ export const artworkService = {
       moderation_status: moderationStatus,
     }),
 
-  // ── Image upload (multipart — bypasses apiClient JSON default) ──────────────
+  // ── Media upload (direct to Cloudinary with a server-issued signature) ──────
 
-  uploadAsset: async (file: File): Promise<{
-    original_url:    string
-    optimized_url:   string | null
-    thumbnail_url:   string | null
-    mime_type:       string
-    file_size_bytes: number
-    width:           number | null
-    height:          number | null
-  }> => {
-    const uploadUrl = `${process.env.NEXT_PUBLIC_API_URL ?? ''}/api/upload/artwork`
+  uploadAsset: (file: File, kind: MediaKind, options?: UploadOptions): Promise<UploadedMedia> =>
+    uploadMedia(file, kind, options),
 
-    // ── DEV FALLBACK ────────────────────────────────────────────────────────────
-    if (process.env.NODE_ENV === 'development' && !process.env.NEXT_PUBLIC_API_URL) {
-      console.warn(
-        '[UploadArt] NEXT_PUBLIC_API_URL is not set — using local blob URL fallback.',
-        '\nSet it in .env.local to point at your real API.',
-      )
-
-      let width: number | null  = null
-      let height: number | null = null
-      if (file.type.startsWith('image/')) {
-        try {
-          const bitmap = await createImageBitmap(file)
-          width  = bitmap.width
-          height = bitmap.height
-          bitmap.close()
-        } catch { /* non-critical */ }
-      }
-
-      const blobUrl = URL.createObjectURL(file)
-      return {
-        original_url:    blobUrl,
-        optimized_url:   blobUrl,
-        thumbnail_url:   blobUrl,
-        mime_type:       file.type,
-        file_size_bytes: file.size,
-        width,
-        height,
-      }
-    }
-    // ── END DEV FALLBACK ────────────────────────────────────────────────────────
-
-    const form = new FormData()
-    form.append('file', file)
-
-    return apiClient.post('/api/upload/artwork', form)
-
-    // Grab the active token from the application's memory layer
-    // const token = getMemoryToken()
-    // const authHeaders: Record<string, string> = token
-    //   ? { Authorization: `Bearer ${token}` }
-    //   : {}
-
-    // let res: Response
-    // try {
-    //   res = await fetch(uploadUrl, {
-    //     method:      'POST',
-    //     body:        form,
-    //     credentials: 'include',
-    //     headers: {
-    //       ...authHeaders,
-    //       // CRITICAL: Do NOT explicitly set 'Content-Type': 'multipart/form-data'.
-    //       // Leaving it blank lets the browser inject the form boundaries dynamically.
-    //     },
-    //   })
-    // } catch (networkErr) {
-    //   const detail = networkErr instanceof Error ? networkErr.message : String(networkErr)
-    //   console.error('[UploadArt] Network error calling', uploadUrl, detail)
-    //   throw new Error(
-    //     `Cannot reach the upload server at ${uploadUrl}. ` +
-    //     `Check that NEXT_PUBLIC_API_URL is correct and the server is running. (${detail})`
-    //   )
-    // }
-
-    // if (!res.ok) {
-    //   let serverMessage = `Upload failed — ${res.status} ${res.statusText}`
-    //   try {
-    //     const body = await res.json()
-    //     serverMessage = body.message ?? body.error ?? body.detail ?? serverMessage
-    //   } catch {
-    //     // Body wasn't JSON status message fallback
-    //   }
-    //   console.error('[UploadArt] Server error from', uploadUrl, serverMessage)
-    //   throw new Error(serverMessage)
-    // }
-
-    // return res.json()
-  },
+  deleteUploadedAsset: (kind: MediaKind, publicId: string): Promise<void> =>
+    deleteUploadedMedia(kind, publicId),
 }

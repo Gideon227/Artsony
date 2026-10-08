@@ -32,14 +32,14 @@ export function DiscoverResultsHeader({
         )}
       </h2>
 
-      <div className="flex items-center gap-x-3 max-md:hidden">
+      <div className="flex items-center gap-x-3">
           <Dropdown
             options={FEED_TAB_OPTIONS}
             value={activeOption}
             onChange={(opt) => onSortChange(opt.id as FeedSort | 'all')}
             indicator="highlight"
             placeholder="All"
-            className='w-[332px]'
+            className='w-83 max-md:w-33'
           />
       </div>
     </div>

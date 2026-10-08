@@ -120,7 +120,7 @@ export default function UploadModal({ isOpen, onClose }: UploadModalProps) {
             />
             
             <div 
-                className={`h-[60vh] w-[90vw] md:w-[65vw] md:h-screen relative scrollbar-hide rounded-2xl shadow-2xl transition-all duration-500 ease-out transform flex flex-col overflow-hidden ${
+                className={`h-[60vh] w-[90vw] md:w-[65vw] md:h-[672px] overflow-y-auto relative scrollbar-hide rounded-2xl transition-all duration-500 ease-out transform flex flex-col overflow-hidden ${
                     animate ? 'translate-y-0 opacity-100 scale-100' : 'translate-y-[10vh] opacity-0 scale-95'
                 }`}
                 // style={{ width: '85vw', height: '100vh' }}

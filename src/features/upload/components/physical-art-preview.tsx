@@ -107,7 +107,7 @@ export const PhysicalArtPreview = ({
                 <div className="relative flex-1 bg-gray-100 overflow-y-auto w-7/10 flex flex-col">
                     {draft?.assets?.map((asset) => (
                         <div className='h-[80vh] p-6 relative w-full'>
-                            {(asset?.media_type === 'IMAGE' || asset?.media_type === 'EXTERNAL_LINK' || asset?.media_type === 'THREE_D') &&
+                            {(asset?.media_type === 'IMAGE' || asset?.media_type === 'EXTERNAL_LINK' || asset?.media_type === 'THREE_D' || asset?.media_type === 'PDF') && asset?.thumbnail_url &&
                                 <Image 
                                     src={asset?.thumbnail_url as string}
                                     alt='Artwork media file'

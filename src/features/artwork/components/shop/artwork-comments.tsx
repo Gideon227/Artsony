@@ -29,9 +29,6 @@ export function ArtworkComments({ artworkId, creatorId, allowComments }: Artwork
   const comments = data?.data ?? []
   const total = data?.total ?? 0
 
-  // allowComments is the artist's per-artwork toggle; permissions.can_comment
-  // is their account-level who_can_comment setting relative to this viewer.
-  // Both gate independently on the backend, so both must pass here too.
   const canComment = allowComments && (permissions?.can_comment ?? true)
 
   const handleSend = () => {
@@ -41,62 +38,64 @@ export function ArtworkComments({ artworkId, creatorId, allowComments }: Artwork
   }
 
   return (
-    <div className="flex flex-col gap-8 border border-border p-6 rounded-xl h-[688px]">
+    <div className="relative flex flex-col gap-6 border border-border p-6 z-10 rounded-xl h-[688px] overflow-hidden bg-white">
       {/* Composer */}
-      {canComment ? (
-        <div className="flex gap-4">
-          <div className="relative h-11 w-11 shrink-0 overflow-hidden rounded-full bg-gray-100">
-            <Image
-              src={user?.avatarUrl || '/images/image-avatar.svg'}
-              alt={user?.username ?? 'You'}
-              fill
-              className="object-cover"
-            />
-          </div>
-          <div className="flex-1">
-            <div className="rounded-[24px] border border-gray-100 p-5">
-              <textarea
-                value={body}
-                onChange={(e) => setBody(e.target.value.slice(0, MAX_LENGTH))}
-                placeholder="Leave a comment"
-                rows={3}
-                className="w-full resize-none bg-transparent border-border font-poppins text-[14px] text-gray-500 placeholder:text-gray-300 outline-none"
+      <div className="shrink-0">
+        {canComment ? (
+          <div className="flex max-lg:flex-col gap-4">
+            <div className="relative h-11 w-11 shrink-0 overflow-hidden rounded-full bg-gray-100">
+              <Image
+                src={user?.avatarUrl || '/images/image-avatar.svg'}
+                alt={user?.username ?? 'You'}
+                fill
+                className="object-cover"
               />
             </div>
-            <div className="mt-2 flex items-center justify-between">
-              <span className="font-poppins text-[12px] text-gray-300">
-                {MAX_LENGTH} characters max
-              </span>
-              <button
-                onClick={handleSend}
-                disabled={!body.trim() || createComment.isPending}
-                className="rounded-full bg-primary-500 px-8 py-2.5 font-poppins text-[14px] font-semibold text-white transition-colors hover:bg-primary-600 disabled:cursor-not-allowed disabled:opacity-50"
-              >
-                {createComment.isPending ? 'Sending...' : 'Send'}
-              </button>
+            <div className="flex-1">
+              <div className="rounded-[24px] border border-gray-100 p-5">
+                <textarea
+                  value={body}
+                  onChange={(e) => setBody(e.target.value.slice(0, MAX_LENGTH))}
+                  placeholder="Leave a comment"
+                  rows={3}
+                  className="w-full resize-none bg-transparent border-border font-poppins text-[14px] text-gray-500 placeholder:text-gray-300 outline-none"
+                />
+              </div>
+              <div className="mt-2 flex items-center justify-between">
+                <span className="font-poppins text-[12px] text-gray-300">
+                  {MAX_LENGTH} characters max
+                </span>
+                <button
+                  onClick={handleSend}
+                  disabled={!body.trim() || createComment.isPending}
+                  className="rounded-full bg-primary-500 px-8 py-2.5 font-poppins text-[14px] font-semibold text-white transition-colors hover:bg-primary-600 disabled:cursor-not-allowed disabled:opacity-50"
+                >
+                  {createComment.isPending ? 'Sending...' : 'Send'}
+                </button>
+              </div>
             </div>
           </div>
-        </div>
-      ) : (
-        <p className="rounded-[24px] border border-gray-100 p-5 font-poppins text-[14px] text-gray-400">
-          {!allowComments
-            ? 'Comments are turned off for this artwork.'
-            : 'This artist limits who can comment on their artwork.'}
-        </p>
-      )}
+        ) : (
+          <p className="rounded-[24px] border border-gray-100 p-5 font-poppins text-[14px] text-gray-400">
+            {!allowComments
+              ? 'Comments are turned off for this artwork.'
+              : 'This artist limits who can comment on their artwork.'}
+          </p>
+        )}
+      </div>
 
-      <hr className='w-9/10 text-gray-50 items-center justify-center mx-auto ' />
+      <hr className="w-full border-gray-100 shrink-0" />
 
-      {/* List */}
-      <div>
-        <h3 className="mb-4 font-poppins text-[16px] font-semibold text-gray-800">
+      {/* List Container - Takes up all remaining space with flex-1 & min-h-0 */}
+      <div className="flex-1 flex flex-col min-h-0">
+        <h3 className="mb-4 font-poppins text-[16px] font-semibold text-gray-800 shrink-0">
           Comments <span className="text-primary-500">({total.toLocaleString()})</span>
         </h3>
 
         {isLoading ? (
           <div className="flex flex-col gap-4">
             {Array.from({ length: 3 }).map((_, i) => (
-              <div key={i} className="h-16 animate-pulse rounded-2xl bg-gray-50" />
+              <div key={i} className="h-16 animate-pulse rounded-2xl bg-gray-50 shrink-0" />
             ))}
           </div>
         ) : comments.length === 0 ? (
@@ -104,9 +103,10 @@ export function ArtworkComments({ artworkId, creatorId, allowComments }: Artwork
             No comments yet — be the first to say something.
           </p>
         ) : (
-          <div className="flex max-h-[360px] flex-col gap-5 overflow-y-auto pr-2">
+          /* Replaced max-h-90 with flex-1 so it scrolls within available height */
+          <div className="flex-1 flex flex-col gap-6 overflow-y-auto pr-2 pb-6 scrollbar-hide">
             {comments.map((comment) => (
-              <div key={comment.id} className="flex gap-3">
+              <div key={comment.id} className="flex gap-3 shrink-0">
                 <div className="relative h-9 w-9 shrink-0 overflow-hidden rounded-full bg-gray-100">
                   <Image
                     src={comment.author.avatar_url || '/images/image-avatar.svg'}
@@ -133,6 +133,9 @@ export function ArtworkComments({ artworkId, creatorId, allowComments }: Artwork
           </div>
         )}
       </div>
+
+      {/* Bottom Fade Gradient Overlay */}
+      <div className="pointer-events-none absolute bottom-0 left-0 right-0 h-6 bg-white z-20 rounded-b-xl" />
     </div>
   )
 }

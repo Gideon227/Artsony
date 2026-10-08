@@ -5,8 +5,10 @@ import Image from 'next/image'
 import { artworkService } from '@/services/artwork.service'
 import { useToast } from '@/components/ui/toaster'
 import { Spinner } from '@/components/ui/spinner'
-import { HttpError } from '@/lib/api-client'
+import { MEDIA_RULES } from '@/lib/media-rules'
 import type { ProfileDraft } from '../components/profile-customization'
+
+const IMAGE_ACCEPT = MEDIA_RULES.IMAGE.extensions.map((ext) => `.${ext}`).join(',')
 
 interface Props {
   draft: ProfileDraft
@@ -27,10 +29,10 @@ const ImageSection = ({ draft, setField }: Props) => {
   ) => {
     setUploading(true)
     try {
-      const result = await artworkService.uploadAsset(file)
+      const result = await artworkService.uploadAsset(file, 'IMAGE')
       setField(field, result.optimized_url ?? result.original_url)
     } catch (err) {
-      const message = err instanceof HttpError ? err.message : 'Could not upload image. Please try again.'
+      const message = err instanceof Error ? err.message : 'Could not upload image. Please try again.'
       error('Upload failed', message)
     } finally {
       setUploading(false)
@@ -61,7 +63,7 @@ const ImageSection = ({ draft, setField }: Props) => {
               <input
                 ref={avatarInputRef}
                 type='file'
-                accept='image/*'
+                accept={IMAGE_ACCEPT}
                 className='hidden'
                 onChange={(e) => {
                   const file = e.target.files?.[0]
@@ -93,7 +95,7 @@ const ImageSection = ({ draft, setField }: Props) => {
             <input
               ref={backgroundInputRef}
               type='file'
-              accept='image/*'
+              accept={IMAGE_ACCEPT}
               className='hidden'
               onChange={(e) => {
                 const file = e.target.files?.[0]

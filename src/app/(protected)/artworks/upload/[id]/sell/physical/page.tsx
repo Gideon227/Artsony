@@ -16,8 +16,12 @@ import UploadPreview from '@/features/upload/components/upload-preview'
 import UploadFlowLayout from '@/features/upload/components/upload-flow-layout'
 
 import { useArtworkStore } from '@/store/artwork.store'
+import { useQueryClient } from '@tanstack/react-query'
 import { artworkService } from '@/services'
 import type { ArtworkStatus, CreateArtworkPayload } from '@/types/artwork'
+import { describeSaveError, sanitizeAssets } from '@/features/upload/lib/artwork-draft'
+import { useDraftHydration } from '@/features/upload/hooks/use-draft-hydration'
+import DraftLoadState from '@/features/upload/components/draft-load-state'
 import PreviewPhysicalArt from '@/features/upload/components/preview-physical-art'
 import { useAuthStore } from '@/store'
 
@@ -27,6 +31,8 @@ export default function PhysicalSellWizardPage() {
 
     const draft = useArtworkStore((state) => state.draft)
     const clearDraft = useArtworkStore((state) => state.clearDraft)
+    const queryClient = useQueryClient()
+    const hydration = useDraftHydration(urlArtworkId)
     const { user } = useAuthStore()
 
     const [stepIndex, setStepIndex] = useState<number>(0)
@@ -34,6 +40,7 @@ export default function PhysicalSellWizardPage() {
     const [isSubmitting, setIsSubmitting] = useState<boolean>(false)
 
     if (!draft) return null
+    if (hydration.status !== 'ready') return <DraftLoadState state={hydration} />
 
     const preparePayload = (rawDraft: typeof draft, targetStatus: ArtworkStatus): CreateArtworkPayload & { status: ArtworkStatus } => {
         const {
@@ -49,28 +56,7 @@ export default function PhysicalSellWizardPage() {
             ...formFields
         } = rawDraft as any
         
-        const sanitizedAssets = (formFields.assets || []).map((asset: any, index: number) => {
-            const mediaType = ['IMAGE', 'VIDEO', 'THREE_D', 'EXTERNAL_LINK'].includes(asset.media_type) 
-                ? asset.media_type 
-                : 'IMAGE';
-
-            const cleanAsset: any = {
-                original_url: asset.original_url,
-                media_type: mediaType,
-                mime_type: asset.mime_type || 'image/jpeg',
-                file_size_bytes: Math.max(1, parseInt(asset.file_size_bytes) || 1024),
-                ordering_index: index,
-            };
-
-            if (asset.width) cleanAsset.width = parseInt(asset.width);
-            if (asset.height) cleanAsset.height = parseInt(asset.height);
-
-            if (mediaType === 'VIDEO' && asset.duration_secs !== null && asset.duration_secs !== undefined) {
-                cleanAsset.duration_secs = parseInt(asset.duration_secs);
-            }
-
-            return cleanAsset;
-        });
+        const sanitizedAssets = sanitizeAssets(formFields.assets)
 
         let safePhysicalDetails = undefined;
         if (formFields.physical_details) {
@@ -128,13 +114,13 @@ export default function PhysicalSellWizardPage() {
         try {
             const finalizedPayload = preparePayload(draft, 'PUBLISHED')
             await artworkService.create(finalizedPayload)
-            console.log("Draft: ", draft)
 
+            void queryClient.invalidateQueries({ queryKey: ['artworks'] })
             clearDraft()
             router.push('/profile')
         } catch (error) {
             console.error('[Workflow Execution Failure]:', error)
-            alert(error instanceof Error ? error.message : 'An unexpected error occurred.')
+            alert(describeSaveError(error, 'An unexpected error occurred.'))
         } finally {
             setIsSubmitting(false)
         }
@@ -143,20 +129,15 @@ export default function PhysicalSellWizardPage() {
     const handleSaveAndExit = async () => {
         setIsSubmitting(true)
         try {
-            if (!draft.title || draft.title.trim().length === 0) {
-                clearDraft()
-                router.push('/profile')
-                return
-            }
-
             const finalizedPayload = preparePayload(draft, 'DRAFT')
             await artworkService.create(finalizedPayload)
 
+            void queryClient.invalidateQueries({ queryKey: ['artworks'] })
             clearDraft()
             router.push('/profile')
-        } catch (error: any) {
-            console.error('[Save Progress Background Attempt Blocked]:', error, error.field)
-            alert('Something went wrong while saving your draft.')
+        } catch (error) {
+            console.error('[Save Progress Background Attempt Blocked]:', error)
+            alert(describeSaveError(error, 'Something went wrong while saving your draft.'))
         } finally {
             setIsSubmitting(false)
         }

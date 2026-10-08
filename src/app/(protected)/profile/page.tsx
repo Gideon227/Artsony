@@ -1,6 +1,7 @@
 'use client'
 
 import { useCallback, useMemo, useState } from 'react'
+import { useRouter } from 'next/navigation'
 import { useQuery } from '@tanstack/react-query'
 import Footer from '@/components/layout/footer'
 import { Navbar } from '@/components/layout/navbar'
@@ -13,6 +14,7 @@ import UploadModal from '@/features/upload/components/upload-modal'
 import { useOpenArtwork } from '@/hooks/use-artwork-viewer'
 import { artworkService } from '@/services'
 import { useAuthStore } from '@/store'
+import { draftRoute } from '@/features/upload/lib/artwork-draft'
 import { User } from '@/types'
 import type { Artwork } from '@/types/artwork'
 
@@ -20,6 +22,7 @@ const PersonalProfilePage = () => {
     const { user } = useAuthStore()
     const [showPostArtwork, setShowPostArtwork] = useState(false)
     const openArtwork = useOpenArtwork()
+    const router = useRouter()
 
     // Draft tab only shows if there's actually something in it.
     const { data: draftCheck } = useQuery({
@@ -32,6 +35,11 @@ const PersonalProfilePage = () => {
     const handleArtworkClick = useCallback(
         (artwork: Artwork, siblings: Artwork[]) => openArtwork(artwork, { siblings, variant: 'home' }),
         [openArtwork],
+    )
+
+    const handleDraftClick = useCallback(
+        (artwork: Artwork) => router.push(draftRoute(artwork)),
+        [router],
     )
 
     const profileTabs: TabItem[] = useMemo(() => {
@@ -76,14 +84,14 @@ const PersonalProfilePage = () => {
                         userId={user.id}
                         tabType="draft"
                         isOwnProfile
-                        onArtworkClick={handleArtworkClick}
+                        onArtworkClick={handleDraftClick}
                     />
                 ),
             })
         }
 
         return tabs
-    }, [user, hasDrafts, handleArtworkClick])
+    }, [user, hasDrafts, handleArtworkClick, handleDraftClick])
 
     if (!user) return null
 

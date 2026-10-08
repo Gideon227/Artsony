@@ -6,6 +6,9 @@ import { CircleHelp, X, Upload, FileImage, Video, FileText, FileArchive, File } 
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components";
 import { useArtworkStore } from "@/store/artwork.store";
+import { artworkService } from "@/services/artwork.service";
+import { useToast } from "@/components/ui/toaster";
+import { MEDIA_RULES, mediaKindForFile, validateMediaFile } from "@/lib/media-rules";
 import type { ArtworkMediaType } from "@/types/artwork";
 
 // ── Props ─────────────────────────────────────────────────────────────────────
@@ -21,12 +24,10 @@ interface UploadArtworkFilesProps {
 
 // ── Constants ─────────────────────────────────────────────────────────────────
 
-const SIZE_LIMITS = {
-  IMAGE: 50  * 1024 * 1024,  // 50MB
-  VIDEO: 200 * 1024 * 1024,  // 200MB
-  THREE_D: 500 * 1024 * 1024,  // 500MB
-  EXTERNAL_LINK: 50 * 1024 * 1024
-}
+const ACCEPTED_EXTENSIONS = Object.values(MEDIA_RULES)
+  .flatMap((rule) => rule.extensions)
+  .map((ext) => `.${ext}`)
+  .join(",")
 
 // ── Local display type — never persisted to store ─────────────────────────────
 // The store holds ArtworkAsset shape; this is UI-only for name/icon/size display
@@ -41,26 +42,6 @@ interface LocalFileDisplay {
 }
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
-
-function getMediaType(fileName: string): ArtworkMediaType | null {
-  const ext = fileName.split(".").pop()?.toLowerCase() ?? ""
-  if (["jpg", "jpeg", "png", "tiff", "tif"].includes(ext)) return "IMAGE"
-  if (["mp4", "mov"].includes(ext))                          return "VIDEO"
-  if (["gltf", "obj", "fbx", "glb"].includes(ext))          return "THREE_D"
-  return null // unsupported
-}
-
-function getMimeType(fileName: string): string {
-  const ext = fileName.split(".").pop()?.toLowerCase() ?? ""
-  const map: Record<string, string> = {
-    jpg: "image/jpeg", jpeg: "image/jpeg", png: "image/png",
-    tiff: "image/tiff", tif: "image/tiff",
-    mp4: "video/mp4", mov: "video/quicktime",
-    gltf: "model/gltf+json", glb: "model/gltf-binary",
-    obj: "model/obj", fbx: "application/octet-stream",
-  }
-  return map[ext] ?? "application/octet-stream"
-}
 
 function formatFileSize(bytes: number): string {
   const mb = bytes / (1024 * 1024)
@@ -85,6 +66,14 @@ export default function UploadArtworkFiles({
   onSaveAndExit,
 }: UploadArtworkFilesProps) {
   const fileInputRef = React.useRef<HTMLInputElement>(null)
+  const uploadingRef = React.useRef(false)
+  const abortRef     = React.useRef<AbortController | null>(null)
+  const { error: toastError } = useToast()
+  const [uploading, setUploading] = React.useState(false)
+  const [progress, setProgress]   = React.useState<{ index: number; total: number; percent: number } | null>(null)
+
+  // Leaving the step mid-upload cancels what is still in flight
+  React.useEffect(() => () => abortRef.current?.abort(), [])
 
   const draft          = useArtworkStore((s) => s.draft)
   const addDraftAsset  = useArtworkStore((s) => s.addDraftAsset)
@@ -103,53 +92,79 @@ export default function UploadArtworkFiles({
     }))
   )
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (!e.target.files) return
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files ?? [])
+    // Reset right away: the FileList is live and the same file can be picked again
+    e.target.value = ""
+    if (files.length === 0 || uploadingRef.current) return
 
-    Array.from(e.target.files).forEach((file) => {
-      const mediaType = getMediaType(file.name)
-      if (!mediaType) {
-        alert(`Unsupported file type: ${file.name}`)
-        return
+    uploadingRef.current = true
+    setUploading(true)
+    const controller = new AbortController()
+    abortRef.current = controller
+
+    try {
+      for (const [index, file] of files.entries()) {
+        const mediaType = mediaKindForFile(file)
+        if (!mediaType) {
+          toastError("Unsupported file", `${file.name} is not a supported file type.`)
+          continue
+        }
+
+        const invalid = validateMediaFile(file, mediaType)
+        if (invalid) {
+          toastError(file.name, invalid)
+          continue
+        }
+
+        try {
+          const asset = await artworkService.uploadAsset(file, mediaType, {
+            signal: controller.signal,
+            onProgress: (percent: any) => setProgress({ index, total: files.length, percent }),
+          })
+
+          // Read the length from the store, not the render closure: earlier
+          // files in this same batch have already been appended.
+          const nextIndex = (useArtworkStore.getState().draft.assets ?? []).length
+          const extension = file.name.split(".").pop()?.toUpperCase() ?? "FILE"
+
+          addDraftAsset({
+            original_url:    asset.original_url,
+            optimized_url:   asset.optimized_url,
+            thumbnail_url:   asset.thumbnail_url,
+            media_type:      mediaType,
+            width:           asset.width,
+            height:          asset.height,
+            duration_secs:   asset.duration_secs,
+            mime_type:       asset.mime_type,
+            file_size_bytes: asset.file_size_bytes,
+            ordering_index:  nextIndex,
+          })
+
+          setDisplayFiles((prev) => [
+            ...prev,
+            {
+              ordering_index: nextIndex,
+              name:           file.name,
+              sizeLabel:      formatFileSize(asset.file_size_bytes),
+              extension,
+              mediaType,
+            },
+          ])
+        } catch (err) {
+          if (err instanceof DOMException && err.name === "AbortError") return
+          toastError(
+            "Upload failed",
+            err instanceof Error ? `${file.name}: ${err.message}` : `${file.name} could not be uploaded.`,
+          )
+        }
       }
-
-      const limit = SIZE_LIMITS[mediaType]
-      if (file.size > limit) {
-        alert(`${file.name} exceeds the ${formatFileSize(limit)} limit for ${mediaType} files.`)
-        return
-      }
-
-      const nextIndex = (draft.assets ?? []).length
-      const extension = file.name.split(".").pop()?.toUpperCase() ?? "FILE"
-
-      // Persist to store — original_url is a local blob URL until server upload
-      addDraftAsset({
-        original_url:    URL.createObjectURL(file),
-        optimized_url:   null,
-        thumbnail_url:   null,
-        media_type:      mediaType,
-        width:           null,
-        height:          null,
-        duration_secs:   null,
-        mime_type:       getMimeType(file.name),
-        file_size_bytes: file.size,
-        ordering_index:  nextIndex,
-      })
-
-      // Update local display list
-      setDisplayFiles((prev) => [
-        ...prev,
-        {
-          ordering_index: nextIndex,
-          name:           file.name,
-          sizeLabel:      formatFileSize(file.size),
-          extension,
-          mediaType,
-        },
-      ])
-    })
-
-    if (fileInputRef.current) fileInputRef.current.value = ""
+    } finally {
+      uploadingRef.current = false
+      abortRef.current = null
+      setUploading(false)
+      setProgress(null)
+    }
   }
 
   const handleRemove = (ordering_index: number) => {
@@ -202,7 +217,7 @@ export default function UploadArtworkFiles({
           </div>
           <p className="text-sm leading-relaxed text-neutral-400 font-medium">
             Upload all relevant files in high quality. Supported formats: JPG, PNG, TIFF (up to 50MB),
-            MP4 or MOV (up to 200MB), GLTF / OBJ (up to 500MB).
+            MP4, MOV, AVI or MKV (up to 500MB), GLTF / GLB / OBJ / FBX (up to 500MB).
           </p>
         </div>
 
@@ -213,16 +228,22 @@ export default function UploadArtworkFiles({
             ref={fileInputRef}
             onChange={handleFileChange}
             multiple
-            accept=".jpg,.jpeg,.png,.tiff,.tif,.mp4,.mov,.gltf,.obj,.fbx,.glb"
+            accept={ACCEPTED_EXTENSIONS}
             className="hidden"
           />
           <button
             type="button"
             onClick={() => fileInputRef.current?.click()}
-            className="w-full h-16 rounded-full border border-dashed border-neutral-200 bg-white hover:border-[#F15A2B] transition-all flex items-center justify-center gap-2.5 group"
+            disabled={uploading}
+            aria-busy={uploading}
+            className="w-full h-16 rounded-full border border-dashed border-neutral-200 bg-white hover:border-[#F15A2B] transition-all flex items-center justify-center gap-2.5 group disabled:cursor-not-allowed disabled:opacity-60"
           >
             <Upload size={18} className="text-[#F15A2B] transition-transform group-hover:-translate-y-0.5" />
-            <span className="text-sm font-semibold text-[#F15A2B]">Upload File</span>
+            <span className="text-sm font-semibold text-[#F15A2B]">
+              {progress
+                ? `Uploading${progress.total > 1 ? ` ${progress.index + 1} of ${progress.total}` : ""}… ${progress.percent}%`
+                : uploading ? "Uploading…" : "Upload File"}
+            </span>
           </button>
         </div>
 
@@ -294,6 +315,7 @@ export default function UploadArtworkFiles({
         <Button
           fullWidth
           onClick={handleNextStep}
+          disabled={uploading}
           className="rounded-full py-4 bg-primary-500 text-white flex items-center justify-center gap-2 hover:bg-primary-600 shadow-lg shadow-primary-500/20"
         >
           Next

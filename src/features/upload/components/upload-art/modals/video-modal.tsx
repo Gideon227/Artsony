@@ -1,7 +1,7 @@
 // upload-art/modals/video-modal.tsx
 'use client'
 
-import React, { useState, useRef, useCallback } from 'react'
+import React, { useState, useRef, useCallback, useEffect } from 'react'
 import { artworkService } from '@/services/artwork.service'
 import { useDragOver } from '../hooks/use-drag-over'
 import {
@@ -29,17 +29,32 @@ export function VideoModal({ onClose, onSaved }: VideoModalProps) {
   const [uploadedFile, setUploadedFile] = useState<UploadedFile | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [uploading, setUploading] = useState(false)
+  const [progress, setProgress] = useState<number | null>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
+  const uploadingRef = useRef(false)
+  const uploadedFileRef = useRef<UploadedFile | null>(null)
+  const savedRef = useRef(false)
   const { isDragging, handlers } = useDragOver()
 
+  uploadedFileRef.current = uploadedFile
+
+  // A video uploaded here but never handed to the draft (modal dismissed
+  // without saving) would otherwise stay in Cloudinary forever.
+  useEffect(() => () => {
+    const asset = uploadedFileRef.current?.uploadedAsset
+    if (!savedRef.current && asset) void artworkService.deleteUploadedAsset('VIDEO', asset.public_id)
+  }, [])
+
   const processFile = useCallback(async (file: File) => {
+    if (uploadingRef.current) return
     setError(null)
     const err = validateVideoFile(file)
     if (err) { setError(err); return }
 
+    uploadingRef.current = true
     setUploading(true)
     try {
-      const asset = await artworkService.uploadAsset(file)
+      const asset = await artworkService.uploadAsset(file, 'VIDEO', { onProgress: setProgress })
       setUploadedFile({ file, previewUrl: URL.createObjectURL(file), uploadedAsset: asset })
       setStep('success')
     } catch (err) {
@@ -48,9 +63,26 @@ export function VideoModal({ onClose, onSaved }: VideoModalProps) {
         : 'Upload failed. Please try again.'
       setError(message)
     } finally {
+      uploadingRef.current = false
       setUploading(false)
+      setProgress(null)
     }
   }, [])
+
+  const handleDiscard = () => {
+    const current = uploadedFile
+    if (current?.uploadedAsset) void artworkService.deleteUploadedAsset('VIDEO', current.uploadedAsset.public_id)
+    if (current) URL.revokeObjectURL(current.previewUrl)
+    setUploadedFile(null)
+    setStep('drop')
+  }
+
+  const handleSave = () => {
+    if (!uploadedFile) return
+    savedRef.current = true
+    onSaved(uploadedFile)
+    onClose()
+  }
 
   const handleDrop = (e: React.DragEvent) => {
     handlers.onDrop(e)
@@ -108,7 +140,7 @@ export function VideoModal({ onClose, onSaved }: VideoModalProps) {
           onChange={handleInputChange}
         />
 
-        {uploading && <UploadingSpinner label="Uploading video…" />}
+        {uploading && <UploadingSpinner label={progress === null ? 'Uploading video…' : `Uploading video… ${progress}%`} />}
 
         <div onClick={() => fileInputRef.current?.click()}  className='flex items-center justfify-center'>
             <Button rightIcon='/icons/alt-arrow-right-double.svg' disabled={!uploadedFile} >Save</Button>
@@ -121,7 +153,7 @@ export function VideoModal({ onClose, onSaved }: VideoModalProps) {
   return (
     <div className="relative bg-white rounded-2xl border border-[#E6E8EB] w-full max-w-[564px] p-8">
       <ModalCloseBtn onClose={onClose} />
-      <BackBtn onBack={() => { setUploadedFile(null); setStep('drop') }} />
+      <BackBtn onBack={handleDiscard} />
 
       <h2 className="text-xl font-semibold text-[#333333] mb-1">Video ready</h2>
       <p className="text-xs text-[#525965] mb-5">Your video has been uploaded successfully.</p>
@@ -149,10 +181,10 @@ export function VideoModal({ onClose, onSaved }: VideoModalProps) {
       )}
 
       <div className="flex items-center gap-3">
-        <OrangeBtn onClick={() => { if (uploadedFile) { onSaved(uploadedFile); onClose() } }}>
+        <OrangeBtn onClick={handleSave}>
           Save
         </OrangeBtn>
-        <OutlineBtn onClick={() => { setUploadedFile(null); setStep('drop') }}>Re-upload</OutlineBtn>
+        <OutlineBtn onClick={handleDiscard}>Re-upload</OutlineBtn>
       </div>
     </div>
   )

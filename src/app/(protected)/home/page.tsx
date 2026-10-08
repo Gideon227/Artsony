@@ -160,10 +160,12 @@ const HomePage = () => {
   }
 
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-screen bg-white max-md:pb-20">
       <Navbar />
       <HeroSection />
-      <GalleryPulseSection />
+      <div className='max-lg:hidden'>
+        <GalleryPulseSection />
+      </div>
 
       <FilterComponent dropdowns={filterDropdowns} onClear={handleClearFilters} />
 
@@ -194,6 +196,7 @@ const HomePage = () => {
         onClose={() => setIsMobileFiltersOpen(false)}
         dropdowns={filterDropdowns}
         onClear={handleClearFilters}
+        filterNum={allArtworks.length}
       />
     </div>
   )
