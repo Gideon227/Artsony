@@ -3,7 +3,7 @@
 import React from 'react'
 import { useRouter } from 'next/navigation'
 import { Button } from '@/components'
-import type { DraftHydration } from '../../../../../features/upload/hooks/use-draft-hydration'
+import type { DraftHydration } from '../hooks/use-draft-hydration'
 
 export default function DraftLoadState({ state }: { state: Exclude<DraftHydration, { status: 'ready' }> }) {
   const router = useRouter()
