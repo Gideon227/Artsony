@@ -13,6 +13,7 @@ import { useState } from "react"
 
 const ProfileCustomizationPage = () => {
     const [activeTab, setActiveTab] = useState<string>("personal")
+    const [mobileActiveTab, setMobileActiveTab] = useState<string>("")
 
     const renderActiveComponent = () => {
         switch (activeTab) {
@@ -35,16 +36,47 @@ const ProfileCustomizationPage = () => {
         }
     }
 
+    const renderMobileActiveComponent = () => {
+        switch (mobileActiveTab) {
+            case "personal":
+                return <ProfileCustomization goBack={() => setMobileActiveTab('')} />
+            case "account":
+                return <AccountDetails goBack={() => setMobileActiveTab('')} />
+            case "privacy-safety":
+                return <PrivacySafety goBack={() => setMobileActiveTab('')} />
+            case "security":
+                return <Security goBack={() => setMobileActiveTab('')} />
+            case "notification":
+                return <NotificationSettings goBack={() => setMobileActiveTab('')} />
+            case "payment":
+                return <BillingPayment goBack={() => setMobileActiveTab('')} />
+            case "shipping-location":
+                return <ShippingLocation goBack={() => setMobileActiveTab('')} />
+            default:
+                return <SettingLeftBar activeTab={mobileActiveTab} setActiveTab={setMobileActiveTab} />
+        }
+    }
+
     return (
-        <>
-            <Navbar />
-            <div className='px-8 py-6 flex gap-x-4 bg-white'>
-                <SettingLeftBar activeTab={activeTab} setActiveTab={setActiveTab} />
-                <div className="flex-1">
+        <div className='flex min-h-dvh flex-col bg-white lg:h-dvh'>
+            <div className="max-lg:hidden">
+                <Navbar />
+            </div>
+
+            <div className='flex min-h-0 flex-1 gap-x-4 lg:px-8 lg:py-6 scrollbar-hide'>
+                <div className="max-lg:hidden">
+                    <SettingLeftBar activeTab={activeTab} setActiveTab={setActiveTab} />
+                </div>
+
+                <div className="lg:hidden min-w-0 flex-1">
+                    {renderMobileActiveComponent()}
+                </div>
+
+                <div className="max-lg:hidden min-w-0 flex-1 lg:h-full lg:min-h-0 lg:overflow-y-auto">
                     {renderActiveComponent()}
                 </div>
             </div>
-        </>
+        </div>
     )
 }
 

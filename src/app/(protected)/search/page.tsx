@@ -16,6 +16,7 @@ import FilterComponent, { FilterDropdownConfig } from '@/features/home/component
 import { DropdownOption } from '@/components/ui/dropdown'
 import { INTERESTS } from '@/features/onboarding/data/interests'
 import { buildSlides } from '@/features/home/components/hero'
+import { MobileFilterDrawer } from '@/features/home/components/mobile-filter-drawer'
 
 // Price dropdown options translation
 function parsePriceRange(id: string): Pick<ArtworkFilters, 'min_price' | 'max_price'> {
@@ -31,7 +32,14 @@ function SearchContent() {
   const urlQuery = searchParams.get('q') ?? ''
   const [localQuery, setLocalQuery] = useState(urlQuery)
   const [index, setIndex] = useState(0)
+  const [isMobileFiltersOpen, setIsMobileFiltersOpen] = useState(false)
+  
+
+  //Search States
   const openArtwork = useOpenArtwork()
+  const query = searchParams.get('q') ?? ''
+  const isSearchMode = query.trim().length > 0
+  const [draftQuery, setDraftQuery] = useState(query)
 
   useEffect(() => {
     setLocalQuery(urlQuery)
@@ -43,23 +51,9 @@ function SearchContent() {
   const [selectedColor, setSelectedColor] = useState<DropdownOption | null>(null)
   const [selectedSize, setSelectedSize] = useState<DropdownOption | null>(null)
   const [selectedCountry, setSelectedCountry] = useState<DropdownOption | null>(null)
-  const [selectedState, setSelectedState] = useState<DropdownOption | null>(null)
-  const [selectedCity, setSelectedCity] = useState<DropdownOption | null>(null)
   const [countryQuery, setCountryQuery] = useState('')
-  const [stateQuery, setStateQuery] = useState('')
-  const [cityQuery, setCityQuery] = useState('')
 
   const { data: countries, isLoading: isLoadingCountries } = useArtworkLocations('country')
-  const { data: states, isLoading: isLoadingStates } = useArtworkLocations(
-    'state',
-    selectedCountry ? { country: String(selectedCountry.id) } : undefined,
-  )
-  const { data: cities, isLoading: isLoadingCities } = useArtworkLocations(
-    'city',
-    selectedCountry
-      ? { country: String(selectedCountry.id), state: selectedState ? String(selectedState.id) : undefined }
-      : undefined,
-  )
   const { data: featured, isError } = useHeroArtworks(5)
 
   useEffect(() => {
@@ -97,8 +91,6 @@ function SearchContent() {
   }
 
   const countryOptions = useMemo(() => toSearchableOptions(countries, countryQuery), [countries, countryQuery])
-  const stateOptions = useMemo(() => toSearchableOptions(states, stateQuery), [states, stateQuery])
-  const cityOptions = useMemo(() => toSearchableOptions(cities, cityQuery), [cities, cityQuery])
 
   const categoriesOption: DropdownOption[] = useMemo(
     () => INTERESTS.map((item) => ({ id: item.id, icon: item.image, label: item.label })),
@@ -131,11 +123,7 @@ function SearchContent() {
     setSelectedColor(null)
     setSelectedSize(null)
     setSelectedCountry(null)
-    setSelectedState(null)
-    setSelectedCity(null)
     setCountryQuery('')
-    setStateQuery('')
-    setCityQuery('')
   }, [])
 
   const filterDropdowns: FilterDropdownConfig[] = useMemo(
@@ -173,13 +161,11 @@ function SearchContent() {
         leftIcon: '/icons/maximize.svg',
       },
       {
-        id: 'country',
+        id: 'location',
         options: countryOptions,
         value: selectedCountry,
         onChange: (opt: DropdownOption | null) => {
           setSelectedCountry(opt)
-          setSelectedState(null)
-          setSelectedCity(null)
         },
         searchable: true,
         searchPlaceholder: 'Search country',
@@ -187,40 +173,9 @@ function SearchContent() {
         onSearchChange: setCountryQuery,
         isLoading: isLoadingCountries,
         emptyMessage: 'No matching countries',
-        placeholder: 'Country',
+        placeholder: 'Location',
         leftIcon: '/icons/map-point.svg',
-      },
-      {
-        id: 'state',
-        options: stateOptions,
-        value: selectedState,
-        onChange: (opt: DropdownOption | null) => {
-          setSelectedState(opt)
-          setSelectedCity(null)
-        },
-        disabled: !selectedCountry,
-        searchable: true,
-        searchPlaceholder: 'Search state',
-        searchValue: stateQuery,
-        onSearchChange: setStateQuery,
-        isLoading: isLoadingStates,
-        emptyMessage: selectedCountry ? 'No matching states' : 'Select a country first',
-        placeholder: 'State',
-      },
-      {
-        id: 'city',
-        options: cityOptions,
-        value: selectedCity,
-        onChange: setSelectedCity,
-        disabled: !selectedCountry,
-        searchable: true,
-        searchPlaceholder: 'Search city',
-        searchValue: cityQuery,
-        onSearchChange: setCityQuery,
-        isLoading: isLoadingCities,
-        emptyMessage: selectedCountry ? 'No matching cities' : 'Select a country first',
-        placeholder: 'City',
-      },
+      }
     ],
     [
       categoriesOption,
@@ -229,17 +184,9 @@ function SearchContent() {
       selectedColor,
       selectedSize,
       selectedCountry,
-      selectedState,
-      selectedCity,
       countryOptions,
-      stateOptions,
-      cityOptions,
       countryQuery,
-      stateQuery,
-      cityQuery,
       isLoadingCountries,
-      isLoadingStates,
-      isLoadingCities,
     ]
   )
 
@@ -256,11 +203,9 @@ function SearchContent() {
       categories: selectedCategory ? [String(selectedCategory.id)] : undefined,
       size_label: selectedSize ? String(selectedSize.id) : undefined,
       country: selectedCountry ? String(selectedCountry.id) : undefined,
-      state: selectedState ? String(selectedState.id) : undefined,
-      city: selectedCity ? String(selectedCity.id) : undefined,
       ...(selectedPrice ? parsePriceRange(String(selectedPrice.id)) : {}),
     }),
-    [urlQuery, selectedCategory, selectedPrice, selectedSize, selectedCountry, selectedState, selectedCity]
+    [urlQuery, selectedCategory, selectedPrice, selectedSize, selectedCountry]
   )
 
   const { data, isLoading, isFetchingNextPage, hasNextPage, fetchNextPage } =
@@ -335,7 +280,7 @@ function SearchContent() {
         </AnimatePresence>
 
         <div className="relative z-20 h-full flex flex-col justify-center px-4 md:px-8 pointer-events-none">
-          <div className="max-w-5xl mx-auto w-full flex justify-center pointer-events-auto">
+          <div className="w-full flex justify-center pointer-events-auto">
             <div className="relative flex flex-col items-center justify-center gap-5 w-full px-4 py-16 md:py-20">
               <div className="w-full max-w-xl">
                 <SearchInput
@@ -370,6 +315,36 @@ function SearchContent() {
         </div>
       </section>
 
+      {/* Mobile header */}
+      <div className="hidden max-lg:flex gap-4 items-center md:hidden my-6 mx-4">
+        <SearchInput
+          value={draftQuery}
+          onChange={setDraftQuery}
+          onSearch={handleSearch}
+          placeholder="Find your next art obsession"
+          leftIconPath='home/magnifier.svg'
+          rightIconPath={draftQuery ? '/icons/cancel.svg' : undefined}
+          onRightIconClick={() => {
+            setDraftQuery('')
+            handleSearch('')
+          }}
+        />
+
+        <button onClick={() => setIsMobileFiltersOpen(true)} aria-label="Open filters">
+          <svg width="40" height="40" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <mask id="path-1-inside-1_7180_37631" fill="white">
+            <path d="M0 20C0 8.95431 8.95431 0 20 0C31.0457 0 40 8.95431 40 20C40 31.0457 31.0457 40 20 40C8.95431 40 0 31.0457 0 20Z"/>
+            </mask>
+            <path d="M0 20M40 20M40 20M0 20M20 0M40 20M20 40M0 20M20 40V38C10.0589 38 2 29.9411 2 20H0H-2C-2 32.1503 7.84974 42 20 42V40ZM40 20H38C38 29.9411 29.9411 38 20 38V40V42C32.1503 42 42 32.1503 42 20H40ZM20 0V2C29.9411 2 38 10.0589 38 20H40H42C42 7.84974 32.1503 -2 20 -2V0ZM20 0V-2C7.84974 -2 -2 7.84974 -2 20H0H2C2 10.0589 10.0589 2 20 2V0Z" fill="#E6E8EB" mask="url(#path-1-inside-1_7180_37631)"/>
+            <path d="M26 16C26 19.3137 23.3137 22 20 22C16.6863 22 14 19.3137 14 16C14 12.6863 16.6863 10 20 10C23.3137 10 26 12.6863 26 16Z" fill="#525965"/>
+            <path d="M13.0335 18.7834C11.2216 19.816 10 21.7653 10 24C10 27.3137 12.6863 30 16 30C19.3137 30 22 27.3137 22 24C22 23.7437 21.9839 23.4911 21.9527 23.2432C21.3301 23.4107 20.6755 23.5 20 23.5C16.8414 23.5 14.1388 21.5474 13.0335 18.7834Z" fill="#525965"/>
+            <path d="M23.3866 22.6937C23.4611 23.1179 23.5 23.5544 23.5 24C23.5 26.0907 22.6446 27.9815 21.2646 29.3417C22.0849 29.7625 23.0147 30 24 30C27.3137 30 30 27.3137 30 24C30 21.7654 28.7783 19.8161 26.9665 18.7835C26.2876 20.4811 25.0062 21.8727 23.3866 22.6937Z" fill="#525965"/>
+          </svg>
+        </button>
+      </div>
+
+      <FilterComponent dropdowns={filterDropdowns} onClear={handleClearFilters} hideClearButton={true} />
+      
       <main className="flex-1">
         <ResultsGrid
           artworks={artworks}
@@ -383,9 +358,16 @@ function SearchContent() {
         />
       </main>
 
-      <FilterComponent dropdowns={filterDropdowns} onClear={handleClearFilters} />
 
       <Footer />
+
+      <MobileFilterDrawer
+        open={isMobileFiltersOpen}
+        onClose={() => setIsMobileFiltersOpen(false)}
+        dropdowns={filterDropdowns}
+        onClear={handleClearFilters}
+        filterNum={artworks.length}
+      />
     </div>
   )
 }

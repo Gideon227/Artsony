@@ -67,7 +67,7 @@ export function ShopResultsGrid({
     <div className="max-w-[1440px] mx-auto px-4 md:px-8 py-8">
       {/* Result count */}
       {total !== undefined && (
-        <p className="font-raleway font-semibold text-h5 text-heading mb-6">
+        <p className="font-raleway font-semibold text-h5 text-body mb-6">
           <span className="font-semibold text-primary-600">{total.toLocaleString()}</span>{' '}
             Search Result {total !== 1 ? 's' : ''}
         </p>

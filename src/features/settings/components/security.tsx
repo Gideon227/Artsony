@@ -5,13 +5,13 @@ import React, { useState } from 'react'
 import ConfirmDeactivation from '../ui/confirm-deactivation'
 import ConfirmDeletion from '../ui/confirm-deletion'
 
-const Security = () => {
+const Security = ({ goBack }: { goBack?: () => void }) => {
     // State to manage modal visibility
     const [isDeactivateOpen, setIsDeactivateOpen] = useState(false)
     const [isDeleteOpen, setIsDeleteOpen] = useState(false)
 
     return (
-        <div className='border border-gray-50 rounded-2xl bg-white w-full relative'>
+        <div className='lg:border lg:border-gray-50 lg:rounded-2xl lg:bg-white w-full lg:pb-8 pb-16'>
             <div className='px-8 py-4 flex justify-between items-center border-b border-gray-50 '>
                 <h5 className='font-raleway font-semibold text-h5 text-primary-500 leading-10 tracking-wide'>Security</h5>
                 <Button size='sm' className='rounded-2xl' onClick={() => {}}>Save</Button>

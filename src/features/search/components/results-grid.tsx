@@ -1,6 +1,6 @@
 'use client'
 
-import { useCallback, useRef } from 'react'
+import { useCallback, useRef, useState } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
 import { Loader2 } from 'lucide-react'
@@ -10,6 +10,8 @@ import { Skeleton } from '@/components/ui/skeleton'
 import { useQuickAddToCart } from '@/hooks/use-cart-actions'
 import type { Artwork } from '@/types'
 import EmptySearch from './empty-search'
+import { Dropdown, DropdownOption } from '@/components/ui/dropdown'
+import { FEED_TABS, FeedSort } from '@/features/home/types'
 
 // ─── ResultsGrid ──────────────────────────────────────────────────────────────
 
@@ -23,6 +25,8 @@ type ResultsGridProps = {
   total?: number
   onArtworkClick: (artwork: Artwork) => void
 }
+
+const FEED_TAB_OPTIONS: DropdownOption[] = FEED_TABS.map((t) => ({ id: t.value, label: t.label }))
 
 export function ResultsGrid({
   artworks,
@@ -51,6 +55,10 @@ export function ResultsGrid({
     },
     [fetchNextPage, hasNextPage, isFetchingNextPage]
   )
+  const [activeTab, setActiveTab] = useState<FeedSort>('for_you')
+  
+  const activeOption = FEED_TAB_OPTIONS.find((o) => o.id === activeTab) ?? FEED_TAB_OPTIONS[0]
+
 
   if (isLoading) {
     return (
@@ -66,14 +74,28 @@ export function ResultsGrid({
   }
 
   return (
-    <div className="max-w-[1440px] mx-auto px-4 md:px-8 py-8">
-      {/* Result count */}
-      {total !== undefined && (
-        <p className="font-raleway font-semibold text-h5 text-heading mb-6">
-          <span className="font-semibold text-primary-600">{total.toLocaleString()}</span>{' '}
-            Search Result{total !== 1 ? 's' : ''}
-        </p>
-      )}
+    <div className="max-w-[1440px] mx-auto px-4 md:px-8 py-6">
+
+      <div className='flex items-center justify-between mb-6'>
+        {/* Result count */} 
+        {total !== undefined && (
+          <p className="font-raleway font-semibold text-h6 lg:text-h5 text-body">
+            <span className="font-semibold text-primary-600">{total.toLocaleString()}</span>{' '}
+              Result{total !== 1 ? 's' : ''} <span className='max-md:hidden'>For {query}</span>
+          </p>
+        )}
+
+        <div style={{ width: 132 }} className=''>
+          <Dropdown
+            options={FEED_TAB_OPTIONS}
+            value={activeOption}
+            onChange={(opt) => setActiveTab(opt.id as FeedSort)}
+            multiple={false}
+            indicator="highlight"
+            placeholder='Sort By'
+          />
+        </div>
+      </div>
 
       {/* 4-col grid — matches design exactly: 364px cards, 332px image, 55px pill */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-x-4 gap-y-10">

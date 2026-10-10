@@ -8,6 +8,7 @@ import { DropdownOption } from '@/components/ui/dropdown'
 import { PriceRangeSlider } from '@/components/ui/price-range-slider'
 import { INTERESTS } from '@/features/onboarding/data/interests'
 import { useArtworkLocations } from '@/hooks/use-artwork'
+import { MobileFilterDrawer } from '@/features/home/components/mobile-filter-drawer'
 
 export type ShopFilterState = {
   category: string | null
@@ -64,6 +65,8 @@ interface SearchSectionProps {
 export function SearchSection({ query, onSearch, filters, onFilterChange, onClearFilters }: SearchSectionProps) {
   const [draftQuery, setDraftQuery] = useState(query)
   const [countryQuery, setCountryQuery] = useState('')
+  const [isMobileFiltersOpen, setIsMobileFiltersOpen] = useState(false)
+
 
   const [countries, setCountries] = useState<DropdownOption[]>([])
   const [isLoadingCountries, setIsLoadingCountries] = useState(false)
@@ -199,13 +202,12 @@ export function SearchSection({ query, onSearch, filters, onFilterChange, onClea
             onChange={setDraftQuery}
             onSearch={onSearch}
             placeholder="Find your next art obsession"
-            leftIconPath={draftQuery ? '/icons/magnifier-red.svg' : 'home/magnifier.svg'}
-            rightIconPath={draftQuery ? '/icons/cancel-red.svg' : undefined}
+            leftIconPath='home/magnifier.svg'
+            rightIconPath='/icons/cancel.svg'
             onRightIconClick={() => {
               setDraftQuery('')
               onSearch('')
             }}
-            className={query ? 'border-primary-500' : undefined}
           />
         </div>
 
@@ -222,11 +224,7 @@ export function SearchSection({ query, onSearch, filters, onFilterChange, onClea
         </Button>
 
         <button
-          onClick={() => {
-            setDraftQuery('')
-            onSearch('')
-            onClearFilters()
-          }}
+          onClick={() => setIsMobileFiltersOpen(true)}
           className="lg:hidden cursor-pointer shrink-0"
           aria-label="Clear filters"
         >
@@ -245,6 +243,18 @@ export function SearchSection({ query, onSearch, filters, onFilterChange, onClea
       <div className="w-full max-w-full overflow-x-auto">
         <FilterComponent dropdowns={dropdowns} onClear={onClearFilters} hideClearButton />
       </div>
+
+      <MobileFilterDrawer
+        open={isMobileFiltersOpen}
+        onClose={() => setIsMobileFiltersOpen(false)}
+        dropdowns={dropdowns}
+        onClear={() => {
+          setDraftQuery('')
+          onSearch('')
+          onClearFilters()
+        }}
+        // filterNum={artwork.length}
+      />
     </div>
   )
 }

@@ -11,7 +11,7 @@ interface MobileFilterDrawerProps {
   onClose: () => void
   dropdowns: FilterDropdownConfig[]
   onClear: () => void
-  filterNum: number
+  filterNum?: number
 }
 
 export function MobileFilterDrawer({ open, onClose, dropdowns, onClear, filterNum }: MobileFilterDrawerProps) {
@@ -40,6 +40,7 @@ export function MobileFilterDrawer({ open, onClose, dropdowns, onClear, filterNu
                 <path d="M28 20H12M18 26L12 20L18 14" stroke="#525965" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
               </svg>
             </button>
+            
             <h2 className="font-raleway font-semibold text-h6 text-body">Filters</h2>
           </div>
 
@@ -101,7 +102,7 @@ export function MobileFilterDrawer({ open, onClose, dropdowns, onClear, filterNu
               Reset
             </Button>
             <Button variant="primary" className="flex-1 active:ring-2 active:ring-primary-500" onClick={onClose}>
-              Apply{filterNum > 0 ? ` (${filterNum})` : ''}
+              Apply{filterNum && filterNum > 0 ? ` (${filterNum})` : ''}
             </Button>
           </div>
         </motion.div>

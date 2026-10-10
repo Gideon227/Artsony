@@ -10,6 +10,7 @@ interface AssetToolbarProps {
   onMoveUp?:   () => void
   onMoveDown?: () => void
   onDelete?:   () => void
+  hideDelete?: boolean
   className?:  string
 }
 
@@ -22,7 +23,7 @@ const ACTIONS = [
   { key: 'down', src: '/icons/arrow-down-round.svg', label: 'Move media down' },
 ] as const
 
-export function AssetToolbar({ onEdit, onMoveUp, onMoveDown, onDelete, className }: AssetToolbarProps) {
+export function AssetToolbar({ onEdit, onMoveUp, onMoveDown, onDelete, hideDelete = false, className }: AssetToolbarProps) {
   const handlers = { edit: onEdit, up: onMoveUp, down: onMoveDown }
 
   return (
@@ -44,15 +45,17 @@ export function AssetToolbar({ onEdit, onMoveUp, onMoveDown, onDelete, className
           <Image src={src} width={20} height={20} alt="" aria-hidden />
         </button>
       ))}
-      <button
-        type="button"
-        aria-label="Delete media"
-        disabled={!onDelete}
-        onClick={onDelete}
-        className={BUTTON_CLASS}
-      >
-        <Trash2 size={20} color="#fff" aria-hidden />
-      </button>
+      {!hideDelete && (
+        <button
+          type="button"
+          aria-label="Delete media"
+          disabled={!onDelete}
+          onClick={onDelete}
+          className={BUTTON_CLASS}
+        >
+          <Trash2 size={20} color="#fff" aria-hidden />
+        </button>
+      )}
     </div>
   )
 }

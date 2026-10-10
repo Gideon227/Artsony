@@ -11,19 +11,36 @@ const TopPicks = () => {
 
     // Overlay state
     const openArtwork = useOpenArtwork()
-
+    
     // Carousel state & refs
     const scrollContainerRef = useRef<HTMLDivElement>(null)
     const [canScrollLeft, setCanScrollLeft] = useState(false)
     const [canScrollRight, setCanScrollRight] = useState(true)
+    const [activeIndex, setActiveIndex] = useState(0) 
 
     const checkScrollPosition = useCallback(() => {
         if (scrollContainerRef.current) {
             const { scrollLeft, scrollWidth, clientWidth } = scrollContainerRef.current
             setCanScrollLeft(scrollLeft > 2)
             setCanScrollRight(scrollLeft + clientWidth < scrollWidth - 2)
+
+            // Calculate the active index based on scroll position (320px width + 24px gap)
+            const itemWidth = 344
+            const newIndex = Math.round(scrollLeft / itemWidth)
+            setActiveIndex(newIndex)
         }
     }, [])
+
+    // Optional: Add a function to let users click the dots to scroll
+    const scrollToIndicator = (index: number) => {
+        if (scrollContainerRef.current) {
+            const itemWidth = 344
+            scrollContainerRef.current.scrollTo({
+                left: index * itemWidth,
+                behavior: 'smooth'
+            })
+        }
+    }
 
     const scroll = (direction: 'left' | 'right') => {
         if (scrollContainerRef.current) {
@@ -50,13 +67,13 @@ const TopPicks = () => {
     return (
         <div className='bg-secondary-100 z-0'>
 
-            <div className="py-12 px-8 gap-y-14 flex flex-col relative w-full overflow-hidden">
+            <div className="py-12 px-4 md:px-8 gap-y-8 md:gap-y-14 flex flex-col relative w-full overflow-hidden">
                 {/* Header Area */}
-                <div className="flex flex-col gap-y-6">
-                    <h2 className="font-raleway font-semibold text-h4 leading-10 text-primary-500 tracking-wide">
+                <div className="flex flex-col gap-y-3 md:gap-y-6">
+                    <h2 className="font-raleway font-semibold text-h6 md:text-h4 leading-10 text-primary-500 tracking-wide">
                         Top Picks by Artsony
                     </h2>
-                    <p className="font-poppins text-body-m leading-6 text-body tracking-wide max-w-[564px] text-wrap text-gray-600">
+                    <p className="font-poppins text-body-xs md:text-body-m leading-6 text-body tracking-wide max-w-[564px] text-wrap ">
                         A glimpse into what our artists are creating — discover original works waiting to find a home.
                     </p>
                 </div>
@@ -87,7 +104,7 @@ const TopPicks = () => {
                         <button
                             onClick={() => scroll('left')}
                             disabled={!canScrollLeft}
-                            className={`absolute left-4 top-[40%] -translate-y-1/2 z-10 w-12 h-12 rounded-full flex items-center justify-center transition-all duration-300
+                            className={`max-md:hidden absolute left-4 top-[40%] -translate-y-1/2 z-10 w-12 h-12 rounded-full flex items-center justify-center transition-all duration-300
                                 ${!canScrollLeft 
                                     ? 'cursor-not-allowed border border-gray-300 backdrop-blur-sm' 
                                     : 'bg-primary-500 hover:bg-primary-600'}`}
@@ -128,7 +145,7 @@ const TopPicks = () => {
                         <button
                             onClick={() => scroll('right')}
                             disabled={!canScrollRight}
-                            className={`absolute right-4 top-[40%] -translate-y-1/2 z-10 w-12 h-12 rounded-full flex items-center justify-center transition-all duration-300
+                            className={`max-md:hidden absolute right-4 top-[40%] -translate-y-1/2 z-10 w-12 h-12 rounded-full flex items-center justify-center transition-all duration-300
                                 ${!canScrollRight 
                                     ? 'cursor-not-allowed border border-gray-300 backdrop-blur-sm' 
                                     : 'bg-primary-500 hover:bg-primary-600'}`}
@@ -146,6 +163,22 @@ const TopPicks = () => {
                         </button>
                     </div>
                 )}
+                
+                <div className="md:hidden flex justify-center items-center gap-2 mt-2 w-full">
+                    {artworks.map((_, index) => (
+                        <button
+                            key={index}
+                            onClick={() => scrollToIndicator(index)}
+                            aria-label={`Go to slide ${index + 1}`}
+                            className={`h-2 rounded-full transition-all duration-300 ${
+                                activeIndex === index 
+                                    ? 'w-6 bg-primary-500' 
+                                    : 'w-2 bg-gray-300 hover:bg-gray-400'
+                            }`}
+                        />
+                    ))}
+                </div>
+
             </div>
         </div>
     )

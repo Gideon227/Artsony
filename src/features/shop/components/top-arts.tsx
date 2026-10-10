@@ -100,15 +100,15 @@ const TopArt = () => {
     }
 
     return (
-        <div className='bg-white py-12 gap-y-6 flex flex-col'>
-            <div className='flex px-8 justify-between items-center w-full'>
-                <h2 className='font-raleway font-semibold text-primary-500 text-h4 leading-10 tracking-wide'>Top Art</h2>
+        <div className='bg-white py-12 md:gap-y-6 flex flex-col'>
+            <div className='flex px-4 lg:px-8 justify-between items-center w-full'>
+                <h2 className='font-raleway font-semibold text-primary-500 text-h6 md:text-h4 leading-10 tracking-wide'>Top Art</h2>
                 <Dropdown
                     options={searchOptions}
                     value={selected}
                     onChange={(option) => setSelected(option)}
                     placeholder="For You"
-                    className='w-67'
+                    className='w-33 md:w-67'
                 />
             </div>
 

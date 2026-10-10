@@ -343,8 +343,8 @@ export function ArtCard({
   const videoSrc = videoAsset?.optimized_url || videoAsset?.original_url
 
   const wrapperSizing = fillContainer
-    ? 'h-full w-full'
-    : 'w-full max-w-[376px]'
+    ? 'h-full w-full mx-auto'
+    : 'w-full max-w-[376px] mx-auto'
 
   const handleCardClick = () => {
     if (onCardClick) {

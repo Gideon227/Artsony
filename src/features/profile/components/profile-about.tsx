@@ -42,7 +42,7 @@ const ProfileAboutTab = ({ user }: { user: User }) => {
                     <div className='flex w-full flex-col gap-6'>
                         <p className='font-raleway font-semibold text-heading text-body-m lg:text-body-xl'>Bio</p>
                         <div className='flex w-full flex-col gap-2 rounded-2xl border border-gray-50 p-6'>
-                            <h5 className='line-clamp-3 font-poppins text-body-s lg:text-body-l leading-8 tracking-wide text-body'>
+                            <h5 className='line-clamp-3 font-poppins text-body-xs md:text-body-l md:leading-8 tracking-wide text-body'>
                                 {user?.bio || 'No bio available.'}
                             </h5>
 
@@ -64,7 +64,7 @@ const ProfileAboutTab = ({ user }: { user: User }) => {
                             <p className='font-raleway font-semibold text-gray-500 text-body-xl leading-8 tracking-wide'>Art Focus</p>
                             <div className='flex w-full flex-col gap-3'>
                                 {user.interests.map((item, index) => (
-                                    <div key={index} className='w-full rounded-2xl border border-gray-50 px-6 py-3 h-12 flex items-center justify-center '>
+                                    <div key={index} className='w-full rounded-2xl border border-gray-50 px-6 py-3 h-10 flex items-center justify-center '>
                                         <p className='font-poppins font-medium text-body-s text-primary-500 leading-6 tracking-wide'>{item.charAt(0).toUpperCase() + item.slice(1)}</p>
                                     </div>
                                 ))}
@@ -76,7 +76,7 @@ const ProfileAboutTab = ({ user }: { user: User }) => {
                     {hasLocation && (
                         <div className='flex w-full flex-col gap-6'>
                             <p className='font-raleway font-semibold text-gray-500 text-body-xl leading-8 tracking-wide'>Location</p>
-                            <div className='flex w-full items-center gap-3 rounded-2xl border border-gray-50 px-6 py-3'>
+                            <div className='flex w-full items-center justify-center h-10 gap-3 rounded-2xl border border-gray-50'>
                                 <MapPin size={20} className='shrink-0 text-gray-400' />
                                 <p className='font-poppins font-medium text-body-s leading-6 text-primary-500 tracking-wide'>
                                     {locationLabel}
@@ -120,7 +120,7 @@ const ProfileAboutTab = ({ user }: { user: User }) => {
 
                             <div className='flex w-full flex-col gap-2'>
                                 {user?.website && (
-                                    <div className='flex w-full mb-4 items-center gap-3 rounded-2xl border border-gray-50 px-6 py-3'>
+                                    <div className='flex w-full mb-4 items-center justify-center h-10 gap-3 rounded-2xl border border-gray-50'>
                                         <LinkIcon color='#525965' width={20} height={20} className='shrink-0' />
                                         <a href={user.website} target='_blank' rel="noopener noreferrer" className='truncate font-poppins text-primary-500 text-body-s leading-6 underline'>
                                             {user.website}
@@ -129,7 +129,7 @@ const ProfileAboutTab = ({ user }: { user: User }) => {
                                 )}
 
                                 {socialLinks.map((item, index) => (
-                                    <div key={index} className='flex w-full items-center gap-3 rounded-2xl border border-gray-50 px-6 py-3'>
+                                    <div key={index} className='flex w-full items-center justify-center h-10 gap-3 rounded-2xl border border-gray-50'>
                                         <Image src={item.icon} width={20} height={20} alt='' className='shrink-0' />
                                         <a href={item.link as string} target='_blank' rel="noopener noreferrer" className='overflow-hidden truncate font-poppins text-gray-400 text-body-s leading-6 underline'>
                                             {item.link}

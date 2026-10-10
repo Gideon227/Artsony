@@ -15,6 +15,7 @@ export interface FilterDropdownConfig {
   placeholder: string;
   leftIcon?: string;
   disabled?: boolean;
+  title?: string;
 
   // Single-select (default)
   value?: DropdownOption | null;
@@ -53,34 +54,36 @@ interface FilterComponentProps {
 
 const FilterComponent: React.FC<FilterComponentProps> = ({ dropdowns, onClear, hideClearButton = false }) => {
   return (
-    <div className='max-md:hidden py-6 px-6 flex gap-x-26.5 flex-1 items-center bg-white'>
+    <div className='max-lg:hidden py-6 px-6 flex justify-between flex-1 items-center bg-white w-full'>
       <div className='flex flex-1 gap-x-4 items-center'>
         {dropdowns?.map((item) => (
-          <Dropdown
-            key={item.id}
-            options={item.options}
-            value={item.value ?? undefined}
-            onChange={item.onChange}
-            multiple={item.multiple}
-            values={item.values}
-            onChangeMultiple={item.onChangeMultiple}
-            maxSelected={item.maxSelected}
-            placeholder={item.placeholder}
-            leftIcon={item.leftIcon}
-            disabled={item.disabled}
-            searchable={item.searchable}
-            searchPlaceholder={item.searchPlaceholder}
-            searchValue={item.searchValue}
-            onSearchChange={item.onSearchChange}
-            searchVariant={item.searchVariant}
-            onSearchSubmit={item.onSearchSubmit}
-            layout={item.layout}
-            indicator={item.indicator}
-            isLoading={item.isLoading}
-            emptyMessage={item.emptyMessage}
-            customBody={item.customBody}
-            valueLabel={item.valueLabel}
-          />
+          <>
+              <Dropdown
+                key={item.id}
+                options={item.options}
+                value={item.value ?? undefined}
+                onChange={item.onChange}
+                multiple={item.multiple}
+                values={item.values}
+                onChangeMultiple={item.onChangeMultiple}
+                maxSelected={item.maxSelected}
+                placeholder={item.placeholder}
+                leftIcon={item.leftIcon}
+                disabled={item.disabled}
+                searchable={item.searchable}
+                searchPlaceholder={item.searchPlaceholder}
+                searchValue={item.searchValue}
+                onSearchChange={item.onSearchChange}
+                searchVariant={item.searchVariant}
+                onSearchSubmit={item.onSearchSubmit}
+                layout={item.layout}
+                indicator={item.indicator}
+                isLoading={item.isLoading}
+                emptyMessage={item.emptyMessage}
+                customBody={item.customBody}
+                valueLabel={item.valueLabel}
+              />
+          </>
         ))}
       </div>
 

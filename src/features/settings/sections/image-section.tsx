@@ -43,17 +43,17 @@ const ImageSection = ({ draft, setField }: Props) => {
     <div className='flex flex-col gap-y-6'>
       <p className='font-poppins font-semibold text-body-m text-primary-500 leading-8 tracking-wide'>Images</p>
 
-      <div className='bg-secondary-50 p-6 gap-y-4 rounded-xl'>
+      <div className='bg-secondary-50 p-6 flex flex-col gap-y-8 rounded-xl'>
         <div className='gap-y-2 flex flex-col w-full'>
           <p className='font-poppins font-medium text-body-s text-heading leading-6 tracking-wide'>Profile Images</p>
           <div className='flex items-center justify-center mx-auto w-full'>
-            <div className='relative w-36 h-36'>
+            <div className='relative lg:w-36 lg:h-36 max-lg:w-26 max-lg:h-26'>
               <Image
                 src={draft.avatarUrl || '/images/image-avatar.svg'}
                 width={144}
                 height={144}
                 alt='profile image'
-                className='border border-gray-50 rounded-full object-cover w-36 h-36'
+                className='border border-gray-50 rounded-full object-cover w-36 h-36 max-lg:w-26 max-lg:h-26'
               />
               {uploadingAvatar && (
                 <div className='absolute inset-0 bg-black/40 rounded-full flex items-center justify-center'>
@@ -87,7 +87,7 @@ const ImageSection = ({ draft, setField }: Props) => {
         <div className='gap-y-2 flex flex-col w-full'>
           <p className='font-poppins font-medium text-body-s text-heading leading-6 tracking-wide'>Profile Background</p>
 
-          <div className='rounded-m relative bg-gray-400 overflow-hidden w0full' style={{ height: 308 }}>
+          <div className='rounded-m relative bg-gray-400 overflow-hidden w-ful h-43 lg:h-77'>
             {draft.backgroundUrl && (
               <Image src={draft.backgroundUrl} alt='profile background' fill className='object-cover' />
             )}

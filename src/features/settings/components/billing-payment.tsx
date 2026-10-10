@@ -5,7 +5,7 @@ import { Dropdown, DropdownOption } from '@/components/ui/dropdown'
 import Link from 'next/link'
 import React, { useEffect, useMemo, useState } from 'react'
 
-const BillingPayment = () => {
+const BillingPayment = ({ goBack }: { goBack?: () => void }) => {
     const [countryQuery, setCountryQuery] = useState('')
     const [selectedCountry, setSelectedCountry] = useState<DropdownOption | null>(null)
     const [countries, setCountries] = useState<DropdownOption[]>([])
@@ -100,7 +100,7 @@ const BillingPayment = () => {
     }, [states, stateQuery])
 
     return (
-        <div className='border border-gray-50 rounded-2xl bg-white w-full'>
+        <div className='lg:border lg:border-gray-50 lg:rounded-2xl lg:bg-white w-full lg:pb-8 pb-16'>
             <div className='px-8 py-4 flex justify-between items-center border-b border-gray-50 '>
                 <h5 className='font-raleway font-semibold text-h5 text-primary-500 leading-10 tracking-wide'>Billing & Payments</h5>
                 <Button size='md' onClick={() => {}}>Send</Button>

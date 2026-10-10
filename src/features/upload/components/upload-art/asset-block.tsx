@@ -16,9 +16,9 @@ function aspectRatioOf(asset: DraftAsset): string | undefined {
   return asset.width && asset.height ? `${asset.width} / ${asset.height}` : undefined
 }
 
-function MediaFallback({ onRetry }: { onRetry?: () => void }) {
+function MediaFallback({ onRetry, fill = false }: { onRetry?: () => void; fill?: boolean }) {
   return (
-    <div className="flex aspect-[4/3] w-full flex-col items-center justify-center gap-3 bg-gray-50 font-poppins text-body-s text-gray-400">
+    <div className={cn('flex w-full flex-col items-center justify-center gap-3 bg-gray-50 font-poppins text-body-s text-gray-400', fill ? 'h-full' : 'aspect-[4/3]')}>
       <p>Preview unavailable</p>
       {onRetry && (
         <button
@@ -33,7 +33,7 @@ function MediaFallback({ onRetry }: { onRetry?: () => void }) {
   )
 }
 
-function PreviewImage({ src, alt, aspectRatio }: { src: string; alt: string; aspectRatio?: string }) {
+function PreviewImage({ src, alt, aspectRatio, fill = false }: { src: string; alt: string; aspectRatio?: string; fill?: boolean }) {
   const [status, setStatus] = useState<'loading' | 'loaded' | 'error'>('loading')
   const [attempt, setAttempt] = useState(0)
   const imgRef = useRef<HTMLImageElement>(null)
@@ -48,12 +48,12 @@ function PreviewImage({ src, alt, aspectRatio }: { src: string; alt: string; asp
     setAttempt((n) => n + 1)
   }
 
-  if (status === 'error') return <MediaFallback onRetry={handleRetry} />
+  if (status === 'error') return <MediaFallback onRetry={handleRetry} fill={fill} />
 
   return (
     <div
-      className={cn('relative w-full bg-gray-50', status === 'loading' && 'animate-pulse')}
-      style={{ aspectRatio: aspectRatio ?? '4 / 3' }}
+      className={cn('relative w-full bg-gray-50', fill && 'h-full', status === 'loading' && 'animate-pulse')}
+      style={fill ? undefined : { aspectRatio: aspectRatio ?? '4 / 3' }}
     >
       <Image
         key={attempt}
@@ -73,10 +73,10 @@ function PreviewImage({ src, alt, aspectRatio }: { src: string; alt: string; asp
   )
 }
 
-function VideoMedia({ asset }: { asset: DraftAsset }) {
+function VideoMedia({ asset, fill = false }: { asset: DraftAsset; fill?: boolean }) {
   const [failed, setFailed] = useState(false)
 
-  if (failed) return <MediaFallback onRetry={() => setFailed(false)} />
+  if (failed) return <MediaFallback onRetry={() => setFailed(false)} fill={fill} />
 
   return (
     <video
@@ -86,15 +86,15 @@ function VideoMedia({ asset }: { asset: DraftAsset }) {
       playsInline
       preload="metadata"
       onError={() => setFailed(true)}
-      className="block h-auto w-full bg-gray-900"
-      style={{ aspectRatio: aspectRatioOf(asset) ?? '16 / 9' }}
+      className={cn('block w-full bg-gray-900', fill ? 'h-full object-contain' : 'h-auto')}
+      style={fill ? undefined : { aspectRatio: aspectRatioOf(asset) ?? '16 / 9' }}
     />
   )
 }
 
-function FileCard({ icon: Icon, label, detail }: { icon: typeof Box; label: string; detail: string }) {
+function FileCard({ icon: Icon, label, detail, fill = false }: { icon: typeof Box; label: string; detail: string; fill?: boolean }) {
   return (
-    <div className="flex aspect-video w-full flex-col items-center justify-center gap-3 bg-gray-50 px-6">
+    <div className={cn('flex w-full flex-col items-center justify-center gap-3 bg-gray-50 px-6', fill ? 'h-full' : 'aspect-video')}>
       <Icon size={40} className="text-gray-300" aria-hidden />
       <p className="font-poppins text-body-s font-medium text-gray-500">{label}</p>
       <p className="max-w-full truncate font-poppins text-body-xs text-gray-400">{detail}</p>
@@ -102,13 +102,13 @@ function FileCard({ icon: Icon, label, detail }: { icon: typeof Box; label: stri
   )
 }
 
-function PdfMedia({ asset, alt }: { asset: DraftAsset; alt: string }) {
+function PdfMedia({ asset, alt, fill = false }: { asset: DraftAsset; alt: string; fill?: boolean }) {
   return (
-    <div className="relative">
+    <div className={cn('relative', fill && 'h-full')}>
       {asset.thumbnail_url ? (
-        <PreviewImage src={asset.thumbnail_url} alt={alt} aspectRatio={aspectRatioOf(asset)} />
+        <PreviewImage src={asset.thumbnail_url} alt={alt} aspectRatio={aspectRatioOf(asset)} fill={fill} />
       ) : (
-        <FileCard icon={FileText} label="PDF document" detail={asset.original_url} />
+        <FileCard icon={FileText} label="PDF document" detail={asset.original_url} fill={fill} />
       )}
       <span className="absolute right-4 top-4 rounded-full bg-black/50 px-3 py-1 font-poppins text-body-xs font-medium text-white backdrop-blur-sm">
         PDF
@@ -123,6 +123,36 @@ function PdfMedia({ asset, alt }: { asset: DraftAsset; alt: string }) {
       </a>
     </div>
   )
+}
+
+interface AssetMediaProps {
+  asset: DraftAsset
+  alt:   string
+  fill?: boolean
+}
+
+export function AssetMedia({ asset, alt, fill = false }: AssetMediaProps) {
+  switch (asset.media_type) {
+    case 'IMAGE':
+      return (
+        <PreviewImage
+          src={asset.optimized_url ?? asset.original_url}
+          alt={alt}
+          aspectRatio={aspectRatioOf(asset)}
+          fill={fill}
+        />
+      )
+    case 'PDF':
+      return <PdfMedia asset={asset} alt={alt} fill={fill} />
+    case 'VIDEO':
+      return <VideoMedia asset={asset} fill={fill} />
+    case 'THREE_D':
+      return <FileCard icon={Box} label="3D model" detail={asset.original_url} fill={fill} />
+    case 'EXTERNAL_LINK':
+      return <FileCard icon={Code2} label="Embedded content" detail={asset.original_url} fill={fill} />
+    default:
+      return null
+  }
 }
 
 interface AssetBlockProps {
@@ -142,17 +172,7 @@ export const AssetBlock = memo(function AssetBlock({
 
   return (
     <div className="group relative w-full overflow-hidden rounded-2xl border border-gray-50 bg-white shadow-sm">
-      {asset.media_type === 'IMAGE' && (
-        <PreviewImage src={asset.optimized_url ?? asset.original_url} alt={alt} aspectRatio={aspectRatioOf(asset)} />
-      )}
-      {asset.media_type === 'PDF' && <PdfMedia asset={asset} alt={alt} />}
-      {asset.media_type === 'VIDEO' && <VideoMedia asset={asset} />}
-      {asset.media_type === 'THREE_D' && (
-        <FileCard icon={Box} label="3D model" detail={asset.original_url} />
-      )}
-      {asset.media_type === 'EXTERNAL_LINK' && (
-        <FileCard icon={Code2} label="Embedded content" detail={asset.original_url} />
-      )}
+      <AssetMedia asset={asset} alt={alt} />
 
       <AssetToolbar
         className={TOOLBAR_VISIBILITY}

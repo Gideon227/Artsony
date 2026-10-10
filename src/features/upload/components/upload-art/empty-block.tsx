@@ -5,10 +5,15 @@ import { AssetToolbar } from './asset-toolbar'
 import { MEDIA_OPTIONS, MediaIcon } from './media-options'
 import type { ModalKind } from './types'
 
-export function EmptyBlock({ onSelect }: { onSelect: (modal: ModalKind) => void }) {
+interface EmptyBlockProps {
+  onSelect:    (modal: ModalKind) => void
+  hideDelete?: boolean
+}
+
+export function EmptyBlock({ onSelect, hideDelete = false }: EmptyBlockProps) {
   return (
     <div className="relative flex aspect-[1824/1447] min-h-80 w-full items-center justify-center rounded-2xl border border-gray-50 bg-white bg-[url('/images/upload-bg.png')] bg-repeat shadow-sm">
-      <AssetToolbar />
+      <AssetToolbar hideDelete={hideDelete} />
 
       <div
         role="group"

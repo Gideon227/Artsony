@@ -9,7 +9,7 @@ export type SellerRegistration = {
   email: string
   phone_number: string
   address: string
-  city?: string
+  city?: string | null
   state: string
   country: string
   postal_code: string | null
@@ -24,6 +24,7 @@ export type DispatchAddressInput = Partial<{
   phone_number: string
   address: string
   state: string
+  city: string
   country: string
   postal_code: string
 }>

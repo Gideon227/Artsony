@@ -14,6 +14,7 @@ import UploadStepTwo from '@/features/upload/components/upload-step-two'
 import UploadArtCollaborators from '@/features/upload/components/upload-art-collaborators'
 import UploadPreview from '@/features/upload/components/upload-preview'
 import UploadFlowLayout from '@/features/upload/components/upload-flow-layout'
+import UploadArtGallery from '@/features/upload/components/upload-art/gallery'
 
 import { useArtworkStore } from '@/store/artwork.store'
 import { useQueryClient } from '@tanstack/react-query'
@@ -37,6 +38,8 @@ export default function DigitalSellWizardPage() {
 
     if (!draft) return null
     if (hydration.status !== 'ready') return <DraftLoadState state={hydration} />
+
+    const leftWorkspace = <UploadArtGallery />
 
     const preparePayload = (rawDraft: typeof draft, targetStatus: ArtworkStatus): CreateArtworkPayload & { status: ArtworkStatus } => {
         const {
@@ -124,6 +127,7 @@ export default function DigitalSellWizardPage() {
         <UploadFlowLayout 
             key="flow-1"
             currentStepIndex={stepIndex}
+            leftWorkspace={leftWorkspace}
             flowComponents={[
                 <UploadStepOne
                     key="step-1"
@@ -138,6 +142,7 @@ export default function DigitalSellWizardPage() {
         <UploadFlowLayout 
             key="flow-2"
             currentStepIndex={stepIndex}
+            leftWorkspace={leftWorkspace}
             flowComponents={[
                 <UploadArtworkFiles
                     key="step-2"
@@ -153,6 +158,7 @@ export default function DigitalSellWizardPage() {
         <UploadFlowLayout 
             key="flow-3"
             currentStepIndex={stepIndex}
+            leftWorkspace={leftWorkspace}
             flowComponents={[
                 <PhysicalArtDimension
                     key="step-3"
@@ -172,6 +178,7 @@ export default function DigitalSellWizardPage() {
         <UploadFlowLayout 
             key="flow-4"
             currentStepIndex={stepIndex}
+            leftWorkspace={leftWorkspace}
             flowComponents={[
                 <UploadStepTwo
                     key="step-4"
@@ -187,6 +194,7 @@ export default function DigitalSellWizardPage() {
         <UploadFlowLayout 
             key="flow-5"
             currentStepIndex={stepIndex}
+            leftWorkspace={leftWorkspace}
             flowComponents={[
                 <UploadArtCollaborators
                     key="step-5"
@@ -202,6 +210,7 @@ export default function DigitalSellWizardPage() {
         <UploadFlowLayout 
             key="flow-6"
             currentStepIndex={stepIndex}
+            leftWorkspace={leftWorkspace}
             flowComponents={[
                 <UploadPreview
                     key="step-6"

@@ -52,7 +52,7 @@ const SearchInput = forwardRef<HTMLInputElement, SearchInputProps>(
           type="text"
           placeholder={placeholder}
           className={cn(
-            "flex-1 h-full bg-transparent outline-none font-poppins text-body-s text-gray-500 placeholder:text-text-disabled",
+            "flex-1 h-full bg-transparent outline-none font-poppins truncate max-md:text-body-xs md:text-body-s text-body placeholder:text-text-disabled",
             // !leftIconPath && "pl-5",
             !rightIconPath && "pr-5"
           )}

@@ -15,6 +15,7 @@ const ConnectedAccount = ({ user }: { user: User }) => {
                     onChange={() => {}}
                     rightIcon='/icons/link.svg'
                     leftIcon='/socials/google.svg'
+                    className='max-lg:text-body-xs h-12'
                 />
             </div>
 
@@ -25,6 +26,7 @@ const ConnectedAccount = ({ user }: { user: User }) => {
                     onChange={() => {}}
                     rightIcon='/icons/link.svg'
                     leftIcon='/socials/apple.svg'
+                    className='max-lg:text-body-xs h-12'
                 />
             </div>
 
@@ -35,6 +37,7 @@ const ConnectedAccount = ({ user }: { user: User }) => {
                     onChange={() => {}}
                     rightIcon='/icons/link.svg'
                     leftIcon='/socials/facebook-blue.svg'
+                    className='max-lg:text-body-xs h-12'
                 />
             </div>
 

@@ -52,7 +52,7 @@ const ProfileHeader = ({ user, isOwnProfile, onPostArtwork }: Props) => {
         )}
       >
         <div
-          className="flex w-full flex-col items-center gap-8 rounded-2xl px-6 py-10 md:gap-12 md:px-8 md:py-12"
+          className="flex w-full flex-col items-center gap-8 rounded-2xl px-4 py-6 md:gap-12 md:px-8 md:py-12"
           style={{ background: 'linear-gradient(180deg, rgba(9, 10, 11, 0) 0%, rgba(27, 27, 27, 0.9) 85.35%)' }}
         >
           <div className="flex flex-col items-center justify-center gap-4">
@@ -86,19 +86,19 @@ const ProfileHeader = ({ user, isOwnProfile, onPostArtwork }: Props) => {
 
           <div className="flex w-full flex-col items-center justify-center gap-8">
             <div className="flex w-full items-center justify-center">
-              <button onClick={() => setFollowListType('followers')} className="flex cursor-pointer w-1/3 flex-col items-center justify-center gap-4 transition-opacity hover:opacity-80">
+              <button onClick={() => setFollowListType('followers')} className="flex cursor-pointer w-1/3 flex-col items-center justify-center gap-2 transition-opacity hover:opacity-80">
                 <p className="text-center font-poppins text-body-m font-medium leading-6 tracking-wide text-secondary-500">
                   {(user.followersCount ?? 0).toLocaleString()}
                 </p>
                 <p className="text-center font-poppins text-body-m leading-6 tracking-wide text-white">Followers</p>
               </button>
-              <div className="flex w-1/3 flex-col items-center justify-center gap-4 border-l border-r border-gray-50">
+              <div className="flex w-1/3 flex-col items-center justify-center gap-2 border-l border-r border-gray-50">
                 <p className="text-center font-poppins text-body-m font-medium leading-6 tracking-wide text-secondary-500">
                   {(user.likesCount ?? 0).toLocaleString()}
                 </p>
                 <p className="text-center font-poppins text-body-m leading-6 tracking-wide text-white">Likes</p>
               </div>
-              <button onClick={() => setFollowListType('following')} className="flex cursor-pointer w-1/3 flex-col items-center justify-center gap-4 transition-opacity hover:opacity-80">
+              <button onClick={() => setFollowListType('following')} className="flex cursor-pointer w-1/3 flex-col items-center justify-center gap-2 transition-opacity hover:opacity-80">
                 <p className="text-center font-poppins text-body-m font-medium leading-6 tracking-wide text-secondary-500">
                   {(user.followingCount ?? 0).toLocaleString()}
                 </p>
@@ -108,7 +108,7 @@ const ProfileHeader = ({ user, isOwnProfile, onPostArtwork }: Props) => {
 
             <div className="flex w-full items-center justify-center gap-4 md:gap-6">
               {isOwnProfile ? (
-                <Button variant="primary" leftIcon="/icons/plus-white-bg.svg" className='w-1/2 flex-1' onClick={onPostArtwork}>
+                <Button variant="primary" leftIcon="/icons/plus-white-bg.svg" className='max-lg:hidden w-1/2 flex-1' onClick={onPostArtwork}>
                   Post Artwork
                 </Button>
               ) : (
@@ -119,13 +119,14 @@ const ProfileHeader = ({ user, isOwnProfile, onPostArtwork }: Props) => {
                   isLoading={isTogglingFollow}
                   onClick={() => toggleFollow()}
                   aria-pressed={isFollowing}
+                  className='max-lg:hidden'
                 >
                   {isFollowing ? 'Following' : 'Follow'}
                 </Button>
               )}
 
               {isOwnProfile ? (
-                <Button variant="outline" leftIcon="/icons/message-white.svg" className='border-white w-1/2 flex-1 text-white hover:bg-primary-100 hover:text-primary-500 hover:border-primary-500' onClick={handleMessage}>
+                <Button variant="outline" leftIcon="/icons/message-white.svg" className='border-white max-lg:w-full lg:w-1/2 flex-1 text-white hover:bg-primary-100 hover:text-primary-500 hover:border-primary-500' onClick={handleMessage}>
                   Inbox
                 </Button>
               ) : (

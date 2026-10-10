@@ -101,10 +101,16 @@ function ShopContent() {
         />
       ) : (
         <>
-          <TopPicks />
+          <div className='max-md:hidden'>
+            <TopPicks />
+          </div>
           <TopArt />
-          <AroundTheWorld />
-
+          <div className='max-md:hidden'>
+            <AroundTheWorld />
+          </div>
+          <div className='md:hidden'>
+            <TopPicks />
+          </div>
           <ArtGrid
             artworks={artworks}
             num={0}

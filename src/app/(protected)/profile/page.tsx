@@ -96,7 +96,7 @@ const PersonalProfilePage = () => {
     if (!user) return null
 
     return (
-        <div className="relative min-h-screen">
+        <div className="relative min-h-screen max-md:pb-20">
             <Navbar />
             <ProfileHeader user={user as User} isOwnProfile onPostArtwork={() => setShowPostArtwork(true)} />
             <ProfileTabs tabs={profileTabs} defaultTab={profileTabs[0]?.id} />

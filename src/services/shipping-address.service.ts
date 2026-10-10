@@ -4,7 +4,7 @@ export type ShippingAddress = {
   id: string
   label?: string | null
   full_name: string
-  phone: string
+  phone: string | null
   address_line_1: string
   address_line_2?: string | null
   city: string
@@ -16,7 +16,8 @@ export type ShippingAddress = {
   updated_at: string
 }
 
-export type ShippingAddressInput = Omit<ShippingAddress, 'id' | 'is_default' | 'created_at' | 'updated_at'> & {
+export type ShippingAddressInput = Omit<ShippingAddress, 'id' | 'phone' | 'is_default' | 'created_at' | 'updated_at'> & {
+  phone?: string | null
   is_default?: boolean
 }
 

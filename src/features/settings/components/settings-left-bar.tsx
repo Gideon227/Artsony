@@ -24,12 +24,12 @@ type NavItem = {
 }
 
 const NAV_ITEMS: NavItem[] = [
-  { id: 'personal', label: 'Personal Customization', icon: '/icons/tuning.svg'  },
+  { id: 'personal', label: 'Profile Customization', icon: '/icons/tuning.svg'  },
   { id: 'account', label: 'Account Details',  icon: '/icons/user-grey.svg' },
   { id: 'privacy-safety', label: 'Privacy & Safety', icon: '/icons/eye.svg' },
   { id: 'security', label: 'Security', icon: '/icons/shield.svg' },
   { id: 'notification', label: 'Notification', icon: '/home/notification-bell.svg' },
-  { id: 'payment', label: 'Billing & Payment', icon: '/icons/wallet.svg'  },
+  { id: 'payment', label: 'Billing & Payments', icon: '/icons/wallet.svg'  },
   { id: 'shipping-location', label: 'Shipping & Location', icon: '/icons/compass.svg' },
 ]
 
@@ -65,9 +65,9 @@ const SettingLeftBar = ({ onLogout, onDeleteAccountRequest, activeTab, setActive
     return (
         <nav
             aria-label="Settings navigation"
-            className="border border-gray-50 rounded-[32px] pt-8 pb-4 px-4 flex flex-col gap-y-8"
+            className="lg:border lg:border-gray-50 lg:rounded-2xl max-lg:w-full lg:pt-8 lg:pb-4 pt-6 pb-16 px-4 flex flex-col gap-y-4 lg:gap-y-[clamp(1rem,4.2vh,2rem)] lg:h-full lg:min-h-0 lg:overflow-hidden"
         >
-        <div className="flex items-center gap-x-4">
+        <div className="flex shrink-0 items-center gap-x-4">
             <Link
                 href="/profile"
                 aria-label="Go back"
@@ -81,10 +81,12 @@ const SettingLeftBar = ({ onLogout, onDeleteAccountRequest, activeTab, setActive
             </h6>
         </div>
 
+        <hr className='text-gray-50 w-full lg:hidden' />
+
         {!user ? (
             <ProfileSkeleton />
         ) : (
-            <div className="flex gap-x-4 items-center">
+            <div className="flex shrink-0 gap-x-4 items-center max-lg:mt-2">
                 <div className="relative w-28 h-28 flex items-center justify-center shrink-0">
                     <Image
                         src="/home/profile-ring.svg"
@@ -112,7 +114,7 @@ const SettingLeftBar = ({ onLogout, onDeleteAccountRequest, activeTab, setActive
                     </h6>
                     {memberSinceYear && (
                         <p className="font-poppins text-body-xs text-primary-500 leading-6 tracking-wide">
-                            Member since {memberSinceYear}
+                            member since {memberSinceYear}
                         </p>
                     )}
                 </div>
@@ -128,12 +130,12 @@ const SettingLeftBar = ({ onLogout, onDeleteAccountRequest, activeTab, setActive
             </div>
         )}
 
-        <div className="border-t border-gray-50 pt-4 flex flex-col gap-y-4">
+        <div className="lg:border-t lg:border-gray-50 pt-4 flex flex-col gap-y-[clamp(0.25rem,2.1vh,1rem)] lg:min-h-0 lg:flex-1">
             {NAV_ITEMS.map((item) => {
                 const isActive = activeTab === item.id
 
                 const sharedClasses =
-                    'group flex items-center  cursor-pointer rounded-xl py-6 px-4 gap-x-4 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gray-50'
+                    'group flex h-14 items-center cursor-pointer rounded-xl px-4 gap-x-4 transition-colors lg:h-auto lg:min-h-9 lg:max-h-14 lg:flex-1 lg:basis-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gray-50'
 
                 const stateClasses = isActive
                     ? 'bg-primary-50 border border-gray-50 ring-2 ring-primary-500'

@@ -4,41 +4,40 @@ import React from 'react'
 
 interface Props {
     artworks: Artwork[]
-    num: number
-    artVariant: "standard" | "discover" | "bland" | "shop"
+    num?: number
+    artVariant?: "standard" | "discover" | "bland" | "shop"
     onCardClick?: (artwork: Artwork, index: number) => void
 }
 
-const ArtGrid = ({ artworks, num, artVariant, onCardClick }: Props) => {
+const ArtGrid = ({ artworks, num, artVariant = "standard", onCardClick }: Props) => {
+    // Limit items rendered if `num` is passed
+    const displayedArtworks = num ? artworks.slice(0, num) : artworks
+
     return (
-        <div className='py-12 px-8 gap-x-4 gap-y-12 grid grid-cols-4'>
-            {artworks.slice(num)?.map((art, index) => {
-                
+        <div className='py-12 px-4 lg:px-8 gap-x-4 gap-y-12 grid grid-cols-[repeat(auto-fill,minmax(min(376px,100%),1fr))] justify-center'>
+            {displayedArtworks.map((art, index) => {
                 const mappedArtists: Artist[] = art.creator ? [{
-                    id: art.creator.id,
-                    name: art.creator.profile?.display_name || art.creator.username || 'Unknown Artist',
-                    avatarUrl: art.creator.profile?.avatar_url || '/default-avatar.png',
+                    id: art.creator.id || art.creator_id,
+                    name: art.creator.profile?.display_name || art.creator.username || 'Artist',
+                    avatarUrl: art.creator.profile?.avatar_url || '/images/image-avatar.svg',
                     role: art.creator.role || 'Artist',
                     stats: {
-                        followers: art.creator.profile?.followers_count?.toString() || '0',
-                        likes: art.like_count?.toString() || '0',
-                        following: art.creator.profile?.following_count?.toString() || '0'
+                        followers: String(art.creator.profile?.followers_count ?? 0),
+                        likes: String(art.like_count ?? 0),
+                        following: String(art.creator.profile?.following_count ?? 0),
                     }
-                }] : [];
+                }] : []
 
                 return (
-                    <ArtCard 
+                    <ArtCard
                         key={art.id || index}
-                        variant={artVariant}
                         image={art.assets?.[0]?.optimized_url || art.assets?.[0]?.original_url || '/placeholder.png'} 
                         title={art.title}
-                        // artworkId={art.id}
                         onCardClick={onCardClick ? () => onCardClick(art, index) : undefined}
+                        showVideo={art.assets?.[0]?.media_type === 'VIDEO'}
                         artist={mappedArtists}
-                        stats={{
-                            likes: art.like_count?.toString() || '0',
-                            views: art.view_count?.toString() || '0'
-                        }}
+                        stats={{ likes: String(art.like_count ?? 0), views: String(art.view_count ?? 0) }}
+                        variant={artVariant}
                     />
                 )
             })}

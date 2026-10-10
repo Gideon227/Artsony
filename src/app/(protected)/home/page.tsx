@@ -1,6 +1,7 @@
 'use client'
 
-import { useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { Spinner } from '@/components'
 import Footer from '@/components/layout/footer'
 import { Navbar } from '@/components/layout/navbar'
@@ -47,6 +48,19 @@ const HomePage = () => {
   // Explicit state for countries fetched from third-party API
   const [countries, setCountries] = useState<DropdownOption[]>([])
   const [isLoadingCountries, setIsLoadingCountries] = useState(false)
+
+  const router = useRouter()
+  const searchParams = useSearchParams()
+  const query = searchParams.get('q') ?? ''
+  const isSearchMode = query.trim().length > 0
+
+  const handleSearch = useCallback(
+    (next: string) => {
+      const trimmed = next.trim()
+      router.push(trimmed ? `/search?q=${encodeURIComponent(trimmed)}` : '/shop')
+    },
+    [router]
+  )
 
   useEffect(() => {
     const fetchCountries = async () => {
@@ -170,6 +184,8 @@ const HomePage = () => {
       <FilterComponent dropdowns={filterDropdowns} onClear={handleClearFilters} />
 
       <FeedSection
+        query={query}
+        onSearch={handleSearch}
         activeTab={activeTab}
         onTabChange={setActiveTab}
         artworks={firstHalf}

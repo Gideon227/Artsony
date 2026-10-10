@@ -209,7 +209,7 @@ const ContactSection = ({ user }: { user: User }) => {
                 
                 {/* Auto Location Toggle Switch */}
                 <div className='flex justify-between items-center w-full pt-2'>
-                    <p className='font-poppins font-medium text-body-s leading-6 text-heading tracking-wide'>
+                    <p className='font-poppins font-medium text-body-xs lg:text-body-s leading-6 text-heading tracking-wide'>
                         {isDetectingLocation ? 'Detecting location...' : 'Set Automatically by location'}
                     </p>
                     <button

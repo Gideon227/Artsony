@@ -66,7 +66,7 @@ const Textarea = React.forwardRef<HTMLTextAreaElement, TextAreaFieldProps>(
     const { base, focus } = getFieldColors(variant);
 
     return (
-      <div className={cn("flex flex-col gap-3.5 w-full", wrapperClassName)}>
+      <div className={cn("flex flex-col gap-3.5 w-full scrollbar-hide", wrapperClassName)}>
         {/* REUSABLE LABEL COMPONENT AT THE TOP */}
         {label && 
           <FormLabel

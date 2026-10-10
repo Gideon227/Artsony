@@ -1,6 +1,6 @@
 'use client'
 
-import React from 'react'
+import React, { useState } from 'react'
 import { motion } from 'framer-motion'
 import { cn, getDisplayThumbnail } from '@/utils'
 import { ArtCard } from '@/components/ui/art-card'
@@ -9,8 +9,11 @@ import { ArtworkGridSkeleton } from './artwork-grid-skeleton'
 import { FEED_TABS } from '../types'
 import type { FeedSort } from '../types'
 import type { Artwork } from '@/types/artwork'
+import { SearchInput } from '@/components/ui/search-input'
 
 interface FeedSectionProps {
+  query: string
+  onSearch: (query: string) => void
   activeTab: FeedSort
   onTabChange: (tab: FeedSort) => void
   artworks: Artwork[]
@@ -21,7 +24,8 @@ interface FeedSectionProps {
 
 const FEED_TAB_OPTIONS: DropdownOption[] = FEED_TABS.map((t) => ({ id: t.value, label: t.label }))
 
-export function FeedSection({ activeTab, onTabChange, artworks, isLoading, onOpenMobileFilters, onArtworkClick }: FeedSectionProps) {
+export function FeedSection({ query, onSearch, activeTab, onTabChange, artworks, isLoading, onOpenMobileFilters, onArtworkClick }: FeedSectionProps) {
+  const [draftQuery, setDraftQuery] = useState(query)
   const activeOption = FEED_TAB_OPTIONS.find((o) => o.id === activeTab) ?? FEED_TAB_OPTIONS[0]
 
   return (
@@ -29,7 +33,21 @@ export function FeedSection({ activeTab, onTabChange, artworks, isLoading, onOpe
       <div className="px-4 md:px-8">
 
         {/* Mobile header */}
-        <div className="flex justify-between items-center md:hidden mb-6">
+        <div className="flex gap-4 items-center md:hidden mb-6">
+          <SearchInput
+            value={draftQuery}
+            onChange={setDraftQuery}
+            onSearch={onSearch}
+            placeholder="Find your next art obsession"
+            leftIconPath={draftQuery ? '/icons/magnifier-red.svg' : 'home/magnifier.svg'}
+            rightIconPath={draftQuery ? '/icons/cancel-red.svg' : undefined}
+            onRightIconClick={() => {
+              setDraftQuery('')
+              onSearch('')
+            }}
+            className={query ? 'border-primary-500' : undefined}
+          />
+
           <button onClick={onOpenMobileFilters} aria-label="Open filters">
             <svg width="40" height="40" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
               <mask id="path-1-inside-1_7180_37631" fill="white">
@@ -41,20 +59,10 @@ export function FeedSection({ activeTab, onTabChange, artworks, isLoading, onOpe
               <path d="M23.3866 22.6937C23.4611 23.1179 23.5 23.5544 23.5 24C23.5 26.0907 22.6446 27.9815 21.2646 29.3417C22.0849 29.7625 23.0147 30 24 30C27.3137 30 30 27.3137 30 24C30 21.7654 28.7783 19.8161 26.9665 18.7835C26.2876 20.4811 25.0062 21.8727 23.3866 22.6937Z" fill="#525965"/>
             </svg>
           </button>
-
-          <div style={{ width: 132 }}>
-            <Dropdown
-              options={FEED_TAB_OPTIONS}
-              value={activeOption}
-              onChange={(opt) => onTabChange(opt.id as FeedSort)}
-              indicator="highlight"
-              placeholder="For you"
-            />
-          </div>
         </div>
 
         {/* Header + feed-mode dropdown (desktop) */}
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8">
+        <div className="flex flex-row sm:items-center sm:justify-between gap-4 mb-8">
           <h2 className="flex-1 font-raleway font-semibold text-h6 lg:text-h4 text-primary-500 leading-10">Top Art</h2>
 
           <div style={{ width: 332 }} className="w-80 max-sm:w-full max-md:hidden">
@@ -63,6 +71,17 @@ export function FeedSection({ activeTab, onTabChange, artworks, isLoading, onOpe
               value={activeOption}
               onChange={(opt) => onTabChange(opt.id as FeedSort)}
               indicator="highlight"
+            />
+          </div>
+
+          <div style={{ width: 132 }} className='lg:hidden'>
+            <Dropdown
+              options={FEED_TAB_OPTIONS}
+              value={activeOption}
+              onChange={(opt) => onTabChange(opt.id as FeedSort)}
+              multiple={false}
+              indicator="highlight"
+              placeholder='Sort By'
             />
           </div>
         </div>
