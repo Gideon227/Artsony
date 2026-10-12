@@ -99,7 +99,7 @@ export default function BlockedUsers({ onBack }: BlockedUsersProps) {
 
   return (
     <div className='flex w-full flex-col gap-y-6'>
-      <div className='flex items-center gap-4'>
+      <div className='flex items-center gap-4 max-lg:border-b border-gray-50'>
         <button
           type='button'
           onClick={onBack}
@@ -111,7 +111,7 @@ export default function BlockedUsers({ onBack }: BlockedUsersProps) {
           </svg>
         </button>
 
-        <h2 className='flex-1 font-poppins text-body-m font-semibold tracking-wide text-primary-500'>Blocked Users</h2>
+        <h2 className='flex-1 font-poppins text-h6 lg:text-body-m font-medium lg:font-semibold tracking-wide text-body lg:text-primary-500'>Blocked Users</h2>
       </div>
 
       <div

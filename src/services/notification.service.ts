@@ -18,10 +18,12 @@ export const notificationService = {
     }),
 
   markRead: (id: string) =>
-    apiClient.patch<ApiResponse<Notification>>(`/api/notifications/${id}/read`),
+    // apiClient.patch<ApiResponse<Notification>>(`/api/notifications/${id}/read`),
+    apiClient.post<ApiResponse<Notification>>(`/api/notifications/${id}/read`),
 
   markAllRead: () =>
-    apiClient.patch<ApiResponse<{ updated: number }>>('/api/notifications/read-all'),
+    // apiClient.patch<ApiResponse<{ updated: number }>>('/api/notifications/read-all'),
+    apiClient.post<ApiResponse<{ updated: number }>>('/api/notifications/read-all'),
 
   delete: (id: string) =>
     apiClient.delete(`/api/notifications/${id}`),

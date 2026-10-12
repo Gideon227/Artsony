@@ -2,14 +2,16 @@
 //
 // Cloudinary images are delivered straight from Cloudinary's CDN at the exact
 // width the browser asked for, with automatic format (AVIF / WebP / JPEG per
-// browser) and quality, instead of being proxied through the Next.js image
-// optimizer. Anything else (local files, other hosts) keeps going through the
-// built-in optimizer exactly as before.
+// browser) and quality.
+//
+// A custom loader disables Next.js's built-in /_next/image optimizer (the
+// route answers 404 whenever images.loader is not "default"), so every other
+// source - local files, other hosts - is returned as it is, unoptimized.
 //
 // Requires Cloudinary's "Strict transformations" setting to allow these
 // on-the-fly transformations. If it cannot be relaxed, set
-// NEXT_PUBLIC_MEDIA_TRANSFORMS=off to route Cloudinary images through the
-// Next.js optimizer instead.
+// NEXT_PUBLIC_MEDIA_TRANSFORMS=off to deliver the stored Cloudinary URL as it
+// is instead.
 
 interface LoaderParams {
   src: string
@@ -23,7 +25,6 @@ const TRANSFORMATION_SEGMENT = /^[a-z]{1,3}_[^/,]+(,[a-z]{1,3}_[^/,]+)*$/
 const PAGE_SELECTOR = /(?:^|,)pg_(\d+)(?:,|$)/
 const SVG_SOURCE = /\.svg(\?|$)/i
 const MAX_DELIVERY_WIDTH = 2560
-const DEFAULT_OPTIMIZER_QUALITY = 75
 
 function qualityToken(quality: number | undefined): string {
   if (quality !== undefined && quality >= 90) return 'auto:best'
@@ -59,24 +60,17 @@ function storedPage(rest: string): string | null {
   return null
 }
 
-function optimizerUrl({ src, width, quality }: LoaderParams): string {
-  return `/_next/image?url=${encodeURIComponent(src)}&w=${width}&q=${quality ?? DEFAULT_OPTIMIZER_QUALITY}`
-}
-
-// Next.js only skips optimization for .svg sources when its *default* loader
-// is in use, and /_next/image refuses SVGs. They are static files, so serve
-// them as they are. Local files get an inert `?w=` so the loader's output
-// differs from `src` (Next warns in development when a loader ignores width).
-function staticAssetUrl({ src, width }: LoaderParams): string {
-  if (!src.startsWith('/')) return src
+// Serves the source untouched. The inert `?w=` makes the loader's output differ
+// from `src`, because Next warns in development when a loader ignores width.
+function passthroughUrl({ src, width }: LoaderParams): string {
   return `${src}${src.includes('?') ? '&' : '?'}w=${width}`
 }
 
 export default function cloudinaryLoader(params: LoaderParams): string {
-  if (SVG_SOURCE.test(params.src)) return staticAssetUrl(params)
+  if (SVG_SOURCE.test(params.src)) return passthroughUrl(params)
 
   const match = CLOUDINARY_IMAGE.exec(params.src)
-  if (!match || process.env.NEXT_PUBLIC_MEDIA_TRANSFORMS === 'off') return optimizerUrl(params)
+  if (!match || process.env.NEXT_PUBLIC_MEDIA_TRANSFORMS === 'off') return passthroughUrl(params)
 
   const [, cloudName, rest] = match
   const width = Math.min(params.width, MAX_DELIVERY_WIDTH)

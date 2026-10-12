@@ -20,6 +20,7 @@ import { Navbar } from '@/components/layout/navbar'
 import { Button } from '@/components'
 import Router from 'next/router'
 import { useRouter } from 'next/navigation'
+import Image from 'next/image'
 
 export default function MessagesPage() {
   const router = useRouter()
@@ -83,7 +84,10 @@ export default function MessagesPage() {
 
   return (
     <div className="relative flex flex-col h-full min-h-screen w-full overflow-hidden bg-white font-poppins">
-      <Navbar />
+      <div className="max-lg:hidden">
+        <Navbar />
+      </div>
+
       {/* Reconnecting banner */}
       {!isConnected && status !== 'idle' && (
         <div className="absolute top-0 left-0 z-50 w-full bg-amber-500 py-1.5 text-center text-xs font-semibold text-white">
@@ -91,7 +95,7 @@ export default function MessagesPage() {
         </div>
       )}
 
-      <div className='flex justify-between items-center mb-6 px-8 pt-12'>
+      <div className={`flex justify-between items-center lg:mb-6 px-4 max-lg:pt-6 lg:px-8 lg:pt-20 ${selectedConvId && 'max-lg:hidden' }`}>
         <div className='flex items-center gap-4'>
           <button onClick={() => router.back()} className='cursor-pointer'>
             <svg width="40" height="40" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -102,12 +106,33 @@ export default function MessagesPage() {
               <path fill-rule="evenodd" clip-rule="evenodd" d="M18.5303 13.4697C18.8232 13.7626 18.8232 14.2374 18.5303 14.5303L13.8107 19.25H28C28.4142 19.25 28.75 19.5858 28.75 20C28.75 20.4142 28.4142 20.75 28 20.75H13.8107L18.5303 25.4697C18.8232 25.7626 18.8232 26.2374 18.5303 26.5303C18.2374 26.8232 17.7626 26.8232 17.4697 26.5303L11.4697 20.5303C11.1768 20.2374 11.1768 19.7626 11.4697 19.4697L17.4697 13.4697C17.7626 13.1768 18.2374 13.1768 18.5303 13.4697Z" fill="#525965"/>
             </svg>
           </button>
-          <h2 className='font-raleway font-semibold text-h4 text-body leading-10'>Messages</h2>
+          <h2 className='font-raleway font-semibold text-h6 lg:text-h4 text-body leading-10'>Messages</h2>
         </div>
-        <Button onClick={() => setIsNewChatOpen(true)} leftIcon='/icons/plus-white-bg.svg'>New Chat</Button>
+        <Button onClick={() => setIsNewChatOpen(true)} leftIcon='/icons/plus-white-bg.svg' className='max-lg:h-12 max-lg:w-31'>New Chat</Button>
       </div>
 
-      <div className='flex border border-gray-50 rounded-xl justify-between flex-1 mx-8'>
+      <main className='lg:hidden relative flex flex-1 w-full'>
+        {selectedConvId ? (
+          <ChatThread
+            conversationId={selectedConvId}
+            conversation={activeConv}
+            myId={myId}
+            goBack={() => setSelectedConvId("")}
+          />
+        ) : (
+          <ConversationList
+            conversations={filtered}
+            selectedId={selectedConvId}
+            myId={myId}
+            isLoading={isLoading}
+            searchQuery={searchQuery}
+            onSearchChange={setSearchQuery}
+            onSelect={setSelectedConvId}
+          />
+        )}
+      </main>
+
+      <div className='hidden lg:flex lg:border lg:border-gray-50 lg:rounded-xl justify-between flex-1 lg:mx-8'>
         <ConversationList
           conversations={filtered}
           selectedId={selectedConvId}

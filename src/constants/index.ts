@@ -161,7 +161,7 @@ export const ROUTES = {
   cart: '/cart',
   checkout: '/checkout',
   orders: '/orders',
-  notifications: '/notifications',
+  notifications: '/notification',
   settings: '/settings',
   upload: '/upload',
   auth: {

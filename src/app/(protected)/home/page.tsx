@@ -1,6 +1,6 @@
 'use client'
 
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { Spinner } from '@/components'
 import Footer from '@/components/layout/footer'
@@ -33,7 +33,7 @@ const COLOR_OPTIONS: DropdownOption[] = COLOR_SWATCHES.map((c) => ({
   hex: c.hex,
 }))
 
-const HomePage = () => {
+function HomePage() {
   const isHydrated = useAuthStore((s) => s.isHydrated)
 
   const [activeTab, setActiveTab] = useState<FeedSort>('for_you')
@@ -218,4 +218,16 @@ const HomePage = () => {
   )
 }
 
-export default HomePage
+export default function Page() {
+  return (
+    <Suspense
+      fallback={
+        <div className="min-h-screen flex items-center justify-center bg-white">
+          <Spinner size="lg" />
+        </div>
+      }
+    >
+      <HomePage />
+    </Suspense>
+  )
+}

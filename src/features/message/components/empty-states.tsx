@@ -8,19 +8,19 @@ export function EmptyInbox({ onNewChat }: { onNewChat: () => void }) {
   return (
     <>
       <Navbar />
-      <div className="flex min-h-screen w-full flex-col items-center justify-center gap-6 bg-white font-poppins">
+      <div className="px-4 flex min-h-screen w-full flex-col items-center justify-center gap-6 bg-white font-poppins">
         <Image
           src="/illustrations/empty-inbox.svg"
           alt="Empty inbox"
           width={384}
           height={400}
-          className="object-cover"
+          className="object-cover md:w-[384px] md:h-100 w-[203px] h-[220px]"
         />
         <div className="flex flex-col items-center text-center">
-          <h2 className="font-poppins text-h6 mb-4 font-medium text-heading text-center tracking-wide">
+          <h2 className="font-poppins text-body-m lg:text-h6 mb-4 font-medium text-heading text-center tracking-wide">
             Your inbox is empty
           </h2>
-          <p style={{ width: '552px' }} className="w-full mb-6 text-body-m text-center text-wrap leading-7 text-body font-normal font-poppins ">
+          <p className="w-full lg:w-[552px] mb-6 text-body-xs lg:text-body-m text-center text-wrap leading-7 text-body font-normal font-poppins ">
             When someone sends you a message, it will appear here. Start a
             conversation to ask about an artwork or connect with an artist.
           </p>

@@ -135,7 +135,7 @@ const SettingLeftBar = ({ onLogout, onDeleteAccountRequest, activeTab, setActive
                 const isActive = activeTab === item.id
 
                 const sharedClasses =
-                    'group flex h-14 items-center cursor-pointer rounded-xl px-4 gap-x-4 transition-colors lg:h-auto lg:min-h-9 lg:max-h-14 lg:flex-1 lg:basis-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gray-50'
+                    'group h-14 flex items-center cursor-pointer rounded-xl p-4 gap-x-4 transition-colors lg:h-auto lg:flex-1 lg:basis-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gray-50'
 
                 const stateClasses = isActive
                     ? 'bg-primary-50 border border-gray-50 ring-2 ring-primary-500'

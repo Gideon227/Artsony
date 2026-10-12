@@ -28,7 +28,7 @@ export function ConversationList({
   onSelect,
 }: ConversationListProps) {
   return (
-    <aside className="flex shrink-0 flex-col border-r border-gray-100" style={{ width: '40%' }}>
+    <aside className="flex shrink-0 flex-col lg:border-r border-gray-100 w-full lg:w-2/5">
 
       {/* Search */}
       <div className="py-4 px-6 border-b border-gray-50">
@@ -81,7 +81,7 @@ function ConversationItem({ conv, myId, isSelected, onSelect }: ConversationItem
 
   return (
     <div
-      className={`group relative flex w-full items-center gap-3 border-l-[3px] p-4 text-left transition-colors ${
+      className={`group relative flex w-full items-center gap-3 border-l-[3px] p-4 text-left transition-colors ${conv.unread_count > 0 && 'border-l-4 border-primary-500 bg-primary-50'} ${
         isSelected
           ? 'border-l-primary-500 bg-[#FFF1EE]'
           : 'border-l-transparent hover:bg-primary-50'
@@ -90,7 +90,23 @@ function ConversationItem({ conv, myId, isSelected, onSelect }: ConversationItem
       <button onClick={onSelect} className="flex min-w-0 flex-1 items-center gap-3 cursor-pointer text-left">
         <ConversationAvatar name={name} avatar={avatar} />
 
-        <div className="min-w-0 flex-1">
+        <div className='flex-1 min-w-0 flex items-center justify-between w-full'>
+          <div className='flex flex-col gap-y-1 flex-1'>
+            <p className='font-poppins text-body-xs lg:text-body-s text-black leading-6'>{name}</p>
+            <p className='font-poppins font-light text-body-xxs lg:text-body-xs text-[#333333]'>
+              {conv.last_message?.deleted_at ? 'Deleted Message' : (conv.last_message?.body ?? '')}
+            </p>
+          </div>
+
+          <div className='flex flex-col gap-y-1 items-center h-full'>
+            <p className='font-poppins font-light text-[#949392] text-body-xxs'>{formatMessageDate(conv.last_activity_at)}</p>
+            <div className='rounded-full p-0.5 h-5 w-5 bg-primary-500 flex items-center justify-center'>
+              <p className='font-poppins text-white text-body-xs'>{conv.unread_count > 99 ? '99+' : conv.unread_count}</p>
+            </div>
+          </div>
+        </div>
+
+        {/* <div className="min-w-0 flex-1">
           <div className="flex items-baseline justify-between gap-2">
             <span className="truncate text-[14px] font-semibold text-heading">{name}</span>
             {conv.last_message && (
@@ -104,42 +120,35 @@ function ConversationItem({ conv, myId, isSelected, onSelect }: ConversationItem
               ? 'Message deleted'
               : (conv.last_message?.body ?? '')}
           </p>
-        </div>
+        </div> */}
 
-        {conv.unread_count > 0 && (
+        {/* {conv.unread_count > 0 && (
           <span className="ml-1 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-primary-500 text-[10px] font-bold text-white">
             {conv.unread_count > 99 ? '99+' : conv.unread_count}
           </span>
-        )}
+        )} */}
       </button>
 
-      <ConversationOptionsMenu conversation={conv} />
+      {/* <ConversationOptionsMenu conversation={conv} /> */}
     </div>
   )
 }
 
 export function ConversationAvatar({
   name,
-  avatar,
-  size = 'md',
+  avatar
 }: {
   name: string
   avatar: string | null
-  size?: 'sm' | 'md'
 }) {
-  const dim = size === 'sm' ? 'h-9 w-9' : 'h-12 w-12'
-  const textSize = size === 'sm' ? 'text-sm' : 'text-lg'
+  // const textSize = size === 'sm' ? 'text-sm' : 'text-lg'
 
   return (
-    <div className={`relative shrink-0 overflow-hidden rounded-full bg-indigo-100 ${dim}`}>
+    <div className={`relative shrink-0 overflow-hidden rounded-full bg-indigo-100 w-10 h-10`}>
       {avatar ? (
         <Image src={avatar} alt={name} fill className="object-cover" />
       ) : (
-        <div
-          className={`flex h-full w-full items-center justify-center font-semibold text-indigo-500 ${textSize}`}
-        >
-          {name.charAt(0).toUpperCase()}
-        </div>
+        <Image src='images/image-avatar.svg' width={40} height={40} alt='profile picture' />
       )}
     </div>
   )

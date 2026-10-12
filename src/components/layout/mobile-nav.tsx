@@ -23,19 +23,19 @@ const PRIMARY_NAV_ITEMS: NavItem[] = [
 
 const BUYER_MENU_ITEMS: NavItem[] = [
   { key: 'cart', label: 'Cart', href: '/cart', icon: '/nav/cart.svg' },
-  { key: 'orders', label: 'Order', href: '/orders', icon: '/nav/order.svg' },
+  { key: 'orders', label: 'Order', href: '/my-orders', icon: '/nav/order.svg' },
   { key: 'messages', label: 'Messages', href: '/messages', icon: '/nav/message.svg' },
-  { key: 'settings', label: 'Settings', href: '/settings', icon: '/nav/settings.svg' },
+  { key: 'settings', label: 'Settings', href: '/settings/profile-customization', icon: '/nav/settings.svg' },
   { key: 'help', label: 'Help', href: '/help', icon: '/nav/help.svg' },
 ]
 
 const SELLER_MENU_ITEMS: NavItem[] = [
-  { key: 'studio', label: 'Studio', href: '/studio', icon: '/nav/studio.svg' },
+  { key: 'studio', label: 'Studio', href: '/artsony-studio', icon: '/nav/studio.svg' },
   { key: 'order-management', label: 'Order Management', href: '/all-orders', icon: '/nav/doc.svg' },
   { key: 'cart', label: 'Cart', href: '/cart', icon: '/nav/cart.svg' },
   { key: 'orders', label: 'Order', href: '/my-orders', icon: '/nav/order.svg' },
   { key: 'messages', label: 'Messages', href: '/messages', icon: '/nav/message.svg' },
-  { key: 'settings', label: 'Settings', href: '/settings', icon: '/nav/settings.svg' },
+  { key: 'settings', label: 'Settings', href: '/settings/profile-customization', icon: '/nav/settings.svg' },
   { key: 'help', label: 'Help', href: '/help', icon: '/nav/help.svg' },
 ]
 

@@ -40,6 +40,11 @@ export default function NotificationsPage() {
 //     [data]
 //   )
 
+  const notifications: Notification[] = useMemo(
+    () => data?.pages.flatMap((p) => p.data.items) ?? [],
+    [data]
+  )
+
   // ── Mutations 
   const { mutate: markRead } = useMarkRead()
   const { mutate: markAllRead, isPending: isMarkingAll } = useMarkAllRead()
@@ -97,7 +102,7 @@ export default function NotificationsPage() {
         </div>
 
         {/* ── Notification list ────────────────────────────────────────── */}
-        {/* <NotificationList
+        <NotificationList
           notifications={notifications}
           isLoading={isLoading}
           isFetchingNextPage={isFetchingNextPage}
@@ -106,9 +111,8 @@ export default function NotificationsPage() {
           onRead={markRead}
           onDelete={handleDelete}
           deletingIds={deletingIds}
-        /> */}
+        />
       </main>
-
       <Footer />
     </div>
   )
