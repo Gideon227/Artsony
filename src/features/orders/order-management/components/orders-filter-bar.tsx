@@ -99,7 +99,7 @@ export function OrdersFilterBar({ filters, heading, total, showMore, onToggleMor
               onChange={(option) => onChange({ sort: option.id as SortOrder })}
               placeholder="Sort"
               arrow="triangle"
-              indicator="radio"
+              // indicator="radio"
             />
           </div>
 
@@ -133,7 +133,7 @@ export function OrdersFilterBar({ filters, heading, total, showMore, onToggleMor
               }
               placeholder="Status"
               arrow="triangle"
-              indicator="radio"
+              // indicator="radio"
             />
 
             <DateRangePicker
@@ -151,7 +151,7 @@ export function OrdersFilterBar({ filters, heading, total, showMore, onToggleMor
               }
               placeholder="Artwork type"
               arrow="triangle"
-              indicator="radio"
+              // indicator="radio"
             />
 
             <Dropdown
@@ -163,7 +163,7 @@ export function OrdersFilterBar({ filters, heading, total, showMore, onToggleMor
               }
               placeholder="Price Range"
               arrow="triangle"
-              indicator="radio"
+              // indicator="radio"
             />
           </div>
         )}
