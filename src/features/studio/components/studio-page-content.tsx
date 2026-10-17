@@ -41,12 +41,12 @@ export default function StudioPageContent() {
   }
 
   return (
-    <div className="flex min-h-0 w-full flex-1 flex-col lg:grid lg:h-full lg:grid-cols-4 lg:gap-4">
-      <div className={cn('min-h-0 lg:col-span-1', hasSection && 'max-lg:hidden')}>
+    <div className="flex min-h-0 w-full flex-1 flex-col lg:flex-row lg:h-full lg:w-full lg:gap-4">
+      <div className={cn('min-h-0 lg:w-1/4', hasSection && 'max-lg:hidden')}>
         <StudioLeftSidebar activeSection={activeSection} onChangeSection={handleChangeSection} />
       </div>
 
-      <div className={cn('min-h-0 lg:col-span-3', !hasSection && 'max-lg:hidden')}>
+      <div className={cn('min-h-0 flex-1 lg:w-3/4', !hasSection && 'max-lg:hidden')}>
         {showSection && activeSection === 'wallet' && <WalletPageContent />}
         {showSection && activeSection === 'stats' && <StatsPageContent />}
         {showSection && activeSection === 'score' && <ScorePageContent />}

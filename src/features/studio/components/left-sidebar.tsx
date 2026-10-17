@@ -53,9 +53,9 @@ export function StudioLeftSidebar({ activeSection, onChangeSection, className, b
   return (
     <nav
       aria-label="Artsony Studio"
-      className={cn('flex flex-col lg:gap-y-8 lg:rounded-2xl lg:border lg:border-gray-50 lg:px-4 lg:pt-8 lg:pb-4', className)}
+      className={cn('flex flex-col lg:gap-8 lg:rounded-2xl lg:border lg:border-gray-50 lg:px-4 lg:pt-8 lg:pb-4', className)}
     >
-      <div className="flex items-center gap-x-4 border-b border-gray-50 px-4 py-4 lg:border-b-0 lg:p-0">
+      <div className="flex items-center gap-x-4 px-4 py-4 lg:border-b-0 lg:p-0">
         <Link
           href={backHref}
           aria-label="Back"
@@ -103,7 +103,7 @@ export function StudioLeftSidebar({ activeSection, onChangeSection, className, b
                 aria-current={isActive ? 'page' : undefined}
                 style={{ borderRadius: 16 }}
                 className={cn(
-                  'flex h-14 w-full cursor-pointer items-center gap-4 rounded-m px-4 text-left font-poppins text-body-s transition-colors lg:h-auto lg:py-6',
+                  'flex h-14 w-full cursor-pointer items-center gap-4 rounded-m p-4 text-left font-poppins text-body-s transition-colors',
                   isActive
                     ? 'border border-gray-50 bg-primary-50 text-primary-500 ring-2 ring-offset-2 ring-primary-500'
                     : 'text-body hover:bg-neutral-50'
