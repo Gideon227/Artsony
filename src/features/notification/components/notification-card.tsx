@@ -8,6 +8,9 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { cn } from '@/utils'
 import type { Notification } from '@/types'
 import { presentNotification, timeAgo, type NotificationPresentation } from '../lib/notification-presenter'
+import { NotificationIcon } from './notification-icon'
+import { ROUTES } from '@/constants'
+import { Button } from '@/components'
 
 const SYSTEM_AVATAR_SRC = '/images/notification-system-avatar.svg'
 const FALLBACK_AVATAR_SRC = '/images/image-avatar.svg'
@@ -23,29 +26,33 @@ function SystemAvatar() {
   const [failed, setFailed] = useState(false)
 
   if (failed) {
-    return <div aria-hidden='true' className='h-14 w-14 rounded-full bg-primary-500' />
+    return <div aria-hidden='true' className='h-12 w-12 rounded-full bg-primary-500' />
   }
 
   return (
     <Image
       src={SYSTEM_AVATAR_SRC}
-      width={56}
-      height={56}
+      width={48}
+      height={48}
       alt='Artsony'
-      className='h-14 w-14 rounded-full object-cover'
+      className='h-12 w-12 rounded-full object-cover'
       onError={() => setFailed(true)}
     />
   )
 }
 
 function ActorAvatar({ src, name }: { src: string | null; name: string }) {
+  const [failed, setFailed] = useState(false)
+  const imgSrc = !src || failed ? FALLBACK_AVATAR_SRC : src
+
   return (
     <Image
-      src={src || FALLBACK_AVATAR_SRC}
-      width={56}
-      height={56}
+      src={imgSrc}
+      width={48}
+      height={48}
       alt={name}
-      className='h-14 w-14 rounded-full border border-gray-50 object-cover'
+      className='h-12 w-12 rounded-full border border-gray-50 object-cover'
+      onError={() => setFailed(true)}
     />
   )
 }
@@ -120,9 +127,14 @@ export function NotificationCard({ notification: n, onRead, isDeleting }: Notifi
   const presentation = useMemo(() => presentNotification(n), [n])
   const { card, action, href } = presentation
 
-  const target = href ?? action?.href ?? null
+  const target = href ?? action?.href ?? resolveHref(n)
   const isRowLink = target !== null && action === undefined
   const actorName = n.actor?.display_name || n.actor?.username || 'Artsony'
+
+  const isMessage = n.type === 'message'
+  const preview = typeof n.data?.['preview'] === 'string' ? (n.data['preview'] as string) : null
+  const body = typeof n.data?.['body'] === 'string' ? (n.data['body'] as string) : null
+  const conversationId = typeof n.data?.['conversation_id'] === 'string' ? (n.data['conversation_id'] as string) : null
 
   const markRead = () => {
     if (!n.is_read) onRead(n.id)
@@ -160,18 +172,19 @@ export function NotificationCard({ notification: n, onRead, isDeleting }: Notifi
           role={isRowLink ? 'link' : undefined}
           tabIndex={isRowLink ? 0 : undefined}
           className={cn(
-            'flex items-start gap-4 px-4 py-6 font-poppins transition-colors duration-150',
+            'group flex items-start gap-4 p-6 border cursor-pointer font-poppins transition-colors duration-150',
             'focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-primary-500',
-            target && 'cursor-pointer',
-            n.is_read ? 'bg-white hover:bg-neutral-50' : 'bg-primary-50 hover:bg-primary-50/80',
+            n.is_read ? 'bg-white border-neutral-100 hover:bg-neutral-50' : 'bg-primary-50 border-primary-100 hover:bg-primary-50/80',
           )}
         >
-          <div className='shrink-0'>
+          {/* Avatar Container with Overlaid Notification Icon */}
+          <div className='relative shrink-0'>
             {presentation.avatar === 'actor' ? (
               <ActorAvatar src={n.actor?.avatar_url ?? null} name={actorName} />
             ) : (
               <SystemAvatar />
             )}
+            <NotificationIcon type={n.type} className='absolute -bottom-1 -right-1' />
           </div>
 
           <div className='flex min-w-0 flex-1 flex-col gap-2'>
@@ -183,8 +196,39 @@ export function NotificationCard({ notification: n, onRead, isDeleting }: Notifi
               </p>
             )}
 
+            {isMessage && preview && (
+              <p className='font-poppins font-light text-body-xs text-body'>{preview}</p>
+            )}
+
+            {!isMessage && body && (
+              <p className='font-poppins font-light text-body-xs text-body'>{body}</p>
+            )}
+
             {card ? (
               <CardBody presentation={presentation} onActivate={handleActionClick} />
+            ) : isMessage && conversationId ? (
+              <div className='border border-gray-50 bg-white flex gap-4 py-2 pl-2 pr-4 rounded-m w-full'>
+                <Image
+                  src={n.actor?.avatar_url || FALLBACK_AVATAR_SRC}
+                  width={72}
+                  height={72}
+                  className='object-cover rounded-m'
+                  alt='sender avatar'
+                />
+                <div className='h-full flex flex-col gap-2 justify-center'>
+                  <Button
+                    variant='outline'
+                    size='md'
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      markRead()
+                      router.push(`/messages/${conversationId}`)
+                    }}
+                  >
+                    Send a Message
+                  </Button>
+                </div>
+              </div>
             ) : (
               action && <ActionLink {...action} onActivate={handleActionClick} />
             )}
@@ -195,4 +239,10 @@ export function NotificationCard({ notification: n, onRead, isDeleting }: Notifi
       )}
     </AnimatePresence>
   )
+}
+
+function resolveHref(n: Notification): string | null {
+  if (n.entity_type === 'user' && n.actor_id) return ROUTES.profile(n.actor_id)
+  if (n.entity_type === 'seller_registration') return '/seller-registration'
+  return null
 }

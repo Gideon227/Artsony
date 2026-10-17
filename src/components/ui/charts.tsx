@@ -1,6 +1,7 @@
 'use client'
 
 import * as React from 'react'
+import { cn } from '@/lib/utils'
 
 export type MiniBarChartProps = {
   data: { label: string; value: number }[]
@@ -19,7 +20,7 @@ export function MiniBarChart({ data, highlightIndex, className }: MiniBarChartPr
   const activeIndex = highlightIndex ?? data.length - 1
 
   return (
-    <div className={`flex h-16 items-end gap-1.5 ${className ?? ''}`} role="img" aria-label="Recent activity">
+    <div className={cn('flex h-16 items-end gap-1.5', className)} role="img" aria-label="Recent activity">
       {data.map((point, i) => {
         const heightPct = Math.max(12, (point.value / max) * 100)
         const isActive = i === activeIndex
@@ -27,7 +28,7 @@ export function MiniBarChart({ data, highlightIndex, className }: MiniBarChartPr
           <div
             key={point.label}
             title={`${point.label}: ${point.value}`}
-            className={`flex-1 rounded-md transition-all ${isActive ? 'bg-primary-500' : 'bg-gray-50'}`}
+            className={cn('flex-1 rounded-s transition-all lg:rounded-md', isActive ? 'bg-primary-500' : 'bg-gray-50 max-lg:bg-secondary-100')}
             style={{ height: `${heightPct}%` }}
           />
         )
@@ -44,6 +45,21 @@ export type AreaChartProps = {
   yTicks?: number
   formatY?: (value: number) => string
   className?: string
+}
+
+const NICE_STEPS = [1, 1.5, 2, 2.5, 3, 4, 5, 7.5, 10]
+
+/**
+ * Smallest "round" axis maximum (a step from NICE_STEPS × 10ⁿ per tick) that fits
+ * the data, so ticks land on readable values at any magnitude — $3, $250 or
+ * $40,000 — instead of snapping everything up to the next thousand.
+ */
+export function niceAxisMax(max: number, ticks: number): number {
+  if (!(max > 0)) return ticks
+  const rawStep = max / ticks
+  const magnitude = 10 ** Math.floor(Math.log10(rawStep))
+  const step = (NICE_STEPS.find((n) => n * magnitude >= rawStep) ?? 10) * magnitude
+  return step * ticks
 }
 
 function buildSmoothPath(points: { x: number; y: number }[]): string {
@@ -70,7 +86,7 @@ export function AreaChart({ data, height = 260, yTicks = 4, formatY, className }
   const width = 1000
 
   const max = Math.max(...data.map((d) => d.value), 1)
-  const niceMax = Math.ceil(max / 1000) * 1000 || 1000
+  const niceMax = niceAxisMax(max, yTicks)
   const plotWidth = width - paddingLeft
   const plotHeight = height - paddingBottom - paddingTop
 

@@ -6,7 +6,7 @@ const textClassByVariant: Record<string, string> = {
   warning: 'bg-warning-50 text-warning-700',
   info: 'bg-info-50 text-info-700',
   error: 'bg-error-50 text-error-700',
-  success: 'bg-success-50 text-success-700',
+  success: 'bg-successful-50 text-successful-700',
 }
 
 export function WalletStatusBadge({ status }: { status: WalletActivityStatus }) {

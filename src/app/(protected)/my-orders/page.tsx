@@ -6,7 +6,7 @@ export default function MyOrderPage() {
   return (
     <>
       <Navbar />
-      <div className="px-8 py-6 flex bg-white min-h-[calc(100vh-96px)]">
+      <div className="px-8 py-6 flex bg-white min-h-screen">
         <div className="bg-secondary-50 rounded-2xl p-4 flex gap-x-4 w-full">
           <Suspense fallback={null}>
             <OrdersPageContent />

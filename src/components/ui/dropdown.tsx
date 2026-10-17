@@ -34,6 +34,8 @@ interface DropdownProps {
   rightIcon?: string;
   arrow?: DropdownArrow;
   className?: string;
+  /** Extra classes for the trigger button itself (className styles the wrapper). */
+  triggerClassName?: string;
 
   value?: DropdownOption;
   onChange?: (option: DropdownOption) => void;
@@ -88,6 +90,7 @@ const Dropdown = ({
   rightIcon,
   arrow = "chevron",
   className,
+  triggerClassName,
   searchable = false,
   searchPlaceholder = "Search",
   searchValue,
@@ -583,7 +586,8 @@ const Dropdown = ({
           "focus:ring-2 focus:ring-offset-2 focus:ring-offset-white",
           variantStyles[variant],
           disabled && "bg-neutral-100 border-neutral-200 text-neutral-400 cursor-not-allowed opacity-100",
-          isOpen && "border-neutral-300 ring-2 ring-offset-2 ring-[#F15A2B]/20"
+          isOpen && "border-neutral-300 ring-2 ring-offset-2 ring-[#F15A2B]/20",
+          triggerClassName
         )}
       >
         {leftIcon && (

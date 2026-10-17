@@ -70,12 +70,14 @@ function RemoveBadge({ label, onClick }: { label: string; onClick: () => void })
       aria-label={label}
       onClick={onClick}
       className={cn(
-        'absolute left-3 top-3 z-10 flex h-6 w-6 cursor-pointer items-center justify-center rounded-full bg-white shadow-sm transition-transform hover:scale-110',
+        'absolute left-3 top-3 z-10 flex h-6 w-6 cursor-pointer items-center justify-center rounded-full transition-transform hover:scale-110',
         'before:absolute before:-inset-1.5 before:content-[""]',
         FOCUS,
       )}
     >
-      <Image src="/icons/cancel.svg" width={14} height={14} alt="" aria-hidden />
+      <svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path fill-rule="evenodd" clip-rule="evenodd" d="M29.3333 15.9993C29.3333 23.3631 23.3638 29.3327 16 29.3327C8.63619 29.3327 2.66666 23.3631 2.66666 15.9993C2.66666 8.63555 8.63619 2.66602 16 2.66602C23.3638 2.66602 29.3333 8.63555 29.3333 15.9993ZM11.9595 11.9589C12.35 11.5684 12.9832 11.5684 13.3737 11.9589L15.9999 14.5851L18.6262 11.9589C19.0167 11.5684 19.6498 11.5684 20.0404 11.9589C20.4309 12.3494 20.4309 12.9826 20.0404 13.3731L17.4142 15.9993L20.0403 18.6255C20.4309 19.016 20.4309 19.6492 20.0403 20.0397C19.6498 20.4303 19.0167 20.4303 18.6261 20.0397L15.9999 17.4135L13.3737 20.0398C12.9832 20.4303 12.35 20.4303 11.9595 20.0398C11.569 19.6492 11.569 19.0161 11.9595 18.6255L14.5857 15.9993L11.9595 13.3731C11.569 12.9826 11.569 12.3494 11.9595 11.9589Z" fill="white"/>
+      </svg>
     </button>
   )
 }
@@ -90,12 +92,12 @@ function ScrollButton({ direction, disabled, onClick }: { direction: 'prev' | 'n
       className={cn(
         'flex h-10 w-10 shrink-0 items-center justify-center rounded-full transition-colors',
         disabled
-          ? 'cursor-not-allowed border-2 border-gray-300 text-gray-500'
+          ? 'cursor-not-allowed border-2 border-gray-300 text-gray-300'
           : 'cursor-pointer bg-primary-500 text-white hover:opacity-90',
         FOCUS,
       )}
     >
-      <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" aria-hidden>
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor" aria-hidden>
         <path d={direction === 'prev' ? 'M16 5v14L5 12z' : 'M8 5v14l11-7z'} />
       </svg>
     </button>

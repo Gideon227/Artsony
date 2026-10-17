@@ -1,7 +1,10 @@
 import * as React from 'react'
-import { ArrowDown, ArrowUp, HelpCircle } from 'lucide-react'
+import { Minus, TrendingDown, TrendingUp } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { formatUsd } from '@/lib/wallet/format'
+import { formatTrendPercent, TREND_TEXT_CLASS } from '@/lib/studio/trend'
+import type { StudioHelp } from '@/lib/studio/help-copy'
+import { DynamicTooltip } from '@/components/ui/dynamic-tooltip'
 import type { TrendDirection } from '@/types/wallet'
 
 export type MetricTrend = {
@@ -9,17 +12,19 @@ export type MetricTrend = {
   direction: TrendDirection
 }
 
-export function TrendIndicator({ trend, label }: { trend: MetricTrend; label?: string }) {
-  const isUp = trend.direction === 'UP'
+const TREND_ICON = { UP: TrendingUp, DOWN: TrendingDown, FLAT: Minus } as const
+const TREND_FALLBACK_LABEL = { UP: 'Up', DOWN: 'Down', FLAT: 'No change' } as const
+
+// Arrow and percentage carry the trend colour; the label stays neutral.
+export function TrendIndicator({ trend, label, className }: { trend: MetricTrend; label?: string; className?: string }) {
+  const Icon = TREND_ICON[trend.direction]
   return (
-    <span
-      className={cn(
-        'inline-flex items-center gap-1 text-body-xs font-medium',
-        isUp ? 'text-success-600' : 'text-error-600'
-      )}
-    >
-      {isUp ? <ArrowUp className="h-3.5 w-3.5" strokeWidth={2} /> : <ArrowDown className="h-3.5 w-3.5" strokeWidth={2} />}
-      {trend.change_percent}% {label ?? (isUp ? 'Up' : 'Down')}
+    <span className={cn('inline-flex items-center gap-2', className)}>
+      <span className={cn('inline-flex items-center gap-2 font-poppins text-body-xs font-medium', TREND_TEXT_CLASS[trend.direction])}>
+        <Icon className="h-6 w-6" strokeWidth={1.5} aria-hidden="true" />
+        {formatTrendPercent(trend.change_percent)}
+      </span>
+      <span className="font-poppins text-body-s text-body">{label ?? TREND_FALLBACK_LABEL[trend.direction]}</span>
     </span>
   )
 }
@@ -49,7 +54,7 @@ export type MetricCardProps = {
   icon: React.ReactNode
   iconBg: string
   valueClassName?: string
-  showHelp?: boolean
+  help?: StudioHelp
 }
 
 function formatMetricValue(value: number, format: 'currency' | 'count'): string {
@@ -57,26 +62,22 @@ function formatMetricValue(value: number, format: 'currency' | 'count'): string 
   return formatUsd(value)
 }
 
-export function MetricCard({ label, value, format = 'currency', trend, icon, iconBg, valueClassName, showHelp }: MetricCardProps) {
+export function MetricCard({ label, value, format = 'currency', trend, icon, iconBg, valueClassName, help }: MetricCardProps) {
   return (
-    <div className="flex-1 rounded-2xl border border-gray-50 bg-white p-5">
+    <div className="flex flex-1 flex-col gap-y-2 rounded-xl border border-gray-50 bg-white p-4 lg:block lg:rounded-2xl lg:p-5">
       <div className="flex items-center justify-between">
         <span className="text-body-s font-medium text-body">{label}</span>
-        <span className={cn('flex h-9 w-9 shrink-0 items-center justify-center rounded-full', iconBg)}>{icon}</span>
+        <span className={cn('flex h-10 w-10 shrink-0 items-center justify-center rounded-full lg:h-9 lg:w-9', iconBg)}>{icon}</span>
       </div>
 
-      <p className={cn('mt-4 font-raleway text-h4 font-semibold text-heading', valueClassName)}>
+      <p className={cn('font-raleway text-h4 font-semibold leading-10 text-heading lg:mt-4', valueClassName)}>
         {format === 'currency' && <span className="mr-1 font-normal text-body-m text-text-alt-grey">$</span>}
         {formatMetricValue(value, format)}
       </p>
 
-      <div className="mt-3 flex items-center gap-2">
+      <div className="flex items-center justify-between gap-2 lg:mt-3 lg:justify-start">
         <TrendIndicator trend={trend} />
-        {showHelp && (
-          <button type="button" aria-label={`About ${label.toLowerCase()}`} className="text-info-500">
-            <HelpCircle className="h-4 w-4" strokeWidth={1.75} />
-          </button>
-        )}
+        {help && <DynamicTooltip title={help.title} content={help.content} iconSize={20} className="w-[212px]" />}
       </div>
     </div>
   )

@@ -43,6 +43,7 @@ export type FeaturedArtwork = {
   image_url: string
   total_earnings: number
   total_sales: number
+  total_views: number
   change_percent: number
   direction: TrendDirection
 }

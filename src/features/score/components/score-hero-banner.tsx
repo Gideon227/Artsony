@@ -1,18 +1,23 @@
 'use client'
 
 import Image from 'next/image'
-import { HelpCircle } from 'lucide-react'
+import Link from 'next/link'
 import { CircularGauge } from '../ui/charts'
+import { useMediaQuery } from '@/hooks'
 import { useScoreOverview } from '@/hooks/queries/use-score'
-import { getRatingTier, RATING_TIER_META } from '@/lib/score/format'
+import { DynamicTooltip } from '@/components/ui/dynamic-tooltip'
+import { ARTSONY_SCORE_HELP, CREATOR_GUIDE_HREF } from '@/lib/studio/help-copy'
+import { RATING_TIER_META } from '@/lib/score/format'
+import { cn } from '@/lib/utils'
 import { StudioCardError } from '@/features/studio/components/studio-card-error'
 
 function BannerSkeleton() {
-  return <div className="h-[340px] w-full animate-pulse rounded-2xl bg-gray-50" />
+  return <div className="h-[424px] w-full animate-pulse rounded-xl bg-gray-50 lg:h-[340px] lg:rounded-2xl" />
 }
 
 export function ScoreHeroBanner() {
   const { data: overview, isLoading, isError, error, refetch, isRefetching } = useScoreOverview()
+  const isDesktop = useMediaQuery('(min-width: 1024px)')
 
   if (isError && !overview) {
     return <StudioCardError error={error} onRetry={() => void refetch()} isRetrying={isRefetching} className="h-60 flex-none" />
@@ -20,27 +25,29 @@ export function ScoreHeroBanner() {
 
   if (isLoading || !overview) return <BannerSkeleton />
 
-  const tier = getRatingTier((overview.value / overview.max) * 100)
-  const tierMeta = RATING_TIER_META[tier]
+  const tierMeta = RATING_TIER_META[overview.tier]
 
   return (
-    <div className="relative overflow-hidden rounded-2xl border border-gray-50 h-60">
-      <Image
-        src={overview.banner_image_url}
-        alt=""
-        fill
-        aria-hidden="true"
-        className="object-cover"
-        onError={(e) => {
-          ;(e.currentTarget as HTMLImageElement).src = '/images/chickens.png'
-        }}
-      />
-      <div className="absolute inset-0 bg-black/70" />
+    <div className="relative rounded-xl border border-gray-50 lg:h-60 lg:rounded-2xl">
+      <div className="absolute inset-0 overflow-hidden rounded-[inherit]">
+        <Image
+          src={overview.banner_image_url}
+          alt=""
+          fill
+          aria-hidden="true"
+          className="object-cover"
+          onError={(e) => {
+            const img = e.currentTarget as HTMLImageElement
+            if (!img.src.endsWith('/images/chickens.png')) img.src = '/images/chickens.png'
+          }}
+        />
+        <div className="absolute inset-0 bg-black/70" />
+      </div>
 
-      <div className="relative flex items-center gap-x-32 py-8 px-6 " style={{ gap: 128 }}>
-        <div className="flex flex-col justify-between gap-y-6">
-          <div className='flex items-center gap-x-2'>
-            <svg width="247" height="20" viewBox="0 0 247 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <div className="relative flex flex-col items-center gap-y-8 px-4 py-8 lg:h-full lg:flex-row lg:gap-x-32 lg:px-6">
+        <div className="contents lg:flex lg:flex-col lg:justify-between lg:gap-y-6">
+          <div className="order-1 mb-2 flex items-center justify-center gap-x-2 lg:mb-0 lg:justify-start">
+            <svg width="247" height="20" className="h-4 w-auto lg:h-5" viewBox="0 0 247 20" fill="none" xmlns="http://www.w3.org/2000/svg">
               <path d="M85.7362 20C83.7324 20 81.7736 19.4151 80.1074 18.3194C78.4413 17.2237 77.1427 15.6663 76.3759 13.8441C75.6091 12.0219 75.4084 10.0169 75.7993 8.08252C76.1903 6.14814 77.1552 4.37129 78.5721 2.97668C79.9891 1.58207 81.7943 0.632324 83.7597 0.247551C85.725 -0.137222 87.7621 0.0602575 89.6134 0.815017C91.4647 1.56978 93.0471 2.84792 94.1603 4.48781C95.2736 6.1277 95.8678 8.05569 95.8678 10.028C95.8592 12.6701 94.7891 15.2016 92.8909 17.0699C90.9927 18.9382 88.4207 19.9916 85.7362 20ZM85.7362 3.40129C84.4046 3.40129 83.103 3.78994 81.9958 4.51809C80.8886 5.24624 80.0256 6.28118 79.516 7.49205C79.0065 8.70292 78.8731 10.0353 79.1329 11.3208C79.3927 12.6062 80.0339 13.787 80.9755 14.7137C81.9171 15.6405 83.1167 16.2716 84.4228 16.5273C85.7288 16.783 87.0825 16.6518 88.3127 16.1502C89.543 15.6487 90.5945 14.7993 91.3343 13.7096C92.0741 12.6198 92.4689 11.3386 92.4689 10.028C92.4689 8.27047 91.7596 6.58494 90.497 5.3422C89.2344 4.09946 87.5219 3.40129 85.7362 3.40129Z" fill="white"/>
               <path d="M19.0923 0.616349C18.5073 0.583706 17.9209 0.583706 17.3359 0.616349C13.4781 0.978539 9.8231 2.48572 6.85505 4.93824C3.88701 7.39076 1.74599 10.6729 0.715577 14.3499C0.237903 16.0056 -0.00292974 17.7188 2.68948e-05 19.44H3.51274C3.51201 17.7067 3.80891 15.9858 4.39091 14.3499H17.401V19.472H20.9137V0.616349C20.307 0.582034 19.6989 0.582034 19.0923 0.616349ZM17.3359 10.9245H6.06596C7.33116 9.05856 8.99533 7.48724 10.942 6.32048C12.8887 5.15372 15.0709 4.4197 17.3359 4.16978V10.9245Z" fill="white"/>
               <path d="M33.8911 11.3564L37.0298 9.75578L40.2823 8.15513C39.552 7.19907 38.7355 6.30978 37.8429 5.49806C34.7512 2.6886 30.7979 0.97112 26.6055 0.616086C26.0205 0.583443 25.4341 0.583443 24.8491 0.616086C24.2641 0.58418 23.6778 0.58418 23.0928 0.616086V19.4077H26.6055V15.0219L30.6061 13.0371L37.1111 19.5197H37.2412L40.3961 17.9191L33.8911 11.3564ZM27.9878 10.412L26.6055 11.1163V4.1215C29.4521 4.46188 32.1479 5.56973 34.3952 7.3228L31.2891 8.92344L27.9878 10.412Z" fill="white"/>
@@ -55,19 +62,40 @@ export function ScoreHeroBanner() {
               <path d="M229.616 0H246.616V3.57143H233.501V8.33333H244.43V11.9048H233.501V16.1905H246.616V20H229.616V0Z" fill="white"/>
             </svg>
 
-            <button type="button" aria-label="About Artsony Score" className="text-info-400">
-              <Image src='/icons/question-circle.svg' width={24} height={24} alt='question icon' /> 
-            </button>
+            <DynamicTooltip
+              title={ARTSONY_SCORE_HELP.title}
+              placement="bottom"
+              iconSize={isDesktop ? 24 : 20}
+              className="w-[212px]"
+              content={
+                <>
+                  <p>{ARTSONY_SCORE_HELP.intro}</p>
+                  <p className="mt-2">
+                    {ARTSONY_SCORE_HELP.guideLead}{' '}
+                    <Link href={CREATOR_GUIDE_HREF} className="text-body-s text-primary-500 underline">
+                      {ARTSONY_SCORE_HELP.guideLabel}
+                    </Link>
+                  </p>
+                </>
+              }
+            />
           </div>
 
-          <div className='flex flex-col gap-y-2'>
-            <p style={{ color: '#4CAF50 ' }} className='font-raleway text-h5 text-successful-500 font-semibold' >{overview.label}</p>
-            <p className="font-poppins text-body-xs text-white leading-4">{overview.description}</p>
+          <div className="order-3 flex w-full flex-col gap-y-2">
+            <p className={cn('font-raleway text-h6 font-semibold lg:text-h5', tierMeta.textClassName)}>{overview.label}</p>
+            <p className="font-poppins text-body-xs leading-4 text-white">{overview.description}</p>
           </div>
         </div>
 
-        <CircularGauge value={overview.value} max={overview.max} size={168} strokeWidth={12} progressColor="#4CAF50" className="shrink-0">
-          <span className="font-raleway text-h2 font-semibold text-white">{overview.value.toFixed(1)}</span>
+        <CircularGauge
+          value={overview.value}
+          max={overview.max}
+          size={isDesktop ? 168 : 130}
+          strokeWidth={isDesktop ? 12 : 10}
+          progressColor={tierMeta.gaugeColor}
+          className="order-2 shrink-0"
+        >
+          <span className="font-raleway text-h4 font-semibold text-white lg:text-h2">{overview.value.toFixed(1)}</span>
         </CircularGauge>
       </div>
     </div>

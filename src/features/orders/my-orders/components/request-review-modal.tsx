@@ -4,35 +4,42 @@ import { useState } from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
 import { Star, X } from 'lucide-react'
 import { Button, Textarea } from '@/components'
-import { useToast } from '@/components/ui/toaster'
+import { useSubmitReview } from '@/hooks/use-review'
 
 interface Props {
   open: boolean
   onClose: () => void
+  orderItemId: string
   artworkTitle: string
 }
 
-// TODO: no review/rating service exists yet. This UI is complete and functional
-// up to the point of submission — wire `handleSubmit` to the real mutation
-// (e.g. useSubmitReview({ physicalId, rating, comment })) once the backend
-// contract (rating scale, artwork vs seller target, endpoint) is defined.
-export function RequestReviewModal({ open, onClose, artworkTitle }: Props) {
+const MAX_COMMENT_LENGTH = 2000
+
+export function RequestReviewModal({ open, onClose, orderItemId, artworkTitle }: Props) {
     const [rating, setRating] = useState(0)
     const [comment, setComment] = useState('')
-    const [isSubmitting, setIsSubmitting] = useState(false)
-    const { success } = useToast()
+    const submitReview = useSubmitReview()
 
     if (!open) return null
 
-    const handleSubmit = async () => {
-        if (rating === 0) return
-        setIsSubmitting(true)
-        await new Promise((r) => setTimeout(r, 600)) // placeholder — replace with real mutation
-        setIsSubmitting(false)
-        success('Review submitted', 'Thanks for sharing your feedback.')
-        setRating(0)
-        setComment('')
+    const handleClose = () => {
+        if (submitReview.isPending) return
         onClose()
+    }
+
+    const handleSubmit = () => {
+        const trimmed = comment.trim()
+        if (rating === 0 || submitReview.isPending) return
+        submitReview.mutate(
+            { order_item_id: orderItemId, rating, ...(trimmed ? { comment: trimmed } : {}) },
+            {
+                onSuccess: () => {
+                    setRating(0)
+                    setComment('')
+                    onClose()
+                },
+            },
+        )
     }
 
     return (
@@ -40,7 +47,8 @@ export function RequestReviewModal({ open, onClose, artworkTitle }: Props) {
             className="fixed inset-0 z-50 flex items-center justify-center bg-black/40"
             role="dialog"
             aria-modal="true"
-            onClick={(e) => e.target === e.currentTarget && onClose()}
+            aria-labelledby="review-title"
+            onClick={(e) => e.target === e.currentTarget && handleClose()}
         >
             <AnimatePresence>
                 <motion.div
@@ -51,7 +59,7 @@ export function RequestReviewModal({ open, onClose, artworkTitle }: Props) {
                 >
                     <button
                         type="button"
-                        onClick={onClose}
+                        onClick={handleClose}
                         aria-label="Close"
                         className="absolute top-3 left-3 w-10 h-10 rounded-full border border-gray-50 flex items-center justify-center"
                     >
@@ -61,7 +69,7 @@ export function RequestReviewModal({ open, onClose, artworkTitle }: Props) {
                     </button>
 
                     <div className="flex flex-col items-center gap-y-2 text-center pt-4">
-                        <h4 className="font-raleway font-medium text-h4 text-[#333333] tracking-wide">Rate your purchase</h4>
+                        <h4 id="review-title" className="font-raleway font-medium text-h4 text-[#333333] tracking-wide">Rate your purchase</h4>
                         <p className="font-poppins text-body-xs text-body">{artworkTitle}</p>
                     </div>
 
@@ -83,16 +91,20 @@ export function RequestReviewModal({ open, onClose, artworkTitle }: Props) {
                         ))}
                     </div>
 
-                    <Textarea
-                        placeholder="Tell us about your experience (optional)"
-                        value={comment}
-                        onChange={(e) => setComment(e.target.value)}
-                    />
+                    <div className="flex flex-col gap-y-2">
+                        <Textarea
+                            placeholder="Tell us about your experience (optional)"
+                            value={comment}
+                            maxLength={MAX_COMMENT_LENGTH}
+                            onChange={(e) => setComment(e.target.value)}
+                        />
+                        <p className="font-poppins text-body-xxs text-body text-right">{comment.length}/{MAX_COMMENT_LENGTH}</p>
+                    </div>
 
                     <Button
                         className="mx-auto"
-                        disabled={rating === 0 || isSubmitting}
-                        isLoading={isSubmitting}
+                        disabled={rating === 0 || submitReview.isPending}
+                        isLoading={submitReview.isPending}
                         onClick={handleSubmit}
                     >
                         Submit Review

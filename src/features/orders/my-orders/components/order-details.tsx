@@ -3,8 +3,10 @@
 import { useState } from 'react'
 import { OrderActionsMenu, type OrderActionsMenuItem } from '../ui/order-actions-menu'
 import { PackagingProofLightbox } from './packaging-proof-lightbox'
-import { useDownloadReceipt, useDownloadInvoice } from '@/hooks/use-physical-order'
+import { useDownloadReceipt } from '@/hooks/use-physical-order'
+import { useReviewEligibility } from '@/hooks/use-review'
 import { RequestReviewModal } from './request-review-modal'
+import { ShareArtworkModal } from '@/features/orders/my-orders/components/share-artwork-modal'
 import Image from 'next/image'
 import type { UseQueryResult } from '@tanstack/react-query'
 import { Input } from '@/components'
@@ -12,7 +14,16 @@ import type { CommerceApiSuccess } from '@/types/order'
 import { PhysicalOrderDetailView } from '@/types/physical-order'
 import { DetailSkeleton } from './detail-skeleton'
 import { DetailErrorState } from './detail-error-state'
-import { formatCurrency, formatDate } from '../utils'
+import {
+  formatCurrency,
+  formatDate,
+  formatOrderNumber,
+  getCancellationEvent,
+  getCancellationReason,
+  getOrderTotal,
+  supportMailto,
+} from '../utils'
+import { openDocumentAfter } from '@/features/orders/my-orders/open-document'
 
 
 interface Props {
@@ -25,64 +36,62 @@ export function OrderDetails({ query, status }: Props) {
     const [proofOpen, setProofOpen] = useState(false)
     const [proofStartIndex, setProofStartIndex] = useState(0)
     const [reviewOpen, setReviewOpen] = useState(false)
+    const [shareOpen, setShareOpen] = useState(false)
     const downloadReceipt = useDownloadReceipt()
-    const downloadInvoice = useDownloadInvoice()
+    const orderItemId = data?.data.order_item?.id
+    const eligibility = useReviewEligibility(orderItemId, status === 'completed')
 
-    const contactSupportItem: OrderActionsMenuItem = {
-    id: 'support',
-    label: 'Contact Support',
-    onSelect: () =>
-        window.open(`mailto:support@artsony.com?subject=${encodeURIComponent(`Order ${physical.order_id}`)}`),
+    if (isLoading) return <DetailSkeleton />
+    if (isError || !data) return <DetailErrorState error={error} onRetry={refetch} />
+
+    const { physical, order_item, order_number, delivery_address, refund_requests, delivery_proofs, timeline } = data.data
+    const orderNumber = formatOrderNumber(order_number, physical.order_id)
+    const total = getOrderTotal(order_item?.unit_price, order_item?.quantity, physical.shipping_cost)
+    const latestRefund = refund_requests[refund_requests.length - 1]
+    const cancellationEvent = getCancellationEvent(timeline)
+    const cancellationReason = getCancellationReason(cancellationEvent) ?? latestRefund?.reason ?? null
+    const alreadyReviewed = eligibility.data?.eligible === false && eligibility.data.reason === 'Already reviewed'
+
+    const receiptItem: OrderActionsMenuItem = {
+        id: 'receipt',
+        label: 'Download Receipt',
+        isPending: downloadReceipt.isPending,
+        onSelect: () =>
+            void openDocumentAfter(() => downloadReceipt.mutateAsync(physical.id).then((doc) => doc.receipt_url)),
     }
 
-    const packagingProofItem: OrderActionsMenuItem = {
-    id: 'proof',
-    label: 'View Packaging Proof',
-    onSelect: () => {
-        setProofStartIndex(0)
-        setProofOpen(true)
-    },
+    const contactSupportItem: OrderActionsMenuItem = {
+        id: 'support',
+        label: 'Contact Support',
+        onSelect: () => window.location.assign(supportMailto(`Order ${orderNumber}`)),
     }
 
     const menuItems: OrderActionsMenuItem[] =
         status === 'canceled'
         ? [
+            receiptItem,
             {
-                id: 'receipt',
-                label: 'Download Receipt',
-                isPending: downloadReceipt.isPending,
-                onSelect: () =>
-                    downloadReceipt.mutate(physical.id, {
-                    onSuccess: (data) => window.open(data.receipt_url, '_blank', 'noopener,noreferrer'),
-                    }),
+                id: 'proof',
+                label: 'View Packaging Proof',
+                disabled: delivery_proofs.length === 0,
+                onSelect: () => {
+                    setProofStartIndex(0)
+                    setProofOpen(true)
+                },
             },
-            packagingProofItem,
             contactSupportItem,
         ]
         : [
-            // TODO: "View Shipping Label" needs a backend discriminator (e.g. DeliveryProof.proof_type)
-            // to separate label images from packaging images. Currently opens the same proof set.
-            { id: 'label', label: 'View Shipping Label', onSelect: () => { setProofStartIndex(0); setProofOpen(true) } },
-            packagingProofItem,
+            receiptItem,
             {
-                id: 'invoice',
-                label: 'Download Invoice',
-                isPending: downloadInvoice.isPending,
-                onSelect: () =>
-                    downloadInvoice.mutate(physical.id, {
-                    onSuccess: (data) => window.open(data.invoice_url, '_blank', 'noopener,noreferrer'),
-                    }),
+                id: 'review',
+                label: alreadyReviewed ? 'Review Submitted' : 'Leave a Review',
+                disabled: eligibility.data?.eligible === false,
+                onSelect: () => setReviewOpen(true),
             },
-            { id: 'review', label: 'Request Review', onSelect: () => setReviewOpen(true) },
+            { id: 'share', label: 'Share Artwork', disabled: !order_item, onSelect: () => setShareOpen(true) },
             contactSupportItem,
         ]
-
-    if (isLoading) return <DetailSkeleton />
-    if (isError || !data) return <DetailErrorState error={error} onRetry={refetch} />
-
-    const { physical, order_item, delivery_address, refund_requests, delivery_proofs } = data.data
-    const total = (order_item?.unit_price ?? 0) * (order_item?.quantity ?? 1) + (physical.shipping_cost ?? 0)
-    const latestRefund = refund_requests[refund_requests.length - 1]
 
     return (
         <div className="bg-white py-4 border-2 border-gray-50 rounded-xl flex flex-col">
@@ -104,7 +113,7 @@ export function OrderDetails({ query, status }: Props) {
                         Artwork Type: <span className="text-body">{order_item?.artwork_format ?? '—'}</span>
                     </p>
                     <p className="font-poppins text-body-xs text-gray-200 tracking-wide">
-                        Order ID: <span className="text-body">{physical.order_id.slice(0, 12).toUpperCase()}</span>
+                        Order ID: <span className="text-body">{orderNumber}</span>
                     </p>
                     <p className="font-poppins text-body-xs text-gray-200 tracking-wide">
                         Status:{' '}
@@ -122,7 +131,9 @@ export function OrderDetails({ query, status }: Props) {
                     <p className="font-poppins text-body-xs text-gray-200 tracking-wide">
                     {status === 'completed' ? 'Pickup Date:' : 'Canceled Date:'}{' '}
                     <span className="text-body">
-                        {status === 'completed' ? formatDate(physical.picked_up_at, true) : formatDate(physical.updated_at, true)}
+                        {status === 'completed'
+                            ? formatDate(physical.picked_up_at, true)
+                            : formatDate(cancellationEvent?.occurred_at ?? physical.updated_at, true)}
                     </span>
                     </p>
                     <p className="font-poppins text-body-xs text-gray-200 tracking-wide">
@@ -169,7 +180,7 @@ export function OrderDetails({ query, status }: Props) {
                 <p className="font-poppins font-medium text-body-m leading-6 tracking-wide text-body">Refund Details</p>
                 <div className="grid grid-cols-2 gap-y-4 gap-x-8">
                     <ReadOnlyField label="Courier" value={physical.courier_name ?? '—'} />
-                    <ReadOnlyField label="Reason" value={latestRefund?.reason ?? '—'} />
+                    <ReadOnlyField label="Reason" value={cancellationReason ?? '—'} />
                     <ReadOnlyField label="Tracking ID :" value={physical.tracking_id ?? '—'} />
                     <ReadOnlyField label="Refund Status" value={physical.refund_status} valueClassName={physical.refund_status === 'COMPLETED' ? 'text-successful-500' : 'text-info-500'} />
                     <ReadOnlyField label="Service Type" value={physical.courier_service_type ?? 'Not Activated'} />
@@ -226,16 +237,23 @@ export function OrderDetails({ query, status }: Props) {
                 open={proofOpen}
                 onClose={() => setProofOpen(false)}
             />
-            
-            {status === 'completed' && (
-                <RequestReviewModal
-                    open={reviewOpen}
-                    onClose={() => setReviewOpen(false)}
-                    artworkTitle={order_item?.artwork_title ?? 'this artwork'}
-                />
-            )}
 
-            <PackagingProofLightbox proofs={delivery_proofs} open={proofOpen} onClose={() => setProofOpen(false)} />
+            {status === 'completed' && order_item && (
+                <>
+                    <RequestReviewModal
+                        open={reviewOpen}
+                        onClose={() => setReviewOpen(false)}
+                        orderItemId={order_item.id}
+                        artworkTitle={order_item.artwork_title}
+                    />
+                    <ShareArtworkModal
+                        open={shareOpen}
+                        onClose={() => setShareOpen(false)}
+                        artworkSlug={order_item.artwork_slug}
+                        artworkTitle={order_item.artwork_title}
+                    />
+                </>
+            )}
         </div>
     )
 }

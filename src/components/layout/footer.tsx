@@ -37,7 +37,7 @@ const Footer = () => {
       userRole === 'ARTIST' 
         ? { name: 'Artsony Studio', href: '/artsony-studio' } 
         : { name: 'Messages', href: '/messages' },
-      ...(userRole === 'ARTIST' ? [{ name: 'Wallet', href: '/artsony-studio' }] : []),
+      ...(userRole === 'ARTIST' ? [{ name: 'Wallet', href: '/artsony-studio?section=wallet' }] : []),
     ],
     company: [
       { name: 'My Profile', href: '/profile' },
@@ -52,7 +52,7 @@ const Footer = () => {
         : { name: 'Shipping and Guide', href: '/' },
       userRole === 'ARTIST' 
         ? { name: 'Contact Support', href: '/support' } 
-        : { name: 'Become a Creator', href: '/' },
+        : { name: 'Become a Creator', href: '/seller-registration' },
     ],
   }
 

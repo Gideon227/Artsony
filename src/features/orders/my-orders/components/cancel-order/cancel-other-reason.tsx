@@ -10,8 +10,8 @@ const schema = z.object({
   reason: z
     .string()
     .trim()
-    .min(1, 'Please tell us why you\'re canceling.')
-    .refine((val) => val.split(/\s+/).filter(Boolean).length <= 500, 'Max 500 words.'),
+    .min(5, 'Please tell us a little more (at least 5 characters).')
+    .max(1000, 'Max 1000 characters.'),
 })
 
 type FormValues = z.infer<typeof schema>
@@ -54,7 +54,7 @@ export function CancelOtherReason({ onClose, onBack, onContinue }: Props) {
           {errors.reason ? (
             <p className="font-poppins text-body-xxs text-error-500" role="alert">{errors.reason.message}</p>
           ) : (
-            <p className="font-poppins text-body-xxs text-body">Max 500 words</p>
+            <p className="font-poppins text-body-xxs text-body">Max 1000 characters</p>
           )}
         </div>
       </div>

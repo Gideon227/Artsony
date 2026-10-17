@@ -153,6 +153,8 @@ export type PhysicalOrderFilters = {
   artist_id?: string
   buyer_id?: string
   sort_order?: 'asc' | 'desc'
+  sort_by?: 'date' | 'value'
+  search?: string
   page?: number
   limit?: number
 }
@@ -175,9 +177,13 @@ export type OrderItemPhysicalListEntry = OrderItemPhysical & {
     artwork_title: string
     artwork_slug: string
     artwork_thumbnail_url: string | null
+    artwork_format: OrderItem['artwork_format']
     unit_price: number
     quantity: number
+    created_at: string
   }
+  cancelled_by: OrderTimelineEvent['actor_role'] | null
+  cancelled_at: string | null
   buyer: OrderPartySummary | null
   seller: OrderPartySummary | null
 }
@@ -200,6 +206,7 @@ export type OrderItemPhysicalWithArtwork = OrderItemPhysicalListEntry
 export type PhysicalOrderDetailView = {
   physical: OrderItemPhysical
   order_item: OrderItem
+  order_number: string | null
   timeline: OrderTimelineEvent[]
   delivery_proofs: DeliveryProof[]
   invoice: OrderInvoice | null

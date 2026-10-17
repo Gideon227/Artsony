@@ -20,7 +20,7 @@ export type WalletActivity = {
   created_at: string
 }
 
-export type TrendDirection = 'UP' | 'DOWN'
+export type TrendDirection = 'UP' | 'DOWN' | 'FLAT'
 
 export type WalletMetric = {
   amount: number
@@ -41,9 +41,9 @@ export type WithdrawInput = {
   amount: number
   network: WalletNetwork
   wallet_address: string
+  idempotency_key: string
 }
 
 export type WithdrawResult = {
   activity: WalletActivity
-  available_balance: number
 }

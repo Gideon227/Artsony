@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState, useMemo, useEffect } from 'react'
+import React, { useState, useMemo, useEffect, useRef } from 'react'
 import { Plus } from 'lucide-react'
 import { useQuery } from '@tanstack/react-query'
 import { messagingService } from '@/services/messaging.service'
@@ -63,6 +63,20 @@ export default function MessagesPage() {
     () => conversations.find((c) => c.id === selectedConvId) ?? null,
     [conversations, selectedConvId]
   )
+
+  const deepLinkApplied = useRef(false)
+  useEffect(() => {
+    if (deepLinkApplied.current) return
+    const requested = new URLSearchParams(window.location.search).get('conversation')
+    if (!requested) {
+      deepLinkApplied.current = true
+      return
+    }
+    if (conversations.some((c) => c.id === requested)) {
+      setSelectedConvId(requested)
+      deepLinkApplied.current = true
+    }
+  }, [conversations])
 
   if (!isLoading && conversations.length === 0) {
     return (

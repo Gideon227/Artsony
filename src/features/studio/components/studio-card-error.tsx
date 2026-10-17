@@ -2,7 +2,7 @@
 
 import { AlertCircle } from 'lucide-react'
 import { Button } from '@/components/ui/button'
-import { studioErrorMessage } from '@/lib/studio/query'
+import { isStudioRetryable, studioErrorMessage } from '@/lib/studio/query'
 import { cn } from '@/lib/utils'
 
 type StudioCardErrorProps = {
@@ -23,9 +23,11 @@ export function StudioCardError({ error, onRetry, isRetrying = false, className 
     >
       <AlertCircle className="h-5 w-5 text-error-500" strokeWidth={1.75} aria-hidden="true" />
       <p className="text-body-s text-body">{studioErrorMessage(error)}</p>
-      <Button type="button" size="sm" variant="outline" isLoading={isRetrying} onClick={onRetry} aria-label="Retry loading">
-        Retry
-      </Button>
+      {isStudioRetryable(error) && (
+        <Button type="button" size="sm" variant="outline" isLoading={isRetrying} onClick={onRetry} aria-label="Retry loading">
+          Retry
+        </Button>
+      )}
     </div>
   )
 }

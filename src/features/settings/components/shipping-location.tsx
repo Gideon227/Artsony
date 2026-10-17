@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useMemo, useState, type ReactNode } from 'react'
 import { Loader2, Trash2 } from 'lucide-react'
 import { Button, Input } from '@/components'
-import { Dropdown, type DropdownOption } from '@/components/ui/dropdown'
+import { CountryField, StateField } from '@/components/forms/location-fields'
 import { useToast } from '@/components/ui/toaster'
 import { cn } from '@/lib/utils'
 import { useAuthStore } from '@/store'
@@ -15,7 +15,6 @@ import {
   useUpdateShippingAddress,
 } from '@/hooks/use-shipping-addresses'
 import { useMySellerRegistration, useUpdateDispatchAddress } from '@/hooks/use-seller'
-import { getCountryName, useCountryOptions, useStateOptions } from '@/hooks/use-location-data'
 
 type AddressFields = {
   address: string
@@ -72,9 +71,6 @@ function useDraft<T extends Record<string, string>>(server: T) {
   return { value, isDirty, update, replace }
 }
 
-const FieldError = ({ message }: { message?: string }) =>
-  message ? <p className='pl-4 text-xs font-semibold text-error-500'>{message}</p> : null
-
 interface SwitchControlProps {
   checked: boolean
   onChange: () => void
@@ -110,116 +106,6 @@ const SwitchControl = ({ checked, onChange, label, disabled, isLoading }: Switch
   </button>
 )
 
-interface CountryFieldProps {
-  value: string
-  onChange: (code: string) => void
-  disabled?: boolean
-  error?: string
-}
-
-const CountryField = ({ value, onChange, disabled, error }: CountryFieldProps) => {
-  const { countries, isLoading } = useCountryOptions()
-  const [query, setQuery] = useState('')
-
-  const options = useMemo<DropdownOption[]>(
-    () => countries.map((c) => ({ id: c.code, label: c.name })),
-    [countries],
-  )
-  const selected = useMemo<DropdownOption | undefined>(() => {
-    if (!value) return undefined
-    return options.find((o) => o.id === value) ?? { id: value, label: getCountryName(value) ?? value }
-  }, [options, value])
-
-  return (
-    <div className='flex flex-col gap-y-1.5'>
-      <Dropdown
-        options={options}
-        value={selected}
-        onChange={(option) => {
-          setQuery('')
-          onChange(String(option.id))
-        }}
-        placeholder='Country'
-        title='Country'
-        arrow='triangle'
-        searchable
-        searchPlaceholder='Search country'
-        searchValue={query}
-        onSearchChange={setQuery}
-        isLoading={isLoading}
-        disabled={disabled}
-        variant={error ? 'error' : 'default'}
-        emptyMessage='No countries found'
-      />
-      <FieldError message={error} />
-    </div>
-  )
-}
-
-interface StateFieldProps {
-  country: string
-  value: string
-  onChange: (state: string) => void
-  disabled?: boolean
-  error?: string
-}
-
-const StateField = ({ country, value, onChange, disabled, error }: StateFieldProps) => {
-  const { countries } = useCountryOptions()
-  const [query, setQuery] = useState('')
-
-  const countryName = country
-    ? countries.find((c) => c.code === country)?.name ?? getCountryName(country)
-    : undefined
-  const { states, isLoading, isError, refetch } = useStateOptions(countryName)
-
-  const options = useMemo<DropdownOption[]>(() => states.map((name) => ({ id: name, label: name })), [states])
-  const selected = useMemo<DropdownOption | undefined>(
-    () => (value ? { id: value, label: value } : undefined),
-    [value],
-  )
-
-  return (
-    <div className='flex min-w-0 flex-1 flex-col gap-y-1.5'>
-      <Dropdown
-        options={options}
-        value={selected}
-        onChange={(option) => {
-          setQuery('')
-          onChange(String(option.id))
-        }}
-        placeholder='State/Province'
-        title='State/Province'
-        arrow='triangle'
-        searchable
-        searchPlaceholder='Search state'
-        searchValue={query}
-        onSearchChange={setQuery}
-        isLoading={isLoading}
-        disabled={disabled || !country}
-        variant={error ? 'error' : 'default'}
-        emptyMessage={
-          !country
-            ? 'Select a country first'
-            : isError
-              ? 'Could not load states'
-              : 'No states found for this country'
-        }
-      />
-      {isError && !disabled && (
-        <button
-          type='button'
-          onClick={() => refetch()}
-          className='self-start pl-4 text-xs font-semibold text-primary-500 underline underline-offset-2 hover:text-primary-600'
-        >
-          Could not load states. Retry
-        </button>
-      )}
-      <FieldError message={error} />
-    </div>
-  )
-}
-
 interface AddressCardProps {
   value: AddressFields
   errors?: AddressErrors
@@ -247,6 +133,7 @@ const AddressCard = ({ value, errors = {}, onChange, disabled, lockedFields, idP
         className={FIELD_TEXT}
       />
       <CountryField
+        arrow='triangle'
         value={value.country}
         disabled={locked}
         error={errors.country}
@@ -266,6 +153,7 @@ const AddressCard = ({ value, errors = {}, onChange, disabled, lockedFields, idP
       />
       <div className='flex flex-col gap-4 sm:flex-row'>
         <StateField
+          arrow='triangle'
           country={value.country}
           value={value.state}
           disabled={locked}
@@ -296,10 +184,10 @@ const SectionTitle = ({ children }: { children: ReactNode }) => (
 )
 
 const SectionDescription = ({ children }: { children: ReactNode }) => (
-  <p className='font-poppins text-body-xs tracking-wide text-body'>{children}</p>
+  <p className='font-poppins text-body-xs leading-8 tracking-wide text-gray-200'>{children}</p>
 )
 
-export default function ShippingLocation({ goBack }: { goBack?: () => void }) {
+export default function ShippingLocation() {
   const { user } = useAuthStore()
   const { error: toastError } = useToast()
 
@@ -485,21 +373,9 @@ export default function ShippingLocation({ goBack }: { goBack?: () => void }) {
   const dispatchDisabled = !canEditDispatch || isLoadingRegistration
 
   return (
-    <section className='flex h-full min-h-0 w-full flex-col overflow-hidden lg:rounded-2xl lg:border lg:border-gray-50 bg-white'>
-      <div className='lg:px-8 lg:py-4 px-4 max-lg:pb-4 max-lg:pt-6 flex justify-between items-center border-b border-gray-50 '>
-        <div className='flex items-center gap-2'>
-          <button onClick={goBack} className='cursor-pointer lg:hidden'>
-            <svg width="40" height="40" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <mask id="path-1-inside-1_10796_3029" fill="white">
-                <path d="M0 20C0 8.95431 8.95431 0 20 0C31.0457 0 40 8.95431 40 20C40 31.0457 31.0457 40 20 40C8.95431 40 0 31.0457 0 20Z"/>
-              </mask>
-              <path d="M0 20M40 20M40 20M0 20M20 0M40 20M20 40M0 20M20 40V38C10.0589 38 2 29.9411 2 20H0H-2C-2 32.1503 7.84974 42 20 42V40ZM40 20H38C38 29.9411 29.9411 38 20 38V40V42C32.1503 42 42 32.1503 42 20H40ZM20 0V2C29.9411 2 38 10.0589 38 20H40H42C42 7.84974 32.1503 -2 20 -2V0ZM20 0V-2C7.84974 -2 -2 7.84974 -2 20H0H2C2 10.0589 10.0589 2 20 2V0Z" fill="#E6E8EB" mask="url(#path-1-inside-1_10796_3029)"/>
-              <path fill-rule="evenodd" clip-rule="evenodd" d="M30 20C30 25.5228 25.5228 30 20 30C14.4772 30 10 25.5228 10 20C10 14.4772 14.4772 10 20 10C25.5228 10 30 14.4772 30 20ZM16.9696 16.9696C17.2625 16.6768 17.7374 16.6768 18.0303 16.9696L20 18.9393L21.9696 16.9697C22.2625 16.6768 22.7374 16.6768 23.0303 16.9697C23.3232 17.2626 23.3232 17.7374 23.0303 18.0303L21.0606 20L23.0303 21.9696C23.3232 22.2625 23.3232 22.7374 23.0303 23.0303C22.7374 23.3232 22.2625 23.3232 21.9696 23.0303L20 21.0607L18.0303 23.0303C17.7374 23.3232 17.2625 23.3232 16.9696 23.0303C16.6768 22.7374 16.6768 22.2625 16.9696 21.9697L18.9393 20L16.9696 18.0303C16.6767 17.7374 16.6767 17.2625 16.9696 16.9696Z" fill="#525965"/>
-            </svg>
-          </button>
-          <h5 className='max-lg:font-poppins lg:font-raleway font-medium lg:font-semibold max-lg:text-body-s lg:text-h5 text-body lg:text-primary-500 leading-10 tracking-wide'>Shipping & Location</h5>
-        </div>
-        
+    <section className='flex h-full min-h-0 w-full flex-col overflow-hidden rounded-2xl border border-gray-50 bg-white'>
+      <header className='flex h-20 shrink-0 items-center justify-between gap-x-4 border-b border-gray-50 px-8'>
+        <h5 className='font-raleway text-h5 font-semibold tracking-wide text-primary-500'>Shipping & Location</h5>
         <Button
           size='sm'
           className='rounded-full'
@@ -511,23 +387,24 @@ export default function ShippingLocation({ goBack }: { goBack?: () => void }) {
         >
           Save
         </Button>
-      </div>
+      </header>
 
-
-      <div className='min-h-0 flex-1 overflow-y-auto lg:px-8 px-4 lg:pb-8 pb-20 pt-12'>
+      <div className='min-h-0 flex-1 overflow-y-auto px-8 pb-8 pt-12'>
         <div className='flex flex-col gap-y-16'>
           <div className='flex flex-col gap-y-4'>
             <SectionTitle>Location</SectionTitle>
             <SectionDescription>
-              This is your primary country and region on Artsony. It&apos;s used for compliance, payouts, and platform
+              This is your primary country and region on Artsony. It’s used for compliance, payouts, and platform
               features — not for shipping.
             </SectionDescription>
             <div className='flex flex-col gap-y-4 rounded-[24px] bg-secondary-50 p-6'>
               <CountryField
+                arrow='triangle'
                 value={location.value.country}
                 onChange={(country) => location.update({ country, state: '' })}
               />
               <StateField
+                arrow='triangle'
                 country={location.value.country}
                 value={location.value.state}
                 onChange={(state) => location.update({ state })}

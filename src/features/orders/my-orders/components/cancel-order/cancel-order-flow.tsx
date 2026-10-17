@@ -6,6 +6,7 @@ import { CancelReason } from './cancel-reason'
 import { CancelOtherReason } from './cancel-other-reason'
 import { Confirmation } from './confirmation'
 import { useCancelPhysicalItem } from '@/hooks/use-physical-order'
+import { HttpError } from '@/lib/api-client'
 
 type Step = 'reason' | 'other' | 'confirm'
 
@@ -30,6 +31,10 @@ export function CancelOrderFlow({ physicalId, open, onOpenChange }: Props) {
     onOpenChange(false)
     setTimeout(reset, 200)
   }, [onOpenChange, reset])
+
+  const requestClose = useCallback(() => {
+    if (!mutation.isPending) close()
+  }, [mutation.isPending, close])
 
   const handleReasonPicked = (value: string) => {
     setReason(value)
@@ -56,7 +61,7 @@ export function CancelOrderFlow({ physicalId, open, onOpenChange }: Props) {
       className="fixed inset-0 z-50 flex items-center justify-center bg-black/40"
       role="dialog"
       aria-modal="true"
-      onClick={(e) => e.target === e.currentTarget && close()}
+      onClick={(e) => e.target === e.currentTarget && requestClose()}
     >
       <AnimatePresence mode="wait">
         <motion.div
@@ -67,17 +72,22 @@ export function CancelOrderFlow({ physicalId, open, onOpenChange }: Props) {
           transition={{ duration: 0.18 }}
           className="w-full max-w-[520px]"
         >
-          {step === 'reason' && <CancelReason onClose={close} onContinue={handleReasonPicked} />}
+          {step === 'reason' && <CancelReason onClose={requestClose} onContinue={handleReasonPicked} />}
           {step === 'other' && (
-            <CancelOtherReason onClose={close} onBack={() => setStep('reason')} onContinue={handleOtherReasonSubmit} />
+            <CancelOtherReason onClose={requestClose} onBack={() => setStep('reason')} onContinue={handleOtherReasonSubmit} />
           )}
           {step === 'confirm' && (
             <Confirmation
-              onClose={close}
-              onCancel={() => setStep(reason === 'Other' ? 'other' : 'reason')}
+              onClose={requestClose}
               onConfirm={handleConfirm}
               isPending={mutation.isPending}
-              errorMessage={mutation.isError ? 'Could not cancel this order. Please try again.' : null}
+              errorMessage={
+                mutation.isError
+                  ? mutation.error instanceof HttpError
+                    ? mutation.error.message
+                    : 'Could not cancel this order. Please try again.'
+                  : null
+              }
             />
           )}
         </motion.div>

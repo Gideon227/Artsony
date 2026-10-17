@@ -49,7 +49,7 @@ export function WalletFilterBar({ filters, onFiltersChange, resultCount, isFilte
     filters.status !== 'ALL' || filters.type !== 'ALL' || filters.priceRange !== 'ALL' || filters.dateFrom !== null
 
   return (
-    <div className="flex flex-col gap-y-8 rounded-xl bg-white p-4">
+    <div className="flex flex-col gap-y-8 rounded-xl border border-gray-50 bg-white p-4 lg:border-0">
       <div className="flex items-center gap-x-4">
         <h2 className="font-raleway text-h5 font-semibold tracking-wide text-body">
           {isFiltered ? 'Search Result' : 'Search'}

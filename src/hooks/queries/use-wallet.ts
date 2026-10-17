@@ -1,7 +1,6 @@
 import { studioRetry } from '@/lib/studio/query'
 import { useMutation, useQuery, useQueryClient, keepPreviousData } from '@tanstack/react-query'
 import { walletService } from '@/services/wallet.service'
-import { useToast } from '@/components/ui/toaster'
 import type { WalletPeriod, WithdrawInput } from '@/types/wallet'
 
 export function useWalletSummary(period: WalletPeriod) {
@@ -31,18 +30,14 @@ export function useWalletActivity() {
 
 export function useWithdraw() {
   const qc = useQueryClient()
-  const { success, error } = useToast()
 
+  // Outcome feedback (success / failed / field errors) is shown by the withdraw
+  // flow itself, so this hook only keeps the cached wallet data fresh.
   return useMutation({
     mutationFn: (input: WithdrawInput) => walletService.withdraw(input),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['wallet-activity'] })
       qc.invalidateQueries({ queryKey: ['wallet-summary'] })
-      success('Withdrawal submitted', 'Your withdrawal is now pending confirmation.')
-    },
-    onError: (err) => {
-      const message = err instanceof Error ? err.message : 'Could not process your withdrawal.'
-      error('Withdrawal failed', message)
     },
   })
 }

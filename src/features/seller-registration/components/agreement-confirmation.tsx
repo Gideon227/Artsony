@@ -1,36 +1,40 @@
+'use client'
+
 import { Button, Checkbox } from '@/components'
-import { Check, Mail, Globe } from 'lucide-react'
+import { Mail, Globe } from 'lucide-react'
 import React, { useState } from 'react'
-import { useRouter } from 'next/navigation'
 
-const AgreementConfirmation = () => {
-    // Functional state handling for user acknowledgment criteria
+interface AgreementConfirmationProps {
+    isSubmitting: boolean
+    onBack: () => void
+    onFinish: () => void | Promise<void>
+}
+
+const AgreementConfirmation = ({ isSubmitting, onBack, onFinish }: AgreementConfirmationProps) => {
     const [isAgreed, setIsAgreed] = useState(false)
-    const route = useRouter()
-
-    const handleToggleAgreement = () => {
-        setIsAgreed((prev) => !prev)
-    }
 
     const handleFinish = () => {
-        if (!isAgreed) return
-        console.log('Terms explicitly acknowledged. Proceeding to profile finalization.')
-        route.push('/')
+        if (!isAgreed || isSubmitting) return
+        void onFinish()
     }
 
     return (
-        <div className='mx-auto border border-gray-50 bg-white rounded-[32px] py-10 px-6 md:px-14 flex flex-col gap-y-6 max-w-4xl shadow-sm'>
-            
-            {/* Scrollable Document Body Container */}
-            <div className='max-h-[320px] overflow-y-auto pr-4 custom-scrollbar flex flex-col gap-6 text-gray-700'>
+        <div className='mx-auto w-full border border-gray-50 bg-white rounded-[32px] py-8 px-4 sm:px-6 md:py-10 md:px-14 flex flex-col gap-y-6 max-w-4xl shadow-sm'>
+
+            <div
+                tabIndex={0}
+                role='region'
+                aria-label='Seller terms and conditions'
+                className='max-h-[320px] overflow-y-auto pr-2 sm:pr-4 custom-scrollbar flex flex-col gap-6 text-gray-700'
+            >
                 <div className='font-poppins text-body-xs leading-6 tracking-wide space-y-4'>
                     <h2 className='text-base font-semibold text-heading'>Artsony Seller Terms and Conditions</h2>
                     <p className='text-text-disabled text-xs'>Last Updated: October 2025</p>
-                    
+
                     <p className='text-sm'>Welcome to Artsony — a global platform empowering artists to share, sell, and connect through art.</p>
                     <p className='text-sm'>These Seller Terms and Conditions (“Terms”) outline your rights and obligations when listing and selling artworks (digital or physical) on Artsony.</p>
                     <p className='text-sm'>By activating your seller account, you agree to comply with these Terms and all applicable laws.</p>
-                    
+
                     <h3 className='font-semibold text-heading pt-2'>1. Eligibility</h3>
                     <ul className='list-disc pl-5 space-y-1 text-sm'>
                         <li>Be at least 18 years old (or of legal age in your country).</li>
@@ -61,60 +65,55 @@ const AgreementConfirmation = () => {
                         <li>Pending payouts will be settled before full account closure.</li>
                     </ol>
 
-                    {/* Section 14 Layout Match from Image */}
                     <h3 className='text-base font-semibold text-heading pt-4'>14. Contact</h3>
                     <p className='text-sm text-gray-600'>For inquiries about these Terms or your account:</p>
                     <div className='flex flex-col gap-y-2 pt-1 text-sm text-gray-700'>
                         <div className='flex items-center gap-x-2'>
                             <Mail size={16} className='text-heading' />
-                            <span className='font-medium'>support@artsony.io</span>
+                            <span className='font-medium break-all'>support@artsony.io</span>
                         </div>
                         <div className='flex items-center gap-x-2'>
                             <Globe size={16} className='text-heading' />
-                            <span className='font-medium'>www.artsony.io/terms</span>
+                            <span className='font-medium break-all'>www.artsony.io/terms</span>
                         </div>
                     </div>
                 </div>
             </div>
 
-            {/* Interactive Custom Checkbox Row */}
-            <div 
-                onClick={handleToggleAgreement}
-                className='flex items-start gap-x-4 pt-4 border-t border-gray-100 cursor-pointer select-none group'
-            >
-                {/* <div 
-                    onClick={(e) => {
-                        e.stopPropagation(); // Prevents double-toggling when clicking directly on the circle
-                        handleToggleAgreement();
-                    }}
-                    className={`flex items-center justify-center rounded-full transition-all duration-200 mt-0.5 flex-shrink-0 w-6 h-6 border ${
-                        isAgreed 
-                            ? 'bg-action border-action text-white scale-100' 
-                            : 'border-gray-300 bg-white group-hover:border-action'
-                    }`}
+            <div className='flex items-start gap-x-4 pt-4 border-t border-gray-100'>
+                <Checkbox
+                    id='seller-terms-agreement'
+                    checked={isAgreed}
+                    onChange={setIsAgreed}
+                    disabled={isSubmitting}
+                    aria-label='I agree to the Artsony Seller Terms and Conditions'
+                />
+
+                <label
+                    htmlFor='seller-terms-agreement'
+                    className='cursor-pointer select-none font-poppins font-medium text-body-xs text-action leading-5 tracking-wide text-left transition-opacity duration-200'
                 >
-                    {isAgreed && <Check size={14} strokeWidth={3} />}
-                </div> */}
-
-                <Checkbox />
-
-                <p className='font-poppins font-medium text-body-xs text-action leading-5 tracking-wide text-left transition-opacity duration-200'>
                     By checking this box, I acknowledge that I have read, understood, and agree to Artsony’s Seller Terms and Conditions. I confirm the accuracy of the information provided and consent to Artsony’s processing of my details for seller verification and payouts.
-                </p>
+                </label>
             </div>
 
-            {/* Anchored Footer Control Actions */}
-            <div className='w-full flex justify-center pt-2'>
-                <Button 
+            <div className='w-full flex flex-col-reverse sm:flex-row items-center justify-center gap-4 pt-2'>
+                <Button
+                    type='button'
+                    variant='outline'
+                    onClick={onBack}
+                    disabled={isSubmitting}
+                    className='w-full sm:w-[168px] h-12'
+                >
+                    Back
+                </Button>
+                <Button
                     onClick={handleFinish}
-                    disabled={!isAgreed}
-                    rightIcon='/icons/verified-check-white.svg' 
-                    // className={`px-10 py-3 rounded-full font-poppins font-semibold tracking-wide text-white transition-all duration-300 ${
-                    //     isAgreed 
-                    //         ? 'bg-action hover:opacity-95 shadow-md cursor-pointer' 
-                    //         : 'bg-gray-300 cursor-not-allowed opacity-60'
-                    // }`}
-                    style={{ width: 180, height: 48 }}
+                    isLoading={isSubmitting}
+                    loadingText='Submitting…'
+                    disabled={!isAgreed || isSubmitting}
+                    rightIcon='/icons/verified-check-white.svg'
+                    className='w-full sm:w-[180px] h-12'
                 >
                     Finish
                 </Button>
@@ -123,4 +122,4 @@ const AgreementConfirmation = () => {
     )
 }
 
-export default AgreementConfirmation;
+export default AgreementConfirmation

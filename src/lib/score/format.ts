@@ -9,10 +9,12 @@ export function formatFeedbackTimestamp(isoDate: string): string {
 
 export type RatingTier = 'EXCELLENT' | 'AVERAGE' | 'POOR'
 
-export const RATING_TIER_META: Record<RatingTier, { label: string; textClassName: string }> = {
-  EXCELLENT: { label: 'Excellent', textClassName: 'text-successful-500' },
-  AVERAGE: { label: 'Average', textClassName: 'text-warning-600' },
-  POOR: { label: 'Poor', textClassName: 'text-error-600' },
+// gaugeColor mirrors the theme's successful-500 / warning-500 / error-500
+// (styles/globals.css) for SVG strokes, which can't take a Tailwind class.
+export const RATING_TIER_META: Record<RatingTier, { label: string; textClassName: string; gaugeColor: string }> = {
+  EXCELLENT: { label: 'Excellent', textClassName: 'text-successful-500', gaugeColor: '#4CAF50' },
+  AVERAGE: { label: 'Average', textClassName: 'text-warning-600', gaugeColor: '#FF9800' },
+  POOR: { label: 'Poor', textClassName: 'text-error-600', gaugeColor: '#F44336' },
 }
 
 /**

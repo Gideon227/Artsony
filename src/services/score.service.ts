@@ -1,19 +1,32 @@
 import { apiClient } from '@/lib/api-client'
-import type { BuyerFeedback, BuyerFeedbackSort, ScoreMetric, ScoreOverview } from '@/types/score'
-import { getRatingTier, RATING_TIER_META } from '@/lib/score/format'
+import type { BuyerFeedback, BuyerFeedbackSort, Score, ScoreMetricTrend } from '@/types/score'
+import { getRatingTier, RATING_TIER_META, type RatingTier } from '@/lib/score/format'
+import type { TrendDirection } from '@/types/wallet'
 
 // Wired to the real backend. Endpoints:
-//   GET /api/analytics/score    -> composite Artsony Score + sub-scores
+//   GET /api/analytics/score    -> composite Artsony Score + sub-scores + trends
 //   GET /api/analytics/reviews  -> buyer reviews for this artist (reuses the
-//                                   review module — see review.types.ts)
+//                                  review module — see review.types.ts)
 
-type BackendScoreComponent = { score: number }
+type BackendTrend = { change_percent: number; direction: 'up' | 'down' | 'flat' } | null
 
 type BackendArtsonyScoreBreakdown = {
   score: number
-  buyer_satisfaction: BackendScoreComponent & { average_rating: number | null; review_count: number }
-  engagement: BackendScoreComponent & { total_views: number; total_likes: number; engagement_rate: number }
-  order_reliability: BackendScoreComponent & {
+  buyer_satisfaction: {
+    score: number
+    average_rating: number | null
+    review_count: number
+    trend: BackendTrend
+  }
+  engagement: {
+    score: number
+    total_views: number
+    total_likes: number
+    engagement_rate: number
+    trend: BackendTrend
+  }
+  order_reliability: {
+    score: number
     delivered_items: number
     total_physical_items: number
   }
@@ -22,82 +35,121 @@ type BackendArtsonyScoreBreakdown = {
 type BackendReview = {
   id: string
   buyer_name: string
+  buyer_avatar_url: string | null
   comment: string | null
   rating: number
   created_at: string
 }
 
-const TIER_DESCRIPTION: Record<ReturnType<typeof getRatingTier>, string> = {
+const TIER_DESCRIPTION: Record<RatingTier, string> = {
   EXCELLENT:
-    "You're performing exceptionally well — your artworks are selling, buyers are satisfied, and your delivery track record is strong. Keep it up to stay highly visible across Artsony.",
+    'You’re performing exceptionally well — your artworks are selling, customers are satisfied, and your delivery performance is top-tier. Maintaining this level keeps your visibility high across Artsony and builds strong trust with new buyers. Keep doing what you’re doing — this is the sweet spot for top creators.',
   AVERAGE:
     "You're doing solidly, with room to grow. Focus on buyer satisfaction and order reliability to move into the top tier of Artsony sellers.",
   POOR:
     'Your score needs attention. Review recent buyer feedback and delivery performance below — small, consistent improvements here go a long way.',
 }
 
-export const scoreService = {
-  getOverview: async (): Promise<ScoreOverview> => {
-    const { data } = await apiClient.get<{ success: true; data: BackendArtsonyScoreBreakdown }>(
-      '/api/analytics/score',
-    )
+const DIRECTION_MAP: Record<'up' | 'down' | 'flat', TrendDirection> = { up: 'UP', down: 'DOWN', flat: 'FLAT' }
 
-    const tier = getRatingTier(data.score)
+const BANNER_IMAGE = '/images/chickens.png'
 
-    return {
-      value: data.score,
-      max: 100,
+function toTrend(trend: BackendTrend, label: string): ScoreMetricTrend | null {
+  if (!trend) return null
+  return { change_percent: trend.change_percent, direction: DIRECTION_MAP[trend.direction], label }
+}
+
+const round1 = (value: number): number => Math.round(value * 10) / 10
+
+// The backend scores 0–100; the Artsony Score is presented on a 10-point scale.
+const DISPLAY_MAX = 10
+
+// The tier (label and colour) always comes from the backend's 0–100 sub-score,
+// the same number the composite is built from, so a card can never show one
+// tier's label in another tier's colour.
+function toMetricStatus(
+  score: number,
+  hasData: boolean,
+  emptyLabel: string,
+): { tier: RatingTier | null; rating_label: string } {
+  if (!hasData) return { tier: null, rating_label: emptyLabel }
+  const tier = getRatingTier(score)
+  return { tier, rating_label: RATING_TIER_META[tier].label }
+}
+
+export function mapScore(data: BackendArtsonyScoreBreakdown): Score {
+  const tier = getRatingTier(data.score)
+
+  const hasReviews = data.buyer_satisfaction.review_count > 0 && data.buyer_satisfaction.average_rating !== null
+  const hasPhysicalOrders = data.order_reliability.total_physical_items > 0
+  const hasViews = data.engagement.total_views > 0
+
+  return {
+    overview: {
+      value: round1((data.score / 100) * DISPLAY_MAX),
+      max: DISPLAY_MAX,
       label: RATING_TIER_META[tier].label,
+      tier,
       description: TIER_DESCRIPTION[tier],
-      banner_image_url: '/images/chickens.png',
-    }
-  },
-
-  getMetrics: async (): Promise<ScoreMetric[]> => {
-    const { data } = await apiClient.get<{ success: true; data: BackendArtsonyScoreBreakdown }>(
-      '/api/analytics/score',
-    )
-
-    // The backend's score breakdown is a point-in-time computation — it
-    // doesn't carry a period-over-period trend the way analytics/overview
-    // does, so change_percent/direction/trend_label are neutral defaults
-    // rather than fabricated figures.
-    const buyerSatisfactionTier = getRatingTier(data.buyer_satisfaction.score)
-    const reliabilityTier = getRatingTier(data.order_reliability.score)
-    const engagementTier = getRatingTier(data.engagement.score)
-
-    return [
+      banner_image_url: BANNER_IMAGE,
+    },
+    metrics: [
       {
         key: 'buyer_satisfaction',
         label: 'Buyer Satisfaction Rate',
-        value: data.buyer_satisfaction.average_rating ?? 0,
+        value: hasReviews ? round1(data.buyer_satisfaction.average_rating ?? 0) : null,
         format: 'RATING_5',
-        rating_label: RATING_TIER_META[buyerSatisfactionTier].label,
-        change_percent: 0,
-        direction: 'UP',
-        trend_label: 'Current',
+        ...toMetricStatus(data.buyer_satisfaction.score, hasReviews, 'No reviews yet'),
+        trend: toTrend(data.buyer_satisfaction.trend, 'vs previous 30 days'),
       },
       {
         key: 'order_reliability',
         label: 'Order Reliability',
-        value: Math.round(data.order_reliability.score),
+        value: hasPhysicalOrders ? Math.round(data.order_reliability.score) : null,
         format: 'PERCENT',
-        rating_label: RATING_TIER_META[reliabilityTier].label,
-        change_percent: 0,
-        direction: 'UP',
-        trend_label: 'Current',
+        ...toMetricStatus(data.order_reliability.score, hasPhysicalOrders, 'No orders yet'),
+        trend: null,
       },
       {
         key: 'engagement_rating',
         label: 'Engagement Rating',
-        value: Math.round(data.engagement.score),
+        value: hasViews ? Math.round(data.engagement.score) : null,
         format: 'PERCENT',
-        rating_label: RATING_TIER_META[engagementTier].label,
-        change_percent: 0,
-        direction: 'UP',
-        trend_label: 'Current',
+        ...toMetricStatus(data.engagement.score, hasViews, 'No views yet'),
+        trend: toTrend(data.engagement.trend, 'vs previous 90 days'),
       },
-    ]
+    ],
+  }
+}
+
+const SORT_MAP: Record<BuyerFeedbackSort, string> = {
+  NEWEST: 'newest',
+  OLDEST: 'oldest',
+  HIGHEST_RATING: 'highest',
+  LOWEST_RATING: 'lowest',
+}
+
+function startOfDay(date: Date): Date {
+  return new Date(date.getFullYear(), date.getMonth(), date.getDate(), 0, 0, 0, 0)
+}
+
+function endOfDay(date: Date): Date {
+  return new Date(date.getFullYear(), date.getMonth(), date.getDate(), 23, 59, 59, 999)
+}
+
+export function buildFeedbackQuery(sort: BuyerFeedbackSort, from?: Date | null, to?: Date | null): string {
+  const params = new URLSearchParams({ sort: SORT_MAP[sort], limit: '100' })
+  if (from) params.set('date_from', startOfDay(from).toISOString())
+  if (to) params.set('date_to', endOfDay(to).toISOString())
+  return params.toString()
+}
+
+export const scoreService = {
+  getScore: async (): Promise<Score> => {
+    const { data } = await apiClient.get<{ success: true; data: BackendArtsonyScoreBreakdown }>(
+      '/api/analytics/score',
+    )
+    return mapScore(data)
   },
 
   getBuyerFeedback: async (
@@ -105,40 +157,14 @@ export const scoreService = {
     from?: Date | null,
     to?: Date | null,
   ): Promise<BuyerFeedback[]> => {
-    const sortMap: Record<BuyerFeedbackSort, string> = {
-      NEWEST: 'newest',
-      OLDEST: 'oldest',
-      HIGHEST_RATING: 'highest',
-      LOWEST_RATING: 'lowest',
-    }
-
-    const params = new URLSearchParams({ sort: sortMap[sort], limit: '100' })
     const { data } = await apiClient.get<{ success: true; data: BackendReview[] }>(
-      `/api/analytics/reviews?${params.toString()}`,
+      `/api/analytics/reviews?${buildFeedbackQuery(sort, from, to)}`,
     )
 
-    // date_from/date_to aren't supported by this endpoint — filtered
-    // client-side on the fetched page, same as the previous mock. Correct
-    // for the review volumes an early-stage marketplace will have; would
-    // need a real backend date filter to stay correct past ~100 reviews.
-    let items = data
-    if (from || to) {
-      items = items.filter((r) => {
-        const created = new Date(r.created_at).getTime()
-        if (from && created < from.getTime()) return false
-        if (to) {
-          const endOfDay = new Date(to.getFullYear(), to.getMonth(), to.getDate(), 23, 59, 59, 999)
-          if (created > endOfDay.getTime()) return false
-        }
-        return true
-      })
-    }
-
-    return items.map((r) => ({
+    return data.map((r) => ({
       id: r.id,
       reviewer_name: r.buyer_name,
-      // Buyer avatars aren't joined into this endpoint's response.
-      avatar_url: '/images/placeholder-art.jpg',
+      avatar_url: r.buyer_avatar_url,
       comment: r.comment ?? '',
       rating: r.rating,
       created_at: r.created_at,

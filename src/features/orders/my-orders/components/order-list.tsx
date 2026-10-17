@@ -1,35 +1,66 @@
 'use client'
 
-import { useMemo, useState } from 'react'
-import { Search, SlidersHorizontal } from 'lucide-react'
+import { useEffect, useRef } from 'react'
+import { Loader2, Search } from 'lucide-react'
 import { Input } from '@/components'
+import { useIntersectionObserver } from '@/hooks'
 import { OrderCard } from './order-card'
-import type { OrderItemPhysicalWithArtwork } from '@/types/physical-order'
+import { OrderSortMenu } from '@/features/orders/my-orders/ui/order-sort-menu'
+import type { OrderSort } from '../constant'
+import type { BuyerOrderView, OrderItemPhysicalListEntry } from '@/types/physical-order'
 import { HttpError } from '@/lib/api-client'
 
 interface Props {
-  orders: OrderItemPhysicalWithArtwork[] | undefined
+  view: BuyerOrderView
+  orders: OrderItemPhysicalListEntry[]
   isLoading: boolean
   isError: boolean
   error: unknown
+  hasNextPage: boolean
+  isFetchingNextPage: boolean
   selectedId: string | undefined
+  search: string
+  sort: OrderSort
+  onSearchChange: (value: string) => void
+  onSortChange: (value: OrderSort) => void
   onSelect: (physicalId: string) => void
+  onLoadMore: () => void
   onRetry: () => void
 }
 
-export function OrderList({ orders, isLoading, isError, error, selectedId, onSelect, onRetry }: Props) {
-  const [search, setSearch] = useState('')
+const EMPTY_COPY: Record<BuyerOrderView, string> = {
+  all: 'No orders yet.',
+  delivered: 'No delivered orders yet.',
+  live: 'No live orders right now.',
+  cancelled: 'No canceled orders.',
+}
 
-  const filtered = useMemo(() => {
-    if (!orders) return []
-    const query = search.trim().toLowerCase()
-    if (!query) return orders
-    return orders.filter(
-      (o) =>
-        o.order_item?.artwork_title?.toLowerCase().includes(query) ||
-        o.order_id.toLowerCase().includes(query),
-    )
-  }, [orders, search])
+const SENTINEL_OPTIONS: IntersectionObserverInit = { rootMargin: '240px' }
+
+export function OrderList({
+  view,
+  orders,
+  isLoading,
+  isError,
+  error,
+  hasNextPage,
+  isFetchingNextPage,
+  selectedId,
+  search,
+  sort,
+  onSearchChange,
+  onSortChange,
+  onSelect,
+  onLoadMore,
+  onRetry,
+}: Props) {
+  const sentinelRef = useRef<HTMLDivElement>(null)
+  const sentinelVisible = useIntersectionObserver(sentinelRef, SENTINEL_OPTIONS)
+  const hasOrders = orders.length > 0
+
+  useEffect(() => {
+    if (sentinelVisible && hasNextPage && !isFetchingNextPage && !isError) onLoadMore()
+  }, [sentinelVisible, hasNextPage, isFetchingNextPage, isError, onLoadMore])
 
   return (
     <div className="flex flex-col gap-y-4 flex-1 min-h-0">
@@ -39,17 +70,10 @@ export function OrderList({ orders, isLoading, isError, error, selectedId, onSel
           placeholder="Search Order"
           className="flex-1"
           value={search}
-          onChange={(e) => setSearch(e.target.value)}
+          onChange={(e) => onSearchChange(e.target.value)}
           aria-label="Search orders"
         />
-        <button
-          type="button"
-          disabled
-          aria-label="Filter orders (coming soon)"
-          className="border border-gray-50 rounded-full p-2 cursor-not-allowed opacity-60"
-        >
-          <SlidersHorizontal size={16} className="text-body" />
-        </button>
+        <OrderSortMenu value={sort} onChange={onSortChange} />
       </div>
 
       <div className="flex flex-col gap-y-3 overflow-y-auto flex-1 min-h-0">
@@ -58,7 +82,7 @@ export function OrderList({ orders, isLoading, isError, error, selectedId, onSel
             <div key={i} className="h-[220px] rounded-xl bg-gray-50 animate-pulse" />
           ))}
 
-        {isError && !isLoading && (
+        {isError && !isLoading && !hasOrders && (
           <div className="flex flex-col items-center gap-y-3 py-12 text-center">
             <p className="font-poppins text-body-s text-body">
               {error instanceof HttpError ? error.message : 'Could not load your orders.'}
@@ -69,27 +93,37 @@ export function OrderList({ orders, isLoading, isError, error, selectedId, onSel
           </div>
         )}
 
-        {!isLoading && !isError && filtered.length === 0 && (
+        {!isLoading && !isError && !hasOrders && (
           <div className="flex flex-col items-center gap-y-2 py-12 text-center">
             <Search size={32} className="text-gray-200" />
             <p className="font-poppins text-body-s text-body">
-              {search ? 'No orders match your search.' : 'No orders here yet.'}
+              {search.trim() ? 'No orders match your search.' : EMPTY_COPY[view]}
             </p>
           </div>
         )}
 
         {!isLoading &&
-          !isError &&
-          filtered.map((order) => (
-            <OrderCard
-              key={order.id}
-              order={order}
-              selected={order.id === selectedId}
-              onSelect={onSelect}
-              artistName={order.seller?.display_name || order.seller?.username || undefined}
-              artistAvatarUrl={order.seller?.avatar_url}
-            />
+          hasOrders &&
+          orders.map((order) => (
+            <OrderCard key={order.id} order={order} selected={order.id === selectedId} onSelect={onSelect} />
           ))}
+
+        {isFetchingNextPage && (
+          <div className="flex justify-center py-3" role="status" aria-label="Loading more orders">
+            <Loader2 size={20} className="animate-spin text-gray-200" />
+          </div>
+        )}
+
+        {isError && hasOrders && (
+          <div className="flex flex-col items-center gap-y-2 py-3 text-center">
+            <p className="font-poppins text-body-xs text-body">Could not load more orders.</p>
+            <button type="button" onClick={onLoadMore} className="text-info-500 font-poppins text-body-xs underline">
+              Try again
+            </button>
+          </div>
+        )}
+
+        <div ref={sentinelRef} aria-hidden className="h-px shrink-0" />
       </div>
     </div>
   )

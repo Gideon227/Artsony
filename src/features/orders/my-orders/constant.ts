@@ -8,6 +8,28 @@ export const ORDER_TABS: { value: BuyerOrderView; label: string }[] = [
   { value: 'cancelled', label: 'Canceled' },
 ]
 
+export type OrderSort = 'newest' | 'oldest' | 'highest' | 'lowest'
+
+export const ORDER_SORT_OPTIONS: { value: OrderSort; label: string }[] = [
+  { value: 'newest', label: 'Newest' },
+  { value: 'oldest', label: 'Oldest' },
+  { value: 'highest', label: 'Highest Value' },
+  { value: 'lowest', label: 'Lowest Value' },
+]
+
+export const ORDER_SORT_QUERY: Record<OrderSort, { sort_by: 'date' | 'value'; sort_order: 'asc' | 'desc' }> = {
+  newest: { sort_by: 'date', sort_order: 'desc' },
+  oldest: { sort_by: 'date', sort_order: 'asc' },
+  highest: { sort_by: 'value', sort_order: 'desc' },
+  lowest: { sort_by: 'value', sort_order: 'asc' },
+}
+
+export const VIEW_FOR_STATUS: Record<DeliveryStatus, BuyerOrderView> = {
+  LIVE: 'live',
+  DELIVERED: 'delivered',
+  CANCELLED: 'cancelled',
+}
+
 export const STATUS_PILL: Record<DeliveryStatus, { bg: string; text: string; label: string }> = {
   LIVE: { bg: 'bg-info-50', text: 'text-info-500', label: 'Live' },
   CANCELLED: { bg: 'bg-error-50', text: 'text-error-500', label: 'Canceled' },

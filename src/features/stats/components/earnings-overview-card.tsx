@@ -5,6 +5,7 @@ import { HelpCircle } from 'lucide-react'
 import { Dropdown, type DropdownOption } from '@/components/ui/dropdown'
 import { AreaChart } from '@/components/ui/charts'
 import { useEarningsOverview } from '@/hooks/queries/use-stats'
+import { formatYAxis } from '@/lib/studio/chart'
 import type { EarningsOverviewRange } from '@/types/stats'
 import { StudioCardError } from '@/features/studio/components/studio-card-error'
 
@@ -12,11 +13,6 @@ const RANGE_OPTIONS: DropdownOption[] = [
   { id: 'MONTHLY', label: 'Monthly' },
   { id: 'YEARLY', label: 'Yearly' },
 ]
-
-function formatYAxis(value: number): string {
-  if (value === 0) return '$ 0'
-  return `$ ${Math.round(value / 1000)}k`
-}
 
 function ChartSkeleton() {
   return <div className="mt-4 h-[260px] w-full animate-pulse rounded-2xl bg-gray-50" />

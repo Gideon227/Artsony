@@ -1,48 +1,47 @@
 'use client'
 
-import { ArrowLeft, Download } from 'lucide-react'
-import Link from 'next/link'
+import { ArrowLeft } from 'lucide-react'
 import { useRouter } from 'next/navigation'
-import { ORDER_TABS } from '../constant'
+import { ORDER_TABS, type OrderSort } from '../constant'
 import { OrderList } from './order-list'
-import { useBuyerPhysicalOrders } from '@/hooks/use-physical-order'
-import type { BuyerOrderView, OrderItemPhysicalWithArtwork } from '@/types/physical-order'
+import type { BuyerOrderView, OrderItemPhysicalListEntry } from '@/types/physical-order'
 import { cn } from '@/lib/utils'
 
 interface Props {
   view: BuyerOrderView
+  orders: OrderItemPhysicalListEntry[]
+  isLoading: boolean
+  isError: boolean
+  error: unknown
+  hasNextPage: boolean
+  isFetchingNextPage: boolean
   selectedId: string | undefined
+  search: string
+  sort: OrderSort
   onViewChange: (view: BuyerOrderView) => void
+  onSearchChange: (value: string) => void
+  onSortChange: (value: OrderSort) => void
   onSelect: (physicalId: string) => void
+  onLoadMore: () => void
+  onRetry: () => void
 }
 
-export function LeftSideBar({ view, selectedId, onViewChange, onSelect }: Props) {
+export function LeftSideBar({ view, onViewChange, ...listProps }: Props) {
   const router = useRouter()
-  const { data, isLoading, isError, error, refetch } = useBuyerPhysicalOrders(view)
-  const orders = data?.data as OrderItemPhysicalWithArtwork[] | undefined
 
   return (
     <div className="flex flex-col gap-y-4 w-[396px] min-h-0">
       <div className="flex flex-col gap-y-8 pb-4">
-        <div className="flex items-center justify-between gap-x-4">
-          <div className="flex items-center justify-start gap-x-4">
-            <button
-              type="button"
-              onClick={() => router.back()}
-              aria-label="Go back"
-              className="p-2 border border-gray-50 rounded-full"
-            >
-              <ArrowLeft color="#525965" size={24} />
-            </button>
-            <h4 className="font-raleway font-semibold text-h5 text-body tracking-wide leading-10">My Orders</h4>
-          </div>
-          {/* <Link
-            href="/my-orders/downloads"
-            className="flex items-center gap-x-1.5 px-3 py-2 rounded-full border border-gray-50 font-poppins text-body-xs text-body shrink-0"
+        <div className="flex items-center justify-start gap-x-4">
+          <button
+            type="button"
+            onClick={() => router.back()}
+            aria-label="Go back"
+            className="p-2 border border-gray-50 rounded-full"
           >
-            <Download size={14} />
-            Downloads
-          </Link> */}
+            <ArrowLeft color="#525965" size={24} />
+          </button>
+          <h4 className="font-raleway font-semibold text-h5 text-body tracking-wide leading-10">My Orders</h4>
         </div>
 
         <div className="flex items-center gap-x-2 w-full">
@@ -65,15 +64,7 @@ export function LeftSideBar({ view, selectedId, onViewChange, onSelect }: Props)
         </div>
       </div>
 
-      <OrderList
-        orders={orders}
-        isLoading={isLoading}
-        isError={isError}
-        error={error}
-        selectedId={selectedId}
-        onSelect={onSelect}
-        onRetry={refetch}
-      />
+      <OrderList view={view} {...listProps} />
     </div>
   )
 }

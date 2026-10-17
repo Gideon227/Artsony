@@ -2,6 +2,7 @@
 
 import {
   useQuery,
+  useInfiniteQuery,
   useMutation,
   useQueryClient,
   keepPreviousData,
@@ -29,6 +30,8 @@ import type {
   PhysicalOrderDetailView,
   ShippingAddressSnapshot,
 } from '@/types/order'
+
+const BUYER_ORDERS_PAGE_SIZE = 20
 
 export const physicalOrderKeys = {
   all: ['physical-orders'] as const,
@@ -61,6 +64,22 @@ export function useBuyerPhysicalOrders(view: BuyerOrderView, filters: PhysicalOr
     enabled: isAuthenticated,
     staleTime: STALE_TIMES.fast,
     placeholderData: keepPreviousData,
+  })
+}
+
+export function useBuyerPhysicalOrdersInfinite(
+  view: BuyerOrderView,
+  filters: Omit<PhysicalOrderQueryParams, 'page'> = {},
+) {
+  const isAuthenticated = useAuthStore(selectIsAuthenticated)
+  return useInfiniteQuery({
+    queryKey: [...physicalOrderKeys.buyer(view, filters), 'infinite'] as const,
+    queryFn: ({ pageParam }) =>
+      physicalOrderService.getBuyerOrders(view, { ...filters, page: pageParam, limit: BUYER_ORDERS_PAGE_SIZE }),
+    initialPageParam: 1,
+    getNextPageParam: (lastPage) => (lastPage.has_next ? lastPage.page + 1 : undefined),
+    enabled: isAuthenticated,
+    staleTime: STALE_TIMES.fast,
   })
 }
 
@@ -177,17 +196,7 @@ export function useCancelPhysicalItem() {
     mutationFn: ({ physicalId, reason }: { physicalId: string; reason: string }) =>
       physicalOrderService.cancelItem(physicalId, reason),
 
-    onMutate: async ({ physicalId }) => {
-      await queryClient.cancelQueries({ queryKey: physicalOrderKeys.detail(physicalId) })
-      const previous = patchDetailCache(queryClient, physicalId, {
-        timeline_status: 'ORDER_FAILED_TO_CONFIRM',
-        delivery_status: 'CANCELLED',
-      })
-      return { previous }
-    },
-
-    onError: (err, { physicalId }, ctx) => {
-      rollbackDetailCache(queryClient, physicalId, ctx?.previous)
+    onError: (err) => {
       if (err instanceof HttpError && err.statusCode === 409) {
         error('Already being processed', 'This item is mid-update elsewhere. Refreshing…')
       } else {

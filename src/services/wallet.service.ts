@@ -1,5 +1,6 @@
 import { apiClient } from '@/lib/api-client'
 import type {
+  TrendDirection,
   WalletActivity,
   WalletActivityStatus,
   WalletActivityType,
@@ -12,18 +13,16 @@ import type {
 
 // Wired to the real backend. Endpoints:
 //   GET  /api/analytics/overview?period=   -> earnings/withdrawals trend + balance snapshot
-//   GET  /api/wallet/ledger?limit=         -> activity feed
-//   POST /api/wallet/withdrawals           -> submit withdrawal
-//   GET  /api/wallet/balance               -> post-withdrawal balance refresh
+//   GET  /api/wallet/ledger?limit=&page=   -> activity feed (all pages are fetched)
+//   POST /api/wallet/withdrawals           -> submit withdrawal (idempotent per key)
 //
-// This module's job is purely translation: the backend's shapes (see
-// common/types/analytics.types.ts, common/types/wallet.types.ts,
-// common/types/commerce.types.ts on the backend) don't match this
-// frontend's existing WalletSummary/WalletActivity contract 1:1, so each
-// function below documents exactly where and why it diverges rather than
-// silently reshaping.
+// This module translates the backend's shapes (see common/types/analytics.types.ts
+// and common/types/wallet.types.ts on the backend) into the frontend's
+// WalletSummary / WalletActivity contract.
 
 const CURRENCY = 'USDT' // single-currency platform — see domain model
+const LEDGER_PAGE_SIZE = 100
+const LEDGER_MAX_PAGES = 50
 
 type BackendMetricTrend = {
   current: number
@@ -44,39 +43,43 @@ type BackendAnalyticsOverview = {
   period: string
 }
 
-type BackendWalletLedgerEntry = {
+type BackendWithdrawalStatus = 'PENDING' | 'PROCESSING' | 'COMPLETED' | 'REJECTED' | 'FAILED' | 'CANCELLED'
+
+export type BackendWalletLedgerEntry = {
   id: string
   transaction_id: string | null
+  type: 'CREDIT' | 'DEBIT'
   category: 'SALE' | 'WITHDRAWAL' | 'REFUND' | 'ADJUSTMENT'
   hold_status: 'PENDING_DELIVERY' | 'ON_HOLD' | 'AVAILABLE'
+  available_at: string | null
   amount: number
   description: string
   created_at: string
+  withdrawal: {
+    status: BackendWithdrawalStatus
+    destination_details: { wallet_address?: string }
+  } | null
 }
 
-type BackendWalletBalanceSummary = {
-  available_balance: number
-  pending_balance: number
-  hold_balance: number
-  total_withdrawn: number
-  total_earned: number
-  currency: string
+type BackendLedgerPage = {
+  success: true
+  data: BackendWalletLedgerEntry[]
+  has_next: boolean
 }
 
 type BackendWithdrawalRequest = {
   id: string
   amount: number
   currency: string
-  status: 'PENDING' | 'PROCESSING' | 'COMPLETED' | 'REJECTED' | 'FAILED' | 'CANCELLED'
+  status: BackendWithdrawalStatus
   destination_details: { wallet_address?: string }
   created_at: string
 }
 
-// direction: backend has a third 'flat' state this frontend's TrendDirection
-// doesn't model — 0% change reads the same as 'UP' visually (no arrow
-// movement implied by change_percent: 0), so flat collapses into 'UP'.
-function toDirection(direction: 'up' | 'down' | 'flat'): 'UP' | 'DOWN' {
-  return direction === 'down' ? 'DOWN' : 'UP'
+const DIRECTION_MAP: Record<BackendMetricTrend['direction'], TrendDirection> = {
+  up: 'UP',
+  down: 'DOWN',
+  flat: 'FLAT',
 }
 
 function toMetric(trend: BackendMetricTrend): WalletMetric {
@@ -84,32 +87,44 @@ function toMetric(trend: BackendMetricTrend): WalletMetric {
     amount: trend.current,
     currency: CURRENCY,
     change_percent: trend.change_percent,
-    direction: toDirection(trend.direction),
+    direction: DIRECTION_MAP[trend.direction],
   }
 }
 
-// available_balance/pending_balance are point-in-time snapshots on the
-// backend, not period-comparable trends the way earnings/withdrawals are —
-// there's no "previous period balance" concept computed server-side. Shown
-// with a neutral (0%, UP) trend rather than fabricating a change figure.
+// Balances are point-in-time snapshots: the backend has no "previous period
+// balance", so they carry a neutral trend rather than a fabricated change.
 function toBalanceMetric(amount: number): WalletMetric {
-  return { amount, currency: CURRENCY, change_percent: 0, direction: 'UP' }
+  return { amount, currency: CURRENCY, change_percent: 0, direction: 'FLAT' }
 }
+
+const roundCents = (value: number): number => Math.round(value * 100) / 100
 
 const PERIOD_MAP: Record<WalletPeriod, string> = {
   TODAY: 'day',
   WEEK: 'week',
   MONTH: 'month',
   YEAR: 'year',
-  // Backend has no "all time" period option — 'year' is the longest window
-  // it supports. Documented gap rather than a silent approximation.
-  ALL_TIME: 'year',
+  ALL_TIME: 'all',
 }
 
-const LEDGER_STATUS_MAP: Record<BackendWalletLedgerEntry['hold_status'], WalletActivityStatus> = {
-  PENDING_DELIVERY: 'HOLD',
-  ON_HOLD: 'HOLD',
-  AVAILABLE: 'COMPLETED',
+const WITHDRAWAL_STATUS_MAP: Record<BackendWithdrawalStatus, WalletActivityStatus> = {
+  PENDING: 'PENDING',
+  PROCESSING: 'PENDING',
+  COMPLETED: 'COMPLETED',
+  REJECTED: 'CANCELED',
+  FAILED: 'CANCELED',
+  CANCELLED: 'CANCELED',
+}
+
+// A WITHDRAWAL ledger row only reserves the balance; its real state is the
+// linked withdrawal request's. Sale proceeds move PENDING_DELIVERY → ON_HOLD
+// (until available_at) → AVAILABLE, and a row whose hold has elapsed is already
+// counted as available by the balance summary, so it reads as completed.
+export function resolveActivityStatus(entry: BackendWalletLedgerEntry, now = Date.now()): WalletActivityStatus {
+  if (entry.withdrawal) return WITHDRAWAL_STATUS_MAP[entry.withdrawal.status]
+  if (entry.hold_status === 'PENDING_DELIVERY') return 'PENDING'
+  if (entry.hold_status === 'ON_HOLD' && entry.available_at && Date.parse(entry.available_at) > now) return 'HOLD'
+  return 'COMPLETED'
 }
 
 // ADJUSTMENT has no frontend-side type equivalent (WalletActivityType is
@@ -120,31 +135,20 @@ function toActivityType(category: BackendWalletLedgerEntry['category']): WalletA
   return category
 }
 
-function toActivity(entry: BackendWalletLedgerEntry): WalletActivity {
+// The backend stores amounts as positive numbers and distinguishes money in
+// from money out by `type`; the UI renders the sign from the amount itself.
+export function toActivity(entry: BackendWalletLedgerEntry, now = Date.now()): WalletActivity {
   return {
     id: entry.id,
     type: toActivityType(entry.category),
     description: entry.description,
-    amount: entry.amount,
+    amount: entry.type === 'DEBIT' ? -entry.amount : entry.amount,
     currency: CURRENCY,
-    status: LEDGER_STATUS_MAP[entry.hold_status],
+    status: resolveActivityStatus(entry, now),
     transaction_id: entry.transaction_id ?? entry.id,
-    // Withdrawal destination address lives on the linked withdrawal_request,
-    // not embedded in the ledger row itself — not available without an
-    // additional join the backend doesn't currently do. Left null rather
-    // than fabricated.
-    wallet_address: null,
+    wallet_address: entry.withdrawal?.destination_details.wallet_address ?? null,
     created_at: entry.created_at,
   }
-}
-
-const WITHDRAWAL_STATUS_MAP: Record<BackendWithdrawalRequest['status'], WalletActivityStatus> = {
-  PENDING: 'PENDING',
-  PROCESSING: 'PENDING',
-  COMPLETED: 'COMPLETED',
-  REJECTED: 'CANCELED',
-  FAILED: 'CANCELED',
-  CANCELLED: 'CANCELED',
 }
 
 export const walletService = {
@@ -157,21 +161,29 @@ export const walletService = {
       period,
       total_earnings: toMetric(data.total_earnings),
       available_balance: toBalanceMetric(data.available_balance),
-      pending_balance: toBalanceMetric(data.pending_balance),
+      // Everything not yet withdrawable: awaiting delivery plus inside the hold
+      // window. Showing only the first would leave held funds in no card at all.
+      pending_balance: toBalanceMetric(roundCents(data.pending_balance + data.hold_balance)),
       total_withdrawals: toMetric(data.total_withdrawals),
     }
   },
 
-  // Filtering/sorting/pagination stays client-side (see lib/wallet/filters.ts)
-  // — this fetches a generous single page rather than implementing
-  // pagination-aware fetching, matching the previous mock's flat-list
-  // behavior. Fine for the activity volumes an early-stage marketplace
-  // will have; revisit if a seller's ledger regularly exceeds 100 entries.
+  // Filtering/sorting/pagination stays client-side (see lib/wallet/filters.ts),
+  // so every page of the ledger is fetched. Ids are de-duplicated because
+  // newest-first offset paging can repeat a row if one is inserted mid-fetch.
   getActivity: async (): Promise<WalletActivity[]> => {
-    const { data } = await apiClient.get<{ success: true; data: BackendWalletLedgerEntry[] }>(
-      '/api/wallet/ledger?limit=100',
-    )
-    return data.map(toActivity)
+    const entries = new Map<string, BackendWalletLedgerEntry>()
+
+    for (let page = 1; page <= LEDGER_MAX_PAGES; page++) {
+      const res = await apiClient.get<BackendLedgerPage>(
+        `/api/wallet/ledger?limit=${LEDGER_PAGE_SIZE}&page=${page}`,
+      )
+      for (const entry of res.data) entries.set(entry.id, entry)
+      if (!res.has_next) break
+    }
+
+    const now = Date.now()
+    return Array.from(entries.values()).map((entry) => toActivity(entry, now))
   },
 
   withdraw: async (input: WithdrawInput): Promise<WithdrawResult> => {
@@ -184,22 +196,15 @@ export const walletService = {
           network: input.network,
           wallet_address: input.wallet_address,
         },
+        idempotency_key: input.idempotency_key,
       },
-    )
-
-    // The withdrawal response doesn't include a refreshed balance — fetch
-    // it explicitly rather than computing it client-side (which is what
-    // the previous mock did, and how it could silently drift from the
-    // real ledger).
-    const { data: balance } = await apiClient.get<{ success: true; data: BackendWalletBalanceSummary }>(
-      '/api/wallet/balance',
     )
 
     const activity: WalletActivity = {
       id: request.id,
       type: 'WITHDRAWAL',
       description: 'Withdrawal',
-      amount: request.amount,
+      amount: -request.amount,
       currency: request.currency,
       status: WITHDRAWAL_STATUS_MAP[request.status],
       transaction_id: request.id,
@@ -207,6 +212,6 @@ export const walletService = {
       created_at: request.created_at,
     }
 
-    return { activity, available_balance: balance.available_balance }
+    return { activity }
   },
 }

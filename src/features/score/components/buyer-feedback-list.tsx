@@ -74,21 +74,21 @@ export function BuyerFeedbackList() {
           {feedback.map((item) => (
             <div key={item.id} className="flex items-center gap-4 px-6 py-4">
               <div className="relative h-10 w-10 shrink-0 overflow-hidden rounded-full">
-                <Image
-                  src={item.avatar_url}
-                  alt=""
-                  aria-hidden="true"
-                  fill
-                  className="object-cover"
-                  onError={(e) => {
-                    ;(e.currentTarget as HTMLImageElement).src = '/images/placeholder-art.jpg'
-                  }}
-                />
+                {item.avatar_url ? (
+                  <Image src={item.avatar_url} alt="" aria-hidden="true" fill className="object-cover" />
+                ) : (
+                  <span
+                    aria-hidden="true"
+                    className="flex h-full w-full items-center justify-center bg-gray-50 font-raleway text-body-m font-semibold text-heading"
+                  >
+                    {item.reviewer_name.charAt(0).toUpperCase()}
+                  </span>
+                )}
               </div>
 
               <div className="min-w-0 flex-1">
                 <p className="text-body-s font-medium text-heading">{item.reviewer_name}</p>
-                <p className="line-clamp-2 text-body-s text-body">{item.comment}</p>
+                <p className="line-clamp-2 text-body-s text-body">{item.comment || 'No written feedback.'}</p>
               </div>
 
               <div className="flex shrink-0 items-center gap-1.5">

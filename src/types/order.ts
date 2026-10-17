@@ -458,6 +458,8 @@ export type PhysicalOrderFilters = {
   page?: number
   limit?: number
   sort_order?: 'asc' | 'desc'
+  sort_by?: 'date' | 'value'
+  search?: string
   date_from?: string
   date_to?: string
   order_number?: string
@@ -498,6 +500,7 @@ export type OrderPartyProfile = {
 export type PhysicalOrderDetailView = {
   physical: OrderItemPhysical
   order_item: OrderItem
+  order_number: string | null
   timeline: OrderTimelineEvent[]
   delivery_proofs: DeliveryProof[]
   invoice: OrderInvoice | null
@@ -528,7 +531,7 @@ export type DigitalDeliveryToken = {
   order_item_id: string
   artwork_id: string
   buyer_id: string
-  expires_at: string
+  expires_at: string | null
   download_count: number
   max_downloads: number
   last_downloaded_at: string | null

@@ -76,7 +76,7 @@ export function WalletActivityTable({ activity, isLoading, isError, onRetry, onS
     <div className="overflow-hidden w-full">
       <div className="hidden md:flex flex-col gap-2 w-full">
         
-        <div className="w-full bg-white rounded-xl px-2">
+        <div className="w-full bg-white rounded-xl px-2 max-lg:border max-lg:border-gray-50">
           <div 
             style={{ gridTemplateColumns: "3.5fr 3.5fr 3.5fr 3.5fr 2.5fr 3.5fr 1fr" }} 
             className="grid gap-2 items-center w-full px-2 py-4"
@@ -90,7 +90,7 @@ export function WalletActivityTable({ activity, isLoading, isError, onRetry, onS
         </div>
 
         {/* 2. THE BODY (8px gap created by parent flex container, rounded, bg-white) */}
-        <div className="w-full bg-white rounded-xl flex flex-col py-2 px-2">
+        <div className="w-full bg-white rounded-xl flex flex-col py-2 px-2 max-lg:border max-lg:border-gray-50">
           {activity.map((item, i) => (
             <div 
               key={item.id} 
@@ -144,11 +144,21 @@ export function WalletActivityTable({ activity, isLoading, isError, onRetry, onS
         </div>
       </div>
 
-      {/* MOBILE VIEW (Unchanged) */}
-      <ul className="divide-y divide-border md:hidden bg-white rounded-xl">
+      <ul className="divide-y divide-gray-50 rounded-xl border border-gray-50 bg-white md:hidden">
         {activity.map((item) => (
-          <li key={item.id} className="flex flex-col gap-3 p-4">
-            {/* ... mobile code ... */}
+          <li key={item.id} className="flex items-start justify-between gap-x-4 p-4">
+            <div className="flex min-w-0 flex-col gap-y-1">
+              <p className="truncate font-poppins text-body-s font-medium text-heading">{getActivityDisplayDescription(item)}</p>
+              <p className="font-poppins text-body-xs text-body">
+                {WALLET_TYPE_META[item.type].label} · {formatWalletTimestamp(item.created_at)}
+              </p>
+              <p className="truncate font-poppins text-body-xs text-text-disabled">{item.transaction_id}</p>
+            </div>
+
+            <div className="flex shrink-0 flex-col items-end gap-y-2">
+              <span className="font-poppins text-body-s font-medium text-heading">{formatWalletAmount(item.amount, item.currency)}</span>
+              <WalletStatusBadge status={item.status} />
+            </div>
           </li>
         ))}
       </ul>

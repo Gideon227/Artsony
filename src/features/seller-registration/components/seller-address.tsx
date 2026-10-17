@@ -1,315 +1,214 @@
+'use client'
+
+import React, { useState } from 'react'
+import { Loader2 } from 'lucide-react'
 import { Button, Input } from '@/components'
-import { Dropdown, DropdownOption } from '@/components/ui/dropdown'
-import { PhoneInput } from '@/components/ui/phone-input'
-import React, { useState, useEffect } from 'react'
+import { CountryField, StateField } from '@/components/forms/location-fields'
+import { useToast } from '@/components/ui/toaster'
+import { cn } from '@/lib/utils'
+import { EMPTY_ADDRESS, type SellerAddressValues } from '../types'
 
-const SellerAddress = ({ onNext }: { onNext: () => void }) => {
-    // Form field states - country and  state now track full DropdownOption objects or null
-    const [formData, setFormData] = useState({
-        address: '',
-        country: null as DropdownOption | null,
-        state: null as DropdownOption | null,
-        postalCode: '',
-        isAutoLocation: false,
-    })
+const IP_LOOKUP_URL = 'https://ipapi.co/json/'
 
-    // Dropdown lists strongly typed using your UI types
-    const [countries, setCountries] = useState<DropdownOption[]>([])
-    const [states, setStates] = useState<DropdownOption[]>([])
-    
-    // UI Loading & Error States
-    const [isLoadingCountries, setIsLoadingCountries] = useState(false)
-    const [isLoadingStates, setIsLoadingStates] = useState(false)
+type AddressErrors = Partial<Record<keyof SellerAddressValues, string>>
+
+interface SellerAddressProps {
+    defaultValues?: SellerAddressValues
+    onBack: () => void
+    onNext: (values: SellerAddressValues) => void
+}
+
+function validate(values: SellerAddressValues): AddressErrors {
+    const errors: AddressErrors = {}
+    if (values.address.trim().length < 3) errors.address = 'Address is required'
+    if (!values.country) errors.country = 'Country is required'
+    if (!values.state.trim()) errors.state = 'State/Province is required'
+    if (!values.postalCode.trim()) errors.postalCode = 'Postal code is required'
+    return errors
+}
+
+const SellerAddress = ({ defaultValues, onBack, onNext }: SellerAddressProps) => {
+    const { error: toastError } = useToast()
+    const [values, setValues] = useState<SellerAddressValues>(defaultValues ?? EMPTY_ADDRESS)
+    const [errors, setErrors] = useState<AddressErrors>({})
+    const [isAutoLocation, setIsAutoLocation] = useState(false)
     const [isDetectingLocation, setIsDetectingLocation] = useState(false)
-    const [errors, setErrors] = useState<Record<string, string>>({})
-    const [isSubmitting, setIsSubmitting] = useState(false)
 
-    // 1. Fetch all countries on component mount
-    useEffect(() => {
-        const fetchCountries = async () => {
-            setIsLoadingCountries(true)
-            try {
-                const response = await fetch('https://countriesnow.space/api/v0.1/countries')
-                const resData = await response.json()
-                
-                if (!resData.error) {
-                    const formattedCountries: DropdownOption[] = resData.data.map((item: any) => ({
-                        id: item.country, 
-                        label: item.country,
-                    }))
-                    setCountries(formattedCountries)
-                }
-            } catch (error) {
-                console.error('Failed to fetch countries lookup table:', error)
-                setErrors(prev => ({ ...prev, country: 'Failed to load countries list.' }))
-            } finally {
-                setIsLoadingCountries(false)
-            }
-        }
+    const update = (patch: Partial<SellerAddressValues>) => {
+        setValues((prev) => ({ ...prev, ...patch }))
+        setErrors((prev) => {
+            const next = { ...prev }
+            for (const key of Object.keys(patch) as Array<keyof SellerAddressValues>) delete next[key]
+            return next
+        })
+    }
 
-        fetchCountries()
-    }, [])
-
-    // 2. Fetch specific states/provinces dynamically when the selected country object updates
-    useEffect(() => {
-        if (!formData.country) {
-            setStates([])
+    const handleToggleLocation = async () => {
+        if (isAutoLocation) {
+            setIsAutoLocation(false)
             return
         }
 
-        const fetchStates = async () => {
-            setIsLoadingStates(true)
-            try {
-                const response = await fetch('https://countriesnow.space/api/v0.1/countries/states', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ country: formData?.country?.label }) 
-                })
-                const resData = await response.json()
-
-                if (!resData.error && resData.data?.states) {
-                    const formattedStates: DropdownOption[] = resData.data.states.map((state: any, index: number) => ({
-                        id: state.state_code || `${state.name}-${index}`, 
-                        label: state.name
-                    }))
-                    setStates(formattedStates)
-                } else {
-                    setStates([])
-                }
-            } catch (error) {
-                console.error('Failed to resolve target regional states:', error)
-                setStates([])
-            } finally {
-                setIsLoadingStates(false)
-            }
-        }
-
-        fetchStates()
-    }, [formData.country])
-
-    // Handler for standard string inputs (Address, Postal Code)
-    const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        const { name, value } = e.target
-        setFormData((prev) => ({ ...prev, [name]: value }))
-        if (errors[name]) {
-            setErrors((prev) => ({ ...prev, [name]: '' }))
-        }
-    }
-
-    // Typed handler specifically for your Dropdown components
-    const handleDropdownChange = (name: 'country' | 'state', option: DropdownOption) => {
-        setFormData((prev) => {
-            const updated = { ...prev, [name]: option }
-            if (name === 'country') {
-                updated.state = null
-            }
-            return updated
-        })
-        if (errors[name]) {
-            setErrors((prev) => ({ ...prev, [name]: '' }))
-        }
-    }
-
-    // Dynamic Live IP address parser and locator config
-    const handleToggleLocation = async () => {
-        const nextValue = !formData.isAutoLocation
-        setErrors({})
-
-        if (nextValue) {
-            setIsDetectingLocation(true)
-            try {
-                // Fetch location metadata by checking user's public IP address
-                const response = await fetch('https://ipapi.co/json/')
-                const data = await response.json()
-                
-                if (data && !data.error) {
-                    setFormData((prev) => ({
-                        ...prev,
-                        isAutoLocation: nextValue,
-                        address: data.city || '', 
-                        country: data.country_name ? { id: data.country_name, label: data.country_name } : null,
-                        state: data.region ? { id: data.region_code || data.region, label: data.region } : null,
-                        postalCode: data.postal || '',
-                    }))
-                } else {
-                    throw new Error("Location data fallback initialized")
-                }
-            } catch (error) {
-                console.error('IP address mapping routing breakdown:', error)
-                setErrors(prev => ({ ...prev, address: 'Auto-location failed. Please enter manually.' }))
-                setFormData((prev) => ({ ...prev, isAutoLocation: false }))
-            } finally {
-                setIsDetectingLocation(false)
-            }
-        } else {
-            // Clear location values completely if toggle is switched off
-            setFormData((prev) => ({ 
-                ...prev, 
-                isAutoLocation: nextValue, 
-                address: '',
-                country: null, 
-                state: null,
-                postalCode: ''
-            }))
-        }
-    }
-
-    const validateForm = () => {
-        const newErrors: Record<string, string> = {}
-        if (!formData.address.trim()) newErrors.address = 'Address is required'
-        if (!formData.country) newErrors.country = 'Country is required'
-        if (!formData.state) newErrors.state = 'State/Province is required'
-        if (!formData.postalCode.trim()) newErrors.postalCode = 'Postal code is required'
-
-        setErrors(newErrors)
-        return Object.keys(newErrors).length === 0
-    }
-
-    const handleSubmit = async (e: React.FormEvent) => {
-        e.preventDefault()
-        if (!validateForm()) return
-
-        setIsSubmitting(true)
-        
-        const submissionPayload = {
-            address: formData.address,
-            country: formData.country?.label || '',
-            state: formData.state?.label || '',
-            postalCode: formData.postalCode,
-        }
-
+        setIsDetectingLocation(true)
         try {
-            await new Promise((resolve) => setTimeout(resolve, 1200))
-            console.log('Successfully saved profile payload:', submissionPayload)
-        } catch (error) {
-            console.error('Failed to sync changes:', error)
+            const res = await fetch(IP_LOOKUP_URL)
+            if (!res.ok) throw new Error(`Lookup failed (${res.status})`)
+            const data = (await res.json()) as {
+                error?: boolean
+                country_code?: string
+                region?: string
+                city?: string
+                postal?: string
+            }
+            if (data.error || !data.country_code) throw new Error('Location could not be determined')
+
+            update({
+                country: data.country_code.toUpperCase(),
+                state: data.region ?? '',
+                city: data.city ?? '',
+                postalCode: data.postal ?? '',
+            })
+            setIsAutoLocation(true)
+        } catch {
+            toastError('Could not detect location', 'Enter your fulfilment address manually or try again.')
         } finally {
-            setIsSubmitting(false)
+            setIsDetectingLocation(false)
         }
     }
+
+    const handleSubmit = (e: React.FormEvent) => {
+        e.preventDefault()
+        const nextErrors = validate(values)
+        setErrors(nextErrors)
+        if (Object.keys(nextErrors).length > 0) return
+
+        onNext({
+            address: values.address.trim(),
+            country: values.country,
+            state: values.state.trim(),
+            city: values.city.trim(),
+            postalCode: values.postalCode.trim(),
+        })
+    }
+
+    const lockLocation = isAutoLocation || isDetectingLocation
 
     return (
-        <form 
-            onSubmit={handleSubmit} 
-            className='mx-auto border border-gray-50 rounded-2xl py-16 px-14 flex flex-col items-center justify-center gap-y-14 max-w-4xl'
-            style={{ paddingBlock: 64, paddingInline: 56, width: 912 }}
+        <form
+            onSubmit={handleSubmit}
+            noValidate
+            className='mx-auto w-full max-w-[912px] border border-gray-50 rounded-2xl px-4 py-8 sm:px-8 sm:py-12 lg:px-14 lg:py-16 flex flex-col items-center justify-center gap-y-10 lg:gap-y-14'
         >
             <div className='flex flex-col items-center justify-center gap-y-8 w-full'>
-                
-                {/* Geolocation Switch Header */}
                 <div className='flex flex-col gap-y-2 items-center w-full'>
                     <div className='flex w-full items-center justify-between gap-x-3'>
                         <p className='font-poppins font-medium text-body-s leading-6 tracking-wide text-heading'>
                             {isDetectingLocation ? 'Detecting your location...' : 'Set Automatically by location'}
                         </p>
                         <button
-                            type="button"
+                            type='button'
+                            role='switch'
+                            aria-checked={isAutoLocation}
+                            aria-label='Set fulfilment address automatically by location'
                             disabled={isDetectingLocation}
                             onClick={handleToggleLocation}
-                            className={`relative inline-flex h-6 w-11 cursor-pointer items-center rounded-2xl transition-colors duration-200 focus:outline-none border border-primary-500 ${
-                                formData.isAutoLocation ? 'bg-primary-500' : 'bg-white'
-                            } ${isDetectingLocation ? 'opacity-50 cursor-wait' : ''}`}
+                            className={cn(
+                                'relative inline-flex h-6 w-11 shrink-0 cursor-pointer items-center rounded-2xl border border-primary-500 transition-colors duration-200',
+                                'focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary-500',
+                                'disabled:cursor-wait disabled:opacity-60',
+                                isAutoLocation ? 'bg-primary-500' : 'bg-white',
+                            )}
                         >
                             <span
-                                className={`inline-block transform rounded-full transition-transform duration-300 ease-in-out ${
-                                    formData.isAutoLocation ? 'translate-x-6 bg-white' : 'translate-x-1 bg-primary-500'
-                                }`}
+                                className={cn(
+                                    'inline-flex transform items-center justify-center rounded-full transition-transform duration-300 ease-in-out',
+                                    isAutoLocation ? 'translate-x-6 bg-white' : 'translate-x-1 bg-primary-500',
+                                )}
                                 style={{ width: 18, height: 18 }}
-                            />
+                            >
+                                {isDetectingLocation && <Loader2 className='size-3 animate-spin text-white' />}
+                            </span>
                         </button>
                     </div>
-                    <p className='font-poppins text-text-disabled text-body-xs leading-4 tracking-wide text-start'>
+                    <p className='font-poppins text-text-disabled text-body-xs leading-4 tracking-wide text-start w-full'>
                         Make sure this address matches where your artworks are stored. It&apos;s used to generate shipping labels and pickup requests.
                     </p>
                 </div>
 
-                {/* Input Fields Layout Container */}
                 <div className='grid grid-cols-1 md:grid-cols-2 gap-6 w-full items-start'>
-                    
-                    {/* Address Field */}
                     <div className='flex flex-col gap-y-2'>
-                        <label className='font-poppins font-medium text-body-s text-heading tracking-wide'>Address</label>
-                        <Input 
-                            name="address"
-                            value={formData.address}
-                            onChange={handleInputChange}
-                            placeholder={isDetectingLocation ? 'Locating...' : 'Enter Address'} 
+                        <label htmlFor='seller-address' className='font-poppins font-medium text-body-s text-heading tracking-wide'>Address</label>
+                        <Input
+                            id='seller-address'
+                            value={values.address}
+                            onChange={(e) => update({ address: e.target.value })}
+                            placeholder='Enter Address'
+                            autoComplete='street-address'
+                            maxLength={300}
                             className='flex-1'
-                            disabled={formData.isAutoLocation || isDetectingLocation}
+                            error={errors.address}
                         />
-                        {errors.address && <p className="text-red-500 text-xs mt-1 font-poppins">{errors.address}</p>}
                     </div>
 
-                    {/* Country Field Dropdown */}
                     <div className='flex flex-col gap-y-2'>
-                        <label className='font-poppins font-medium text-body-s text-heading tracking-wide'>Country</label>
-                        <Dropdown 
-                            options={countries}
-                            value={formData.country || undefined}
-                            onChange={(option) => handleDropdownChange('country', option)}
-                            placeholder={isLoadingCountries ? 'Loading countries...' : 'Select Country'}
-                            className='flex-1'
-                            disabled={formData.isAutoLocation || isLoadingCountries || isDetectingLocation}
+                        <span className='font-poppins font-medium text-body-s text-heading tracking-wide'>Country</span>
+                        <CountryField
+                            value={values.country}
+                            onChange={(country) => update({ country, state: '', city: '' })}
+                            placeholder='Select Country'
+                            disabled={lockLocation}
+                            error={errors.country}
                         />
-                        {errors.country && <p className="text-red-500 text-xs mt-1 font-poppins">{errors.country}</p>}
                     </div>
 
-                    {/* State/Province Field Dropdown */}
                     <div className='flex flex-col gap-y-2'>
-                        <label className='font-poppins font-medium text-body-s text-heading tracking-wide'>State/Province</label>
-                        <Dropdown 
-                            options={states}
-                            value={formData.state || undefined}
-                            onChange={(option) => handleDropdownChange('state', option)}
-                            placeholder={
-                                isLoadingStates 
-                                    ? 'Loading regions...' 
-                                    : !formData.country 
-                                    ? 'Select country first' 
-                                    : 'Select State/Province'
-                            }
-                            className='flex-1'
-                            disabled={formData.isAutoLocation || isLoadingStates || !formData.country || isDetectingLocation}
+                        <span className='font-poppins font-medium text-body-s text-heading tracking-wide'>State/Province</span>
+                        <StateField
+                            country={values.country}
+                            value={values.state}
+                            onChange={(state) => update({ state, city: '' })}
+                            placeholder={values.country ? 'Select State/Province' : 'Select country first'}
+                            disabled={lockLocation}
+                            error={errors.state}
                         />
-                        {errors.state && <p className="text-red-500 text-xs mt-1 font-poppins">{errors.state}</p>}
                     </div>
 
-                    {/* Postal Code Field */}
                     <div className='flex flex-col gap-y-2'>
-                        <label className='font-poppins font-medium text-body-s text-heading tracking-wide'>Postal Code</label>
-                        <Input 
-                            name="postalCode"
-                            value={formData.postalCode}
-                            onChange={handleInputChange}
-                            placeholder={isDetectingLocation ? 'Locating...' : 'Enter area code'} 
+                        <label htmlFor='seller-postal' className='font-poppins font-medium text-body-s text-heading tracking-wide'>Postal Code</label>
+                        <Input
+                            id='seller-postal'
+                            value={values.postalCode}
+                            onChange={(e) => update({ postalCode: e.target.value })}
+                            placeholder='Enter area code'
+                            autoComplete='postal-code'
+                            maxLength={20}
                             className='flex-1'
-                            disabled={formData.isAutoLocation || isDetectingLocation}
+                            disabled={lockLocation}
+                            error={errors.postalCode}
                         />
-                        {errors.postalCode && <p className="text-red-500 text-xs mt-1 font-poppins">{errors.postalCode}</p>}
                     </div>
                 </div>
-
             </div>
 
-            {/* Navigation Actions */}
-            <div className='flex items-center justify-center gap-x-4 w-full'>
-                <Button 
-                    type='button' 
-                    variant='outline' 
+            <div className='flex flex-col-reverse sm:flex-row items-center justify-center gap-4 w-full'>
+                <Button
+                    type='button'
+                    variant='outline'
                     size='lg'
-                    disabled={isSubmitting || isDetectingLocation}
-                    style={{ width: 168, height: 48 }}
+                    onClick={onBack}
+                    disabled={isDetectingLocation}
+                    className='w-full sm:w-[168px] h-12'
                 >
                     Back
                 </Button>
-                <Button 
-                    onClick={onNext}
-                    rightIcon={!isSubmitting ? '/icons/alt-arrow-right-double.svg' : undefined} 
+                <Button
+                    type='submit'
+                    rightIcon='/icons/alt-arrow-right-double.svg'
                     size='lg'
-                    disabled={isSubmitting || isLoadingCountries || isLoadingStates || isDetectingLocation}
-                    style={{ width: 168, height: 48 }}
+                    disabled={isDetectingLocation}
+                    className='w-full sm:w-[168px] h-12'
                 >
-                    {isSubmitting ? 'Submitting...' : 'Continue'}
+                    Continue
                 </Button>
             </div>
         </form>

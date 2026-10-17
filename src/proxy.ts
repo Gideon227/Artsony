@@ -34,6 +34,7 @@ const GATED_PREFIXES = [
   '/messages',
   '/settings',
   '/seller-registration',
+  '/admin',
   '/artsony-studio',
   '/artworks/upload',
 ]

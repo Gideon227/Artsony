@@ -26,6 +26,7 @@ const BUYER_MENU_ITEMS: NavItem[] = [
   { key: 'orders', label: 'Order', href: '/my-orders', icon: '/nav/order.svg' },
   { key: 'messages', label: 'Messages', href: '/messages', icon: '/nav/message.svg' },
   { key: 'settings', label: 'Settings', href: '/settings/profile-customization', icon: '/nav/settings.svg' },
+  { key: 'sell', label: 'Sell', href: '/seller-registration', icon: '/nav/studio.svg' },
   { key: 'help', label: 'Help', href: '/help', icon: '/nav/help.svg' },
 ]
 

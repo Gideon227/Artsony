@@ -9,7 +9,8 @@ import type { PhysicalOrderDetailView } from '@/types/physical-order'
 import { ShipmentTimeline } from './shipment-timeline'
 import { DetailSkeleton } from './detail-skeleton'
 import { DetailErrorState } from './detail-error-state'
-import { formatCurrency, formatDate, timeAgo } from '../utils'
+import { formatCurrency, formatDate, formatOrderNumber, getOrderTotal, supportMailto, timeAgo } from '../utils'
+import { openDocumentAfter } from '@/features/orders/my-orders/open-document'
 import { OrderActionsMenu, OrderActionsMenuItem } from '../ui/order-actions-menu'
 import { CancelOrderFlow } from './cancel-order/cancel-order-flow'
 import { useDownloadInvoice } from '@/hooks/use-physical-order'
@@ -23,14 +24,14 @@ interface Props {
 export function LiveOrderDetails({ query }: Props) {
     const { data, isLoading, isError, error, refetch, isFetching } = query
     const [cancelOpen, setCancelOpen] = useState(false)
+    const downloadInvoice = useDownloadInvoice()
 
     if (isLoading) return <DetailSkeleton />
     if (isError || !data) return <DetailErrorState error={error} onRetry={refetch} />
 
-    const { physical, order_item, delivery_address } = data.data
-    const total = (order_item?.unit_price ?? 0) * (order_item?.quantity ?? 1) + (physical.shipping_cost ?? 0)
-
-    const downloadInvoice = useDownloadInvoice()
+    const { physical, order_item, order_number, delivery_address } = data.data
+    const orderNumber = formatOrderNumber(order_number, physical.order_id)
+    const total = getOrderTotal(order_item?.unit_price, order_item?.quantity, physical.shipping_cost)
     const canCancel = BUYER_ARTIST_CANCELLABLE_STATES.has(physical.timeline_status)
 
     const menuItems: OrderActionsMenuItem[] = [
@@ -38,19 +39,16 @@ export function LiveOrderDetails({ query }: Props) {
             ? [{ id: 'cancel', label: 'Cancel Order', onSelect: () => setCancelOpen(true) }]
             : []),
         {
-            id: 'support',
-            label: 'Contact Support',
-            onSelect: () =>
-            window.open(`mailto:support@artsony.com?subject=${encodeURIComponent(`Order ${physical.order_id}`)}`),
-        },
-        {
             id: 'invoice',
             label: 'Download Invoice',
             isPending: downloadInvoice.isPending,
             onSelect: () =>
-            downloadInvoice.mutate(physical.id, {
-                onSuccess: (data) => window.open(data.invoice_url, '_blank', 'noopener,noreferrer'),
-            }),
+                void openDocumentAfter(() => downloadInvoice.mutateAsync(physical.id).then((doc) => doc.invoice_url)),
+        },
+        {
+            id: 'support',
+            label: 'Contact Support',
+            onSelect: () => window.location.assign(supportMailto(`Order ${orderNumber}`)),
         },
     ]
 
@@ -71,7 +69,7 @@ export function LiveOrderDetails({ query }: Props) {
                                 </span>
                                 <div>
                                 <p className="py-1 font-poppins text-gray-200 text-body-xs tracking-wide">
-                                    Order ID: <span className="text-info-500">{physical.order_id.slice(0, 12).toUpperCase()}</span>
+                                    Order ID: <span className="text-info-500">{orderNumber}</span>
                                 </p>
                                 <p className="py-1 font-poppins text-gray-200 text-body-xs tracking-wide">
                                     Tracking ID: <span className="text-info-500">{physical.tracking_id ?? 'Not assigned yet'}</span>

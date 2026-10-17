@@ -1,11 +1,14 @@
 'use client'
 
 import * as React from 'react'
-import { ArrowDown, ArrowUp, BarChart3, Clock, CreditCard, DollarSign, HelpCircle, Plus } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components'
+import { useMediaQuery } from '@/hooks'
 import { Dropdown, type DropdownOption } from '@/components/ui/dropdown'
+import { DynamicTooltip } from '@/components/ui/dynamic-tooltip'
+import { TrendIndicator as SharedTrendIndicator } from '@/components/ui/metric-card'
 import { formatUsd } from '@/lib/wallet/format'
+import { STUDIO_HELP, type StudioHelp } from '@/lib/studio/help-copy'
 import type { WalletMetric, WalletPeriod, WalletSummary } from '@/types/wallet'
 import Image from 'next/image'
 import { StudioCardError } from '@/features/studio/components/studio-card-error'
@@ -25,17 +28,22 @@ export type WalletSummaryHeaderProps = {
 }
 
 export function WalletSummaryHeader({ period, onPeriodChange, onWithdrawClick }: WalletSummaryHeaderProps) {
+  const isDesktop = useMediaQuery('(min-width: 1024px)')
+
+  // Below `lg` the Withdraw action lives in the screen header (StudioMobileHeader).
   return (
     <div className="flex items-center justify-between gap-4">
       <Dropdown
         options={PERIOD_OPTIONS}
         value={PERIOD_OPTIONS.find((opt) => opt.id === period)}
         onChange={(option) => onPeriodChange(option.id as WalletPeriod)}
-        rightIcon='/icons/alt-arrow-down.svg'
-        className="w-54 h-12"
+        rightIcon={isDesktop ? '/icons/alt-arrow-down.svg' : undefined}
+        arrow="triangle"
+        className="w-33 lg:w-54"
+        triggerClassName="h-10 lg:h-12"
       />
 
-      <Button variant="primary" size="lg" onClick={onWithdrawClick} className="gap-2 h-12" leftIcon='/icons/plus-white-bg.svg'>
+      <Button variant="primary" size="lg" onClick={onWithdrawClick} className="h-12 gap-2 max-lg:hidden" leftIcon='/icons/plus-white-bg.svg'>
         Withdrawal
       </Button>
     </div>
@@ -48,13 +56,13 @@ type MetricCardConfig = {
   icon: string;
   iconBg: string
   valueClassName?: string
-  showHelp?: boolean
+  help?: StudioHelp
 }
 
 const CARDS: MetricCardConfig[] = [
   { key: 'total_earnings', label: 'Total Earnings', icon: '/wallet/money-wad.svg', iconBg: 'bg-gray-100', valueClassName: 'text-primary-500' },
-  { key: 'available_balance', label: 'Available Balance', icon: '/wallet/dollar.svg', iconBg: 'bg-successful-100', showHelp: true },
-  { key: 'pending_balance', label: 'Pending Balance', icon: '/wallet/money-wad-yellow.svg', iconBg: 'bg-warning-100', showHelp: true },
+  { key: 'available_balance', label: 'Available Balance', icon: '/wallet/dollar.svg', iconBg: 'bg-successful-100', help: STUDIO_HELP.availableBalance },
+  { key: 'pending_balance', label: 'Pending Balance', icon: '/wallet/money-wad-yellow.svg', iconBg: 'bg-warning-100', help: STUDIO_HELP.pendingBalance },
   { key: 'total_withdrawals', label: 'Total Withdrawals', icon: 'wallet/debit-card.svg', iconBg: 'bg-primary-50' },
 ]
 
@@ -72,18 +80,7 @@ function MetricCardSkeleton() {
 }
 
 export function TrendIndicator({ metric }: { metric: WalletMetric }) {
-  const isUp = metric.direction === 'UP'
-  return (
-    <span
-      className={cn(
-        'inline-flex items-center gap-1 text-body-xs font-medium',
-        isUp ? 'text-success-600' : 'text-error-600'
-      )}
-    >
-      {isUp ? <ArrowUp className="h-3.5 w-3.5" strokeWidth={2} /> : <ArrowDown className="h-3.5 w-3.5" strokeWidth={2} />}
-      {metric.change_percent}% {isUp ? 'Up' : 'Down'}
-    </span>
-  )
+  return <SharedTrendIndicator trend={metric} />
 }
 
 export type WalletSummaryCardsProps = {
@@ -115,7 +112,7 @@ export function WalletSummaryCards({ summary, isLoading, isError = false, error,
       {CARDS.map((card) => {
         const metric = summary[card.key]
         return (
-          <div key={card.key} className="flex-1 rounded-xl border border-gray-50 bg-white p-4 flex flex-col gap-y-8">
+          <div key={card.key} className="flex flex-1 flex-col gap-y-2 rounded-xl border border-gray-50 bg-white p-4 lg:gap-y-8">
             <div className="flex items-center justify-between">
               <span className="text-body-s font-poppins leading-6 text-body">{card.label}</span>
               <span className={cn('flex h-10 w-10 p-2 shrink-0 items-center justify-center rounded-full', card.iconBg)}>
@@ -130,11 +127,7 @@ export function WalletSummaryCards({ summary, isLoading, isError = false, error,
 
             <div className="flex items-center w-full justify-between">
               <TrendIndicator metric={metric} />
-              {card.showHelp && (
-                <button type="button" aria-label={`About ${card.label.toLowerCase()}`} className="text-info-500">
-                  <HelpCircle className="h-4 w-4" strokeWidth={1.75} />
-                </button>
-              )}
+              {card.help && <DynamicTooltip title={card.help.title} content={card.help.content} iconSize={20} className="w-[212px]" />}
             </div>
           </div>
         )

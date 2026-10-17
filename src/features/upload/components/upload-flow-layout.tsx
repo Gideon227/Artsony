@@ -18,11 +18,7 @@ export default function UploadFlowLayout({
     const ActiveStepComponent = flowComponents || null;
 
     return (
-        // 1. Added `overflow-hidden` to prevent the whole page from expanding and scrolling
-        // 2. Removed `justify-center items-center` so the flex container behaves correctly for full-height layouts
         <div className="h-full w-full bg-white flex flex-col overflow-hidden">
-            
-            {/* 3. Removed `items-start` to let children stretch to the full container height naturally */}
             <div className="h-full w-full px-8 py-8 flex gap-8 overflow-hidden">
                 
                 {/* Left Workspace */}

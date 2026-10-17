@@ -17,6 +17,14 @@ const SORT_OPTIONS: DropdownOption[] = [
   { id: 'VIEWS', label: 'By Views' },
 ]
 
+const SORT_SUBTITLE: Record<ArtworkRankSort, string> = {
+  EARNINGS: 'Top artworks by total earnings this month.',
+  SALES: 'Top artworks by units sold this month.',
+  VIEWS: 'Top artworks by views this month.',
+}
+
+const PLACEHOLDER_SRC = '/images/placeholder-art.jpg'
+
 function TpaSkeleton() {
   return (
     <div className="flex-1 rounded-2xl border border-gray-50 bg-white p-5">
@@ -103,8 +111,8 @@ export function FeaturedArtworkCard() {
                 fill
                 className="object-cover"
                 onError={(e) => {
-                  // Graceful fallback if image doesn't exist yet
-                  ;(e.currentTarget as HTMLImageElement).src = '/images/placeholder-art.jpg'
+                  const img = e.currentTarget as HTMLImageElement
+                  if (!img.src.endsWith(PLACEHOLDER_SRC)) img.src = PLACEHOLDER_SRC
                 }}
               />
             </motion.div>
@@ -139,11 +147,11 @@ export function FeaturedArtworkCard() {
         <p className="font-raleway text-h6 font-semibold text-heading">
           Rank <span className="text-primary-500">#{String(artwork.rank).padStart(2, '0')}</span>
         </p>
-        <p className="mt-1 text-body-s text-body">Top artworks by total earnings this month.</p>
+        <p className="mt-1 text-body-s text-body">{SORT_SUBTITLE[sort]}</p>
 
         <div className="mt-4 flex items-center gap-2">
-          <span className="flex h-8 w-8 items-center justify-center rounded-full bg-success-100">
-            <DollarSign className="h-4 w-4 text-success-600" strokeWidth={1.75} />
+          <span className="flex h-8 w-8 items-center justify-center rounded-full bg-successful-100">
+            <DollarSign className="h-4 w-4 text-successful-600" strokeWidth={1.75} />
           </span>
           <span className="text-body-s text-body">Total Earnings:</span>
         </div>
@@ -156,6 +164,13 @@ export function FeaturedArtworkCard() {
           <span className="text-body-s text-body">Total Sales:</span>
           <span className="text-body-s font-medium text-heading">{artwork.total_sales} units</span>
         </div>
+
+        {sort === 'VIEWS' && (
+          <div className="mt-3 flex items-center justify-between">
+            <span className="text-body-s text-body">Total Views:</span>
+            <span className="text-body-s font-medium text-heading">{artwork.total_views.toLocaleString('en-US')}</span>
+          </div>
+        )}
 
         <div className="mt-3">
           <TrendIndicator trend={artwork} label="This Month" />

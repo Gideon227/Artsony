@@ -11,7 +11,7 @@ export const WALLET_STATUS_META: Record<WalletActivityStatus, StatusMeta> = {
   HOLD: { label: 'Hold', variant: 'warning', dotClassName: 'bg-warning-500' },
   PENDING: { label: 'Pending', variant: 'info', dotClassName: 'bg-info-500' },
   CANCELED: { label: 'Canceled', variant: 'error', dotClassName: 'bg-error-500' },
-  COMPLETED: { label: 'Completed', variant: 'success', dotClassName: 'bg-success-500' },
+  COMPLETED: { label: 'Completed', variant: 'success', dotClassName: 'bg-successful-500' },
 }
 
 export const WALLET_STATUS_VALUES: WalletActivityStatus[] = ['HOLD', 'PENDING', 'CANCELED', 'COMPLETED']

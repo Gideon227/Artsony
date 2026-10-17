@@ -8,13 +8,19 @@ import { useLogout } from "@/hooks/use-auth-mutations";
 
 const FALLBACK_AVATAR = "/images/image-avatar.svg";
 
-const NAV_LINKS = [
+type NavLink = { label: string; href: string };
+
+const NAV_LINKS: readonly NavLink[] = [
   { label: "Visit Profile", href: "/profile" },
   { label: "Artsony Studio", href: "/artsony-studio" },
   { label: "Orders", href: "/all-orders" },
   { label: "Wallet", href: "/artsony-studio?section=wallet" },
   { label: "Settings", href: "/settings/profile-customization" },
-] as const;
+];
+
+const ADMIN_LINKS: readonly NavLink[] = [
+  { label: "Seller Applications", href: "/admin/seller-registrations" },
+];
 
 export default function UserMenuOverlay({ onClose }: { onClose?: () => void }) {
   const { user } = useAuthStore();
@@ -31,6 +37,8 @@ export default function UserMenuOverlay({ onClose }: { onClose?: () => void }) {
   useEffect(() => {
     setAvatarSrc(user?.avatarUrl || FALLBACK_AVATAR);
   }, [user?.avatarUrl]);
+
+  const navLinks = user?.role === "ADMIN" ? [...NAV_LINKS, ...ADMIN_LINKS] : NAV_LINKS;
 
   const handleLogout = () => {
     onClose?.();
@@ -80,7 +88,7 @@ export default function UserMenuOverlay({ onClose }: { onClose?: () => void }) {
       {/* NAVIGATION LINKS */}
         <nav>
             <ul className="flex flex-col space-y-7">
-                {NAV_LINKS.map((link) => (
+                {navLinks.map((link) => (
                     <li key={link.href}>
                         <Link
                             href={link.href}

@@ -1,91 +1,121 @@
 'use client'
+
+import { useCallback } from 'react'
 import { Button, Input } from '@/components'
 import { PhoneInput } from '@/components/ui/phone-input'
-import { z } from 'zod'
 import { useForm, Controller } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
-
-// Define strict validation schema
-const accountBasicsSchema = z.object({
-    fullName: z.string().min(2, "Full name is required"),
-    email: z.string().email("Invalid email address"),
-    username: z.string().min(3, "Username must be at least 3 characters"),
-    phone: z.string().min(10, "Valid phone number is required"),
-})
-
-type AccountBasicsForm = z.infer<typeof accountBasicsSchema>
+import { accountBasicsSchema, type AccountBasicsFormValues } from '../schemas'
+import { DEFAULT_DIAL_CODE, type AccountBasicsValues } from '../types'
 
 interface AccountBasicsProps {
-    onNext: () => void;
+    defaultValues?: Partial<AccountBasicsValues>
+    isSubmitting: boolean
+    serverError?: string
+    onSubmit: (values: AccountBasicsValues) => void | Promise<void>
 }
 
-const AccountBasics = ({ onNext }: AccountBasicsProps) => {
+const AccountBasics = ({ defaultValues, isSubmitting, serverError, onSubmit }: AccountBasicsProps) => {
     const {
         register,
         handleSubmit,
         control,
-        formState: { isValid }
-    } = useForm<AccountBasicsForm>({
+        setValue,
+        formState: { errors, isValid },
+    } = useForm<AccountBasicsFormValues>({
         resolver: zodResolver(accountBasicsSchema),
-        mode: 'onChange' // Triggers validation continuously to enable/disable button
+        mode: 'onTouched',
+        defaultValues: {
+            fullName: defaultValues?.fullName ?? '',
+            email: defaultValues?.email ?? '',
+            username: defaultValues?.username ?? '',
+            phone: defaultValues?.phone ?? '',
+            dialCode: defaultValues?.dialCode ?? DEFAULT_DIAL_CODE,
+        },
     })
 
-    const onSubmit = (data: AccountBasicsForm) => {
-        // Safe to proceed, data perfectly matches schema
-        console.log('Form validated successfully:', data)
-        onNext()
-    }
+    const handleDialCodeChange = useCallback(
+        (dialCode: string) => setValue('dialCode', dialCode),
+        [setValue],
+    )
 
     return (
-        <form 
-            onSubmit={handleSubmit(onSubmit)} 
-            className='mx-auto border rounded-2xl border-gray-50 py-16 px-14 flex flex-col gap-y-14 items-center justify-center' 
-            style={{ padding: 64, width: 917 }}
+        <form
+            onSubmit={handleSubmit((values) => onSubmit(values))}
+            noValidate
+            className='mx-auto w-full max-w-[917px] border rounded-2xl border-gray-50 p-6 sm:p-10 lg:p-16 flex flex-col gap-y-10 lg:gap-y-14 items-center justify-center'
         >
-            <div className='grid grid-cols-2 grid-rows-2 gap-4 items-center justify-center w-full'>
-                <div className='flex flex-col' style={{ gap: 8 }}>
-                    <label className='font-poppins font-medium text-body-s text-heading tracking-wide'>Full Name</label>
-                    <Input 
-                        {...register('fullName')} 
-                        className='flex-1' 
-                        placeholder='personal / business name'   
+            <div className='grid grid-cols-1 md:grid-cols-2 gap-4 items-start w-full'>
+                <div className='flex flex-col gap-y-2'>
+                    <label htmlFor='seller-full-name' className='font-poppins font-medium text-body-s text-heading tracking-wide'>Full Name</label>
+                    <Input
+                        id='seller-full-name'
+                        {...register('fullName')}
+                        autoComplete='name'
+                        className='flex-1'
+                        placeholder='personal / business name'
+                        error={errors.fullName?.message}
                     />
                 </div>
-                <div className='flex flex-col' style={{ gap: 8 }}>
-                    <label className='font-poppins font-medium text-body-s text-heading tracking-wide'>Email</label>
-                    <Input 
-                        {...register('email')} 
-                        className='flex-1' 
-                        placeholder='forexample@gmail.com'  
+                <div className='flex flex-col gap-y-2'>
+                    <label htmlFor='seller-email' className='font-poppins font-medium text-body-s text-heading tracking-wide'>Email</label>
+                    <Input
+                        id='seller-email'
+                        type='email'
+                        {...register('email')}
+                        autoComplete='email'
+                        className='flex-1'
+                        placeholder='forexample@gmail.com'
+                        error={errors.email?.message}
                     />
                 </div>
-                <div className='flex flex-col' style={{ gap: 8 }}>
-                    <label className='font-poppins font-medium text-body-s text-heading tracking-wide'>Username</label>
-                    <Input 
-                        {...register('username')} 
-                        className='flex-1' 
-                        placeholder='@Rocketman32' 
+                <div className='flex flex-col gap-y-2'>
+                    <label htmlFor='seller-username' className='font-poppins font-medium text-body-s text-heading tracking-wide'>Username</label>
+                    <Input
+                        id='seller-username'
+                        {...register('username')}
+                        autoComplete='username'
+                        className='flex-1'
+                        placeholder='@Rocketman32'
+                        error={errors.username?.message}
                     />
                 </div>
-                <div className='flex flex-col' style={{ gap: 8 }}>
-                    <label className='font-poppins font-medium text-body-s text-heading tracking-wide'>Phone Number</label>
-                    {/* Controller used for custom UI components to ensure perfect ref forwarding */}
+                <div className='flex flex-col gap-y-2'>
+                    <label htmlFor='seller-phone' className='font-poppins font-medium text-body-s text-heading tracking-wide'>Phone Number</label>
                     <Controller
-                        name="phone"
+                        name='phone'
                         control={control}
                         render={({ field }) => (
-                            <PhoneInput {...field} />
+                            <PhoneInput
+                                {...field}
+                                id='seller-phone'
+                                type='tel'
+                                autoComplete='tel-national'
+                                defaultDialCode={defaultValues?.dialCode}
+                                onDialCodeChange={handleDialCodeChange}
+                            />
                         )}
                     />
+                    {errors.phone?.message && (
+                        <p className='pl-4 text-xs font-semibold text-error-500'>{errors.phone.message}</p>
+                    )}
                 </div>
             </div>
 
-            <Button 
-                type="submit" 
-                rightIcon='/icons/shield-user.svg' 
-                size='lg' 
-                className='mx-auto transition-opacity duration-300'
-                disabled={!isValid}
+            {serverError && (
+                <p role='alert' className='w-full text-center font-poppins text-body-xs font-medium text-error-500'>
+                    {serverError}
+                </p>
+            )}
+
+            <Button
+                type='submit'
+                rightIcon='/icons/shield-user.svg'
+                size='lg'
+                className='mx-auto w-full sm:w-auto transition-opacity duration-300'
+                isLoading={isSubmitting}
+                loadingText='Sending code…'
+                disabled={!isValid || isSubmitting}
             >
                 Send Verification Code
             </Button>

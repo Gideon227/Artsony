@@ -13,9 +13,8 @@ interface Props {
 export function DownloadCard({ token }: Props) {
   const { mutate: download, isPending } = useDownloadArtwork()
 
-  const isExpired = new Date(token.expires_at) < new Date()
   const isExhausted = token.download_count >= token.max_downloads
-  const disabled = isExpired || isExhausted || isPending
+  const disabled = isExhausted || isPending
 
   return (
     <div className="w-full border border-gray-50 rounded-xl p-4 flex items-center gap-x-4">
@@ -36,11 +35,9 @@ export function DownloadCard({ token }: Props) {
       <div className="min-w-0 flex-1">
         {/* <p className="font-poppins font-medium text-body-s text-body truncate">{token.artwork_title}</p> */}
         <p className="font-poppins text-body-xs text-gray-200 tracking-wide mt-1">
-          {isExpired
-            ? 'Download link expired'
-            : isExhausted
-              ? `Download limit reached (${token.max_downloads} max)`
-              : `${token.download_count}/${token.max_downloads} downloads used`}
+          {isExhausted
+            ? 'Already downloaded'
+            : 'Available for one download'}
         </p>
       </div>
 

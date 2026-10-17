@@ -4,13 +4,12 @@ import { CloseButton } from './close-button'
 
 interface Props {
   onClose: () => void
-  onCancel: () => void
   onConfirm: () => void
   isPending: boolean
   errorMessage: string | null
 }
 
-export function Confirmation({ onClose, onCancel, onConfirm, isPending, errorMessage }: Props) {
+export function Confirmation({ onClose, onConfirm, isPending, errorMessage }: Props) {
   return (
     <div className="py-16 px-10 rounded-2xl border border-gray-50 relative bg-white flex flex-col gap-y-12">
         <CloseButton onClose={onClose} />
@@ -34,7 +33,7 @@ export function Confirmation({ onClose, onCancel, onConfirm, isPending, errorMes
         </div>
 
         <div className="flex items-center justify-between w-full">
-            <Button variant="outline" size="lg" onClick={onCancel} disabled={isPending}>Back</Button>
+            <Button variant="outline" size="lg" onClick={onClose} disabled={isPending}>Cancel</Button>
             <Button size="lg" onClick={onConfirm} isLoading={isPending} disabled={isPending} aria-label="Confirm order cancellation">
                 Finish
             </Button>
