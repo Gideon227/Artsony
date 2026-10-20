@@ -13,7 +13,7 @@ type NavLink = { label: string; href: string };
 const NAV_LINKS: readonly NavLink[] = [
   { label: "Visit Profile", href: "/profile" },
   { label: "Artsony Studio", href: "/artsony-studio" },
-  { label: "Orders", href: "/all-orders" },
+  { label: "Orders", href: "/order-management" },
   { label: "Wallet", href: "/artsony-studio?section=wallet" },
   { label: "Settings", href: "/settings/profile-customization" },
 ];

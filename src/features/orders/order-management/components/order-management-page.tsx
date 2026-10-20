@@ -3,33 +3,51 @@
 import * as React from 'react'
 import { usePathname, useRouter, useSearchParams } from 'next/navigation'
 import { ErrorState } from '@/components/feedback/states'
+import { cn } from '@/lib/utils'
+import { describeOrdersLoadError } from '@/lib/orders/errors'
 import { Navbar } from '@/components/layout/navbar'
 import { Skeleton } from '@/components/ui/skeleton'
 import { useSellerSales, useSellerSalesCounts } from '@/hooks/queries/use-seller-sales'
 import { selectHasSellerAccount, selectIsHydrated, useAuthStore } from '@/store'
-import type { SellerSaleLine } from '@/types/seller-sales'
+import type { SellerSaleLine, SellerStatus } from '@/types/seller-sales'
 import { ORDER_MANAGEMENT_HREF, STATUS_TABS } from '../constants'
 import {
   DEFAULT_FILTERS,
   hasActiveFilters,
   hasSecondaryFilters,
   type OrderFilters,
+  type StatusFilter,
   type UpdateOptions,
 } from '../lib/filters'
 import { toApiParams } from '../lib/to-api-params'
 import { parseFilters, serializeFilters } from '../lib/url-filters'
+import { OrdersMasterDetail } from './master-detail/orders-master-detail'
 import { OrdersEmptyState } from './orders-empty-state'
 import { OrdersFilterBar } from './orders-filter-bar'
 import { OrdersSidebar } from './orders-sidebar'
 import { OrdersTable, OrdersTableSkeleton } from './orders-table'
 import { SellerGate } from './seller-gate'
 
-function Layout({ sidebar, children }: { sidebar: React.ReactNode; children: React.ReactNode }) {
+const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
+
+function parseOrderParam(value: string | null): string | null {
+  return value && UUID.test(value) ? value : null
+}
+
+function Layout({
+  sidebar,
+  children,
+  hideSidebarOnMobile = false,
+}: {
+  sidebar: React.ReactNode
+  children: React.ReactNode
+  hideSidebarOnMobile?: boolean
+}) {
   return (
     <div className="min-h-screen bg-white">
       <Navbar />
-      <main className="mx-auto grid max-w-[1440px] gap-4 px-4 py-6 md:px-8 lg:grid-cols-4">
-        <div className="lg:sticky lg:top-24 lg:self-start">{sidebar}</div>
+      <main className="grid gap-4 px-4 py-6 md:px-8 lg:grid-cols-4">
+        <div className={cn('lg:sticky lg:top-24 lg:self-start', hideSidebarOnMobile && 'hidden lg:block')}>{sidebar}</div>
         {children}
       </main>
     </div>
@@ -62,10 +80,12 @@ export function OrderManagementPage() {
   const hasSellerAccount = useAuthStore(selectHasSellerAccount)
 
   const filters = React.useMemo(() => parseFilters(new URLSearchParams(queryString)), [queryString])
+  const orderParam = React.useMemo(() => parseOrderParam(new URLSearchParams(queryString).get('order')), [queryString])
+  const isMasterDetail = filters.status !== 'ALL'
   const apiParams = React.useMemo(() => toApiParams(filters), [filters])
 
   const canQuery = isHydrated && hasSellerAccount
-  const list = useSellerSales(apiParams, canQuery)
+  const list = useSellerSales(apiParams, canQuery && !isMasterDetail)
   const counts = useSellerSalesCounts(canQuery)
 
   const [showMore, setShowMore] = React.useState(() => hasSecondaryFilters(filters))
@@ -91,6 +111,45 @@ export function OrderManagementPage() {
     }
   }, [list.data, list.isPlaceholderData, filters.page, totalPages, updateFilters])
 
+  const navigate = React.useCallback(
+    (params: URLSearchParams, options: UpdateOptions = {}) => {
+      const query = params.toString()
+      const href = query ? `${pathname}?${query}` : pathname
+      if (options.replace) router.replace(href, { scroll: false })
+      else router.push(href, { scroll: false })
+    },
+    [pathname, router],
+  )
+
+  const selectOrder = React.useCallback(
+    (orderItemId: string | null, options: UpdateOptions = {}) => {
+      const params = serializeFilters(filters)
+      if (orderItemId) params.set('order', orderItemId)
+      navigate(params, options)
+    },
+    [filters, navigate],
+  )
+
+  const selectStatus = React.useCallback(
+    (status: StatusFilter) => {
+      updateFilters(
+        status === 'ALL'
+          ? { status }
+          : { status, format: 'ALL', price: 'ALL', dateFrom: null, dateTo: null },
+      )
+    },
+    [updateFilters],
+  )
+
+  const showOrderIn = React.useCallback(
+    (status: StatusFilter, orderItemId: string) => {
+      const params = serializeFilters({ ...DEFAULT_FILTERS, status })
+      params.set('order', orderItemId)
+      navigate(params, { replace: true })
+    },
+    [navigate],
+  )
+
   const handleBack = React.useCallback(() => {
     if (window.history.length > 1) router.back()
     else router.push('/')
@@ -107,7 +166,7 @@ export function OrderManagementPage() {
       active={filters.status}
       counts={countsData}
       disabled={sidebarDisabled}
-      onSelect={(status) => updateFilters({ status })}
+      onSelect={selectStatus}
       onBack={handleBack}
     />
   )
@@ -126,6 +185,22 @@ export function OrderManagementPage() {
     )
   }
 
+  if (isMasterDetail) {
+    return (
+      <Layout sidebar={sidebar} hideSidebarOnMobile={orderParam !== null}>
+        <OrdersMasterDetail
+          filters={filters}
+          status={filters.status as SellerStatus}
+          orderParam={orderParam}
+          onSelect={selectOrder}
+          onSearchChange={(search) => updateFilters({ search }, { replace: true })}
+          onCancelled={(orderItemId) => showOrderIn('CANCELLED', orderItemId)}
+          onActivated={(orderItemId) => showOrderIn('LIVE', orderItemId)}
+        />
+      </Layout>
+    )
+  }
+
   const rows = list.data?.data ?? []
   const activeTab = STATUS_TABS.find((tab) => tab.id === filters.status)
   const heading = hasActiveFilters(filters) ? 'Search Result' : (activeTab?.label ?? 'All Orders')
@@ -134,12 +209,13 @@ export function OrderManagementPage() {
   if (list.isPending) {
     body = <OrdersTableSkeleton />
   } else if (list.isError && !list.data) {
+    const loadError = describeOrdersLoadError(list.error)
     body = (
       <div className="rounded-[32px] border border-gray-50 bg-white">
         <ErrorState
-          title="We couldn't load your orders"
-          description="Check your connection and try again."
-          onRetry={() => void list.refetch()}
+          title={loadError.title}
+          description={loadError.description}
+          {...(loadError.retryable ? { onRetry: () => void list.refetch() } : {})}
         />
       </div>
     )

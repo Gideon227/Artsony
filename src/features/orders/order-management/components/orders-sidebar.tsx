@@ -21,7 +21,7 @@ export function OrdersSidebar({ active, counts, disabled, onSelect, onBack, clas
   return (
     <nav
       aria-label="Order management"
-      className={cn('flex flex-col gap-4 rounded-[32px] bg-secondary-50 p-4 lg:gap-0 lg:px-4 lg:pb-4 lg:pt-8', className)}
+      className={cn('flex flex-col gap-4 rounded-2xl bg-secondary-50 p-4 lg:gap-0 lg:px-4 lg:pb-4 lg:pt-8 w-[332px]', className)}
     >
       <div className="flex items-center gap-4 lg:pb-8">
         <button
@@ -37,7 +37,7 @@ export function OrdersSidebar({ active, counts, disabled, onSelect, onBack, clas
 
       <hr className="hidden border-gray-50 lg:block" />
 
-      <ul className="-mx-1 flex gap-2 overflow-x-auto px-1 py-1 scrollbar-hide lg:mx-0 lg:flex-col lg:gap-4 lg:overflow-visible lg:px-0 lg:pb-0 lg:pt-4">
+      <ul className="flex gap-2 px-1 py-1 scrollbar-hide lg:mx-0 lg:flex-col lg:gap-4 lg:overflow-visible lg:px-0 lg:pb-0 lg:pt-4">
         {STATUS_TABS.map((tab) => {
           const isActive = !disabled && active === tab.id
           const showBadge = disabled ? tab.id === 'ALL' : isActive
@@ -51,7 +51,7 @@ export function OrdersSidebar({ active, counts, disabled, onSelect, onBack, clas
                 aria-current={isActive ? 'page' : undefined}
                 onClick={() => onSelect(tab.id)}
                 className={cn(
-                  'flex h-12 w-full cursor-pointer items-center gap-3 rounded-[16px] px-4 font-poppins text-body-s font-medium tracking-wide lg:h-14 lg:gap-4',
+                  'flex h-12 w-full cursor-pointer items-center gap-4 rounded-m p-4 font-poppins text-body-s tracking-wide lg:h-14 lg:gap-4',
                   'whitespace-nowrap transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary-500',
                   isActive
                     ? 'bg-primary-50 text-primary-500 ring-2 ring-primary-500 ring-offset-2'
@@ -65,7 +65,7 @@ export function OrdersSidebar({ active, counts, disabled, onSelect, onBack, clas
                 {showBadge && count !== undefined && (
                   <span
                     className={cn(
-                      'flex h-6 min-w-6 items-center justify-center rounded-[8px] px-1.5 text-body-xs font-semibold leading-none text-white',
+                      'flex h-6 w-6 items-center justify-center rounded-s p-0.5 text-body-xs leading-none text-white',
                       disabled ? 'bg-gray-400' : 'bg-primary-500',
                     )}
                   >

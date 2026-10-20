@@ -8,7 +8,7 @@ import { OrderCard } from './order-card'
 import { OrderSortMenu } from '@/features/orders/my-orders/ui/order-sort-menu'
 import type { OrderSort } from '../constant'
 import type { BuyerOrderView, OrderItemPhysicalListEntry } from '@/types/physical-order'
-import { HttpError } from '@/lib/api-client'
+import { describeOrdersLoadError } from '@/lib/orders/errors'
 
 interface Props {
   view: BuyerOrderView
@@ -57,6 +57,7 @@ export function OrderList({
   const sentinelRef = useRef<HTMLDivElement>(null)
   const sentinelVisible = useIntersectionObserver(sentinelRef, SENTINEL_OPTIONS)
   const hasOrders = orders.length > 0
+  const loadError = isError ? describeOrdersLoadError(error) : null
 
   useEffect(() => {
     if (sentinelVisible && hasNextPage && !isFetchingNextPage && !isError) onLoadMore()
@@ -82,14 +83,15 @@ export function OrderList({
             <div key={i} className="h-[220px] rounded-xl bg-gray-50 animate-pulse" />
           ))}
 
-        {isError && !isLoading && !hasOrders && (
-          <div className="flex flex-col items-center gap-y-3 py-12 text-center">
-            <p className="font-poppins text-body-s text-body">
-              {error instanceof HttpError ? error.message : 'Could not load your orders.'}
-            </p>
-            <button type="button" onClick={onRetry} className="text-info-500 font-poppins text-body-s underline">
-              Try again
-            </button>
+        {loadError && !isLoading && !hasOrders && (
+          <div role="alert" className="flex flex-col items-center gap-y-2 py-12 text-center">
+            <p className="font-poppins text-body-s font-medium text-heading">{loadError.title}</p>
+            <p className="font-poppins text-body-s text-body">{loadError.description}</p>
+            {loadError.retryable && (
+              <button type="button" onClick={onRetry} className="text-info-500 font-poppins text-body-s underline">
+                Try again
+              </button>
+            )}
           </div>
         )}
 

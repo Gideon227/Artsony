@@ -9,7 +9,7 @@ import Image from "next/image";
 import { Checkbox } from "./checkbox";
 
 export type DropdownVariant = "default" | "error" | "success";
-export type DropdownIndicator = "checkbox" | "checkmark" | "highlight" | "none";
+export type DropdownIndicator = "checkbox" | "checkmark" | "highlight" | "radio" | "none";
 export type DropdownLayout = "list" | "grid";
 export type DropdownSearchVariant = "inline" | "button";
 export type DropdownArrow = "chevron" | "triangle";
@@ -34,8 +34,6 @@ interface DropdownProps {
   rightIcon?: string;
   arrow?: DropdownArrow;
   className?: string;
-  /** Extra classes for the trigger button itself (className styles the wrapper). */
-  triggerClassName?: string;
 
   value?: DropdownOption;
   onChange?: (option: DropdownOption) => void;
@@ -90,7 +88,6 @@ const Dropdown = ({
   rightIcon,
   arrow = "chevron",
   className,
-  triggerClassName,
   searchable = false,
   searchPlaceholder = "Search",
   searchValue,
@@ -405,7 +402,7 @@ const Dropdown = ({
                 }}
                 className={cn(
                   "flex items-center w-full h-15 px-6 py-3 text-left text-body-xs transition-colors cursor-pointer outline-none",
-                  resolvedIndicator === "highlight"
+                  resolvedIndicator === "highlight" || resolvedIndicator === "radio"
                     ? selected && !multiple
                       ? "bg-primary-500"
                       : "hover:bg-neutral-50"
@@ -461,6 +458,18 @@ const Dropdown = ({
                   <div className="ml-2 shrink-0">
                     <Checkbox checked={selected} className="pointer-events-none" tabIndex={-1} />
                   </div>
+                )}
+
+                {resolvedIndicator === "radio" && (
+                  <span
+                    aria-hidden
+                    className={cn(
+                      "ml-3 flex h-6 w-6 shrink-0 items-center justify-center rounded-full transition-colors duration-150",
+                      selected ? "bg-white" : "border-2 border-gray-100"
+                    )}
+                  >
+                    {selected && <Check className="h-3.5 w-3.5 text-primary-500" strokeWidth={3} />}
+                  </span>
                 )}
 
                 {resolvedIndicator === "checkmark" && selected && (
@@ -586,8 +595,7 @@ const Dropdown = ({
           "focus:ring-2 focus:ring-offset-2 focus:ring-offset-white",
           variantStyles[variant],
           disabled && "bg-neutral-100 border-neutral-200 text-neutral-400 cursor-not-allowed opacity-100",
-          isOpen && "border-neutral-300 ring-2 ring-offset-2 ring-[#F15A2B]/20",
-          triggerClassName
+          isOpen && "border-neutral-300 ring-2 ring-offset-2 ring-[#F15A2B]/20"
         )}
       >
         {leftIcon && (

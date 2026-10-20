@@ -5,7 +5,11 @@ import { ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, Calendar as Cal
 import { cn } from '@/lib/utils'
 
 const WEEKDAYS = ['MO', 'TU', 'WE', 'TH', 'FR', 'SA', 'SU'] as const
-const MONTH_LABEL = new Intl.DateTimeFormat('en-US', { month: 'long', year: 'numeric' })
+const MONTH_NAMES = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sept', 'Oct', 'Nov', 'Dec'] as const
+
+function formatMonthTitle(date: Date): string {
+  return `${MONTH_NAMES[date.getMonth()]} ${date.getFullYear()}`
+}
 
 function startOfDay(date: Date): Date {
   return new Date(date.getFullYear(), date.getMonth(), date.getDate())
@@ -46,6 +50,7 @@ type CalendarProps = {
 function Calendar({ monthCursor, onMonthCursorChange, selected, onSelectDay, minDate, maxDate, className }: CalendarProps) {
     const days = React.useMemo(() => buildMonthGrid(monthCursor), [monthCursor])
     const currentMonth = monthCursor.getMonth()
+    const today = React.useMemo(() => startOfDay(new Date()), [])
 
     const range = selected && typeof selected === 'object' && 'from' in selected ? selected : null
     const single = selected instanceof Date ? selected : null
@@ -70,7 +75,7 @@ function Calendar({ monthCursor, onMonthCursorChange, selected, onSelectDay, min
                         <ChevronLeft className="h-4 w-4" strokeWidth={1.5} />
                     </button>
                     </div>
-                    <span className="font-poppins text-body-m font-bold text-heading">{MONTH_LABEL.format(monthCursor)}</span>
+                    <span className="font-poppins text-body-m font-medium text-primary-500">{formatMonthTitle(monthCursor)}</span>
                     <div className="flex items-center gap-1">
                     <button type="button" aria-label="Next month" onClick={() => goToMonth(1)} className="rounded-full p-1 text-primary-500 hover:bg-primary-50 focus-visible:outline-2 focus-visible:outline-primary-500">
                         <ChevronRight className="h-4 w-4" strokeWidth={1.5} />
@@ -98,6 +103,8 @@ function Calendar({ monthCursor, onMonthCursorChange, selected, onSelectDay, min
                 const isRangeEnd = range && isSameDay(day, range.to)
                 const isRangeMiddle = range?.from && range?.to && isBetween(day, range.from, range.to)
                 const isSingleSelected = isSameDay(day, single)
+                const isToday = isSameDay(day, today)
+                const isSelectedDay = Boolean(isRangeStart || isRangeEnd || isSingleSelected)
 
                 return (
                     <div
@@ -113,14 +120,15 @@ function Calendar({ monthCursor, onMonthCursorChange, selected, onSelectDay, min
                         type="button"
                         disabled={disabled}
                         onClick={() => onSelectDay(day)}
-                        aria-pressed={isRangeStart || isRangeEnd || isSingleSelected}
+                        aria-pressed={isSelectedDay}
                         aria-label={day.toDateString()}
                         className={cn(
                         'flex h-9 w-9 items-center justify-center rounded-full font-poppins text-body-s transition-colors',
                         'focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary-500',
                         outsideMonth && 'bg-gray-50 text-text-alt-grey',
-                        !outsideMonth && !isRangeStart && !isRangeEnd && !isSingleSelected && 'text-heading hover:bg-primary-50',
-                        (isRangeStart || isRangeEnd || isSingleSelected) && 'border border-primary-500 font-semibold text-primary-500',
+                        !outsideMonth && !isSelectedDay && 'text-heading hover:bg-primary-50',
+                        isToday && !isSelectedDay && 'border border-primary-500 text-primary-500',
+                        isSelectedDay && 'bg-primary-500 font-semibold text-white',
                         disabled && 'cursor-not-allowed opacity-40 hover:bg-transparent'
                         )}
                     >
@@ -164,7 +172,7 @@ export type DateRangePickerProps = {
   className?: string
 }
 
-function DateRangePicker({ value, onChange, minDate, maxDate, placeholder = 'Date: from – to', className }: DateRangePickerProps) {
+function DateRangePicker({ value, onChange, minDate, maxDate, placeholder = 'Date: from - to', className }: DateRangePickerProps) {
   const [isOpen, setIsOpen] = React.useState(false)
   const [monthCursor, setMonthCursor] = React.useState(() => startOfDay(value.from ?? new Date()))
   const containerRef = useOutsideClose(() => setIsOpen(false))

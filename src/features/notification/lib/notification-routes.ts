@@ -11,8 +11,8 @@ export const notificationRoutes = {
 
   sellerOrder: (orderId: string | null): string =>
     orderId
-      ? `/all-orders?${new URLSearchParams({ q: formatOrderCode(orderId) }).toString()}`
-      : '/all-orders',
+      ? `/order-management?${new URLSearchParams({ q: formatOrderCode(orderId) }).toString()}`
+      : '/order-management',
 
   wallet: '/artsony-studio',
   messages: '/messages',

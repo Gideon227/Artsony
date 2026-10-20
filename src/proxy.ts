@@ -28,7 +28,7 @@ const SESSION_COOKIE = 'artsony_session' // non-httpOnly, set by backend + clien
 const GATED_PREFIXES = [
   '/checkout',
   '/my-orders',
-  '/all-orders',
+  '/order-management',
   '/notification',
   '/moodboards',
   '/messages',

@@ -1,5 +1,6 @@
 import { apiClient } from '@/lib/api-client'
 import type {
+  SellerSaleDetailResponse,
   SellerSalesCountsResponse,
   SellerSalesParams,
   SellerSalesResponse,
@@ -9,6 +10,11 @@ export const sellerSalesService = {
   list: (params: SellerSalesParams, signal?: AbortSignal) =>
     apiClient.get<SellerSalesResponse>('/api/orders/sales/lines', {
       params,
+      ...(signal && { signal }),
+    }),
+
+  detail: (orderItemId: string, signal?: AbortSignal) =>
+    apiClient.get<SellerSaleDetailResponse>(`/api/orders/sales/lines/${encodeURIComponent(orderItemId)}`, {
       ...(signal && { signal }),
     }),
 

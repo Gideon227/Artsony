@@ -32,7 +32,7 @@ const BUYER_MENU_ITEMS: NavItem[] = [
 
 const SELLER_MENU_ITEMS: NavItem[] = [
   { key: 'studio', label: 'Studio', href: '/artsony-studio', icon: '/nav/studio.svg' },
-  { key: 'order-management', label: 'Order Management', href: '/all-orders', icon: '/nav/doc.svg' },
+  { key: 'order-management', label: 'Order Management', href: '/order-management', icon: '/nav/doc.svg' },
   { key: 'cart', label: 'Cart', href: '/cart', icon: '/nav/cart.svg' },
   { key: 'orders', label: 'Order', href: '/my-orders', icon: '/nav/order.svg' },
   { key: 'messages', label: 'Messages', href: '/messages', icon: '/nav/message.svg' },

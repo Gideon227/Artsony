@@ -32,7 +32,7 @@ const Footer = () => {
         ? { name: 'Create Post', href: '/artworks/upload' } 
         : { name: 'My Orders', href: '/my-orders' },
       userRole === 'ARTIST' 
-        ? { name: 'Order Management', href: '/all-orders' } 
+        ? { name: 'Order Management', href: '/order-management' } 
         : { name: 'Cart', href: '/cart' },
       userRole === 'ARTIST' 
         ? { name: 'Artsony Studio', href: '/artsony-studio' } 

@@ -29,7 +29,15 @@ export function OrdersEmptyState() {
   const router = useRouter()
 
   return (
-    <section className="flex-1 bg-white rounded-2xl border-2 border-gray-50 px-8 pt-12 pb-30 flex flex-col gap-y-6 min-h-screen h-full">
+    <section className="flex-1 relative overflow-x-hidden overflow-y-auto scrollbar-hide bg-white rounded-2xl border-2 border-gray-50 px-4 lg:px-8 pt-12 pb-30 flex flex-col gap-y-6 min-h-screen h-full">
+      <div className='absolute top-10 md:rotate-90' style={{ right: '-60px' }}>
+        <Image src='/upload/vector.svg' width={248} height={248} className='max-md:w-8 w-62 h-auto'  alt='vector element' />
+      </div>
+
+      <div className='absolute md:-rotate-90' style={{ left: '-60px', bottom: '-60px' }}>
+        <Image src='/upload/vector.svg' width={248} height={248} className='max-md:w-30' alt='vector element' />
+      </div>
+      
       <div className="flex items-center gap-x-4">
         <button
           type="button"
@@ -47,7 +55,7 @@ export function OrdersEmptyState() {
 
         <Image src='/illustrations/empty-inbox.svg' width={382} height={400} alt='empty order illustration' className='w-[382px] h-100 max-md:w-[90%] lg:h-auto'/>
 
-        <div className="flex flex-col items-center gap-y-3 max-md:w-full md:max-w-138">
+        <div className="flex flex-col items-center gap-y-3 max-md:w-full" style={{ maxWidth: '552px' }}>
           <h5 className="font-poppins font-medium max-md:text-body-m md:text-h6 text-heading tracking-wide">No Orders Yet</h5>
           <p className="font-poppins text-body-s md:text-body-m text-body tracking-wide">
             You haven&apos;t purchased any artwork yet. Visit the Artsony Store to discover original artwork from
