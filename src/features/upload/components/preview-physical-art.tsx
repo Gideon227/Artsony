@@ -120,7 +120,7 @@ export default function PreviewPhysicalArt({ user } : { user: User | null}) {
                     onClick={() => hasRealAsset && setActiveAssetIndex(idx)}
                     className={`w-[220px] h-[260px] rounded-[32px] p-4 flex flex-col shadow-sm transition-transform ${hasRealAsset ? 'cursor-pointer hover:-translate-y-2' : 'opacity-70'} ${CAROUSEL_BGS[idx % CAROUSEL_BGS.length]}`}
                 >
-                    <div className="bg-[#D9DBD9] p-2 pb-10 w-full h-full flex flex-col shadow-inner relative rounded-sm">
+                    <div className="bg-[#D9DBD9] p-2 pb-10 w-full h-full flex flex-col shadow-inner relative rounded-[8px]m">
                     <div className="relative w-full flex-1 bg-black overflow-hidden">
                         <Image 
                         src={assetData?.original_url || `/placeholder-thumb-${idx + 1}.png`} 

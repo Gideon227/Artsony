@@ -74,7 +74,7 @@ export function Navbar({ hideSearchBar = false }: { hideSearchBar?: boolean }) {
   return (
     <>
       <header className="w-full bg-white border-b-2 border-gray-50 sticky top-0 z-50">
-        <div className="xl:max-w-[95%] w-full mx-auto px-4 lg:px-8 py-3 h-18 flex items-center justify-between">
+        <div className="w-full mx-auto px-4 lg:px-8 py-3 h-18 flex items-center justify-between">
           
           {/* LEFT SECTION */}
           <div className="flex items-center gap-4 shrink-0">

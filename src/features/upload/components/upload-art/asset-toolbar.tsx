@@ -29,7 +29,7 @@ export function AssetToolbar({ onEdit, onMoveUp, onMoveDown, onDelete, hideDelet
   return (
     <div
       className={cn(
-        'absolute top-6 left-6 z-10 flex flex-col gap-2.5 w-14 h-39 rounded-xl border border-gray-50 bg-linear-to-r from-gray-900/20 to-[#1B1B1B]/30 p-2 backdrop-blur-xl',
+        'absolute top-6 left-6 z-10 flex flex-col gap-2.5 w-14 rounded-xl border border-gray-50 bg-linear-to-r from-gray-900/20 to-[#1B1B1B]/30 p-2 backdrop-blur-xl',
         className,
       )}
     >
@@ -53,7 +53,7 @@ export function AssetToolbar({ onEdit, onMoveUp, onMoveDown, onDelete, hideDelet
           onClick={onDelete}
           className={BUTTON_CLASS}
         >
-          <Image src='icons/trash-grey.svg' width={20} height={20} color="#fff" aria-hidden alt='delete button' />
+          <Image src='/icons/trash.svg' width={20} height={20} color="#fff" aria-hidden alt='delete button' />
         </button>
       )}
     </div>

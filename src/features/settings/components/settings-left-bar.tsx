@@ -65,7 +65,7 @@ const SettingLeftBar = ({ onLogout, onDeleteAccountRequest, activeTab, setActive
     return (
         <nav
             aria-label="Settings navigation"
-            className="lg:border lg:border-gray-50 lg:rounded-2xl max-lg:w-full lg:pt-8 lg:pb-4 pt-6 pb-16 px-4 flex flex-col gap-y-4 lg:gap-y-[clamp(1rem,4.2vh,2rem)] lg:h-full lg:min-h-0 lg:overflow-hidden"
+            className="lg:w-[448px] lg:border lg:border-gray-50 lg:rounded-2xl max-lg:w-full lg:pt-8 lg:pb-4 pt-6 pb-16 px-4 flex flex-col gap-y-4 lg:gap-y-[clamp(1rem,4.2vh,2rem)] lg:h-full lg:min-h-0 lg:overflow-hidden"
         >
         <div className="flex shrink-0 items-center gap-x-4">
             <Link
@@ -130,7 +130,7 @@ const SettingLeftBar = ({ onLogout, onDeleteAccountRequest, activeTab, setActive
             </div>
         )}
 
-        <div className="lg:border-t lg:border-gray-50 pt-4 flex flex-col gap-y-[clamp(0.25rem,2.1vh,1rem)] lg:min-h-0 lg:flex-1">
+        <div className="lg:border-t lg:border-gray-50 pt-4 flex flex-col gap-y-[clamp(0.25rem,2.1vh,1rem)] lg:min-h-0 lg:flex-1 max-xl:pb-8 max-xl:overflow-y-auto scrollbar-hide">
             {NAV_ITEMS.map((item) => {
                 const isActive = activeTab === item.id
 

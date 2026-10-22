@@ -91,20 +91,22 @@ export function CreatorCTASection() {
             )}
           </div>
 
-          {!isLoading && currentIndex > 0 && (
+          {!isLoading && (
             <button
               onClick={prevSlide}
-              className="absolute left-6 top-[166px] -translate-y-1/2 w-12 h-12 rounded-full flex items-center justify-center text-white transition-all z-20 bg-primary-500 shadow-lg hover:scale-105"
+              disabled={currentIndex + 1 > 0}
+              className="absolute cursor-pointer disabled:cursor-not-allowed left-6 top-[166px] -translate-y-1/2 w-12 h-12 rounded-full flex items-center justify-center text-white transition-all z-20 bg-primary-500 disabled:bg-transparent disabled:border disabled:roudned-full disabled:border-gray-300 disabled:text-body shadow-lg hover:scale-105"
               aria-label="Previous artworks"
             >
               <ChevronLeft size={24} />
             </button>
           )}
 
-          {!isLoading && currentIndex < artworks.length - 1 && (
+          {!isLoading && (
             <button
               onClick={nextSlide}
-              className="absolute right-6 top-[166px] -translate-y-1/2 w-12 h-12 rounded-full flex items-center justify-center text-white transition-all z-20 bg-primary-500 shadow-lg hover:scale-105"
+              disabled={currentIndex < artworks.length - 1}
+              className="absolute cursor-pointer disabled:cursor-not-allowed right-6 top-[166px] -translate-y-1/2 w-12 h-12 rounded-full flex items-center justify-center text-white transition-all z-20 bg-primary-500 disabled:bg-transparent disabled:border disabled:roudned-full disabled:border-gray-300 disabled:text-body shadow-lg hover:scale-105"
               aria-label="Next artworks"
             >
               <ChevronRight size={24} />

@@ -14,7 +14,7 @@ const ArtGrid = ({ artworks, num, artVariant = "standard", onCardClick }: Props)
     const displayedArtworks = num ? artworks.slice(0, num) : artworks
 
     return (
-        <div className='py-12 px-4 lg:px-8 gap-x-4 gap-y-12 grid grid-cols-[repeat(auto-fill,minmax(min(376px,100%),1fr))] justify-center'>
+        <div className='py-12 px-4 lg:px-8 gap-x-4 gap-y-12 grid grid-cols-[repeat(auto-fill,minmax(min(332px,100%),1fr))] justify-center'>
             {displayedArtworks.map((art, index) => {
                 const mappedArtists: Artist[] = art.creator ? [{
                     id: art.creator.id || art.creator_id,

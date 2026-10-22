@@ -65,13 +65,13 @@ export function OrdersFilterBar({ filters, heading, total, showMore, onToggleMor
   }, [searchInput, commitSearch])
 
   return (
-    <div className="flex flex-col gap-6 rounded-2xl bg-white p-4 md:gap-14">
+    <div className="hidden lg:flex flex-col rounded-2xl bg-white p-4 gap-4 md:gap-14">
       <div className="flex items-center gap-4">
-        <h2 className="font-raleway text-h6 font-semibold leading-8 tracking-wide text-gray-500 md:text-h5">{showMore ? 'Search Result ' : 'Search'}</h2>
+        <h2 className="font-raleway text-h6 font-semibold leading-8 tracking-wide text-body lg:text-h5">{showMore ? 'Search Result ' : 'Search'}</h2>
         {showMore && total !== undefined && (
           <span
             aria-label={`${total} orders`}
-            className="flex h-8 min-w-8 items-center justify-center rounded-s bg-primary-500 px-2 font-poppins text-body-s font-medium leading-none text-white"
+            className="flex h-8 w-8 items-center justify-center rounded-[8px] bg-primary-500 p-4 font-poppins text-body-s text-white"
           >
             {total}
           </span>
@@ -80,7 +80,7 @@ export function OrdersFilterBar({ filters, heading, total, showMore, onToggleMor
 
       <div className="flex flex-col gap-4">
         <div className="flex flex-col gap-4 md:flex-row md:items-center md:flex-nowrap">
-          <div className="md:min-w-[240px] flex-1">
+          <div className="md:min-w-[240px] md:flex-1">
             <SearchInput
               value={searchInput}
               onChange={setSearchInput}
@@ -111,7 +111,7 @@ export function OrdersFilterBar({ filters, heading, total, showMore, onToggleMor
             aria-controls="orders-more-filters"
             className={cn(
               'flex h-12 w-full cursor-pointer items-center justify-between gap-3 rounded-full border px-6',
-              'md:w-[168px] md:shrink-0',
+              'md:w-[216px] md:shrink-0',
               'font-poppins text-body-xs tracking-wide transition-colors',
               'focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary-500',
               showMore

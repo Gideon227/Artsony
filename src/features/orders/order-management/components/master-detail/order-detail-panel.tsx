@@ -88,7 +88,7 @@ export function OrderDetailPanel({ orderItemId, onClose, onCancelled, onActivate
   if (detailQuery.isError || !detail) {
     const notFound = detailQuery.error instanceof HttpError && detailQuery.error.statusCode === 404
     return (
-      <div className="rounded-[32px] border border-gray-50 bg-white">
+      <div className="lg:rounded-2xl lg:border lg:border-gray-50 bg-white">
         <ErrorState
           title={notFound ? 'Order not found' : "We couldn't load this order"}
           description={notFound ? 'It may have been removed or does not belong to your account.' : 'Check your connection and try again.'}

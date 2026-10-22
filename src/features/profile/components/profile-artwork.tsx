@@ -7,6 +7,7 @@ import { ArtCard } from '@/components/ui/art-card'
 import { artworkService } from '@/services'
 import { Artwork, ArtworkStatus } from '@/types/artwork'
 import { getAssetDisplaySrc } from '@/utils'
+import Link from 'next/link'
 
 interface ProfileArtworkProps {
     userId: string;
@@ -18,7 +19,7 @@ interface ProfileArtworkProps {
 
 const EMPTY_COPY: Record<ProfileArtworkProps['tabType'], { title: string; body: string }> = {
     artwork: { title: 'Nothing here… yet.', body: "You haven't shared any artworks yet. Create your first post to start engaging with the community." },
-    shop: { title: 'Nothing for sale… yet.', body: "No artworks are currently listed in the shop." },
+    shop: { title: 'Nothing here... yet.', body: "Browse the Explore page and start building your collection one masterpiece at a time." },
     draft: { title: 'No drafts.', body: "Artworks you save without publishing will show up here." },
 }
 
@@ -100,6 +101,13 @@ const ProfileArtwork = ({ userId, tabType, isOwnProfile, onArtworkClick, onPostA
                     {isOwnProfile && tabType === 'artwork' && onPostArtwork && (
                         <Button variant='primary' leftIcon='/icons/plus-white-bg.svg' onClick={onPostArtwork}>
                             Post Artwork
+                        </Button>
+                    )}
+                    {tabType === "shop" && isOwnProfile && (
+                        <Button rightIcon='/icons/alt-arrow-right-double.svg'>
+                            <Link href='/discover'>
+                                Explore
+                            </Link>
                         </Button>
                     )}
                 </div>

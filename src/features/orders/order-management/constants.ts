@@ -42,8 +42,8 @@ export const SORT_OPTIONS: DropdownOption[] = [
 ]
 
 export const ORDER_ILLUSTRATIONS: Record<'seller' | 'empty', string | null> = {
-  seller: null,
-  empty: null,
+  seller: '/illustrations/empty-seller.svg',
+  empty: '/illustrations/empty-inbox.svg'
 }
 
 export const MASTER_DETAIL_PAGE_SIZE = 10

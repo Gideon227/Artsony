@@ -458,15 +458,6 @@ export default function ArtworkViewOverlay({ artwork: artworkProp, onClose, onNa
 
       {artwork.artwork_format === 'PHYSICAL' && (
         <div className="flex items-center gap-4">
-          {/* <div className="flex w-[150px] items-center justify-between rounded-full border-2 border-gray-100 px-1 py-1">
-            <button onClick={decreaseQty} className="flex h-10 w-10 items-center justify-center rounded-full text-gray-500 transition-colors hover:bg-gray-50 hover:text-gray-800">
-              <ChevronLeft size={18} strokeWidth={3} />
-            </button>
-            <span className="w-8 text-center text-lg font-bold text-primary-500">{quantity.toString().padStart(2, '0')}</span>
-            <button onClick={increaseQty} className="flex h-10 w-10 items-center justify-center rounded-full text-gray-500 transition-colors hover:bg-gray-50 hover:text-gray-800">
-              <ChevronRight size={18} strokeWidth={3} />
-            </button>
-          </div> */}
           <StepperInput 
             min={1}
             max={maxQty}
@@ -872,7 +863,7 @@ export default function ArtworkViewOverlay({ artwork: artworkProp, onClose, onNa
                   {formControls}
                 </>
               )}
-              <div className="mt-10">{footerIcons}</div>
+              <div className="mt-auto">{footerIcons} </div>
             </div>
           </motion.div>
         </div>

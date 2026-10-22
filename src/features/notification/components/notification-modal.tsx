@@ -42,7 +42,7 @@ const NotificationModal = ({ onClose }: { onClose?: () => void }) => {
         }, 280)
     }
     return (
-        <div className='flex flex-col border border-gray-50 rounded-2xl bg-white w-[calc(100vw-2rem)] max-w-[400px] h-[70vh] max-h-[560px] mx-auto md:w-[400px] md:h-[560px] md:max-h-[calc(100vh-112px)] overflow-hidden shadow-2xl'>
+        <div className='flex flex-col border border-gray-50 rounded-2xl bg-white w-[calc(100vw-2rem)] h-[70vh] max-h-[704px] mx-auto md:w-[469px] md:h-[704px] md:max-h-[calc(100vh-112px)] overflow-hidden shadow-2xl'>
             <div className='flex justify-between items-center py-6 px-8 shrink-0'>
                 <h6 className='font-raleway font-medium text-h6 text-heading leading-8'>Notifications</h6>
                 <button

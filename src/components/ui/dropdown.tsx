@@ -401,7 +401,7 @@ const Dropdown = ({
                   }
                 }}
                 className={cn(
-                  "flex items-center w-full h-15 px-6 py-3 text-left text-body-xs transition-colors cursor-pointer outline-none",
+                  "flex items-center w-full min-h-15 px-6 py-3 text-left text-body-xs transition-colors cursor-pointer outline-none",
                   resolvedIndicator === "highlight" || resolvedIndicator === "radio"
                     ? selected && !multiple
                       ? "bg-primary-500"
@@ -445,7 +445,7 @@ const Dropdown = ({
                   {option.description && (
                     <span
                       className={cn(
-                        "text-[12px] font-normal font-poppins leading-5 mt-1 transition-colors",
+                        "text-[12px] block font-normal font-poppins leading-5 mt-1 transition-colors",
                         selected && !multiple ? "text-white/80" : "text-neutral-400"
                       )}
                     >

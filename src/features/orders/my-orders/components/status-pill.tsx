@@ -7,7 +7,7 @@ export function StatusPill({ status, className }: { status: DeliveryStatus; clas
   return (
     <span
       className={cn(
-        'px-3 py-1 rounded-s border border-current font-poppins text-body-s font-medium tracking-wide',
+        'px-3 py-1 rounded-[8px] border border-current font-poppins text-body-s font-medium tracking-wide',
         config.bg,
         config.text,
         className,

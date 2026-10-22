@@ -135,6 +135,7 @@ export function ShareModal({
                 <div className="flex items-center gap-x-4 justify-between w-full max-w-[420px] px-1">
                     {/* Behance */}
                     <button
+                        className='cursor-pointer hover:scale-105 hover:opacity-90'
                         onClick={() => handleShare('behance')}
                         aria-label="Share on Behance"
                     >
@@ -146,6 +147,7 @@ export function ShareModal({
 
                     {/* WhatsApp */}
                     <button
+                        className='cursor-pointer hover:scale-105 hover:opacity-90'
                         onClick={() => handleShare('whatsapp')}
                         aria-label="Share on WhatsApp"
                     >
@@ -158,6 +160,7 @@ export function ShareModal({
 
                     {/* Instagram */}
                     <button
+                        className='cursor-pointer hover:scale-105 hover:opacity-90'
                         onClick={() => handleShare('instagram')}
                         aria-label="Share on Instagram"
                     >
@@ -170,6 +173,7 @@ export function ShareModal({
 
                     {/* Facebook */}
                     <button
+                        className='cursor-pointer hover:scale-105 hover:opacity-90'
                         onClick={() => handleShare('facebook')}
                         aria-label="Share on Facebook"
                     >
@@ -187,6 +191,7 @@ export function ShareModal({
 
                     {/* Twitter / X */}
                     <button
+                        className='cursor-pointer hover:scale-105 hover:opacity-90'
                         onClick={() => handleShare('twitter')}
                         aria-label="Share on Twitter"
                     >
@@ -197,6 +202,7 @@ export function ShareModal({
 
                     {/* LinkedIn */}
                     <button
+                        className='cursor-pointer hover:scale-105 hover:opacity-90'
                         onClick={() => handleShare('linkedin')}
                         aria-label="Share on LinkedIn"
                     >
@@ -207,6 +213,7 @@ export function ShareModal({
 
                     {/* Dribbble */}
                     <button
+                        className='cursor-pointer hover:scale-105 hover:opacity-90'
                         onClick={() => handleShare('dribbble')}
                         aria-label="Share on Dribbble"
                     >

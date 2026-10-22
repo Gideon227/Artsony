@@ -56,7 +56,7 @@ function OrdersFilterBar({ filters, onFiltersChange, resultCount, isFiltered }: 
                     {isFiltered ? 'Search Result' : 'Search'}
                 </h2>
                 {isFiltered && (
-                    <span style={{ borderRadius: 8 }} className="flex h-8 w-8 items-center justify-center rounded-s bg-primary-500 p-2 text-body-s font-semibold text-white">
+                    <span style={{ borderRadius: 8 }} className="flex h-8 w-8 items-center justify-center rounded-[8px] bg-primary-500 p-2 text-body-s font-semibold text-white">
                         {resultCount}
                     </span>
                 )}

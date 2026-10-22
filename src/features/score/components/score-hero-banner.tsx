@@ -41,11 +41,11 @@ export function ScoreHeroBanner() {
             if (!img.src.endsWith('/images/chickens.png')) img.src = '/images/chickens.png'
           }}
         />
-        <div className="absolute inset-0 bg-black/70" />
+        <div className="absolute inset-0 bg-black/60" />
       </div>
 
       <div className="relative flex flex-col items-center gap-y-8 px-4 py-8 lg:h-full lg:flex-row lg:gap-x-32 lg:px-6">
-        <div className="contents lg:flex lg:flex-col lg:justify-between lg:gap-y-6">
+        <div className="contents lg:flex lg:flex-col lg:justify-between lg:h-full">
           <div className="order-1 mb-2 flex items-center justify-center gap-x-2 lg:mb-0 lg:justify-start">
             <svg width="247" height="20" className="h-4 w-auto lg:h-5" viewBox="0 0 247 20" fill="none" xmlns="http://www.w3.org/2000/svg">
               <path d="M85.7362 20C83.7324 20 81.7736 19.4151 80.1074 18.3194C78.4413 17.2237 77.1427 15.6663 76.3759 13.8441C75.6091 12.0219 75.4084 10.0169 75.7993 8.08252C76.1903 6.14814 77.1552 4.37129 78.5721 2.97668C79.9891 1.58207 81.7943 0.632324 83.7597 0.247551C85.725 -0.137222 87.7621 0.0602575 89.6134 0.815017C91.4647 1.56978 93.0471 2.84792 94.1603 4.48781C95.2736 6.1277 95.8678 8.05569 95.8678 10.028C95.8592 12.6701 94.7891 15.2016 92.8909 17.0699C90.9927 18.9382 88.4207 19.9916 85.7362 20ZM85.7362 3.40129C84.4046 3.40129 83.103 3.78994 81.9958 4.51809C80.8886 5.24624 80.0256 6.28118 79.516 7.49205C79.0065 8.70292 78.8731 10.0353 79.1329 11.3208C79.3927 12.6062 80.0339 13.787 80.9755 14.7137C81.9171 15.6405 83.1167 16.2716 84.4228 16.5273C85.7288 16.783 87.0825 16.6518 88.3127 16.1502C89.543 15.6487 90.5945 14.7993 91.3343 13.7096C92.0741 12.6198 92.4689 11.3386 92.4689 10.028C92.4689 8.27047 91.7596 6.58494 90.497 5.3422C89.2344 4.09946 87.5219 3.40129 85.7362 3.40129Z" fill="white"/>
@@ -83,7 +83,7 @@ export function ScoreHeroBanner() {
 
           <div className="order-3 flex w-full flex-col gap-y-2">
             <p className={cn('font-raleway text-h6 font-semibold lg:text-h5', tierMeta.textClassName)}>{overview.label}</p>
-            <p className="font-poppins text-body-xs leading-4 text-white">{overview.description}</p>
+            <p className="font-poppins text-body-xs leading-5 text-white">{overview.description}</p>
           </div>
         </div>
 

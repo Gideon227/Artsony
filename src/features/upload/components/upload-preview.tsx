@@ -3,13 +3,16 @@
 import { Button } from '@/components'
 import { ArtCard, Artist } from '@/components/ui/art-card'
 import { useArtworkStore, selectDraft } from '@/store/artwork.store'
-import Image from 'next/image'
-import React, { useState } from 'react'
+import React, { useMemo, useState } from 'react'
+import { createPortal } from 'react-dom'
 import { ChevronLeft, ChevronRight, ChevronsRight } from 'lucide-react'
 import UploadHeader from './upload-header'
 import { useAuthStore } from '@/store'
 import { useUsersByIds } from '@/hooks/use-user'
 import { getAssetDisplaySrc } from '@/utils'
+import HomeArtworkViewOverlay from '@/features/artwork/components/home/artwork-view-overlay'
+import ShopArtworkViewOverlay from '@/features/artwork/components/shop/artwork-view-overlay'
+import { buildPreviewArtwork } from '../lib/build-preview-artwork'
 
 interface UploadPreviewProps {
   id?: string;
@@ -18,16 +21,18 @@ interface UploadPreviewProps {
   onSaveAndExit: () => void;
   steps: string;
   number: string;
+  /** @deprecated The Preview button now opens the real artwork viewer itself. */
   previewFunction?: () => void
   loading?: boolean
 }
 
-const UploadPreview = ({ id, onNext, onBack, onSaveAndExit, steps, number, previewFunction, loading }: UploadPreviewProps) => {
+const UploadPreview = ({ id, onNext, onBack, onSaveAndExit, steps, number, loading }: UploadPreviewProps) => {
   const draft = useArtworkStore(selectDraft)
   const { user } = useAuthStore()
-  
+
   // -- Slide Navigation State --
   const [currentSlide, setCurrentSlide] = useState(0)
+  const [showPreview, setShowPreview] = useState(false)
   const assets = draft?.assets || []
   const totalSlides = Math.max(assets.length, 1)
 
@@ -67,6 +72,13 @@ const UploadPreview = ({ id, onNext, onBack, onSaveAndExit, steps, number, previ
 
   // The full artist array passed to the ArtCard
   const allArtists = [currentUser, ...collaborators]
+
+  // The draft, shaped like a published artwork, for the real viewer overlay.
+  const previewArtwork = useMemo(() => buildPreviewArtwork(draft, user), [draft, user])
+
+  // Same rule the app uses when it opens a real artwork:
+  // marketplace pieces use the shop overlay, everything else the home overlay.
+  const Overlay = draft?.listing_type === 'MARKETPLACE' ? ShopArtworkViewOverlay : HomeArtworkViewOverlay
 
   return (
     <div className='border border-gray-50 rounded-2xl flex flex-col justify-between bg-white min-h-screen'>
@@ -127,8 +139,12 @@ const UploadPreview = ({ id, onNext, onBack, onSaveAndExit, steps, number, previ
               </div>
             )}
 
-            {/* Preview Button */}
-            <button onClick={previewFunction} className="w-full bg-primary-50 cursor-pointer group text-gray-400 border-transparent border hover:border-primary-500 hover:text-primary-500 transition-colors flex items-center justify-center gap-3 py-3 leading-6 rounded-full font-medium font-poppins text-body-s mt-2">
+            {/* Preview Button — opens the real artwork viewer with the draft */}
+            <button
+              type="button"
+              onClick={() => setShowPreview(true)}
+              className="w-full bg-primary-50 cursor-pointer group text-gray-400 border-transparent border hover:border-primary-500 hover:text-primary-500 transition-colors flex items-center justify-center gap-3 py-3 leading-6 rounded-full font-medium font-poppins text-body-s mt-2"
+            >
               Preview <ChevronsRight size={18} strokeWidth={2.5} className="text-gray-400 group-hover:text-primary-500" />
             </button>
           </div>
@@ -145,6 +161,13 @@ const UploadPreview = ({ id, onNext, onBack, onSaveAndExit, steps, number, previ
           Upload
         </Button>
       </div>
+
+      {/* Real viewer, portalled to <body> so it isn't affected by this page's layout */}
+      {showPreview &&
+        createPortal(
+          <Overlay artwork={previewArtwork} onClose={() => setShowPreview(false)} preview />,
+          document.body,
+        )}
     </div>
   )
 }

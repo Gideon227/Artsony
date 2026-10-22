@@ -1,6 +1,7 @@
 'use client'
 
-import React, { useState, useRef } from 'react'
+import React, { useState, useRef, useEffect } from 'react'
+import { createPortal } from 'react-dom'
 import Image from 'next/image'
 import Link from 'next/link'
 import { UserPlus, Loader2 } from 'lucide-react'
@@ -137,7 +138,7 @@ function ArtistHoverProfile({
         animate={{ opacity: 1, y: 0, scale: 1 }}
         exit={{ opacity: 0, y: 10, scale: 0.95 }}
         transition={{ duration: 0.2, ease: "easeOut" }}
-        className="w-[280px] sm:w-[300px] bg-white shadow-[0_8px_30px_rgb(0,0,0,0.12)] rounded-[24px] rounded-tl-sm p-5 font-poppins cursor-pointer"
+        className="w-[280px] sm:w-[300px] bg-white shadow-[0_8px_30px_rgb(0,0,0,0.12)] rounded-[24px] p-5 font-poppins cursor-pointer"
         onClick={(e) => { e.stopPropagation(); onViewArtwork() }}
       >
         <div className="flex flex-col">
@@ -229,6 +230,33 @@ function ArtistHoverProfile({
   )
 }
 
+// Defined at module level so its identity is stable across renders.
+// (Defining a component inside ArtCard makes React remount the whole card
+// subtree on every state change, e.g. when the hover state flips.)
+function CardWrapper({
+  clickable,
+  onClick,
+  href,
+  className,
+  children,
+}: {
+  clickable: boolean
+  onClick: () => void
+  href: string
+  className: string
+  children: React.ReactNode
+}) {
+  return clickable ? (
+    <div onClick={onClick} className={className}>
+      {children}
+    </div>
+  ) : (
+    <Link href={href} className={className}>
+      {children}
+    </Link>
+  )
+}
+
 export function ArtCard({
   artwork,
   image,
@@ -281,11 +309,12 @@ export function ArtCard({
   const hasVideoAsset = Boolean(artwork?.assets?.some((a) => a.media_type === 'VIDEO'))
   const isOwner = Boolean(artwork && currentUserId && artwork.creator_id === currentUserId)
 
-  const effectiveShowCat   = artwork ? (artwork.allow_moodboard_save ?? true) : (showCat ?? true)
-  const effectiveShowHeart = artwork ? true : (showHeart ?? false)
-  const effectiveShowCart  = artwork ? artwork.listing_type === 'MARKETPLACE' : (showCart ?? false)
-  const effectiveShowVideo = artwork ? hasVideoAsset : (showVideo ?? false)
-  const effectiveShowTrash = artwork ? isOwner : (showTrash ?? false)
+  // An explicit prop always wins; otherwise fall back to what the artwork implies.
+  const effectiveShowCat   = showCat   ?? (artwork ? (artwork.allow_moodboard_save ?? true) : true)
+  const effectiveShowHeart = showHeart ?? (artwork ? true : false)
+  const effectiveShowCart  = showCart  ?? (artwork ? artwork.listing_type === 'MARKETPLACE' : false)
+  const effectiveShowVideo = showVideo ?? (artwork ? hasVideoAsset : false)
+  const effectiveShowTrash = showTrash ?? (artwork ? isOwner : false)
 
   const primaryArtist = derivedArtist?.[0]
   const artistImages = derivedArtist?.map((a) => a.avatarUrl) || []
@@ -293,15 +322,48 @@ export function ArtCard({
 
   // ── Hover state ──
   const [isHoveringArtist, setIsHoveringArtist] = useState(false)
+  const [hoverPos, setHoverPos] = useState<{ top: number; left: number } | null>(null)
   const hoverTimeoutRef = useRef<NodeJS.Timeout | null>(null)
+  const [mounted, setMounted] = useState(false)
+  useEffect(() => setMounted(true), [])
 
-  const handleMouseEnter = () => {
+  const keepOpen = () => {
     if (hoverTimeoutRef.current) clearTimeout(hoverTimeoutRef.current)
+  }
+
+  const handleArtistEnter = (e: React.MouseEvent<HTMLElement>) => {
+    keepOpen()
+
+    // Anchor to the name text, not the whole row (some rows are flex-1 and very wide)
+    const anchor =
+      e.currentTarget.querySelector<HTMLElement>('[data-artist-name]') ?? e.currentTarget
+    const r = anchor.getBoundingClientRect()
+    const width = window.innerWidth < 640 ? 280 : 300
+    const gap = 16
+
+    // To the right of the name; flip to the left if it would run off-screen
+    let left = r.right + gap
+    if (left + width > window.innerWidth - 8) left = Math.max(8, r.left - gap - width)
+
+    // Top aligned with the name's vertical center, kept inside the viewport.
+    // 290 is a rough popover height — raise it if you show many contributors.
+    const top = Math.max(8, Math.min(r.top + r.height / 2, window.innerHeight - 290))
+
+    setHoverPos({ top, left })
     setIsHoveringArtist(true)
   }
+
   const handleMouseLeave = () => {
     hoverTimeoutRef.current = setTimeout(() => setIsHoveringArtist(false), 150)
   }
+
+  // Fixed positioning goes stale on scroll, so close the popover instead
+  useEffect(() => {
+    if (!isHoveringArtist) return
+    const close = () => setIsHoveringArtist(false)
+    window.addEventListener('scroll', close, true)
+    return () => window.removeEventListener('scroll', close, true)
+  }, [isHoveringArtist])
 
   // ── Action state (only meaningful when `artwork` is provided) ──
   const [isPlayingVideo, setIsPlayingVideo] = useState(false)
@@ -362,24 +424,16 @@ export function ArtCard({
     if (artwork) openArtwork(artwork)
   }
 
-  const CardWrapper = (onCardClick || artwork)
-    ? ({ children }: { children: React.ReactNode }) => (
-        <div
-          onClick={handleCardClick}
-          className={cn('relative gap-y-4 cursor-pointer block', wrapperSizing)}
-        >
-          {children}
-        </div>
-      )
-    : ({ children }: { children: React.ReactNode }) => (
-        <Link href={cardLink ?? '/404'} className={cn('relative gap-y-4 cursor-pointer block', wrapperSizing)}>
-          {children}
-        </Link>
-      )
+  const isClickable = Boolean(onCardClick || artwork)
 
   return (
     <>
-      <CardWrapper>
+      <CardWrapper
+        clickable={isClickable}
+        onClick={handleCardClick}
+        href={cardLink ?? '/404'}
+        className={cn('relative gap-y-4 cursor-pointer block', wrapperSizing)}
+      >
         {/* --- Image Container --- */}
         <div ref={revealRef} className={cn(
           'relative group overflow-hidden rounded-2xl bg-neutral-100 w-full',
@@ -458,13 +512,13 @@ export function ArtCard({
                   <div className='flex items-center justify-between w-full'>
                     <div
                       className='flex gap-2 items-center min-w-0 flex-1 mr-1'
-                      onMouseEnter={handleMouseEnter}
+                      onMouseEnter={handleArtistEnter}
                       onMouseLeave={handleMouseLeave}
                     >
                       <div className="shrink-0">
                         <AvatarGroup images={artistImages} />
                       </div>
-                      <span className="text-[12px] truncate leading-4 tracking-wide font-poppins font-medium text-white">{primaryArtist?.name} {artistCount > 1 && `+ ${artistCount - 1}`}</span>
+                      <span data-artist-name className="text-[12px] truncate leading-4 tracking-wide font-poppins font-medium text-white">{primaryArtist?.name} {artistCount > 1 && `+ ${artistCount - 1}`}</span>
                     </div>
 
                     <div className='flex gap-x-2'>
@@ -486,13 +540,13 @@ export function ArtCard({
                 {variant === 'discover' && (
                   <div
                     className="flex items-center gap-2"
-                    onMouseEnter={handleMouseEnter}
+                    onMouseEnter={handleArtistEnter}
                     onMouseLeave={handleMouseLeave}
                   >
                     <div className="relative h-8 w-8 overflow-hidden rounded-full border border-white/20">
                       <AvatarGroup images={artistImages} />
                     </div>
-                      <span className="text-[12px] truncate leading-4 tracking-wide font-poppins font-medium text-white">{primaryArtist?.name} {artistCount > 1 && `+ ${artistCount - 1}`}</span>
+                      <span data-artist-name className="text-[12px] truncate leading-4 tracking-wide font-poppins font-medium text-white">{primaryArtist?.name} {artistCount > 1 && `+ ${artistCount - 1}`}</span>
                   </div>
                 )}
               </div>
@@ -514,11 +568,11 @@ export function ArtCard({
           <div className="mt-4 flex items-center justify-between w-full overflow-hidden py-2 pl-2 pr-4 bg-white gap-x-4 border border-gray-50 rounded-full">
             <div
               className="flex items-center gap-2 flex-1 min-w-0"
-              onMouseEnter={handleMouseEnter}
+              onMouseEnter={handleArtistEnter}
               onMouseLeave={handleMouseLeave}
             >
               <AvatarGroup images={artistImages} width={40} height={40} />
-              <span className="text-[12px] truncate leading-4 tracking-wide font-poppins font-medium text-gray-400">{primaryArtist?.name} {artistCount > 1 && `+ ${artistCount - 1}`}</span>
+              <span data-artist-name className="text-[12px] truncate leading-4 tracking-wide font-poppins font-medium text-gray-400">{primaryArtist?.name} {artistCount > 1 && `+ ${artistCount - 1}`}</span>
             </div>
 
             {derivedPrice ? (
@@ -543,24 +597,30 @@ export function ArtCard({
           </div>
         )}
 
-        {/* Global Hover Profile Wrapper */}
-        <AnimatePresence>
-          {isHoveringArtist && artistCount > 0 && primaryArtist && (
-            <div
-              className="absolute z-50 left-2"
-              style={{ bottom: variant === 'standard' ? '65px' : '90px' }}
-              onMouseEnter={handleMouseEnter}
-              onMouseLeave={handleMouseLeave}
-              onClick={(e) => e.preventDefault()}
-            >
-              <ArtistHoverProfile
-                artwork={artwork}
-                primaryArtist={primaryArtist}
-                onViewArtwork={handleViewArtwork}
-              />
-            </div>
+        {/* Artist hover profile — portalled to <body> so it isn't clipped by
+            overflow-hidden / masonry / reveal masks, and positioned next to the name */}
+        {mounted &&
+          createPortal(
+            <AnimatePresence>
+              {isHoveringArtist && hoverPos && artistCount > 0 && primaryArtist && (
+                <div
+                  key="artist-hover"
+                  className="fixed z-[60]"
+                  style={{ top: hoverPos.top, left: hoverPos.left }}
+                  onMouseEnter={keepOpen}
+                  onMouseLeave={handleMouseLeave}
+                  onClick={(e) => { e.preventDefault(); e.stopPropagation() }}
+                >
+                  <ArtistHoverProfile
+                    artwork={artwork}
+                    primaryArtist={primaryArtist}
+                    onViewArtwork={handleViewArtwork}
+                  />
+                </div>
+              )}
+            </AnimatePresence>,
+            document.body,
           )}
-        </AnimatePresence>
       </CardWrapper>
 
       {artwork && moodboardSheetOpen && (

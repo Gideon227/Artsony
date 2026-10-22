@@ -44,10 +44,12 @@ function Layout({
   hideSidebarOnMobile?: boolean
 }) {
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-screen bg-white max-lg:pb-24 scrollbar-hide">
       <Navbar />
-      <main className="grid gap-4 px-4 py-6 md:px-8 lg:grid-cols-4">
-        <div className={cn('lg:sticky lg:top-24 lg:self-start', hideSidebarOnMobile && 'hidden lg:block')}>{sidebar}</div>
+      <main className="grid grid-cols-1 gap-4 px-4 py-6 lg:px-8 lg:grid-cols-4 scrollbar-hide">
+        <div className={cn('min-w-0 lg:sticky lg:top-24 lg:self-start', hideSidebarOnMobile && 'hidden lg:block')}>
+          {sidebar}
+        </div>
         {children}
       </main>
     </div>
@@ -56,9 +58,9 @@ function Layout({
 
 export function OrderManagementSkeleton() {
   return (
-    <Layout sidebar={<Skeleton className="h-[120px] rounded-[32px] lg:h-[479px]" />}>
-      <div className="flex flex-col gap-4 rounded-[32px] bg-secondary-50 p-4 lg:col-span-3">
-        <Skeleton className="h-[200px] rounded-[32px]" />
+    <Layout sidebar={<Skeleton className="h-[120px] rounded-2xl lg:h-[479px]" />}>
+      <div className="flex flex-col gap-4 rounded-2xl bg-secondary-50 p-4 lg:col-span-3">
+        <Skeleton className="h-[200px] rounded-2xl" />
         <OrdersTableSkeleton />
       </div>
     </Layout>
@@ -240,7 +242,7 @@ export function OrderManagementPage() {
 
   return (
     <Layout sidebar={sidebar}>
-      <section aria-label="Orders" className="flex min-w-0 flex-col gap-6 rounded-[32px] bg-secondary-50 p-4 lg:col-span-3 lg:gap-12">
+      <section aria-label="Orders" className="flex min-w-0 flex-col gap-12 rounded-2xl bg-secondary-50 p-4 lg:col-span-3 lg:gap-12">
         <OrdersFilterBar
           filters={filters}
           heading={heading}

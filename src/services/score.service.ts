@@ -45,9 +45,9 @@ const TIER_DESCRIPTION: Record<RatingTier, string> = {
   EXCELLENT:
     'You’re performing exceptionally well — your artworks are selling, customers are satisfied, and your delivery performance is top-tier. Maintaining this level keeps your visibility high across Artsony and builds strong trust with new buyers. Keep doing what you’re doing — this is the sweet spot for top creators.',
   AVERAGE:
-    "You're doing solidly, with room to grow. Focus on buyer satisfaction and order reliability to move into the top tier of Artsony sellers.",
+    "You’re doing solidly — your artworks are finding buyers and most orders are going through smoothly, but there’s still room to grow. Improving buyer satisfaction and order reliability, such as faster dispatch and clearer communication, will lift your visibility across Artsony and build trust with new buyers. Stay consistent — a few small improvements can move you into the top tier of Artsony sellers.",
   POOR:
-    'Your score needs attention. Review recent buyer feedback and delivery performance below — small, consistent improvements here go a long way.',
+    'Your score needs attention right now — some recent orders may have fallen short on buyer satisfaction or delivery performance, which can limit your visibility across Artsony. Review the recent buyer feedback and delivery performance below to see where things slipped. Small, consistent improvements go a long way — respond promptly, ship on time, and your score will start climbing back.',
 }
 
 const DIRECTION_MAP: Record<'up' | 'down' | 'flat', TrendDirection> = { up: 'UP', down: 'DOWN', flat: 'FLAT' }

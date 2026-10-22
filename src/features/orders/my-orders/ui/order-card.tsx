@@ -36,19 +36,19 @@ const OrderCard = ({ artType, artName, artMedia, artist, courier, canceledBy, de
                 </div>
 
                 {status === 'delivered' && 
-                    <span className='border border-successful-500 bg-successful-100 rounded-s py-1 px-3 text-successful-500'>
+                    <span className='border border-successful-500 bg-successful-100 rounded-[8px] py-1 px-3 text-successful-500'>
                         <p>Delivered</p>
                     </span>
                 }
 
                 {status === 'live' && 
-                    <span className='border border-info-500 bg-info-100 rounded-s py-1 px-3 text-info-500'>
+                    <span className='border border-info-500 bg-info-100 rounded-[8px] py-1 px-3 text-info-500'>
                         <p>Live</p>
                     </span>
                 }
 
                 {status === 'canceled' && 
-                    <span className='border border-error-500 bg-error-100 rounded-s py-1 px-3 text-error-500'>
+                    <span className='border border-error-500 bg-error-100 rounded-[8px] py-1 px-3 text-error-500'>
                         <p>Canceled</p>
                     </span>
                 }

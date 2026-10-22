@@ -201,8 +201,9 @@ const NotificationSettings = ({ goBack }: { goBack?: () => void }) => {
   }
 
   return (
-    <div className='lg:border lg:border-gray-50 lg:rounded-2xl lg:bg-white w-full lg:pb-8 pb-16'>
-      <div className='lg:px-8 lg:py-4 px-4 max-lg:pb-4 max-lg:pt-6 flex justify-between items-center border-b border-gray-50 '>
+    <div className='flex w-full flex-col bg-white lg:h-full lg:min-h-0 lg:overflow-hidden lg:rounded-2xl lg:border lg:border-gray-50'>
+      {/* topbar */}
+      <div className='sticky top-0 z-10 flex shrink-0 items-center justify-between border-b border-gray-50 bg-white px-4 max-lg:pb-4 max-lg:pt-6 lg:static lg:px-8 lg:py-4'>
         <div className='flex items-center gap-2'>
           <button onClick={goBack} className='cursor-pointer lg:hidden'>
             <svg width="40" height="40" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -229,7 +230,7 @@ const NotificationSettings = ({ goBack }: { goBack?: () => void }) => {
       </div>
 
 
-      <div className='pt-8 px-4 lg:px-8 gap-y-16 flex flex-col'>
+      <div className='flex flex-col gap-y-16 px-4 pb-16 pt-8 lg:min-h-0 lg:flex-1 lg:overflow-y-auto lg:px-8 lg:pb-8 scrollbar-hide'>
         {isLoading && <NotificationSkeleton />}
 
         {isError && !preferences && (

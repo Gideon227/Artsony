@@ -24,7 +24,7 @@ export function ProfileMoodboardDetail({ moodboardId, onBack, onSelectArtwork }:
         <button
           type="button"
           onClick={onBack}
-          className="flex items-center gap-2 font-poppins text-body-m font-medium text-primary-500 transition-opacity hover:opacity-70"
+          className="flex items-center cursor-pointer gap-2 font-poppins text-body-m font-medium text-primary-500 transition-opacity hover:opacity-70"
         >
           <ChevronLeft size={20} /> {moodboard?.title ?? 'Back'}
         </button>

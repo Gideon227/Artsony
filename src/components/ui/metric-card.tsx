@@ -71,8 +71,9 @@ export function MetricCard({ label, value, format = 'currency', trend, icon, ico
       </div>
 
       <p className={cn('font-raleway text-h4 font-semibold leading-10 text-heading lg:mt-4', valueClassName)}>
-        {format === 'currency' && <span className="mr-1 font-normal text-body-m text-text-alt-grey">$</span>}
-        {formatMetricValue(value, format)}
+        <span className="mr-1 font-raleway font-medium text-h4 text-heading">
+          ${formatMetricValue(value, format)}
+        </span>
       </p>
 
       <div className="flex items-center justify-between gap-2 lg:mt-3 lg:justify-start">

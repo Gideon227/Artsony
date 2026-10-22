@@ -28,7 +28,7 @@ export function MiniBarChart({ data, highlightIndex, className }: MiniBarChartPr
           <div
             key={point.label}
             title={`${point.label}: ${point.value}`}
-            className={cn('flex-1 rounded-s transition-all lg:rounded-md', isActive ? 'bg-primary-500' : 'bg-gray-50 max-lg:bg-secondary-100')}
+            className={cn('flex-1 rounded-[8px] transition-all lg:rounded-md', isActive ? 'bg-primary-500' : 'bg-gray-50 max-lg:bg-secondary-100')}
             style={{ height: `${heightPct}%` }}
           />
         )

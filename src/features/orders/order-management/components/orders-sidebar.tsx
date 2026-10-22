@@ -7,6 +7,7 @@ import type { SellerSalesCounts } from '@/types/seller-sales'
 import { STATUS_TABS } from '../constants'
 import { formatCount } from '../lib/format'
 import type { StatusFilter } from '../lib/filters'
+import { Input } from '@/components'
 
 type Props = {
   active: StatusFilter
@@ -18,10 +19,11 @@ type Props = {
 }
 
 export function OrdersSidebar({ active, counts, disabled, onSelect, onBack, className }: Props) {
+  const mobileStyle = 'max-lg:bg-white max-lg:pt-2'
   return (
     <nav
       aria-label="Order management"
-      className={cn('flex flex-col gap-4 rounded-2xl bg-secondary-50 p-4 lg:gap-0 lg:px-4 lg:pb-4 lg:pt-8 w-[332px]', className)}
+      className={cn('flex flex-col gap-4 lg:rounded-2xl lg:bg-secondary-50 lg:p-4 lg:gap-0 lg:px-4 lg:pb-4 lg:pt-8', className, mobileStyle)}
     >
       <div className="flex items-center gap-4 lg:pb-8">
         <button
@@ -32,12 +34,33 @@ export function OrdersSidebar({ active, counts, disabled, onSelect, onBack, clas
         >
           <ArrowLeft className="h-5 w-5" aria-hidden="true" />
         </button>
-        <h1 className="font-raleway text-h6 font-medium leading-8 tracking-wide text-gray-400">Order Management</h1>
+        <h1 className="font-raleway text-h6 font-semibold lg:font-medium leading-8 tracking-wide text-gray-400">Order Management</h1>
       </div>
 
-      <hr className="hidden border-gray-50 lg:block" />
+      <hr className="border-gray-50 max-lg:-mx-4 max-lg:w-[calc(100%+2rem)]" />
 
-      <ul className="flex gap-2 px-1 py-1 scrollbar-hide lg:mx-0 lg:flex-col lg:gap-4 lg:overflow-visible lg:px-0 lg:pb-0 lg:pt-4">
+      <div className='hidden pt-6 max-lg:flex items-center gap-2 w-full'>
+        <Input 
+          leftIcon='/home/magnifier.svg'
+          placeholder='Search Order'
+          className='flex-1'
+          onClick={() => {}}
+        />
+
+        <button onClick={() => {}} >
+          <svg width="40" height="40" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <mask id="path-1-inside-1_10370_82206" fill="white">
+              <path d="M0 20C0 8.95431 8.95431 0 20 0C31.0457 0 40 8.95431 40 20C40 31.0457 31.0457 40 20 40C8.95431 40 0 31.0457 0 20Z"/>
+            </mask>
+            <path d="M0 20M40 20M40 20M0 20M20 0M40 20M20 40M0 20M20 40V38C10.0589 38 2 29.9411 2 20H0H-2C-2 32.1503 7.84974 42 20 42V40ZM40 20H38C38 29.9411 29.9411 38 20 38V40V42C32.1503 42 42 32.1503 42 20H40ZM20 0V2C29.9411 2 38 10.0589 38 20H40H42C42 7.84974 32.1503 -2 20 -2V0ZM20 0V-2C7.84974 -2 -2 7.84974 -2 20H0H2C2 10.0589 10.0589 2 20 2V0Z" fill="#E6E8EB" mask="url(#path-1-inside-1_10370_82206)"/>
+            <path d="M30.75 15C30.75 15.4142 30.4142 15.75 30 15.75L10 15.75C9.58579 15.75 9.25 15.4142 9.25 15C9.25 14.5858 9.58579 14.25 10 14.25L30 14.25C30.4142 14.25 30.75 14.5858 30.75 15Z" fill-rule="evenodd" clip-rule="evenodd" fill="#525965"/>
+            <path d="M27.75 20C27.75 20.4142 27.4142 20.75 27 20.75L13 20.75C12.5858 20.75 12.25 20.4142 12.25 20C12.25 19.5858 12.5858 19.25 13 19.25H27C27.4142 19.25 27.75 19.5858 27.75 20Z" fill-rule="evenodd" clip-rule="evenodd" fill="#525965"/>
+            <path d="M24.75 25C24.75 25.4142 24.4142 25.75 24 25.75H16C15.5858 25.75 15.25 25.4142 15.25 25C15.25 24.5858 15.5858 24.25 16 24.25H24C24.4142 24.25 24.75 24.5858 24.75 25Z" fill-rule="evenodd" clip-rule="evenodd" fill="#525965"/>
+          </svg>
+        </button>
+      </div>
+
+      <ul className="flex overflow-x-auto max-lg:pb-4 gap-2 px-1 py-1 scrollbar-hide lg:mx-0 lg:flex-col lg:gap-4 lg:overflow-visible lg:px-0 lg:pb-0 lg:pt-4">
         {STATUS_TABS.map((tab) => {
           const isActive = !disabled && active === tab.id
           const showBadge = disabled ? tab.id === 'ALL' : isActive
@@ -65,7 +88,7 @@ export function OrdersSidebar({ active, counts, disabled, onSelect, onBack, clas
                 {showBadge && count !== undefined && (
                   <span
                     className={cn(
-                      'flex h-6 w-6 items-center justify-center rounded-s p-0.5 text-body-xs leading-none text-white',
+                      'flex h-6 w-6 items-center justify-center rounded-[8px] p-0.5 text-body-xs leading-none text-white',
                       disabled ? 'bg-gray-400' : 'bg-primary-500',
                     )}
                   >

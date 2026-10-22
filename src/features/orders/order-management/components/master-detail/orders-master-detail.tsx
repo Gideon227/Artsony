@@ -53,7 +53,7 @@ export function OrdersMasterDetail({ filters, status, orderParam, onSelect, onSe
   const showDetail = isDesktop || orderParam !== null
 
   return (
-    <div className="grid min-w-0 gap-4 rounded-[32px] bg-secondary-50 p-4 lg:col-span-3 lg:grid-cols-[minmax(0,5fr)_minmax(0,8fr)]">
+    <div className="grid min-w-0 gap-4 lg:rounded-2xl lg:bg-secondary-50 lg:p-4 lg:col-span-3 lg:grid-cols-[minmax(0,5fr)_minmax(0,8fr)]">
       {showList && (
         <OrderListPanel
           rows={rows}
@@ -78,7 +78,7 @@ export function OrdersMasterDetail({ filters, status, orderParam, onSelect, onSe
       )}
 
       {showDetail && selectedId && (
-        <div className="min-w-0 lg:max-h-[calc(100vh-120px)] lg:overflow-y-auto">
+        <div className="min-w-0 lg:max-h-[calc(100vh-120px)] lg:overflow-y-auto lg:scrollbar-hide">
           <OrderDetailPanel
             key={selectedId}
             orderItemId={selectedId}

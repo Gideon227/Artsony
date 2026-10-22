@@ -217,7 +217,7 @@ function FilterDropdown({
                       alt={opt.label}
                       width={20}
                       height={20}
-                      className="w-5 h-5 rounded-sm object-cover shrink-0"
+                      className="w-5 h-5 rounded-[8px]m object-cover shrink-0"
                     />
                   )}
                   <span className="flex-1 truncate">{opt.label}</span>

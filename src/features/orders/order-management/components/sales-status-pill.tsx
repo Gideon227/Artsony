@@ -13,8 +13,8 @@ export function SalesStatusPill({ status, className }: { status: SellerStatus; c
   return (
     <span
       className={cn(
-        'inline-flex h-6 min-w-[74px] items-center justify-center rounded-[8px] border px-3',
-        'font-poppins text-body-xs font-medium leading-none tracking-wide',
+        'inline-flex h-6 min-w-[74px] items-center justify-center rounded-[8px] border px-3 py-2',
+        'font-poppins text-[10px] font-medium leading-none tracking-wide',
         STYLES[status],
         className,
       )}

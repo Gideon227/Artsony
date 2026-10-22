@@ -32,6 +32,7 @@ import { ArtworkComments } from '../shop/artwork-comments'
 import Link from 'next/link'
 import { ShareModal } from '../../modals/share-modal'
 import ReportModal from '../../modals/report-modal'
+import { StepperInput } from '@/components/ui/quantity-input'
 
 // ── Formatting ────────────────────────────────────────────────────────────────
 function formatCount(n: number): string {
@@ -51,9 +52,10 @@ interface ArtworkViewOverlayProps {
   onClose: () => void
   onNavigate?: (direction: 'prev' | 'next') => void
   onSwapArtwork?: (artwork: Artwork) => void
+  preview?: boolean
 }
 
-export default function ArtworkViewOverlay({ artwork: artworkProp, onClose, onNavigate, onSwapArtwork }: ArtworkViewOverlayProps) {
+export default function ArtworkViewOverlay({ artwork: artworkProp, onClose, onNavigate, onSwapArtwork, preview = false }: ArtworkViewOverlayProps) {
   // Clicking a related work in "Also by" / "For sale by" swaps the displayed
   // artwork in place, without needing a navigation-index prop threaded through
   // every parent (TopPicks, TopArt, ResultsGrid, ArtGrid). Resets whenever the
@@ -117,6 +119,7 @@ export default function ArtworkViewOverlay({ artwork: artworkProp, onClose, onNa
   // prop from an already-loaded feed query, so GET /:id (and its automatic
   // view-tracking side effect) never runs. Record the view explicitly.
   useEffect(() => {
+    if (preview) return
     trackView(artwork.id)
   }, [artwork.id, trackView])
 
@@ -170,6 +173,7 @@ export default function ArtworkViewOverlay({ artwork: artworkProp, onClose, onNa
 
   const handleLike = async () => {
     if (isLiking) return
+    if (preview) return
     setIsLiking(true)
     const previousLiked = isLiked
     const previousCount = likeCount
@@ -192,6 +196,7 @@ export default function ArtworkViewOverlay({ artwork: artworkProp, onClose, onNa
   }
 
   const handleFollow = async () => {
+    if (preview) return
     if (!artwork.creator?.id || isFollowLoading) return
     setIsFollowLoading(true)
     const wasFollowing = isFollowing
@@ -206,6 +211,7 @@ export default function ArtworkViewOverlay({ artwork: artworkProp, onClose, onNa
   }
 
   const handleAddToCart = async () => {
+    if (preview) return
     if (isAddingToCart) return
     if (artwork.has_variants && !selectedVariantOptionId) {
       setCartError('Please select a type before adding to cart.')
@@ -359,15 +365,14 @@ export default function ArtworkViewOverlay({ artwork: artworkProp, onClose, onNa
 
       {artwork.artwork_format === 'PHYSICAL' && (
         <div className="flex items-center justify-between">
-          <div className="flex w-[150px] items-center justify-between rounded-full border-2 border-gray-100 px-1 py-1">
-            <button onClick={decreaseQty} className="flex h-10 w-10 items-center justify-center rounded-full text-gray-500 transition-colors hover:bg-gray-50 hover:text-gray-800">
-              <ChevronLeft size={18} strokeWidth={3} />
-            </button>
-            <span className="w-8 text-center text-lg font-bold text-primary-500">{quantity.toString().padStart(2, '0')}</span>
-            <button onClick={increaseQty} className="flex h-10 w-10 items-center justify-center rounded-full text-gray-500 transition-colors hover:bg-gray-50 hover:text-gray-800">
-              <ChevronRight size={18} strokeWidth={3} />
-            </button>
-          </div>
+          <StepperInput
+            min={1}
+            max={maxQty}
+            value={quantity}
+            onValueChange={setQuantity}
+            className='w-48'
+          />
+
           <div className="flex items-center gap-1.5 text-[14px] font-semibold text-gray-400">
             Max Qty <span className="text-primary-500">( {maxQty} )</span>
           </div>
@@ -796,7 +801,7 @@ export default function ArtworkViewOverlay({ artwork: artworkProp, onClose, onNa
               {/* Desktop-only: Description lives in the main column here */}
               <div className="hidden lg:block px-6 lg:px-8">{descriptionSection}</div>
 
-              {artwork.creator?.id && (
+              {!preview && artwork.creator?.id && (
                 <>
                   <div className='bg-secondary-100'>
                     <ArtworkCreatorWorks
@@ -822,11 +827,13 @@ export default function ArtworkViewOverlay({ artwork: artworkProp, onClose, onNa
               )}
 
               <div className="grid grid-cols-1 gap-4 px-6 border-t border-gray-50 py-12 lg:grid-cols-[1fr_308px]">
-                <ArtworkComments
-                  artworkId={artwork.id}
-                  creatorId={artwork.creator_id}
-                  allowComments={artwork.allow_comments ?? true}
-                />
+                {preview ? <div /> : (
+                  <ArtworkComments
+                    artworkId={artwork.id}
+                    creatorId={artwork.creator_id}
+                    allowComments={artwork.allow_comments ?? true}
+                  />
+                )}
                 {categoriesTagsLicense}
               </div>
             </div>
@@ -843,12 +850,16 @@ export default function ArtworkViewOverlay({ artwork: artworkProp, onClose, onNa
                 {formControls}
               </>
             )}
-            <div className="mt-4">
+
+            <div className={`${isForSale ? 'mt-auto' : 'mt-4'}`}>
               {footerIcons}
             </div>
-            <div className='mt-auto'>
-              {socialLinks}
-            </div>
+
+            {!isForSale && (
+              <div className='mt-auto'>
+                {socialLinks}
+              </div>
+            )}
           </div>
         </motion.div>
       </div>
@@ -864,9 +875,12 @@ export default function ArtworkViewOverlay({ artwork: artworkProp, onClose, onNa
         </button>
       </div> */}
     </div>
-    
-      <SaveToMoodboardDialog artworkId={artwork.id} open={saveDialogOpen} onOpenChange={setSaveDialogOpen} />
-      <ReportModal artworkId={artwork.id} open={reportDialogOpen} onOpenChange={setReportDialogOpen} />
+    {!preview && (
+      <>
+        <SaveToMoodboardDialog artworkId={artwork.id} open={saveDialogOpen} onOpenChange={setSaveDialogOpen} />
+        <ReportModal artworkId={artwork.id} open={reportDialogOpen} onOpenChange={setReportDialogOpen} />
+      </>
+    )}
     </>
   )
 }

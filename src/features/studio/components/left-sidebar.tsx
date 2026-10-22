@@ -3,7 +3,7 @@
 import Link from 'next/link'
 import Image from 'next/image'
 import { ArrowLeft } from 'lucide-react'
-import { useAuthStore } from '@/store'
+import { selectIsHydrated, useAuthStore } from '@/store'
 import { cn } from '@/lib/utils'
 
 export type StudioSection = 'wallet' | 'stats' | 'score'
@@ -23,6 +23,11 @@ const NAV_ITEMS: NavItem[] = [
 export type StudioLeftSidebarProps = {
   activeSection: StudioSection
   onChangeSection: (section: StudioSection) => void
+  /**
+   * Greys out every item and clears the active highlight. Used when the visitor
+   * is signed out or isn't a seller yet (the gate is shown instead of a section).
+   */
+  disabled?: boolean
   className?: string
   backHref?: string
 }
@@ -41,8 +46,15 @@ function ProfileSkeleton() {
 
 // Below `lg` this is the Studio menu screen (header, profile, section list);
 // from `lg` up it is the bordered sidebar.
-export function StudioLeftSidebar({ activeSection, onChangeSection, className, backHref = '/home' }: StudioLeftSidebarProps) {
+export function StudioLeftSidebar({
+  activeSection,
+  onChangeSection,
+  disabled = false,
+  className,
+  backHref = '/home',
+}: StudioLeftSidebarProps) {
   const { user } = useAuthStore()
+  const isHydrated = useAuthStore(selectIsHydrated)
 
   const memberSinceYear = (() => {
     if (!user?.created_at) return null
@@ -66,9 +78,10 @@ export function StudioLeftSidebar({ activeSection, onChangeSection, className, b
         <h2 className="font-raleway text-h6 font-semibold leading-8 tracking-wide text-body">Artsony Studio</h2>
       </div>
 
-      {!user ? (
+      {/* Mobile profile block: skeleton while the session loads, nothing for guests */}
+      {!isHydrated ? (
         <ProfileSkeleton />
-      ) : (
+      ) : user ? (
         <div className="mx-4 flex items-center gap-x-4 border-b border-gray-50 pt-6 pb-4 lg:hidden">
           <div className="relative flex h-24 w-24 shrink-0 items-center justify-center">
             <Image src="/home/profile-ring.svg" alt="" width={96} height={96} className="object-contain" priority />
@@ -90,26 +103,35 @@ export function StudioLeftSidebar({ activeSection, onChangeSection, className, b
             )}
           </div>
         </div>
-      )}
+      ) : null}
 
-      <ul className="flex flex-col gap-y-4 px-4 pt-6 lg:border-t lg:border-gray-50 lg:px-0 lg:pt-4">
+      {/* When gated, the list is greyed on desktop and hidden on mobile (the gate takes its place) */}
+      <ul
+        className={cn(
+          'flex flex-col gap-y-4 px-4 pt-6 lg:border-t lg:border-gray-50 lg:px-0 lg:pt-4',
+          disabled && 'max-lg:hidden',
+        )}
+      >
         {NAV_ITEMS.map((item) => {
-          const isActive = item.id === activeSection
+          const isActive = !disabled && item.id === activeSection
           return (
             <li key={item.id}>
               <button
                 type="button"
+                disabled={disabled}
                 onClick={() => onChangeSection(item.id)}
                 aria-current={isActive ? 'page' : undefined}
                 style={{ borderRadius: 16 }}
                 className={cn(
-                  'flex h-14 w-full cursor-pointer items-center gap-4 rounded-m p-4 text-left font-poppins text-body-s transition-colors',
+                  'flex h-14 w-full items-center gap-4 rounded-m p-4 text-left font-poppins text-body-s transition-colors',
                   isActive
-                    ? 'border border-gray-50 bg-primary-50 text-primary-500 ring-2 ring-offset-2 ring-primary-500'
-                    : 'text-body hover:bg-neutral-50'
+                    ? 'cursor-pointer border border-gray-50 bg-primary-50 text-primary-500 ring-2 ring-offset-2 ring-primary-500'
+                    : disabled
+                      ? 'cursor-not-allowed bg-gray-50 text-gray-400'
+                      : 'cursor-pointer text-body hover:bg-neutral-50',
                 )}
               >
-                <Image src={item.icon} width={24} height={24} alt="" aria-hidden="true" />
+                <Image src={item.icon} width={24} height={24} alt="" aria-hidden="true" className={cn(disabled && 'opacity-60')} />
                 <span className="flex-1 truncate">{item.label}</span>
               </button>
             </li>

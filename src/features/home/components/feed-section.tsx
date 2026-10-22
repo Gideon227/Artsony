@@ -91,7 +91,7 @@ export function FeedSection({ query, onSearch, activeTab, onTabChange, artworks,
         ) : artworks.length === 0 ? (
           <EmptyState />
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-x-4 gap-y-10">
+          <div className="grid gap-x-4 gap-y-10 grid-cols-[repeat(auto-fill,minmax(min(100%,332px),332px))]">
             {artworks.map((artwork, i) => (
               <motion.div
                 key={artwork.id}

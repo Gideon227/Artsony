@@ -43,7 +43,7 @@ export function MasonryArtworkGrid({ artworks, onArtworkClick }: MasonryArtworkG
 
   return (
     <div
-      className="mx-auto w-full max-w-[1440px] px-4 py-12 md:px-8"
+      className="w-full px-4 py-12 md:px-8"
       style={{ containerType: 'inline-size' }}
     >
       <div

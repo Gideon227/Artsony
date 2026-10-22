@@ -144,11 +144,11 @@ export function SaveToMoodboardDialog({
               </button>
 
               {/* Title */}
-              <h2 className="text-h4 font-medium text-[#333333] text-center mb-14 font-raleway">
+              <h2 className="text-h4 font-medium text-[#d35c5c] text-center font-raleway">
                 Moodboard
               </h2>
 
-              <div className='flex items-center justify-center gap-4'>
+              <div className='flex items-center justify-center gap-4 w-full'>
                 <SearchInput
                   value={query}
                   onChange={setQuery}

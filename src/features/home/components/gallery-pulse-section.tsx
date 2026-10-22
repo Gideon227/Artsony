@@ -120,7 +120,7 @@ export function GalleryPulseSection() {
   for (let abs = pos - 1; abs <= pos + visible + 1; abs++) slots.push(abs)
 
   const renderCard = (artwork: (typeof list)[number]) => (
-    <ArtCard artwork={artwork} variant="discover" fillContainer />
+    <ArtCard artwork={artwork} variant="discover" fillContainer showTrash={false} />
   )
 
   return (

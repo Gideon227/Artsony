@@ -5,7 +5,7 @@ import { cn } from '@/lib/utils'
 
 export function DetailShell({ children, className, ...rest }: React.HTMLAttributes<HTMLElement>) {
   return (
-    <article {...rest} className={cn('flex min-w-0 flex-col rounded-[32px] border border-gray-50 bg-white', className)}>
+    <article {...rest} className={cn('flex min-w-0 flex-col lg:rounded-2xl lg:border lg:border-gray-50 bg-white', className)}>
       {children}
     </article>
   )
@@ -20,7 +20,7 @@ type HeaderProps = {
 
 export function DetailHeader({ title, mobileTitle, actions, onClose }: HeaderProps) {
   return (
-    <header className="flex items-center justify-between gap-4 px-4 pb-4 pt-4 lg:px-6 lg:pb-6 lg:pt-6">
+    <header className="flex items-center justify-between gap-4 pb-4 lg:px-6 lg:pb-6 lg:pt-6">
       <div className="flex min-w-0 items-center gap-3">
         <button
           type="button"
@@ -30,9 +30,10 @@ export function DetailHeader({ title, mobileTitle, actions, onClose }: HeaderPro
         >
           <X className="h-5 w-5" aria-hidden="true" />
         </button>
-        <h2 className="hidden font-raleway text-h4 font-medium tracking-wide text-gray-500 lg:block">{title}</h2>
-        <h2 className="truncate font-raleway text-h6 font-medium tracking-wide text-gray-500 lg:hidden">{mobileTitle}</h2>
+        <h2 className="hidden font-raleway max-lg:text-h6 lg:text-h4 max-lg:font-semibold lg:font-medium tracking-wide text-gray-500 lg:block">{title}</h2>
+        <h2 className="truncate font-raleway text-h6 font-semibold lg:font-medium tracking-wide text-body lg:hidden">{mobileTitle}</h2>
       </div>
+
       {actions}
     </header>
   )
@@ -40,7 +41,7 @@ export function DetailHeader({ title, mobileTitle, actions, onClose }: HeaderPro
 
 export function DetailSection({ title, children, className }: { title: string; children: React.ReactNode; className?: string }) {
   return (
-    <section className={cn('flex flex-col gap-4 border-t border-gray-50 px-4 py-6 lg:gap-6 lg:px-6', className)}>
+    <section className={cn('flex flex-col gap-4 border-t border-gray-50 py-6 lg:gap-6 lg:px-6', className)}>
       <h3 className="font-raleway text-h6 font-medium tracking-wide text-gray-500 lg:text-h5">{title}</h3>
       {children}
     </section>
@@ -64,7 +65,7 @@ export function ReadOnlyField({ label, value, valueClassName, className, title }
       <span
         title={title ?? (typeof value === 'string' ? value : undefined)}
         className={cn(
-          'flex min-h-12 items-center rounded-[24px] border border-gray-50 px-4 py-2 font-poppins text-body-s tracking-wide text-gray-500',
+          'flex min-h-12 items-center rounded-[24px] border border-gray-50 px-4 py-2 font-poppins text-[14px] tracking-wide text-body',
           valueClassName,
         )}
       >

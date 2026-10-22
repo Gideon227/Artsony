@@ -12,7 +12,7 @@ import { formatMoney } from '../lib/format'
 import { OrdersPagination } from './orders-pagination'
 import { SalesStatusPill } from './sales-status-pill'
 
-const GRID = 'grid-cols-[154fr_120fr_120fr_120fr_156fr_90fr_70fr_96fr_40fr]'
+const GRID = 'grid-cols-[138fr_104fr_104fr_104fr_140fr_74fr_54fr_79fr_40fr]'
 const HEADERS = ['Order ID', 'Artwork Title', 'Type', 'Buyers Name', 'Date Purchased', 'Status', 'Quantity', 'Price', 'Action']
 
 type Props = {
@@ -29,7 +29,7 @@ type Props = {
 function PackageBadge() {
   return (
     <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-[12px] border border-gray-50 bg-white">
-      <Image src="/home/box-black.svg" width={20} height={20} alt="" aria-hidden="true" />
+      <Image src="/home/box-black.svg" width={24} height={24} alt="" aria-hidden="true" />
     </span>
   )
 }
@@ -64,9 +64,9 @@ export function OrdersTable({ rows, isFetching, isRefreshError, onRetry, page, t
     <div className="flex flex-col gap-2.5" aria-busy={isFetching}>
       <div className="hidden xl:block">
         <div role="table" aria-label="Orders" className="flex flex-col gap-2.5">
-          <div role="row" className={cn('grid h-[46px] items-center rounded-full border border-gray-50 bg-white px-4', GRID)}>
+          <div role="row" className={cn('grid gap-4 h-12 items-center rounded-full border border-gray-50 bg-white p-4', GRID)}>
             {HEADERS.map((header) => (
-              <div key={header} role="columnheader" className={cn('truncate font-poppins text-body-xs font-medium tracking-wide text-gray-300', header === 'Quantity' && 'text-center')}>
+              <div key={header} role="columnheader" className={cn('truncate font-poppins text-[12px] text-body', header === 'Quantity' && 'text-center')}>
                 {header}
               </div>
             ))}
@@ -75,19 +75,19 @@ export function OrdersTable({ rows, isFetching, isRefreshError, onRetry, page, t
           <div className="overflow-hidden rounded-[32px] border border-gray-50 bg-white">
             {isRefreshError && <RefreshBanner onRetry={onRetry} />}
             <div role="rowgroup" className={cn('transition-opacity', isFetching && 'opacity-60')}>
-              {rows.map((row) => (
-                <div key={row.order_item_id} role="row" className={cn('grid h-16 items-center border-b border-gray-50 px-4 font-poppins text-body-s tracking-wide text-gray-400', GRID)}>
-                  <div role="cell" className="flex min-w-0 items-center gap-3">
+              {rows.map((row, index) => (
+                <div key={row.order_item_id} role="row" className={cn('grid h-16 items-center gap-4 px-4 py-3 font-poppins text-body-s tracking-wide text-body', GRID, `${rows.length > 1 && 'border-b border-gray-50'}`)}>
+                  <div role="cell" className="flex min-w-0 items-center gap-2">
                     <PackageBadge />
-                    <span className="truncate font-medium text-gray-500">{row.order_code}</span>
+                    <span className="truncate font-poppins text-body-xs text-center text-heading">{row.order_code}</span>
                   </div>
-                  <div role="cell" className="truncate pr-3" title={row.artwork_title}>{row.artwork_title}</div>
-                  <div role="cell" className="truncate pr-3">{row.artwork_format === 'PHYSICAL' ? 'Physical' : 'Digital'}</div>
-                  <div role="cell" className="truncate pr-3" title={row.buyer_name}>{row.buyer_name}</div>
-                  <div role="cell" className="truncate pr-3">{formatOrderDate(row.purchased_at)}</div>
+                  <div role="cell" className="truncate font-poppins text-body-xs text-center text-body" title={row.artwork_title}>{row.artwork_title}</div>
+                  <div role="cell" className="truncate font-poppins text-body-xs text-center text-body">{row.artwork_format === 'PHYSICAL' ? 'Physical' : 'Digital'}</div>
+                  <div role="cell" className="truncate font-poppins text-body-xs text-center text-body" title={row.buyer_name}>{row.buyer_name}</div>
+                  <div role="cell" className="truncate font-poppins text-body-xs text-center text-body">{formatOrderDate(row.purchased_at)}</div>
                   <div role="cell"><SalesStatusPill status={row.seller_status} /></div>
                   <div role="cell" className="text-center">{row.quantity}</div>
-                  <div role="cell" className="truncate">{formatMoney(row.line_total, row.currency)}</div>
+                  <div role="cell" className="truncate font-poppins text-body-xs text-center text-body">{formatMoney(row.line_total, row.currency)}</div>
                   <div role="cell"><ActionLink href={getRowHref(row)} code={row.order_code} /></div>
                 </div>
               ))}

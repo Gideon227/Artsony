@@ -31,8 +31,10 @@ export function CancelledDetail({ detail, actions, onClose }: Props) {
   return (
     <DetailShell>
       <DetailHeader title="Canceled Order Info" mobileTitle={detail.artwork_title} actions={actions} onClose={onClose} />
+      
+      <hr className="hidden max-lg:block border-gray-50 max-lg:w-full pb-6" />
 
-      <div className="flex flex-col gap-6 px-4 pb-8 lg:flex-row lg:items-start lg:justify-between lg:px-6">
+      <div className="flex flex-col gap-6 pb-8 lg:flex-row lg:items-start lg:justify-between lg:px-6">
         <div className="flex items-center gap-4">
           <OrderCube />
           <div className="flex flex-col gap-2">

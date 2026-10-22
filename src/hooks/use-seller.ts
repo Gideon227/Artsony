@@ -3,12 +3,13 @@ import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tansta
 import {
   sellerService,
   type AdminSellerFilters,
+  type SellerRegistration,
   type DispatchAddressInput,
   type SellerRegistrationStatus,
   type SellerReviewAction,
 } from '@/services/seller.service'
 import { authService } from '@/services/auth.service'
-import { useAuthStore } from '@/store'
+import { selectIsHydrated, useAuthStore } from '@/store'
 import { useToast } from '@/components/ui/toaster'
 import { HttpError } from '@/lib/api-client'
 import { STALE_TIMES } from '@/constants'
@@ -22,9 +23,10 @@ const errorMessage = (err: unknown) => (err instanceof HttpError ? err.message :
 
 // A 404 here just means "never applied to sell" — a normal, common state,
 // not an error — so this doesn't retry or surface a toast on failure.
-export function useMySellerRegistration(options: { poll?: boolean } = {}) {
+export function useMySellerRegistration(options: { poll?: boolean; enabled?: boolean } = {}) {
   return useQuery({
     queryKey: KEY,
+    enabled: options.enabled ?? true,
     queryFn: () => sellerService.getMyRegistration().then((r) => r.data),
     staleTime: STALE_TIMES.fast,
     retry: false,
@@ -139,4 +141,43 @@ export function useReviewSellerRegistration() {
       error('Action failed', errorMessage(err))
     },
   })
+}
+export type SellerAccountState =
+  | { status: 'loading' }
+  | { status: 'error'; retry: () => void }
+  | { status: 'approved' }
+  | { status: 'none' }
+  | { status: 'pending' | 'rejected' | 'suspended'; registration: SellerRegistration }
+
+// Single answer to "does this user have a seller account?". The role in the
+// auth store is what the backend authorizes against, so ARTIST means approved.
+// Anyone else is looked up in their registration to tell "never applied" (404)
+// apart from pending, rejected and suspended.
+export function useSellerAccountState(): SellerAccountState {
+  const isHydrated = useAuthStore(selectIsHydrated)
+  const isArtist = useAuthStore((s) => s.user?.role === 'ARTIST')
+  const registration = useMySellerRegistration({ poll: true, enabled: isHydrated && !isArtist })
+  useSyncSellerRole(registration.data?.status)
+
+  if (!isHydrated) return { status: 'loading' }
+  if (isArtist) return { status: 'approved' }
+  if (registration.isPending) return { status: 'loading' }
+
+  if (registration.isError) {
+    if (registration.error instanceof HttpError && registration.error.statusCode === 404) return { status: 'none' }
+    return { status: 'error', retry: () => void registration.refetch() }
+  }
+
+  const current = registration.data
+  switch (current.status) {
+    case 'PENDING':
+      return { status: 'pending', registration: current }
+    case 'REJECTED':
+      return { status: 'rejected', registration: current }
+    case 'SUSPENDED':
+      return { status: 'suspended', registration: current }
+    case 'APPROVED':
+      // Approved but the stored role is stale; useSyncSellerRole is refreshing it.
+      return { status: 'loading' }
+  }
 }
