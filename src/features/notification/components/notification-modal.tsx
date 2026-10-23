@@ -48,7 +48,7 @@ const NotificationModal = ({ onClose }: { onClose?: () => void }) => {
                 <button
                     onClick={() => {
                         markAllRead()
-                        onClose
+                        onClose?.()
                     }}
                     aria-label="Close notifications"
                     className=''

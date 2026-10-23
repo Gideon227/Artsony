@@ -192,13 +192,15 @@ export function Navbar({ hideSearchBar = false }: { hideSearchBar?: boolean }) {
               exit={{ opacity: 0, scale: 0.95, y: -20 }}
               transition={{ type: "spring", damping: 25, stiffness: 300 }}
               className={cn(
-                "fixed z-[70]",
+                "fixed z-[70] max-lg:pointer-events-none",
                 "max-lg:inset-0 max-lg:flex max-lg:items-center max-lg:justify-center max-lg:p-4",
                 "lg:top-[76px] lg:right-20 lg:right-32"
               )}
-            >
-              <NotificationModal onClose={() => setIsNotificationOpen(false)} />
-            </motion.div>
+              >
+                <div className="pointer-events-auto">
+                  <NotificationModal onClose={() => setIsNotificationOpen(false)} />
+                </div>
+              </motion.div>
           </>
         )}
       </AnimatePresence>

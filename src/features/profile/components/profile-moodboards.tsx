@@ -135,7 +135,7 @@ export function ProfileMoodboards({ isOwnProfile, onArtworkClick }: Props) {
     // this stays an honest placeholder rather than silently showing the
     // viewer's own boards on someone else's profile.
     return (
-      <div className="flex flex-col items-center gap-2 py-16 text-center">
+      <div className="flex flex-col items-center gap-2 py-16 text-center pb-24">
         <h3 className="font-poppins text-body-l font-semibold text-heading">Moodboards aren&apos;t viewable yet</h3>
         <p className="max-w-sm font-poppins text-body-s text-gray-400">
           Viewing another artist&apos;s moodboards is coming soon.
