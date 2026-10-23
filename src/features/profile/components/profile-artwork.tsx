@@ -142,7 +142,9 @@ const ProfileArtwork = ({ userId, tabType, isOwnProfile, onArtworkClick, onPostA
                             </clipPath>
                         </defs>
                     </svg>
-                    {/* <Image src='/illustrations/empty-artwork.png' width={445} height={459} alt='' /> */}
+                    {tabType === 'artwork' &&
+                        <Image src='/illustrations/empty-artwork.png' width={445} height={459} alt='' className='max-lg:w-[203px] max-lg:h-[209px]' />
+                    }
                     <div className='flex flex-col gap-2'>
                         <h3 className='font-poppins text-body-l font-semibold text-heading'>{EMPTY_COPY[tabType].title}</h3>
                         <p className='max-w-sm font-poppins text-body-s text-gray-400'>{EMPTY_COPY[tabType].body}</p>
