@@ -166,7 +166,7 @@ export function MobileNav({ variant, className }: MobileNavProps) {
           className,
         )}
       >
-        <div className="pointer-events-auto mx-auto flex w-full max-w-[341px] items-end gap-[18px]">
+        <div className="pointer-events-auto mx-auto flex w-full items-end gap-4">
           <motion.div
             initial={false}
             animate={{

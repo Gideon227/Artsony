@@ -19,7 +19,7 @@ const NAV_LINKS: readonly NavLink[] = [
 ];
 
 const ADMIN_LINKS: readonly NavLink[] = [
-  { label: "Seller Applications", href: "/admin/seller-registrations" },
+  { label: "Seller Applications", href: "/admin/seller-registration" },
 ];
 
 export default function UserMenuOverlay({ onClose }: { onClose?: () => void }) {

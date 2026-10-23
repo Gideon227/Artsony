@@ -127,7 +127,7 @@ const TopArt = () => {
             {(!isLoading || artworks.length > 0) && !error && (
                 <ArtGrid
                     artworks={artworks}
-                    artVariant='shop'
+                    // artVariant='shop'
                     num={0}
                     onCardClick={(_, index) => handleOpenArtwork(index)}
                 />

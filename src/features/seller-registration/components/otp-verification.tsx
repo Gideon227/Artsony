@@ -6,6 +6,7 @@ import Image from 'next/image'
 import React, { useRef, useState, useEffect, useCallback } from 'react'
 import { HttpError } from '@/lib/api-client'
 import { useSendSellerEmailCode, useVerifySellerEmailCode } from '@/hooks/use-seller'
+import Link from 'next/link'
 
 const OTP_LENGTH = 4
 const DEFAULT_RESEND_SECONDS = 60
@@ -66,6 +67,23 @@ const OtpVerification = ({
         },
         [email, onVerified, status, verifyCode],
     )
+
+    const maskEmail = (email: string) => {
+        if (!email || !email.includes('@')) return email
+        const [name, domain] = email.split('@')
+
+        if (!name) return;
+
+        if (name.length <= 4) {
+            return `${name[0]}***@${domain}`
+        }
+
+        const start = name.slice(0, 2)
+        const end = name.slice(-2)
+        const asterisks = '*'.repeat(7)
+
+        return `${start}${asterisks}${end}@${domain}`
+    }
 
     const handleChange = (value: string, index: number) => {
         if (!/^\d*$/.test(value)) return
@@ -185,7 +203,7 @@ const OtpVerification = ({
 
                         <div className='flex flex-col gap-y-4 items-center justify-center text-center'>
                             <p className='font-poppins text-body-m leading-6 tracking-wide text-body'>
-                                We&apos;ve sent a {OTP_LENGTH}-digit verification code to <span className='text-primary-500 break-all'>{email}</span>. Enter the code below to confirm it&apos;s you. This helps keep your account secure.
+                                We&apos;ve sent a {OTP_LENGTH}-digit verification code to <Link href={`https://mail.google.com/mail/u/0/#inbox`} target="_blank" rel="noopener noreferrer" className='text-primary-500 break-all'>{maskEmail(email)}</Link>. Enter the code below to confirm it&apos;s you. This helps keep your account secure.
                             </p>
 
                             <div className='flex flex-col items-center gap-y-2 mt-4'>

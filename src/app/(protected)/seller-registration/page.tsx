@@ -225,7 +225,7 @@ const SellerRegistrationPage = () => {
     return (
         <div className=''>
             <Navbar />
-            <div className='flex-1 pt-8 md:pt-12 pb-10 flex flex-col gap-y-10 lg:gap-y-16 bg-white'>
+            <div className='flex-1 pt-8 md:pt-12 pb-10 flex flex-col gap-y-10 lg:gap-y-16 bg-white min-h-screen'>
                 <div className='flex flex-col justify-center items-center gap-y-8 md:gap-y-10 w-full px-4 sm:px-8 lg:px-22'>
                     <div className='flex flex-col gap-y-4 justify-center items-center'>
                         <h4 className='font-raleway font-semibold text-h4 text-primary-500 leading-10 tracking-wide text-center'>Seller Account Registration</h4>

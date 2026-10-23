@@ -114,7 +114,7 @@ function ShopContent() {
           <ArtGrid
             artworks={artworks}
             num={0}
-            artVariant="shop"
+            // artVariant="shop"
             onCardClick={(_, index) => handleGridClick(index)}
           />
 

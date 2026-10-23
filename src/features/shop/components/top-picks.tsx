@@ -133,7 +133,7 @@ const TopPicks = () => {
                                     <div key={artwork.id} className="flex-none w-[320px] snap-start">
                                         <ArtCard
                                             artwork={artwork}
-                                            variant="shop"
+                                            variant="standard"
                                             onCardClick={() => handleOpenArtwork(index)}
                                         />
                                     </div>
