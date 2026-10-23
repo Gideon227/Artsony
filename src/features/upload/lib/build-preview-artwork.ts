@@ -41,7 +41,7 @@ export function buildPreviewArtwork(draft: ArtworkDraft, user: User | null): Art
       : undefined,
     collaborator_ids: (draft.collaborator_ids ?? []).map(String),
     tools_used: draft.tools_used ?? [],
-    assets: (draft.assets ?? []).map((asset, index) => ({
+    assets: (draft.assets ?? []).filter((asset) => !asset.is_file).map((asset, index) => ({
       ...asset,
       id: `preview-asset-${index}`,
       ordering_index: asset.ordering_index ?? index,

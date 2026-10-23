@@ -33,7 +33,7 @@ const UploadPreview = ({ id, onNext, onBack, onSaveAndExit, steps, number, loadi
   // -- Slide Navigation State --
   const [currentSlide, setCurrentSlide] = useState(0)
   const [showPreview, setShowPreview] = useState(false)
-  const assets = draft?.assets || []
+  const assets = (draft?.assets || []).filter((asset) => !asset.is_file)
   const totalSlides = Math.max(assets.length, 1)
 
   const handlePrev = () => setCurrentSlide((prev) => Math.max(0, prev - 1))
@@ -81,7 +81,7 @@ const UploadPreview = ({ id, onNext, onBack, onSaveAndExit, steps, number, loadi
   const Overlay = draft?.listing_type === 'MARKETPLACE' ? ShopArtworkViewOverlay : HomeArtworkViewOverlay
 
   return (
-    <div className='border border-gray-50 rounded-2xl flex flex-col justify-between bg-white min-h-screen'>
+    <div className='border border-gray-50 rounded-2xl flex flex-col justify-between bg-white'>
       <div>
         {/* TOP CONTROLS */}
         <UploadHeader 

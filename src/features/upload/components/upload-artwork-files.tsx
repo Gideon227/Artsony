@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import Image from "next/image";
-import { CircleHelp, X, Upload, FileImage, Video, FileText, FileArchive, File } from "lucide-react";
+import { CircleHelp, X, Upload, FileImage, Video, FileText, File } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components";
 import { useArtworkStore } from "@/store/artwork.store";
@@ -28,18 +28,6 @@ const ACCEPTED_EXTENSIONS = Object.values(MEDIA_RULES)
   .flatMap((rule) => rule.extensions)
   .map((ext) => `.${ext}`)
   .join(",")
-
-// ── Local display type — never persisted to store ─────────────────────────────
-// The store holds ArtworkAsset shape; this is UI-only for name/icon/size display
-
-interface LocalFileDisplay {
-  // Used as the key to match against draft.assets[ordering_index]
-  ordering_index: number;
-  name:      string;
-  sizeLabel: string;
-  extension: string;
-  mediaType: ArtworkMediaType;
-}
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -80,23 +68,31 @@ export default function UploadArtworkFiles({
   const removeDraftAsset = useArtworkStore((s) => s.removeDraftAsset)
   const setDraftStep   = useArtworkStore((s) => s.setDraftStep)
 
-  // Local display list — mirrors draft.assets ordering but holds UI-only fields
-  // Seeded from store on mount so display survives remounts
-  const [displayFiles, setDisplayFiles] = React.useState<LocalFileDisplay[]>(() =>
-    (draft.assets ?? []).map((asset, i) => ({
-      ordering_index: i,
-      name:      asset.mime_type,          // best fallback we have from the store
-      sizeLabel: formatFileSize(asset.file_size_bytes),
-      extension: asset.mime_type.split("/")[1]?.toUpperCase() ?? "FILE",
-      mediaType: asset.media_type,
-    }))
+  // The file list is read straight from the store: only assets flagged `is_file`
+  // (added in this step) show up here, and the gallery on the left skips them.
+  // `index` is the asset's real position in draft.assets, used for removal.
+  const files = React.useMemo(
+    () =>
+      (draft.assets ?? []).flatMap((asset, index) =>
+        asset.is_file
+          ? [{
+              index,
+              key:       `${asset.original_url}#${index}`,
+              name:      asset.file_name ?? asset.mime_type,
+              sizeLabel: formatFileSize(asset.file_size_bytes),
+              extension: (asset.file_name?.split(".").pop() ?? asset.mime_type.split("/")[1] ?? "FILE").toUpperCase(),
+              mediaType: asset.media_type,
+            }]
+          : [],
+      ),
+    [draft.assets],
   )
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const files = Array.from(e.target.files ?? [])
+    const selected = Array.from(e.target.files ?? [])
     // Reset right away: the FileList is live and the same file can be picked again
     e.target.value = ""
-    if (files.length === 0 || uploadingRef.current) return
+    if (selected.length === 0 || uploadingRef.current) return
 
     uploadingRef.current = true
     setUploading(true)
@@ -104,7 +100,7 @@ export default function UploadArtworkFiles({
     abortRef.current = controller
 
     try {
-      for (const [index, file] of files.entries()) {
+      for (const [index, file] of selected.entries()) {
         const mediaType = mediaKindForFile(file)
         if (!mediaType) {
           toastError("Unsupported file", `${file.name} is not a supported file type.`)
@@ -120,13 +116,8 @@ export default function UploadArtworkFiles({
         try {
           const asset = await artworkService.uploadAsset(file, mediaType, {
             signal: controller.signal,
-            onProgress: (percent: any) => setProgress({ index, total: files.length, percent }),
+            onProgress: (percent: any) => setProgress({ index, total: selected.length, percent }),
           })
-
-          // Read the length from the store, not the render closure: earlier
-          // files in this same batch have already been appended.
-          const nextIndex = (useArtworkStore.getState().draft.assets ?? []).length
-          const extension = file.name.split(".").pop()?.toUpperCase() ?? "FILE"
 
           addDraftAsset({
             original_url:    asset.original_url,
@@ -138,19 +129,12 @@ export default function UploadArtworkFiles({
             duration_secs:   asset.duration_secs,
             mime_type:       asset.mime_type,
             file_size_bytes: asset.file_size_bytes,
-            ordering_index:  nextIndex,
+            // The store re-numbers ordering_index when it appends
+            ordering_index:  0,
+            // Client-only: keeps this out of the left-hand gallery
+            is_file:         true,
+            file_name:       file.name,
           })
-
-          setDisplayFiles((prev) => [
-            ...prev,
-            {
-              ordering_index: nextIndex,
-              name:           file.name,
-              sizeLabel:      formatFileSize(asset.file_size_bytes),
-              extension,
-              mediaType,
-            },
-          ])
         } catch (err) {
           if (err instanceof DOMException && err.name === "AbortError") return
           toastError(
@@ -167,24 +151,13 @@ export default function UploadArtworkFiles({
     }
   }
 
-  const handleRemove = (ordering_index: number) => {
-    // Remove from store by index
-    removeDraftAsset(ordering_index)
-    // Remove from display list and re-number ordering_index to stay in sync
-    setDisplayFiles((prev) =>
-      prev
-        .filter((f) => f.ordering_index !== ordering_index)
-        .map((f, i) => ({ ...f, ordering_index: i }))
-    )
-  }
-
   const handleNextStep = () => {
     setDraftStep(4)
     onNext()
   }
 
   return (
-    <div className="w-full max-w-2xl bg-white border border-neutral-100 rounded-[40px] overflow-hidden font-poppins">
+    <div className="flex h-full w-full max-w-2xl flex-col bg-white border border-neutral-100 rounded-[40px] overflow-hidden font-poppins">
 
       {/* HEADER */}
       <div className="flex justify-between px-6 py-4 items-center border-b border-gray-50">
@@ -205,7 +178,7 @@ export default function UploadArtworkFiles({
       </div>
 
       {/* CONTENT */}
-      <div className="p-6 space-y-6 max-h-[64vh] overflow-y-auto custom-scrollbar">
+      <div className="min-h-0 flex-1 p-6 space-y-6 overflow-y-auto custom-scrollbar">
 
         {/* HEADING */}
         <div className="space-y-2">
@@ -249,7 +222,7 @@ export default function UploadArtworkFiles({
 
         {/* FILE LIST */}
         <AnimatePresence>
-          {displayFiles.length > 0 && (
+          {files.length > 0 && (
             <motion.div
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
@@ -257,9 +230,9 @@ export default function UploadArtworkFiles({
               className="border border-neutral-100 rounded-[32px] p-2 bg-white overflow-hidden"
             >
               <div className="max-h-[290px] overflow-y-auto custom-scrollbar divide-y divide-neutral-50 px-4">
-                {displayFiles.map((file) => (
+                {files.map((file) => (
                   <motion.div
-                    key={file.ordering_index}
+                    key={file.key}
                     initial={{ opacity: 0, height: 0 }}
                     animate={{ opacity: 1, height: "auto" }}
                     exit={{ opacity: 0, height: 0 }}
@@ -287,7 +260,8 @@ export default function UploadArtworkFiles({
                       </span>
                       <button
                         type="button"
-                        onClick={() => handleRemove(file.ordering_index)}
+                        aria-label={`Remove ${file.name}`}
+                        onClick={() => removeDraftAsset(file.index)}
                         className="h-8 w-8 flex items-center justify-center rounded-full bg-slate-100 text-slate-500 hover:bg-neutral-200 hover:text-neutral-700 transition-colors"
                       >
                         <X size={15} strokeWidth={2.5} />

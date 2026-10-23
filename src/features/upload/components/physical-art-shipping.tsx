@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import Image from "next/image";
-import { CircleHelp, ChevronDown } from "lucide-react";
+import { Check, CircleHelp, ChevronDown } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components";
@@ -112,19 +112,23 @@ export default function PhysicalArtShipping({
 
   const physicalDetails: Partial<PhysicalDetails> = draft.physical_details ?? {}
 
+  // `undefined` means the artist has never opened this step for this draft —
+  // in that case every region starts out selected.
+  const hasSavedRegions = physicalDetails.shipping_regions !== undefined
+
   // Selected sub-region IDs → physical_details.shipping_regions
   const [selectedRegions, setSelectedRegions] = React.useState<string[]>(
-    () => physicalDetails.shipping_regions ?? []
+    () => physicalDetails.shipping_regions ?? ALL_SUBREGION_IDS
   )
 
   // Which continent IDs are visible in the accordion (chosen via top dropdown)
   const [activeContinentIds, setActiveContinentIds] = React.useState<string[]>(
     () => {
-      // On mount, pre-expand continents that already have sub-regions selected in the store
-      const seeded = SHIPPING_DATA
+      if (!hasSavedRegions) return ALL_CONTINENT_IDS
+      // Otherwise pre-expand continents that already have sub-regions selected in the store
+      return SHIPPING_DATA
         .filter((c) => c.subRegions.some((sr) => (physicalDetails.shipping_regions ?? []).includes(sr.id)))
         .map((c) => c.id)
-      return seeded.length > 0 ? seeded : []
     }
   )
 
@@ -138,55 +142,65 @@ export default function PhysicalArtShipping({
     setDraftField('physical_details', {
       ...physicalDetails,
       shipping_regions: regions,
+      ships_worldwide: regions.length === ALL_SUBREGION_IDS.length,
     } as PhysicalDetails)
   }
 
+  // First visit: persist the "everything selected" default so it is saved with the draft
+  React.useEffect(() => {
+    if (!hasSavedRegions) syncRegionsToStore(ALL_SUBREGION_IDS)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
   // ── Handlers ────────────────────────────────────────────────────────────────
 
-  const handleContinentDropdownSelect = (opt: DropdownOption) => {
-    const optId = String(opt.id);
-
-    // Handle "Worldwide" synthetic option
+  const toggleContinentOption = (optId: string) => {
+    // "Worldwide" toggles every continent at once
     if (optId === "worldwide") {
       const isAllSelected = activeContinentIds.length === ALL_CONTINENT_IDS.length;
-      
+
       if (isAllSelected) {
-        // Deselect everything globally
         setActiveContinentIds([]);
         setSelectedRegions([]);
         syncRegionsToStore([]);
         setExpandedContinents({});
       } else {
-        // Select everything globally
         setActiveContinentIds(ALL_CONTINENT_IDS);
         setSelectedRegions(ALL_SUBREGION_IDS);
         syncRegionsToStore(ALL_SUBREGION_IDS);
-        // Expand all accordions so the user sees everything is checked
-        setExpandedContinents(
-          Object.fromEntries(ALL_CONTINENT_IDS.map((id) => [id, true]))
-        );
+        setExpandedContinents(Object.fromEntries(ALL_CONTINENT_IDS.map((id) => [id, true])));
       }
       return;
     }
 
-    // Handle normal continent selection
-    setActiveContinentIds((prev) => {
-      if (prev.includes(optId)) {
-        // Removing continent — also deselect its sub-regions from the store
-        const continent = SHIPPING_DATA.find((c) => c.id === optId)
-        if (continent) {
-          const subIds = continent.subRegions.map((sr) => sr.id)
-          const updated = selectedRegions.filter((r) => !subIds.includes(r))
-          setSelectedRegions(updated)
-          syncRegionsToStore(updated)
-        }
-        return prev.filter((id) => id !== optId)
-      } else {
-        // Adding continent — auto-expand it
-        setExpandedContinents((prevExpanded) => ({ ...prevExpanded, [optId]: true }))
-        return [...prev, optId]
-      }
-    })
+    const continent = SHIPPING_DATA.find((c) => c.id === optId)
+    if (!continent) return
+    const subIds = continent.subRegions.map((sr) => sr.id)
+
+    if (activeContinentIds.includes(optId)) {
+      // Removing a continent also deselects its sub-regions
+      const updated = selectedRegions.filter((r) => !subIds.includes(r))
+      setActiveContinentIds((prev) => prev.filter((id) => id !== optId))
+      setSelectedRegions(updated)
+      syncRegionsToStore(updated)
+    } else {
+      // Adding a continent selects all of its sub-regions and opens it
+      const updated = Array.from(new Set([...selectedRegions, ...subIds]))
+      setActiveContinentIds((prev) => [...prev, optId])
+      setSelectedRegions(updated)
+      syncRegionsToStore(updated)
+      setExpandedContinents((prev) => ({ ...prev, [optId]: true }))
+    }
+  }
+
+  // The multi-select Dropdown hands back the whole new list; work out which row was toggled
+  const handleContinentsChange = (next: DropdownOption[]) => {
+    const prevIds = new Set(selectedOptionValues.map((o) => String(o.id)))
+    const nextIds = new Set(next.map((o) => String(o.id)))
+    const toggled =
+      [...nextIds].find((id) => !prevIds.has(id)) ??
+      [...prevIds].find((id) => !nextIds.has(id))
+    if (toggled) toggleContinentOption(toggled)
   }
 
   const toggleSubRegion = (subRegionId: string) => {
@@ -240,24 +254,21 @@ export default function PhysicalArtShipping({
     })
   ];
 
-  const activeDropdownValue = React.useMemo(() => {
-    if (activeContinentIds.length === 0) return undefined;
-    
-    if (activeContinentIds.length === ALL_CONTINENT_IDS.length) {
-      return {
-        id: 'worldwide',
-        label: 'Worldwide',
-      };
-    }
+  // Rows that get a check mark
+  const selectedOptionValues = dropdownOptions.filter((o) =>
+    o.id === "worldwide" ? isWorldwideActive : activeContinentIds.includes(String(o.id))
+  )
+
+  // Text shown in the closed dropdown
+  const triggerLabel = React.useMemo(() => {
+    if (activeContinentIds.length === 0) return undefined
+    if (activeContinentIds.length === ALL_CONTINENT_IDS.length) return "Worldwide"
 
     const names = SHIPPING_DATA
       .filter((c) => activeContinentIds.includes(c.id))
       .map((c) => c.name)
       .join(', ')
-    return {
-      id:    'summary',
-      label: names.length > 38 ? `${names.slice(0, 35)}...` : names,
-    }
+    return names.length > 38 ? `${names.slice(0, 35)}...` : names
   }, [activeContinentIds])
 
   // Only render continents that have been selected via the top dropdown
@@ -285,7 +296,7 @@ export default function PhysicalArtShipping({
               <CircleHelp size={18} className="text-secondary-100" fill="#30A2FF" color="white" />
             </div>
             <p className="text-body-xs leading-6 text-gray-200 font-poppins font-medium">
-              Select the continents you ship to — then fine-tune by sub-region below.
+              Every region is selected by default — deselect the ones you don't ship to.
               Buyers outside selected regions won't be able to purchase.
             </p>
           </div>
@@ -294,9 +305,14 @@ export default function PhysicalArtShipping({
           <div className="w-full pt-1">
             <Dropdown
               options={dropdownOptions}
-              value={activeDropdownValue}
+              multiple
+              hideChips
+              indicator="checkmark"
+              values={selectedOptionValues}
+              onChangeMultiple={handleContinentsChange}
+              valueLabel={triggerLabel}
               placeholder="Select continents to ship to..."
-              onChange={handleContinentDropdownSelect}
+              title="Ship to"
               leftIcon="/icons/global.svg"
               className="h-14"
             />
@@ -333,11 +349,13 @@ export default function PhysicalArtShipping({
                             allSubSelected ? "border-[#F15A2B] bg-[#F15A2B]" : "border-neutral-300 bg-white"
                           )}>
                             {allSubSelected && (
-                              <motion.div
+                              <motion.span
                                 initial={{ scale: 0 }}
                                 animate={{ scale: 1 }}
-                                className="w-2 h-2 rounded-full bg-white"
-                              />
+                                className="flex items-center justify-center"
+                              >
+                                <Check className="h-3.5 w-3.5 text-white" strokeWidth={3} aria-hidden />
+                              </motion.span>
                             )}
                           </div>
                           <span className="text-sm font-semibold text-neutral-700">All</span>
@@ -390,7 +408,7 @@ export default function PhysicalArtShipping({
                                       "w-6 h-6 rounded-full border-2 flex items-center justify-center shrink-0 transition-all duration-200",
                                       isSelected ? "border-white bg-white" : "border-neutral-200 bg-white"
                                     )}>
-                                      {isSelected && <div className="w-2.5 h-2.5 rounded-full bg-[#F15A2B]" />}
+                                      {isSelected && <Check className="h-3.5 w-3.5 text-[#F15A2B]" strokeWidth={3} aria-hidden />}
                                     </div>
                                   </div>
                                 )

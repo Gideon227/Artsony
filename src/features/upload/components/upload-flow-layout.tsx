@@ -26,8 +26,7 @@ export default function UploadFlowLayout({
                     {!leftWorkspace ? <UploadArtIndex /> : leftWorkspace }
                 </div>
                 
-                {/* Right Form Context Panel */}
-                <div className="h-screen w-md shrink-0 overflow-y-auto scrollbar-hide pb-12">
+                <div className="h-screen w-md shrink-0 overflow-y-auto scrollbar-hide pb-12 [&>*]:min-h-full">
                     {ActiveStepComponent}
                 </div>
 

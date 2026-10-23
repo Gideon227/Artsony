@@ -12,6 +12,7 @@ import { useArtworkStore } from "@/store/artwork.store";
 import type { Variant, VariantOption } from "@/types/artwork";
 import UploadHeader from "./upload-header";
 import PriceInput from "@/components/ui/price-input";
+import { Dropdown, DropdownOption } from "@/components/ui/dropdown";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -134,6 +135,9 @@ export default function PhysicalArtVariable({
     [setDraftField]
   )
 
+  const VARIANT_TYPE_DROPDOWN_OPTIONS: DropdownOption[] =
+    VARIANT_TYPE_OPTIONS.map((o) => ({ id: o.value, label: o.label }))
+
   // ── CRUD ──────────────────────────────────────────────────────────────────
   const addVariation = () => {
     const newVar: LocalVariation = {
@@ -184,7 +188,7 @@ export default function PhysicalArtVariable({
   }
 
   return (
-    <div className="w-full max-w-2xl bg-white border border-neutral-100 rounded-[40px] overflow-hidden shadow-sm font-poppins">
+    <div className="flex h-full flex-col *:w-full max-w-2xl bg-white border border-neutral-100 rounded-[40px] overflow-hidden shadow-sm font-poppins">
 
       {/* HEADER */}
       <UploadHeader
@@ -194,7 +198,7 @@ export default function PhysicalArtVariable({
       />
 
       {/* CONTENT */}
-      <div className="p-6 space-y-6 max-h-[70vh] overflow-y-auto">
+      <div className="min-h-0 flex-1 overflow-y-auto p-6 space-y-6">
 
         {/* VARIANT TYPE */}
         <div className="space-y-3">
@@ -204,7 +208,15 @@ export default function PhysicalArtVariable({
             </label>
             <CircleHelp size={18} className="text-[#30A2FF] cursor-help" fill="#30A2FF" color="white" />
           </div>
-          <div className="relative">
+
+          <Dropdown
+            options={VARIANT_TYPE_DROPDOWN_OPTIONS}
+            value={VARIANT_TYPE_DROPDOWN_OPTIONS.find((o) => o.id === variantType)}
+            onChange={(option) => handleTypeChange(option.id as VariantTypeKey)}
+            placeholder="Select variable type"
+            className="font-poppins text-gray-700 text-sm"
+          />
+          {/* <div className="relative">
             <select
               className="w-full h-14 rounded-full border border-neutral-200 px-6 appearance-none outline-none focus:border-primary-500 transition-all text-neutral-600"
               value={variantType}
@@ -215,7 +227,7 @@ export default function PhysicalArtVariable({
               ))}
             </select>
             <ChevronDown className="absolute right-6 top-1/2 -translate-y-1/2 text-neutral-400 pointer-events-none" />
-          </div>
+          </div> */}
         </div>
 
         {/* ADD BUTTON */}

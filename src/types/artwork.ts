@@ -33,6 +33,8 @@ export type ArtworkAsset = {
   mime_type: string
   file_size_bytes: number
   ordering_index: number
+  is_file?: boolean
+  file_name?: string
 }
 
 export type PhysicalDetails = {

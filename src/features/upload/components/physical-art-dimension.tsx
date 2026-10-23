@@ -83,7 +83,7 @@ export default function PhysicalArtDimension({
   };
 
   return (
-    <div className="w-full max-w-2xl bg-white border border-neutral-100 rounded-[40px] overflow-hidden shadow-sm">
+    <div className="flex h-full flex-col w-full max-w-2xl bg-white border border-neutral-100 rounded-[40px] overflow-hidden shadow-sm">
       {/* HEADER */}
       <div className="flex justify-between px-6 py-4 items-center border-b border-gray-50">
         <div className="flex gap-4 items-center">
@@ -114,7 +114,7 @@ export default function PhysicalArtDimension({
       </div>
 
       {/* CONTENT */}
-      <div className="p-6 space-y-6">
+      <div className="min-h-0 flex-1 overflow-y-auto p-6 space-y-6">
         {/* PRICE — draft.price: number */}
         <section className="space-y-2">
           <div className="flex items-center gap-3">

@@ -57,6 +57,7 @@ interface DropdownProps {
 
   customBody?: React.ReactNode;
   valueLabel?: string;
+  hideChips?: boolean
 }
 
 const MOBILE_BREAKPOINT = 640;
@@ -100,6 +101,7 @@ const Dropdown = ({
   emptyMessage = "No results found",
   customBody,
   valueLabel,
+  hideChips
 }: DropdownProps) => {
   const [isOpen, setIsOpen] = React.useState(false);
   const [mounted, setMounted] = React.useState(false);
@@ -269,7 +271,7 @@ const Dropdown = ({
     <p className="text-sm text-neutral-400 text-center py-6">{emptyMessage}</p>
   ) : null;
 
-  const chipsSection = multiple ? (
+  const chipsSection = multiple && !hideChips  ? (
     <div className="p-4 flex flex-col gap-y-2">
       <div className="flex items-center justify-between mb-2">
         <span className="text-sm font-semibold text-neutral-900">
@@ -387,7 +389,11 @@ const Dropdown = ({
           const selected = isSelected(option);
           const disabledRow = option.disabled || (multiple && !selected && atMax);
 
-          return (
+          const filled =
+            selected && !multiple &&
+            (resolvedIndicator === "highlight" || resolvedIndicator === "radio" || resolvedIndicator === "checkbox");
+
+            return (
             <li key={option.id}>
               <div
                 role="button"
@@ -437,7 +443,8 @@ const Dropdown = ({
                   <span
                     className={cn(
                       "font-poppins font-medium text-body-xs truncate leading-tight transition-colors",
-                      selected ? "text-white" : "text-neutral-800"
+                      // selected ? "text-white" : "text-neutral-800",
+                      filled ? "text-white" : "text-neutral-800"
                     )}
                   >
                     {option.label}
@@ -446,7 +453,8 @@ const Dropdown = ({
                     <span
                       className={cn(
                         "text-[12px] block font-normal font-poppins leading-5 mt-1 transition-colors",
-                        selected && !multiple ? "text-white/80" : "text-neutral-400"
+                        // selected && !multiple ? "text-white/80" : "text-neutral-400",
+                        filled ? "text-white/80" : "text-neutral-400"
                       )}
                     >
                       {option.description}
