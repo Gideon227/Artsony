@@ -22,8 +22,8 @@ type CardConfig = {
 const CARDS: CardConfig[] = [
   { key: 'total_earnings', label: 'Total Earnings', icon: '/wallet/money-wad-yellow.svg', iconBg: 'bg-primary-100', valueClassName: 'text-primary-500' },
   { key: 'total_sales', label: 'Total Sales', icon: '/icons/shopping-bag.svg', iconBg: 'bg-primary-100', help: STUDIO_HELP.totalSales },
-  { key: 'artwork_views', label: 'Artwork Views', icon: '/wallet/eye-red.svg', iconBg: 'bg-primary-100', help: STUDIO_HELP.artworkViews },
-  { key: 'artwork_likes', label: 'Artwork Likes', icon: '/wallet/heart-red.svg', iconBg: 'bg-primary-50' },
+  { key: 'artwork_views', label: 'Artwork Views', icon: '/icons/eye-red.svg', iconBg: 'bg-primary-100', help: STUDIO_HELP.artworkViews },
+  { key: 'artwork_likes', label: 'Artwork Likes', icon: '/icons/heart-red.svg', iconBg: 'bg-primary-50' },
 ]
 
 export function StatsSummaryCards() {

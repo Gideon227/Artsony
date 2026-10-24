@@ -7,7 +7,7 @@ import { StudioMobileHeader } from '@/features/studio/components/studio-mobile-h
 
 export function ScorePageContent() {
   return (
-    <div className="flex min-h-0 w-full flex-col lg:h-full">
+    <div className="flex min-h-0 w-full flex-col lg:h-full max-lg:w-full max-lg:overflow-hidden max-lg:pb-80">
       <StudioMobileHeader title="Artsony Score" />
 
       <div className="flex flex-col gap-y-4 bg-white p-4 lg:h-full lg:min-h-0 lg:overflow-y-auto lg:rounded-2xl lg:bg-[#F5FAFA]">

@@ -70,6 +70,7 @@ export function MiniStatCard({ metric, label, defaultPeriod = 'WEEK' }: MiniStat
           onChange={(option) => setPeriod(option.id as MiniStatPeriod)}
           arrow={isDesktop ? 'chevron' : 'triangle'}
           className="w-auto lg:w-32"
+          placeholder=''
           // triggerClassName="max-lg:h-8 max-lg:border-transparent max-lg:bg-secondary-100 max-lg:px-4"
         />
       </div>

@@ -72,7 +72,7 @@ export function MetricCard({ label, value, format = 'currency', trend, icon, ico
 
       <p className={cn('font-raleway text-h4 font-semibold leading-10 text-heading lg:mt-4', valueClassName)}>
         <span className="mr-1 font-raleway font-medium text-h4 text-heading">
-          ${formatMetricValue(value, format)}
+          {!['Artwork Views', 'Artwork Likes'].includes(label) && '$'} {formatMetricValue(value, format)}        
         </span>
       </p>
 

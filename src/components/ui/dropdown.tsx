@@ -508,7 +508,7 @@ const Dropdown = ({
                 disabled={disabledRow}
                 aria-pressed={selected}
                 className={cn(
-                  "flex h-15 w-full items-center justify-between border-b border-neutral-200 px-6 text-left outline-none transition-colors",
+                  "flex h-15 w-full items-center justify-between not-last:border-b border-neutral-200 px-6 text-left outline-none transition-colors",
                   "active:bg-neutral-50 focus-visible:bg-neutral-50",
                   "disabled:cursor-not-allowed disabled:opacity-50"
                 )}
@@ -659,7 +659,7 @@ const Dropdown = ({
                     ? { borderRadius: 32 }
                     : { borderBottomLeftRadius: 32, borderBottomRightRadius: 32 }),
                 }}
-                className="fixed z-[499] overflow-hidden border border-neutral-200 bg-white shadow-xl"
+                className="fixed z-[499] overflow-hidden border border-neutral-200 bg-white"
               >
                 {isMobile ? (
                   mobileBody

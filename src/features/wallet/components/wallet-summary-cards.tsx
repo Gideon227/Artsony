@@ -121,8 +121,8 @@ export function WalletSummaryCards({ summary, isLoading, isError = false, error,
               </span>
             </div>
 
-            <p className={cn('font-raleway text-h4 leading-10 font-medium text-heading', card.valueClassName)}>
-              <span className="mr-1 font-normal text-h4 text-text-alt-grey">
+            <p className={cn('font-raleway text-h4 leading-10 font-medium', card.valueClassName ? card.valueClassName : 'text-heading')}>
+              <span className="mr-1 font-normal text-h4">
                 ${formatUsd(metric.amount)}
               </span>
             </p>
