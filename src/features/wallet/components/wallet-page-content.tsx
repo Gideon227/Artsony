@@ -28,9 +28,17 @@ export function WalletPageContent() {
     (nextPeriod: WalletPeriod, nextFilters: WalletActivityFilters) => {
       const params = walletFiltersToSearchParams(nextFilters)
       if (nextPeriod !== 'WEEK') params.set('period', nextPeriod)
-      router.push(`${pathname}?${params.toString()}`, { scroll: false })
+
+      // Keep the Studio `section` param. On mobile it is what keeps the wallet
+      // screen open; dropping it sends the user back to the Studio menu.
+      const section = searchParams.get('section')
+      if (section) params.set('section', section)
+
+      const query = params.toString()
+      // replace (not push): filter tweaks shouldn't pile up in history
+      router.replace(query ? `${pathname}?${query}` : pathname, { scroll: false })
     },
-    [pathname, router]
+    [pathname, router, searchParams]
   )
 
   const updateFilters = React.useCallback(
@@ -58,7 +66,7 @@ export function WalletPageContent() {
   const { data: pageData, total, totalPages } = React.useMemo(() => applyWalletFilters(activity, filters), [activity, filters])
 
   return (
-    <div className="flex min-h-0 flex-col lg:h-full">
+    <div className="flex min-h-0 flex-col lg:h-full w-full overflow-hidden">
       <StudioMobileHeader
         title="Wallet"
         action={

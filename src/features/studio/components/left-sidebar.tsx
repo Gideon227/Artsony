@@ -67,7 +67,7 @@ export function StudioLeftSidebar({
       aria-label="Artsony Studio"
       className={cn('flex flex-col lg:gap-8 lg:rounded-2xl lg:border lg:border-gray-50 lg:px-4 lg:pt-8 lg:pb-4', className)}
     >
-      <div className="flex items-center gap-x-4 px-4 py-4 lg:border-b-0 lg:p-0">
+      <div className="flex items-center gap-x-4 px-4 py-4 border-b border-gray-50 lg:border-b-0 lg:p-0">
         <Link
           href={backHref}
           aria-label="Back"
@@ -81,7 +81,7 @@ export function StudioLeftSidebar({
       {/* Mobile profile block: skeleton while the session loads, nothing for guests */}
       {!isHydrated ? (
         <ProfileSkeleton />
-      ) : user ? (
+      ) : user && !disabled ? (
         <div className="mx-4 flex items-center gap-x-4 border-b border-gray-50 pt-6 pb-4 lg:hidden">
           <div className="relative flex h-24 w-24 shrink-0 items-center justify-center">
             <Image src="/home/profile-ring.svg" alt="" width={96} height={96} className="object-contain" priority />

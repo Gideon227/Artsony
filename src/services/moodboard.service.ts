@@ -6,6 +6,9 @@ export const moodboardService = {
   list: () =>
     apiClient.get<ApiResponse<MoodboardSummary[]>>('/api/moodboards'),
 
+  listByUser: (userId: string) =>
+    apiClient.get<ApiResponse<MoodboardSummary[]>>(`/api/moodboards/user/${userId}`),
+
   getById: (id: string) =>
     apiClient.get<ApiResponse<Moodboard>>(`/api/moodboards/${id}`),
 

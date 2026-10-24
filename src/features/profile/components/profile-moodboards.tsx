@@ -4,7 +4,7 @@ import { useState } from 'react'
 import Image from 'next/image'
 import { Menu, Plus } from 'lucide-react'
 import { Button } from '@/components/ui/button'
-import { useMoodboards } from '@/hooks/use-moodboards'
+import { useMoodboards, useUserMoodboards } from '@/hooks/use-moodboards'
 import { CreateMoodboardDialog } from '@/features/moodboards/components/create-moodboard-dialog'
 import type { MoodboardSummary } from '@/features/moodboards/types'
 import { ProfileMoodboardDetail } from './profile-moodboard-detail'
@@ -12,6 +12,8 @@ import type { Artwork } from '@/types/artwork'
 
 interface Props {
   isOwnProfile: boolean
+  /** Whose boards to show when `isOwnProfile` is false. */
+  userId?: string
   onArtworkClick: (artwork: Artwork, list: Artwork[]) => void
 }
 
@@ -56,10 +58,12 @@ function MoodboardCard({
   board,
   onOpen,
   onMenu,
+  readOnly = false,
 }: {
   board: MoodboardSummary & { is_private?: boolean }
   onOpen: () => void
   onMenu?: (board: MoodboardSummary) => void
+  readOnly?: boolean
 }) {
   const isEmpty = board.artwork_count === 0
 
@@ -109,14 +113,16 @@ function MoodboardCard({
 
         {/* Hover state: menu button + private indicator (top-left) */}
         <div className="pointer-events-none absolute left-6 top-6 flex items-center gap-4 text-white opacity-0 transition-opacity duration-300 group-hover:opacity-100 group-focus-within:opacity-100 [@media(hover:none)]:opacity-100">
-          <button
-            type="button"
-            aria-label="Moodboard options"
-            onClick={() => onMenu?.(board)}
-            className="pointer-events-auto flex h-10 w-10 cursor-pointer items-center justify-center rounded-full border-2 border-white/90 backdrop-blur-sm transition-transform hover:scale-110 active:scale-95"
-          >
-            <Menu size={20} strokeWidth={2} />
-          </button>
+          {!readOnly && (
+            <button
+              type="button"
+              aria-label="Moodboard options"
+              onClick={() => onMenu?.(board)}
+              className="pointer-events-auto flex h-10 w-10 cursor-pointer items-center justify-center rounded-full border-2 border-white/90 backdrop-blur-sm transition-transform hover:scale-110 active:scale-95"
+            >
+              <Menu size={20} strokeWidth={2} />
+            </button>
+          )}
           {board.is_private && <ClosedEyeIcon />}
         </div>
       </div>
@@ -124,25 +130,13 @@ function MoodboardCard({
   )
 }
 
-export function ProfileMoodboards({ isOwnProfile, onArtworkClick }: Props) {
-  const { data: moodboards, isLoading, isError, refetch, isRefetching } = useMoodboards()
+export function ProfileMoodboards({ isOwnProfile, userId, onArtworkClick }: Props) {
+  // Only the relevant query is enabled; the other stays idle.
+  const ownBoards = useMoodboards({ enabled: isOwnProfile })
+  const otherBoards = useUserMoodboards(isOwnProfile ? undefined : userId)
+  const { data: moodboards, isLoading, isError, refetch, isRefetching } = isOwnProfile ? ownBoards : otherBoards
   const [showCreate, setShowCreate] = useState(false)
   const [activeBoardId, setActiveBoardId] = useState<string | null>(null)
-
-  if (!isOwnProfile) {
-    // `moodboardService.list()` is scoped to the signed-in user — there's no
-    // documented endpoint for fetching *another* user's moodboards yet, so
-    // this stays an honest placeholder rather than silently showing the
-    // viewer's own boards on someone else's profile.
-    return (
-      <div className="flex flex-col items-center gap-2 py-16 text-center pb-24">
-        <h3 className="font-poppins text-body-l font-semibold text-heading">Moodboards aren&apos;t viewable yet</h3>
-        <p className="max-w-sm font-poppins text-body-s text-gray-400">
-          Viewing another artist&apos;s moodboards is coming soon.
-        </p>
-      </div>
-    )
-  }
 
   if (activeBoardId) {
     return (
@@ -150,7 +144,19 @@ export function ProfileMoodboards({ isOwnProfile, onArtworkClick }: Props) {
         moodboardId={activeBoardId}
         onBack={() => setActiveBoardId(null)}
         onSelectArtwork={onArtworkClick}
+        isOwnProfile={isOwnProfile}
       />
+    )
+  }
+
+  if (!isOwnProfile && !isLoading && !isError && moodboards?.length === 0) {
+    return (
+      <div className="flex flex-col items-center gap-2 py-16 text-center pb-24">
+        <h3 className="font-poppins text-body-l font-semibold text-heading">No moodboards yet</h3>
+        <p className="max-w-sm font-poppins text-body-s text-gray-400">
+          This artist hasn&apos;t created any moodboards.
+        </p>
+      </div>
     )
   }
 
@@ -220,18 +226,24 @@ export function ProfileMoodboards({ isOwnProfile, onArtworkClick }: Props) {
         </div>
       ) : isError ? (
         <div role="alert" className="flex flex-col items-center gap-3 py-16 text-center">
-          <p className="font-poppins text-body-s text-gray-400">We couldn&apos;t load your moodboards.</p>
+          <p className="font-poppins text-body-s text-gray-400">{isOwnProfile ? 'We couldn\u2019t load your moodboards.' : 'We couldn\u2019t load these moodboards.'}</p>
           <Button variant="outline" onClick={() => void refetch()} isLoading={isRefetching}>
             Retry
           </Button>
         </div>
       ) : (
         <div className={gridClass}>
-          {moodboards?.map((board) => (
-            <MoodboardCard key={board.id} board={board} onOpen={() => setActiveBoardId(board.id)} />
+          {moodboards?.map((board: any) => (
+            <MoodboardCard
+              key={board.id}
+              board={board}
+              onOpen={() => setActiveBoardId(board.id)}
+              readOnly={!isOwnProfile}
+            />
           ))}
 
-          {/* Add new — same pt-4 so it lines up with the stacked cards */}
+          {/* Add new — owner only. Same pt-4 so it lines up with the stacked cards */}
+          {isOwnProfile && (
           <div className="pt-4">
             <button
               onClick={() => setShowCreate(true)}
@@ -243,10 +255,13 @@ export function ProfileMoodboards({ isOwnProfile, onArtworkClick }: Props) {
               <span className="font-poppins text-body-s font-medium text-gray-500">Add New Collection</span>
             </button>
           </div>
+          )}
         </div>
       )}
 
-      <CreateMoodboardDialog open={showCreate} onOpenChange={setShowCreate} onCreated={(id) => setActiveBoardId(id)} />
+      {isOwnProfile && (
+        <CreateMoodboardDialog open={showCreate} onOpenChange={setShowCreate} onCreated={(id) => setActiveBoardId(id)} />
+      )}
     </div>
   )
 }

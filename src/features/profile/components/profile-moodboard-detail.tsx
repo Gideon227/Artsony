@@ -10,11 +10,12 @@ interface Props {
   moodboardId: string
   onBack: () => void
   onSelectArtwork: (artwork: Artwork, list: Artwork[]) => void
+  isOwnProfile?: boolean
 }
 
 const GRID_CLASSES = 'grid grid-cols-1 gap-x-4 gap-y-30 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4'
 
-export function ProfileMoodboardDetail({ moodboardId, onBack, onSelectArtwork }: Props) {
+export function ProfileMoodboardDetail({ moodboardId, onBack, onSelectArtwork, isOwnProfile = true }: Props) {
   const { data: moodboard, isLoading, isError, refetch, isRefetching } = useMoodboard(moodboardId)
   const artworks = (moodboard?.artworks ?? []) as unknown as Artwork[]
 
@@ -49,7 +50,9 @@ export function ProfileMoodboardDetail({ moodboardId, onBack, onSelectArtwork }:
       ) : artworks.length === 0 ? (
         <div className="flex flex-col items-center gap-2 py-16 text-center">
           <h3 className="font-poppins text-body-l font-semibold text-heading">No artworks here yet</h3>
-          <p className="font-poppins text-body-s text-gray-400">Save artworks to this collection from the artwork view.</p>
+          <p className="font-poppins text-body-s text-gray-400">
+            {isOwnProfile ? 'Save artworks to this collection from the artwork view.' : 'Nothing to show in this collection yet.'}
+          </p>
         </div>
       ) : (
         <div className={GRID_CLASSES}>

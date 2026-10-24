@@ -8,13 +8,24 @@ import { HttpError } from '@/lib/api-client'
 const MOODBOARD_KEYS = {
   all: ['moodboards'] as const,
   mine: () => [...MOODBOARD_KEYS.all, 'mine'] as const,
+  user: (userId: string) => [...MOODBOARD_KEYS.all, 'user', userId] as const,
   detail: (id: string) => [...MOODBOARD_KEYS.all, id] as const,
 }
 
-export function useMoodboards() {
+export function useMoodboards({ enabled = true }: { enabled?: boolean } = {}) {
   return useQuery({
     queryKey: MOODBOARD_KEYS.mine(),
     queryFn: () => moodboardService.list().then((r) => r.data),
+    enabled,
+  })
+}
+
+// Another user's moodboards (profile → Moodboard tab). Pass undefined to skip.
+export function useUserMoodboards(userId?: string) {
+  return useQuery({
+    queryKey: MOODBOARD_KEYS.user(userId ?? ''),
+    queryFn: () => moodboardService.listByUser(userId as string).then((r) => r.data),
+    enabled: Boolean(userId),
   })
 }
 

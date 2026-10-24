@@ -40,6 +40,7 @@ export function WalletSummaryHeader({ period, onPeriodChange, onWithdrawClick }:
         rightIcon={isDesktop ? '/icons/alt-arrow-down.svg' : undefined}
         arrow="triangle"
         className="w-33 lg:w-54"
+        title=''
         // triggerClassName="h-10 lg:h-12"
       />
 

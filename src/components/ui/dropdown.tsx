@@ -340,7 +340,7 @@ const Dropdown = ({
   ) : null;
 
   const gridSection = (
-    <div className={cn("p-4", !isMobile && "max-h-[320px] overflow-y-auto custom-scrollbar")}>
+    <div className={cn("p-4", !isMobile && "max-h-[320px] overflow-y-auto scrollbar-hide")}>
       {statusBlock ?? (
         <div className="grid grid-cols-4 gap-3 place-items-center">
           {filteredOptions.map((option) => {
@@ -383,7 +383,7 @@ const Dropdown = ({
   );
 
   const desktopList = (
-    <ul className="max-h-[320px] overflow-y-auto py-2 custom-scrollbar">
+    <ul className="max-h-[320px] overflow-y-auto py-2 scrollbar-hide">
       {statusBlock ??
         filteredOptions.map((option, index) => {
           const selected = isSelected(option);
@@ -573,7 +573,7 @@ const Dropdown = ({
             <div className="pb-4 pt-2">{gridSection}</div>
           ) : (
             <div
-              className={cn("ml-6 mr-7 mt-5 mb-8 overflow-y-auto pr-1", MOBILE_SCROLLBAR)}
+              className={cn("ml-6 mr-7 mt-5 mb-8 overflow-y-auto scrollbar-hide pr-1", MOBILE_SCROLLBAR)}
               style={{
                 maxHeight: `min(300px, calc(100dvh - ${menuPos.top}px - ${MOBILE_CHROME_HEIGHT}px))`,
               }}
@@ -665,7 +665,7 @@ const Dropdown = ({
                   mobileBody
                 ) : (
                   <div
-                    className="flex flex-col gap-y-2 overflow-y-auto"
+                    className="flex flex-col gap-y-2 overflow-y-auto scrollbar-hide"
                     style={{ maxHeight: `calc(100dvh - ${menuPos.top}px - ${MOBILE_MARGIN}px)` }}
                   >
                     {desktopBody}

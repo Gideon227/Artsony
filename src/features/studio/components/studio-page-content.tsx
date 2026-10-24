@@ -56,7 +56,7 @@ export default function StudioPageContent() {
         {!isHydrated ? (
           <Skeleton className="h-[320px] rounded-2xl lg:h-full" />
         ) : gate ? (
-          <div className="p-4 lg:h-full lg:p-0">
+          <div className="lg:h-full lg:p-0">
             <StudioGate variant={gate} />
           </div>
         ) : (

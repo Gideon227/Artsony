@@ -53,7 +53,7 @@ export default function PublicProfileView({ id, redirectOwnProfile = true }: Pub
         id: 'moodboard',
         label: 'Moodboard',
         icon: '/icons/moodboard-grey.svg',
-        content: <ProfileMoodboards isOwnProfile={false} onArtworkClick={handleArtworkClick} />,
+        content: <ProfileMoodboards isOwnProfile={false} userId={profileUser.id} onArtworkClick={handleArtworkClick} />,
       },
       {
         id: 'shop',

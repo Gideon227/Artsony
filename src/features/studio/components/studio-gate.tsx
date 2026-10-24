@@ -50,18 +50,18 @@ export function StudioGate({ variant, className }: { variant: StudioGateVariant;
     <section
       aria-labelledby="studio-gate-title"
       className={cn(
-        'relative flex min-h-[560px] flex-col items-center justify-center gap-8 overflow-hidden rounded-2xl border border-gray-50 bg-white px-6 py-12 text-center lg:h-full',
+        'relative flex min-h-[560px] flex-col items-center justify-center gap-8 overflow-hidden lg:rounded-2xl lg:border lg:border-gray-50 bg-white px-6 py-12 text-center lg:h-full max-md:py-26',
         className,
       )}
     >
       {/* Corner decoration (desktop/tablet only) */}
-        <div className='absolute top-10 md:rotate-90' style={{ right: '-60px' }}>
-            <Image src='/upload/vector.svg' width={248} height={248} className='max-md:w-8 w-62 h-auto'  alt='vector element' />
-        </div>
+      <div className='absolute -top-6 md:top-10 rotate-90' style={{ right: '-60px' }}>
+        <Image src='/upload/vector.svg' width={248} height={248} className='max-md:w-40 w-62 h-auto'  alt='vector element' />
+      </div>
 
-        <div className='absolute md:-rotate-90' style={{ left: '-60px', bottom: '-60px' }}>
-            <Image src='/upload/vector.svg' width={248} height={248} className='max-md:w-30' alt='vector element' />
-        </div>
+      <div className='absolute -rotate-90' style={{ left: '-60px', bottom: '-60px' }}>
+        <Image src='/upload/vector.svg' width={248} height={248} className='max-md:w-40' alt='vector element' />
+      </div>
 
       <Image
         src={image}

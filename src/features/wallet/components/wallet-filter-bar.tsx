@@ -38,6 +38,9 @@ export function WalletFilterBar({ filters, onFiltersChange, resultCount, isFilte
   const [showMoreFilters, setShowMoreFilters] = React.useState(false)
 
   React.useEffect(() => {
+    // Nothing to sync (e.g. on mount): don't touch the URL or reset pagination
+    if (searchInput === filters.search) return
+
     const timeout = setTimeout(() => {
       onFiltersChange((prev) => ({ ...prev, search: searchInput, page: 1 }))
     }, 300)
