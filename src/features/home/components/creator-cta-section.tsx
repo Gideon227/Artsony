@@ -51,7 +51,7 @@ export function CreatorCTASection() {
 
       <div className="flex flex-col gap-y-8">
         <div className="relative w-full overflow-visible">
-          <div className="w-full class-carousel-viewport">
+          <div className="w-screen overflow-x-auto scrollbar-hide">
             {isLoading ? (
               <div className="flex gap-6 w-max">
                 {Array.from({ length: 4 }).map((_, i) => (
@@ -95,7 +95,7 @@ export function CreatorCTASection() {
             <button
               onClick={prevSlide}
               disabled={currentIndex + 1 > 0}
-              className="absolute cursor-pointer disabled:cursor-not-allowed left-6 top-[166px] -translate-y-1/2 w-12 h-12 rounded-full flex items-center justify-center text-white transition-all z-20 bg-primary-500 disabled:bg-transparent disabled:border disabled:roudned-full disabled:border-gray-300 disabled:text-body shadow-lg hover:scale-105"
+              className="max-lg:hidden absolute cursor-pointer disabled:cursor-not-allowed left-6 top-[166px] -translate-y-1/2 w-12 h-12 rounded-full flex items-center justify-center text-white transition-all z-20 bg-primary-500 disabled:bg-transparent disabled:border disabled:roudned-full disabled:border-gray-300 disabled:text-body shadow-lg hover:scale-105"
               aria-label="Previous artworks"
             >
               <ChevronLeft size={24} />
@@ -106,7 +106,7 @@ export function CreatorCTASection() {
             <button
               onClick={nextSlide}
               disabled={currentIndex < artworks.length - 1}
-              className="absolute cursor-pointer disabled:cursor-not-allowed right-6 top-[166px] -translate-y-1/2 w-12 h-12 rounded-full flex items-center justify-center text-white transition-all z-20 bg-primary-500 disabled:bg-transparent disabled:border disabled:roudned-full disabled:border-gray-300 disabled:text-body shadow-lg hover:scale-105"
+              className="max-lg:hidden absolute cursor-pointer disabled:cursor-not-allowed right-6 top-[166px] -translate-y-1/2 w-12 h-12 rounded-full flex items-center justify-center text-white transition-all z-20 bg-primary-500 disabled:bg-transparent disabled:border disabled:roudned-full disabled:border-gray-300 disabled:text-body shadow-lg hover:scale-105"
               aria-label="Next artworks"
             >
               <ChevronRight size={24} />

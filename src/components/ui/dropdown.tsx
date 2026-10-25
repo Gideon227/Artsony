@@ -63,7 +63,9 @@ interface DropdownProps {
 const MOBILE_BREAKPOINT = 640;
 const MOBILE_MARGIN = 16;
 const MENU_OFFSET = 8;
-const MOBILE_CHROME_HEIGHT = 128 + 32 + MOBILE_MARGIN;
+// The mobile sheet never gets squeezed below this, even when its trigger sits
+// near the bottom of the screen (it then overlaps the trigger instead).
+const MOBILE_MIN_SHEET_HEIGHT = 360;
 
 const MOBILE_SCROLLBAR = [
   "[scrollbar-width:thin] [scrollbar-color:#D1D5DB_transparent]",
@@ -133,8 +135,15 @@ const Dropdown = ({
     const rect = triggerRef.current?.getBoundingClientRect();
     if (!rect) return;
     const mobile = window.innerWidth < MOBILE_BREAKPOINT;
+    const below = rect.bottom + MENU_OFFSET;
+    const top = mobile
+      ? Math.max(
+          MOBILE_MARGIN,
+          Math.min(below, window.innerHeight - MOBILE_MIN_SHEET_HEIGHT - MOBILE_MARGIN)
+        )
+      : below;
     setMenuPos({
-      top: rect.bottom + MENU_OFFSET,
+      top,
       left: mobile ? MOBILE_MARGIN : rect.left,
       width: mobile ? window.innerWidth - MOBILE_MARGIN * 2 : rect.width,
     });
@@ -340,7 +349,7 @@ const Dropdown = ({
   ) : null;
 
   const gridSection = (
-    <div className={cn("p-4", !isMobile && "max-h-[320px] overflow-y-auto scrollbar-hide")}>
+    <div className={cn("p-4", !isMobile && "max-h-[320px] overflow-y-auto custom-scrollbar")}>
       {statusBlock ?? (
         <div className="grid grid-cols-4 gap-3 place-items-center">
           {filteredOptions.map((option) => {
@@ -383,7 +392,7 @@ const Dropdown = ({
   );
 
   const desktopList = (
-    <ul className="max-h-[320px] overflow-y-auto py-2 scrollbar-hide">
+    <ul className="max-h-[320px] overflow-y-auto py-2 custom-scrollbar">
       {statusBlock ??
         filteredOptions.map((option, index) => {
           const selected = isSelected(option);
@@ -508,7 +517,7 @@ const Dropdown = ({
                 disabled={disabledRow}
                 aria-pressed={selected}
                 className={cn(
-                  "flex h-15 w-full items-center justify-between not-last:border-b border-neutral-200 px-6 text-left outline-none transition-colors",
+                  "flex h-15 w-full items-center justify-between border-b border-neutral-200 px-6 text-left outline-none transition-colors",
                   "active:bg-neutral-50 focus-visible:bg-neutral-50",
                   "disabled:cursor-not-allowed disabled:opacity-50"
                 )}
@@ -542,8 +551,10 @@ const Dropdown = ({
     </>
   );
 
+  // Mobile sheet: header (close + title) and search stay put; chips and the
+  // options list/grid scroll inside the space left in the viewport.
   const mobileBody = (
-    <div className="relative">
+    <div className="relative flex min-h-0 flex-1 flex-col">
       <button
         type="button"
         onClick={closeMenu}
@@ -555,32 +566,25 @@ const Dropdown = ({
         </span>
       </button>
 
-      <h2 className="px-16 pt-[78px] text-center font-poppins text-xl font-normal leading-7 text-neutral-800">
+      <h2 className="shrink-0 px-16 pt-[78px] text-center font-poppins text-xl font-normal leading-7 text-neutral-800">
         {sheetTitle}
       </h2>
 
       {customBody ? (
-        <div className="px-6 pb-8 pt-5">{customBody}</div>
+        <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-6 pb-8 pt-5">{customBody}</div>
       ) : (
         <>
-          {(chipsSection || searchSection) && (
-            <div className="mt-2 px-2">
-              {chipsSection}
-              {searchSection}
-            </div>
-          )}
-          {layout === "grid" ? (
-            <div className="pb-4 pt-2">{gridSection}</div>
-          ) : (
-            <div
-              className={cn("ml-6 mr-7 mt-5 mb-8 overflow-y-auto scrollbar-hide pr-1", MOBILE_SCROLLBAR)}
-              style={{
-                maxHeight: `min(300px, calc(100dvh - ${menuPos.top}px - ${MOBILE_CHROME_HEIGHT}px))`,
-              }}
-            >
-              {mobileList}
-            </div>
-          )}
+          {searchSection && <div className="mt-2 shrink-0 px-2">{searchSection}</div>}
+
+          <div className={cn("min-h-0 flex-1 overflow-y-auto overscroll-contain pb-8", MOBILE_SCROLLBAR)}>
+            {chipsSection && <div className="mt-2 px-2">{chipsSection}</div>}
+
+            {layout === "grid" ? (
+              <div className="pt-2">{gridSection}</div>
+            ) : (
+              <div className="ml-6 mr-7 mt-5 pr-1">{mobileList}</div>
+            )}
+          </div>
         </>
       )}
     </div>
@@ -656,16 +660,22 @@ const Dropdown = ({
                   left: menuPos.left,
                   width: menuPos.width,
                   ...(isMobile
-                    ? { borderRadius: 32 }
+                    ? {
+                        borderRadius: 32,
+                        maxHeight: `calc(100dvh - ${menuPos.top}px - ${MOBILE_MARGIN}px)`,
+                      }
                     : { borderBottomLeftRadius: 32, borderBottomRightRadius: 32 }),
                 }}
-                className="fixed z-[499] overflow-hidden border border-neutral-200 bg-white"
+                className={cn(
+                  "fixed z-[499] overflow-hidden border border-neutral-200 bg-white shadow-xl",
+                  isMobile && "flex flex-col"
+                )}
               >
                 {isMobile ? (
                   mobileBody
                 ) : (
                   <div
-                    className="flex flex-col gap-y-2 overflow-y-auto scrollbar-hide"
+                    className="flex flex-col gap-y-2 overflow-y-auto"
                     style={{ maxHeight: `calc(100dvh - ${menuPos.top}px - ${MOBILE_MARGIN}px)` }}
                   >
                     {desktopBody}

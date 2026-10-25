@@ -26,7 +26,7 @@ export function FeedContinuation({ artworks, isLoading, hasNextPage, isFetchingN
         {isLoading ? (
           <ArtworkGridSkeleton count={4} />
         ) : (
-          <div className="grid gap-x-4 gap-y-10 grid-cols-[repeat(auto-fill,minmax(min(100%,332px),332px))]">
+          <div className="grid gap-x-4 gap-y-10 md:grid-cols-[repeat(auto-fill,minmax(min(100%,332px),332px))]">
             {artworks.map((artwork, i) => (
               <motion.div
                 key={artwork.id}

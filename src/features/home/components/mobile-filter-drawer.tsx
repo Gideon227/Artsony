@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState } from 'react'
+import React from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
 import { Button } from '@/components'
 import { Dropdown } from '@/components/ui/dropdown'
@@ -15,8 +15,6 @@ interface MobileFilterDrawerProps {
 }
 
 export function MobileFilterDrawer({ open, onClose, dropdowns, onClear, filterNum }: MobileFilterDrawerProps) {
-  const [activeDropdownId, setActiveDropdownId] = useState<string | number | null>(null)
-
   return (
     <AnimatePresence>
       {open && (
@@ -24,7 +22,7 @@ export function MobileFilterDrawer({ open, onClose, dropdowns, onClear, filterNu
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-          className="fixed inset-0 z-[500] bg-white flex flex-col md:hidden"
+          className="fixed inset-0 z-[450] bg-white flex flex-col md:hidden"
         >
           <div className="flex items-center gap-4 px-6 h-16 border-b border-gray-50 shrink-0">
             <button
@@ -45,56 +43,44 @@ export function MobileFilterDrawer({ open, onClose, dropdowns, onClear, filterNu
           </div>
 
           <div className="flex-1 overflow-y-auto px-6 py-6 flex flex-col gap-5">
-            {dropdowns.map((item) => {
-              const isActive = activeDropdownId === item.id;
-
-              return (
-                <div 
-                  key={item.id} 
-                  className={`flex flex-col gap-y-6 p-4 border border-gray-50 rounded-2xl transition-all duration-300 scrollbar-hide ${
-                    isActive 
-                      ? 'h-[464px] overflow-y-auto' 
-                      : 'h-max shrink-0 overflow-hidden'
-                  }`}
-                >
-                  <div className="flex justify-between items-center w-full">
-                    <span className="font-poppins text-body-s font-medium text-heading">
-                      {item.placeholder}
-                    </span>
-                  </div>
-
-                  <div 
-                    className="w-full cursor-pointer" 
-                    onClick={() => {
-                      setActiveDropdownId(isActive ? null : item.id);
-                    }}
-                  >
-                    <Dropdown
-                      options={item.options}
-                      value={item.value ?? undefined}
-                      onChange={item.onChange}
-                      multiple={item.multiple}
-                      values={item.values}
-                      onChangeMultiple={item.onChangeMultiple}
-                      maxSelected={item.maxSelected}
-                      placeholder={item.placeholder}
-                      leftIcon={item.leftIcon}
-                      disabled={item.disabled}
-                      searchable={item.searchable}
-                      searchPlaceholder={item.searchPlaceholder}
-                      searchValue={item.searchValue}
-                      onSearchChange={item.onSearchChange}
-                      searchVariant={item.searchVariant}
-                      onSearchSubmit={item.onSearchSubmit}
-                      layout={item.layout}
-                      indicator={item.indicator}
-                      isLoading={item.isLoading}
-                      emptyMessage={item.emptyMessage}
-                    />
-                  </div>
+            {dropdowns.map((item) => (
+              <div
+                key={item.id}
+                className="flex flex-col gap-y-6 p-4 border border-gray-50 rounded-2xl shrink-0"
+              >
+                <div className="flex justify-between items-center w-full">
+                  <span className="font-poppins text-body-s font-medium text-heading">
+                    {item.placeholder}
+                  </span>
                 </div>
-              )
-            })}
+
+                <div className="w-full">
+                  <Dropdown
+                    options={item.options}
+                    value={item.value ?? undefined}
+                    onChange={item.onChange}
+                    multiple={item.multiple}
+                    values={item.values}
+                    onChangeMultiple={item.onChangeMultiple}
+                    maxSelected={item.maxSelected}
+                    placeholder={item.placeholder}
+                    leftIcon={item.leftIcon}
+                    disabled={item.disabled}
+                    searchable={item.searchable}
+                    searchPlaceholder={item.searchPlaceholder}
+                    searchValue={item.searchValue}
+                    onSearchChange={item.onSearchChange}
+                    searchVariant={item.searchVariant}
+                    onSearchSubmit={item.onSearchSubmit}
+                    layout={item.layout}
+                    indicator={item.indicator}
+                    isLoading={item.isLoading}
+                    emptyMessage={item.emptyMessage}
+                  />
+                </div>
+
+              </div>
+            ))}
           </div>
 
           <div className="shrink-0 border-t border-gray-50 px-6 py-4 flex gap-3">
