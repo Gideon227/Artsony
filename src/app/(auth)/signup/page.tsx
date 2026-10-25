@@ -118,7 +118,7 @@ export default function SignUpPage() {
                     placeholder="Username (e.g. leggyman)"
                     disabled={isPending}
                     autoCapitalize="none"
-                    className='h-10 lg:h-12'
+                    className='h-12'
                     variant={touchedFields.username && errors.username ? 'error' : 'default'}
                   />
                   {touchedFields.username && errors.username && (
@@ -132,7 +132,7 @@ export default function SignUpPage() {
                     type="email"
                     placeholder="example@gmail.com"
                     disabled={isPending}
-                    className='h-10 lg:h-12'
+                    className='h-12'
                     variant={touchedFields.email && errors.email ? 'error' : 'default'}
                   />
                   {touchedFields.email && errors.email && (
@@ -146,7 +146,7 @@ export default function SignUpPage() {
                     type="password"
                     placeholder="Password"
                     disabled={isPending}
-                    className='h-10 lg:h-12'
+                    className='h-12'
                     variant={touchedFields.password && errors.password ? 'error' : 'default'}
                   />
                   {touchedFields.password && errors.password && (
