@@ -10,6 +10,7 @@ import { Skeleton } from '@/components/ui/skeleton'
 import { useSellerSales, useSellerSalesCounts } from '@/hooks/queries/use-seller-sales'
 import { selectHasSellerAccount, selectIsHydrated, useAuthStore } from '@/store'
 import type { SellerSaleLine, SellerStatus } from '@/types/seller-sales'
+import { ORDER_SORT_QUERY, type OrderSort } from '@/features/orders/my-orders/constant'
 import { ORDER_MANAGEMENT_HREF, STATUS_TABS } from '../constants'
 import {
   DEFAULT_FILTERS,
@@ -152,6 +153,19 @@ export function OrderManagementPage() {
     [navigate],
   )
 
+  // The sort menu offers four combined options; the URL stores them as sortBy + sort.
+  const sortValue = (Object.keys(ORDER_SORT_QUERY) as OrderSort[]).find(
+    (key) => ORDER_SORT_QUERY[key].sort_by === filters.sortBy && ORDER_SORT_QUERY[key].sort_order === filters.sort,
+  ) ?? 'newest'
+
+  const handleSortChange = React.useCallback(
+    (next: OrderSort) => {
+      const { sort_by, sort_order } = ORDER_SORT_QUERY[next]
+      updateFilters({ sortBy: sort_by, sort: sort_order }, { replace: true })
+    },
+    [updateFilters],
+  )
+
   const handleBack = React.useCallback(() => {
     if (window.history.length > 1) router.back()
     else router.push('/')
@@ -170,6 +184,8 @@ export function OrderManagementPage() {
       disabled={sidebarDisabled}
       onSelect={selectStatus}
       onBack={handleBack}
+      sort={sortValue}
+      onSortChange={handleSortChange}
     />
   )
 
@@ -192,6 +208,8 @@ export function OrderManagementPage() {
       <Layout sidebar={sidebar} hideSidebarOnMobile={orderParam !== null}>
         <OrdersMasterDetail
           filters={filters}
+          sort={sortValue}
+          onSortChange={handleSortChange}
           status={filters.status as SellerStatus}
           orderParam={orderParam}
           onSelect={selectOrder}
@@ -223,7 +241,7 @@ export function OrderManagementPage() {
     )
   } else if (rows.length === 0) {
     body = hasActiveFilters(filters)
-      ? <OrdersEmptyState kind="filtered" onClear={() => updateFilters({ ...DEFAULT_FILTERS, sort: filters.sort })} />
+      ? <OrdersEmptyState kind="filtered" onClear={() => updateFilters({ ...DEFAULT_FILTERS, sort: filters.sort, sortBy: filters.sortBy })} />
       : <OrdersEmptyState kind="group" groupLabel={activeTab?.label ?? 'orders'} />
   } else {
     body = (

@@ -4,6 +4,7 @@ import {
   type FormatFilter,
   type OrderFilters,
   type PriceFilter,
+  type SortField,
   type SortOrder,
   type StatusFilter,
 } from './filters'
@@ -11,6 +12,7 @@ import {
 const STATUSES: readonly StatusFilter[] = ['ALL', 'LIVE', 'PENDING', 'COMPLETED', 'CANCELLED']
 const FORMATS: readonly FormatFilter[] = ['ALL', 'PHYSICAL', 'DIGITAL']
 const SORTS: readonly SortOrder[] = ['asc', 'desc']
+const SORT_FIELDS: readonly SortField[] = ['date', 'value']
 const MAX_PAGE = 100_000
 const MAX_SEARCH_LENGTH = 100
 const DATE_KEY = /^(\d{4})-(\d{2})-(\d{2})$/
@@ -51,6 +53,7 @@ export function parseFilters(params: ParamReader): OrderFilters {
     dateTo: inverted ? from : to,
     search: (params.get('q') ?? '').slice(0, MAX_SEARCH_LENGTH),
     sort: pick(params.get('sort'), SORTS, DEFAULT_FILTERS.sort),
+    sortBy: pick(params.get('by'), SORT_FIELDS, DEFAULT_FILTERS.sortBy),
     page: Number.isFinite(rawPage) && rawPage >= 1 ? Math.min(rawPage, MAX_PAGE) : DEFAULT_FILTERS.page,
   }
 }
@@ -65,6 +68,7 @@ export function serializeFilters(filters: OrderFilters): URLSearchParams {
   const search = filters.search.trim()
   if (search) params.set('q', search)
   if (filters.sort !== DEFAULT_FILTERS.sort) params.set('sort', filters.sort)
+  if (filters.sortBy !== DEFAULT_FILTERS.sortBy) params.set('by', filters.sortBy)
   if (filters.page > 1) params.set('page', String(filters.page))
   return params
 }

@@ -96,8 +96,8 @@ export function OrdersFilterBar({ filters, heading, total, showMore, onToggleMor
             <Dropdown
               className="w-full"
               options={SORT_OPTIONS}
-              value={findOption(SORT_OPTIONS, filters.sort)}
-              onChange={(option) => onChange({ sort: option.id as SortOrder })}
+              value={filters.sortBy === 'date' ? findOption(SORT_OPTIONS, filters.sort) : undefined}
+              onChange={(option) => onChange({ sort: option.id as SortOrder, sortBy: 'date' })}
               placeholder="Sort"
               arrow="triangle"
               indicator="radio"

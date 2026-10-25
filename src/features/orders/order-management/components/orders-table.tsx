@@ -130,7 +130,7 @@ export function OrdersTable({ rows, isFetching, isRefreshError, onRetry, page, t
             </li>
           ))}
         </ul>
-        <div className="rounded-[24px] border border-gray-50 bg-white">
+        <div className="max-lg:hidden rounded-[24px] border border-gray-50 bg-white">
           <OrdersPagination page={page} totalPages={totalPages} onPageChange={onPageChange} />
         </div>
       </div>

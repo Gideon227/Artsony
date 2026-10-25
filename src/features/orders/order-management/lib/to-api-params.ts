@@ -21,6 +21,7 @@ export function toApiParams(filters: OrderFilters): SellerSalesParams {
     ...(filters.dateFrom && { date_from: startOfDay(filters.dateFrom).toISOString() }),
     ...(filters.dateTo && { date_to: endOfDay(filters.dateTo).toISOString() }),
     ...(search && { q: search }),
+    sort_by: filters.sortBy,
     sort_order: filters.sort,
     page: filters.page,
     limit: ORDER_PAGE_SIZE,

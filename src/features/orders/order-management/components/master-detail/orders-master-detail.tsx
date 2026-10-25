@@ -15,6 +15,8 @@ type SelectOptions = { replace?: boolean }
 
 type Props = {
   filters: OrderFilters
+  sort: OrderSort
+  onSortChange: (value: OrderSort) => void
   status: SellerStatus
   orderParam: string | null
   onSelect: (orderItemId: string | null, options?: SelectOptions) => void
@@ -23,9 +25,8 @@ type Props = {
   onActivated: (orderItemId: string) => void
 }
 
-export function OrdersMasterDetail({ filters, status, orderParam, onSelect, onSearchChange, onCancelled, onActivated }: Props) {
+export function OrdersMasterDetail({ filters, sort, onSortChange, status, orderParam, onSelect, onSearchChange, onCancelled, onActivated }: Props) {
   const isDesktop = useIsDesktop()
-  const [sort, setSort] = React.useState<OrderSort>('newest')
   const message = useMessageArtist()
 
   const params = React.useMemo<Omit<SellerSalesParams, 'page'>>(() => {
@@ -60,7 +61,7 @@ export function OrdersMasterDetail({ filters, status, orderParam, onSelect, onSe
           search={filters.search}
           onSearchChange={onSearchChange}
           sort={sort}
-          onSortChange={setSort}
+          onSortChange={onSortChange}
           selectedId={selectedId}
           onSelect={(id) => onSelect(id, { replace: isDesktop })}
           onMessage={(buyerId) => message.mutate(buyerId)}

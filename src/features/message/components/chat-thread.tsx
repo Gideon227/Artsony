@@ -91,7 +91,7 @@ export function ChatThread({ conversationId, conversation, myId, goBack }: ChatT
           <div className='flex items-center gap-2'>
             <ConversationAvatar name={displayName} avatar={avatar} />
             <div>
-              <h2 className="text-body-xs lg:text-body-m font-medium font-poppins text-body lg:text-[#02272F]">{displayName}</h2>
+              <h2 className="text-body-s lg:text-body-m font-medium font-poppins text-body lg:text-[#02272F]">{displayName}</h2>
               {typingUsers.length > 0 && (
                 <p className="text-body-xxs italic text-body">typing...</p>
               )}
@@ -149,7 +149,7 @@ export function ChatThread({ conversationId, conversation, myId, goBack }: ChatT
             value={input}
             onChange={handleInputChange}
             placeholder="Message"
-            className='flex-1 font-poppins text-body-xs placeholder:text-text-disabled text-body outline-none'
+            className='flex-1 font-poppins text-body-s placeholder:text-text-disabled text-body outline-none'
           />
 
           <button 

@@ -14,6 +14,7 @@ import ShippingLocation from './shipping-location'
 import BillingPayment from './billing-payment'
 import ProfileCustomization from './profile-customization'
 import NotificationSettings from './notification'
+import { useLogout } from '@/hooks/use-auth-mutations'
 
 type NavItem = {
   id: string
@@ -49,12 +50,13 @@ function ProfileSkeleton() {
 interface SettingLeftBarProps {
     activeTab: string
     setActiveTab: (value: string) =>  void;  
-    onLogout?: () => void
     onDeleteAccountRequest?: () => void
 }
 
-const SettingLeftBar = ({ onLogout, onDeleteAccountRequest, activeTab, setActiveTab }: SettingLeftBarProps) => {
+const SettingLeftBar = ({ onDeleteAccountRequest, activeTab, setActiveTab }: SettingLeftBarProps) => {
     const { user } = useAuthStore()
+    const { mutate: logout, isPending: isLoggingOut } = useLogout();
+
 
     const memberSinceYear = (() => {
         if (!user?.created_at) return null
@@ -121,9 +123,10 @@ const SettingLeftBar = ({ onLogout, onDeleteAccountRequest, activeTab, setActive
 
                 <button
                     type="button"
-                    onClick={onLogout}
+                    onClick={() => logout()}
+                    disabled={isLoggingOut}
                     aria-label="Log out"
-                    className="border border-gray-50 rounded-full w-10 h-10 flex items-center justify-center shrink-0 hover:bg-primary-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gray-50"
+                    className="border border-gray-50 rounded-full w-10 h-10 flex items-center justify-center shrink-0 hover:bg-primary-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gray-50 disabled:opacity-60"
                 >
                     <Image src='/icons/logout.svg' width={22} height={22} alt='logout icon' />
                 </button>

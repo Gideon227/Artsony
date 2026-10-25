@@ -29,14 +29,15 @@ export function OrdersEmptyState() {
   const router = useRouter()
 
   return (
-    <section className="flex-1 relative overflow-x-hidden overflow-y-auto scrollbar-hide bg-white rounded-2xl border-2 border-gray-50 px-4 lg:px-8 pt-12 pb-30 flex flex-col gap-y-6 min-h-screen h-full">
-      <div className='absolute top-10 md:rotate-90' style={{ right: '-60px' }}>
-        <Image src='/upload/vector.svg' width={248} height={248} className='max-md:w-8 w-62 h-auto'  alt='vector element' />
+    <section className="flex-1 relative overflow-x-hidden overflow-y-auto scrollbar-hide bg-white lg:rounded-2xl lg:border-2 lg:border-gray-50 px-4 lg:px-8 pt-8 lg:pt-12 pb-30 flex flex-col gap-y-6 min-h-screen h-full max-md:pb-8">
+      <div className='absolute -top-6 md:top-10 rotate-90' style={{ right: '-60px' }}>
+        <Image src='/upload/vector.svg' width={248} height={248} className='max-md:w-40 w-62 h-auto'  alt='vector element' />
       </div>
 
-      <div className='absolute md:-rotate-90' style={{ left: '-60px', bottom: '-60px' }}>
-        <Image src='/upload/vector.svg' width={248} height={248} className='max-md:w-30' alt='vector element' />
+      <div className='absolute -rotate-90' style={{ left: '-60px', bottom: '-60px' }}>
+        <Image src='/upload/vector.svg' width={248} height={248} className='max-md:w-40' alt='vector element' />
       </div>
+      
       
       <div className="flex items-center gap-x-4">
         <button

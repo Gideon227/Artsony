@@ -8,6 +8,8 @@ import { STATUS_TABS } from '../constants'
 import { formatCount } from '../lib/format'
 import type { StatusFilter } from '../lib/filters'
 import { Input } from '@/components'
+import type { OrderSort } from '@/features/orders/my-orders/constant'
+import { SortByMenu } from '../components/sort-by-menu'
 
 type Props = {
   active: StatusFilter
@@ -15,10 +17,12 @@ type Props = {
   disabled: boolean
   onSelect: (tab: StatusFilter) => void
   onBack: () => void
+  sort: OrderSort
+  onSortChange: (value: OrderSort) => void
   className?: string
 }
 
-export function OrdersSidebar({ active, counts, disabled, onSelect, onBack, className }: Props) {
+export function OrdersSidebar({ active, counts, disabled, onSelect, onBack, sort, onSortChange, className }: Props) {
   const mobileStyle = 'max-lg:bg-white max-lg:pt-2'
   return (
     <nav
@@ -47,17 +51,17 @@ export function OrdersSidebar({ active, counts, disabled, onSelect, onBack, clas
           onClick={() => {}}
         />
 
-        <button onClick={() => {}} >
+        <SortByMenu value={sort} onChange={onSortChange}>
           <svg width="40" height="40" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
             <mask id="path-1-inside-1_10370_82206" fill="white">
               <path d="M0 20C0 8.95431 8.95431 0 20 0C31.0457 0 40 8.95431 40 20C40 31.0457 31.0457 40 20 40C8.95431 40 0 31.0457 0 20Z"/>
             </mask>
             <path d="M0 20M40 20M40 20M0 20M20 0M40 20M20 40M0 20M20 40V38C10.0589 38 2 29.9411 2 20H0H-2C-2 32.1503 7.84974 42 20 42V40ZM40 20H38C38 29.9411 29.9411 38 20 38V40V42C32.1503 42 42 32.1503 42 20H40ZM20 0V2C29.9411 2 38 10.0589 38 20H40H42C42 7.84974 32.1503 -2 20 -2V0ZM20 0V-2C7.84974 -2 -2 7.84974 -2 20H0H2C2 10.0589 10.0589 2 20 2V0Z" fill="#E6E8EB" mask="url(#path-1-inside-1_10370_82206)"/>
-            <path d="M30.75 15C30.75 15.4142 30.4142 15.75 30 15.75L10 15.75C9.58579 15.75 9.25 15.4142 9.25 15C9.25 14.5858 9.58579 14.25 10 14.25L30 14.25C30.4142 14.25 30.75 14.5858 30.75 15Z" fill-rule="evenodd" clip-rule="evenodd" fill="#525965"/>
-            <path d="M27.75 20C27.75 20.4142 27.4142 20.75 27 20.75L13 20.75C12.5858 20.75 12.25 20.4142 12.25 20C12.25 19.5858 12.5858 19.25 13 19.25H27C27.4142 19.25 27.75 19.5858 27.75 20Z" fill-rule="evenodd" clip-rule="evenodd" fill="#525965"/>
-            <path d="M24.75 25C24.75 25.4142 24.4142 25.75 24 25.75H16C15.5858 25.75 15.25 25.4142 15.25 25C15.25 24.5858 15.5858 24.25 16 24.25H24C24.4142 24.25 24.75 24.5858 24.75 25Z" fill-rule="evenodd" clip-rule="evenodd" fill="#525965"/>
+            <path d="M30.75 15C30.75 15.4142 30.4142 15.75 30 15.75L10 15.75C9.58579 15.75 9.25 15.4142 9.25 15C9.25 14.5858 9.58579 14.25 10 14.25L30 14.25C30.4142 14.25 30.75 14.5858 30.75 15Z" fillRule="evenodd" clipRule="evenodd" fill="#525965"/>
+            <path d="M27.75 20C27.75 20.4142 27.4142 20.75 27 20.75L13 20.75C12.5858 20.75 12.25 20.4142 12.25 20C12.25 19.5858 12.5858 19.25 13 19.25H27C27.4142 19.25 27.75 19.5858 27.75 20Z" fillRule="evenodd" clipRule="evenodd" fill="#525965"/>
+            <path d="M24.75 25C24.75 25.4142 24.4142 25.75 24 25.75H16C15.5858 25.75 15.25 25.4142 15.25 25C15.25 24.5858 15.5858 24.25 16 24.25H24C24.4142 24.25 24.75 24.5858 24.75 25Z" fillRule="evenodd" clipRule="evenodd" fill="#525965"/>
           </svg>
-        </button>
+        </SortByMenu>
       </div>
 
       <ul className="flex overflow-x-auto max-lg:pb-4 gap-2 px-1 py-1 scrollbar-hide lg:mx-0 lg:flex-col lg:gap-4 lg:overflow-visible lg:px-0 lg:pb-0 lg:pt-4">

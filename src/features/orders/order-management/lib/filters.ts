@@ -5,6 +5,7 @@ export const ORDER_PAGE_SIZE = 7
 export type StatusFilter = SellerStatus | 'ALL'
 export type FormatFilter = SellerSalesFormat | 'ALL'
 export type SortOrder = 'asc' | 'desc'
+export type SortField = 'date' | 'value'
 
 export type PriceRangeId =
   | 'UNDER_50'
@@ -35,6 +36,7 @@ export type OrderFilters = {
   dateTo: Date | null
   search: string
   sort: SortOrder
+  sortBy: SortField
   page: number
 }
 
@@ -48,6 +50,7 @@ export const DEFAULT_FILTERS: OrderFilters = {
   dateTo: null,
   search: '',
   sort: 'desc',
+  sortBy: 'date',
   page: 1,
 }
 
