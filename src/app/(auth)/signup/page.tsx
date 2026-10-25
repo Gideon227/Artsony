@@ -69,20 +69,20 @@ export default function SignUpPage() {
       <MobileAuthHero onBack={mobileStep === 'form' ? () => setMobileStep('choose') : undefined} />
 
       {/* Form panel */}
-      <section className=" flex-1 h-[65vh] lg:h-screen flex flex-col self-center items-center mt-[40vh] w-full lg:mt-0">
-        <div className="w-full relative lg:flex-1 max-lg:overflow-y-auto scrollbar-hide bg-white rounded-xl lg:rounded-none flex flex-col justify-between py-12 lg:py-0 px-6 lg:px-0">
+      <section className="max-lg:absolute max-lg:h-fit scrollbar-hide max-lg:left-4 max-lg:right-4 max-lg:bottom-4 relative z-10 flex-1 flex flex-col self-center items-center w-[calc(100vw_-_32px)]">
+        <div className="w-full bg-white rounded-xl lg:rounded-none flex flex-col lg:justify-between h-auto lg:h-full py-6 lg:py-0 px-4 lg:px-0">
           <div className="flex flex-col justify-center lg:flex-1">
             
-            <div className="flex justify-center mb-12 lg:mb-auto">
-              <Image src="/icons/logo.svg" alt="ARTSONY" width={272} height={48} className="h-auto max-lg:w-[181px]" priority />
+            <div className="flex justify-center mb-4 lg:mb-auto">
+              <Image src="/icons/logo.svg" alt="ARTSONY" width={272} height={48} className="h-auto max-lg:w-[160px]" priority />
             </div>
 
             {/* MOBILE — step 1: choose sign up method */}
-            <div className={cn('lg:hidden w-full space-y-4', mobileStep !== 'choose' && 'hidden')}>
+            <div className={cn('lg:hidden w-full space-y-3', mobileStep !== 'choose' && 'hidden')}>
               <p className="text-center text-body-xxs text-heading font-poppins px-2">
                 Welcome to Artsony , please choose a sign up option
               </p>
-              <div className="space-y-4">
+              <div className="space-y-3">
                 {OAUTH_PROVIDERS.map((provider) => (
                   <a
                     key={provider}
@@ -105,12 +105,12 @@ export default function SignUpPage() {
             </div>
 
             {/* Step 2 (mobile) / always (desktop): email & password form */}
-            <div className={cn('w-full space-y-6', mobileStep !== 'form' && 'hidden lg:block')}>
-              <h1 className="font-raleway font-medium text-heading text-h6 lg:text-h4 tracking-wide leading-10">
+            <div className={cn('w-full space-y-4 lg:space-y-6', mobileStep !== 'form' && 'hidden lg:block')}>
+              <h1 className="font-raleway font-medium text-heading text-h6 lg:text-h4 tracking-wide leading-tight lg:leading-10">
                 Hello
               </h1>
 
-              <form onSubmit={handleSubmit(onSubmit)} noValidate className="space-y-4">
+              <form onSubmit={handleSubmit(onSubmit)} noValidate className="space-y-3 lg:space-y-4">
 
                 <div>
                   <Input
@@ -196,7 +196,7 @@ export default function SignUpPage() {
                 </Button>
               </form>
 
-              <p className="text-[14px] text-center font-poppins text-gray-500 tracking-wide">
+              <p className="text-[14px] text-center font-poppins text-gray-500 tracking-wide mt-2">
                 Have an account?{' '}
                 <Link href="/login" className="text-primary-500 hover:underline">
                   Log in now
@@ -207,7 +207,7 @@ export default function SignUpPage() {
                   alongside the OAuth icon row */}
               <Link
                 href="/forgot-password"
-                className="lg:hidden block text-center text-primary-500 font-medium text-sm hover:underline"
+                className="lg:hidden block text-center text-primary-500 font-medium text-sm hover:underline mt-2"
               >
                 Forgot Password? Reset
               </Link>
