@@ -106,11 +106,11 @@ export default function SignUpPage() {
 
             {/* Step 2 (mobile) / always (desktop): email & password form */}
             <div className={cn('w-full lg:space-y-6', mobileStep !== 'form' && 'hidden lg:block')}>
-              <h1 className="font-raleway font-medium text-heading text-h6 lg:text-h4 tracking-wide leading-tight lg:leading-10">
+              <h1 className="font-raleway font-medium text-heading text-h6 lg:text-h4 tracking-wide leading-tight lg:leading-10 max-lg:mt-12">
                 Hello
               </h1>
 
-              <form onSubmit={handleSubmit(onSubmit)} noValidate className="space-y-3 lg:space-y-4 max-lg:mt-12">
+              <form onSubmit={handleSubmit(onSubmit)} noValidate className="space-y-3 lg:space-y-4 max-lg:mt-6">
 
                 <div>
                   <Input
@@ -207,7 +207,7 @@ export default function SignUpPage() {
                   alongside the OAuth icon row */}
               <Link
                 href="/forgot-password"
-                className="lg:hidden block text-center text-primary-500 font-medium text-sm hover:underline mt-2"
+                className="lg:hidden block text-center text-primary-500 font-medium text-sm hover:underline max-lg:mt-6 mt-2"
               >
                 Forgot Password? Reset
               </Link>
