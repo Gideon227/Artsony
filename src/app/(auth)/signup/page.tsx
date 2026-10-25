@@ -105,12 +105,12 @@ export default function SignUpPage() {
             </div>
 
             {/* Step 2 (mobile) / always (desktop): email & password form */}
-            <div className={cn('w-full space-y-4 lg:space-y-6', mobileStep !== 'form' && 'hidden lg:block')}>
+            <div className={cn('w-full lg:space-y-6', mobileStep !== 'form' && 'hidden lg:block')}>
               <h1 className="font-raleway font-medium text-heading text-h6 lg:text-h4 tracking-wide leading-tight lg:leading-10">
                 Hello
               </h1>
 
-              <form onSubmit={handleSubmit(onSubmit)} noValidate className="space-y-3 lg:space-y-4">
+              <form onSubmit={handleSubmit(onSubmit)} noValidate className="space-y-3 lg:space-y-4 max-lg:mt-12">
 
                 <div>
                   <Input
@@ -155,7 +155,7 @@ export default function SignUpPage() {
                 </div>
 
                 {/* Checkbox via Controller so RHF gets the boolean value correctly */}
-                <div className="flex items-center justify-start gap-3 pt-1">
+                <div className="flex items-center justify-start gap-3 pt-1 max-lg:mb-6">
                   <Controller
                     name="termsAccepted"
                     control={control}
@@ -196,7 +196,7 @@ export default function SignUpPage() {
                 </Button>
               </form>
 
-              <p className="text-[14px] text-center font-poppins text-gray-500 tracking-wide mt-2">
+              <p className="text-[14px] text-center font-poppins text-gray-500 tracking-wide mt-2 max-lg:mt-6">
                 Have an account?{' '}
                 <Link href="/login" className="text-primary-500 hover:underline">
                   Log in now
