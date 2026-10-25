@@ -42,19 +42,19 @@ function LoginContent() {
       <MobileAuthHero onBack={() => router.back()} />
 
       {/* Form panel */}
-      <section className="max-lg:absolute max-lg:h-fit scrollbar-hide max-lg:left-4 max-lg:right-4 max-lg:bottom-6 relative z-10 flex-1 flex flex-col self-center items-center w-[calc(100vw_-_32px)] ">
-        <div className="w-full bg-white rounded-xl max-lg:overflow-y-auto scrollbar-hide lg:rounded-none flex flex-col lg:justify-between gap-y-0 h-full py-12 lg:py-0 px-6 lg:px-0">
+      <section className="max-lg:absolute max-lg:h-fit scrollbar-hide max-lg:left-4 max-lg:right-4 max-lg:bottom-4 relative z-10 flex-1 flex flex-col self-center items-center w-[calc(100vw_-_32px)]">
+        <div className="w-full bg-white rounded-xl lg:rounded-none flex flex-col lg:justify-between h-auto lg:h-full py-6 lg:py-0 px-4 lg:px-0">
 
-          <div className="flex justify-center mb-12">
-            <Image src="/icons/logo.svg" alt="ARTSONY" width={272} height={48} className="h-auto max-lg:w-[181px]" priority />
+          <div className="flex justify-center mb-4 lg:mb-12">
+            <Image src="/icons/logo.svg" alt="ARTSONY" width={272} height={48} className="h-auto max-lg:w-[160px]" priority />
           </div>
 
-          <div className="w-full space-y-8">
-            <h1 className="font-raleway font-medium text-heading text-h6 lg:text-h4 tracking-wide leading-10">
+          <div className="w-full space-y-4 lg:space-y-8">
+            <h1 className="font-raleway font-medium text-heading text-h6 lg:text-h4 tracking-wide leading-tight lg:leading-10">
               Welcome Back
             </h1>
 
-            <form onSubmit={handleSubmit(onSubmit)} noValidate className="space-y-4">
+            <form onSubmit={handleSubmit(onSubmit)} noValidate className="space-y-3 lg:space-y-4">
               <div className="flex flex-col gap-1.5">
                 <Input
                   {...register('email')}
@@ -63,7 +63,7 @@ function LoginContent() {
                   disabled={isPending}
                   variant={errors.email ? 'error' : 'default'}
                   autoComplete="email"
-                  className="h-12 rounded-full px-6 text-base"
+                  className="h-10 lg:h-12 rounded-full px-6 text-base"
                 />
                 {errors.email && (
                   <span className="text-sm text-error-600 pl-4">{errors.email.message}</span>
@@ -78,7 +78,7 @@ function LoginContent() {
                   disabled={isPending}
                   variant={errors.password ? 'error' : 'default'}
                   autoComplete="current-password"
-                  className="h-12 rounded-full px-6 text-base"
+                  className="h-10 lg:h-12 rounded-full px-6 text-base"
                 />
                 {errors.password && (
                   <span className="text-sm text-error-600 pl-4">{errors.password.message}</span>
@@ -97,7 +97,7 @@ function LoginContent() {
               </Button>
             </form>
 
-            <div className="mt-4 flex justify-center items-center gap-x-1">
+            <div className="mt-2 lg:mt-4 flex justify-center items-center gap-x-1">
               <p className="text-xs lg:text-sm text-black leading-6 font-medium">Don&apos;t have an account?</p>
               <Link href="/signup" className="text-xs lg:text-sm text-primary-500 font-medium leading-6 hover:underline">
                 Sign Up
@@ -105,21 +105,21 @@ function LoginContent() {
             </div>
           </div>
 
-          <div className="mt-6 lg:mt-10 text-center space-y-4">
+          <div className="mt-4 lg:mt-10 text-center space-y-2 lg:space-y-4">
             <p className="font-poppins text-[14px] leading-6 text-black font-medium tracking-wide">Or sign in with</p>
-            <div className="flex justify-center gap-6">
+            <div className="flex justify-center gap-4 lg:gap-6">
               {(['google', 'apple', 'facebook'] as const).map((provider) => (
                 <a
                   key={provider}
                   href='/login/google'
-                  className="w-10 h-10 rounded-full border border-secondary-400 flex items-center justify-center hover:bg-gray-50 transition-colors"
+                  className="w-9 h-9 lg:w-10 lg:h-10 rounded-full border border-secondary-400 flex items-center justify-center hover:bg-gray-50 transition-colors"
                   aria-label={`Sign in with ${provider}`}
                 >
-                  <Image src={`/icons/${provider}.svg`} alt={provider} width={24} height={24} />
+                  <Image src={`/icons/${provider}.svg`} alt={provider} width={20} height={20} />
                 </a>
               ))}
             </div>
-            <Link href="/forgot-password" className="inline-block text-primary-500 font-medium text-sm hover:underline mt-4">
+            <Link href="/forgot-password" className="inline-block text-primary-500 font-medium text-sm hover:underline mt-2 lg:mt-4">
               Forgot Password? Reset
             </Link>
           </div>
