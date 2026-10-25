@@ -42,8 +42,8 @@ function LoginContent() {
       <MobileAuthHero onBack={() => router.back()} />
 
       {/* Form panel */}
-      <section className="max-lg:absolute max-lg:h-[60vh] scrollbar-hide max-lg:left-4 max-lg:right-4 max-lg:bottom-6 relative z-10 flex-1 flex flex-col self-center items-center w-[calc(100vw_-_32px)] ">
-        <div className="w-full bg-white rounded-xl max-lg:overflow-y-auto scrollbar-hide lg:rounded-none flex flex-col justify-between h-full py-12 lg:py-0 px-6 lg:px-0">
+      <section className="max-lg:absolute max-lg:h-fit scrollbar-hide max-lg:left-4 max-lg:right-4 max-lg:bottom-6 relative z-10 flex-1 flex flex-col self-center items-center w-[calc(100vw_-_32px)] ">
+        <div className="w-full bg-white rounded-xl max-lg:overflow-y-auto scrollbar-hide lg:rounded-none flex flex-col lg:justify-between gap-y-0 h-full py-12 lg:py-0 px-6 lg:px-0">
 
           <div className="flex justify-center mb-12">
             <Image src="/icons/logo.svg" alt="ARTSONY" width={272} height={48} className="h-auto max-lg:w-[181px]" priority />
@@ -105,7 +105,7 @@ function LoginContent() {
             </div>
           </div>
 
-          <div className="mt-10 text-center space-y-4">
+          <div className="mt-6 lg:mt-10 text-center space-y-4">
             <p className="font-poppins text-[14px] leading-6 text-black font-medium tracking-wide">Or sign in with</p>
             <div className="flex justify-center gap-6">
               {(['google', 'apple', 'facebook'] as const).map((provider) => (
