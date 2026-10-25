@@ -78,7 +78,7 @@ function ShopContent() {
   }
 
   return (
-    <div className="bg-white">
+    <div className="bg-white max-lg:pb-20">
       <Navbar />
       <HeroSection />
       <SearchSection

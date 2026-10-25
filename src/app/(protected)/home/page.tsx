@@ -174,7 +174,7 @@ function HomePage() {
   }
 
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-screen bg-white max-lg:pb-20">
       <Navbar />
       <HeroSection />
       <div className='max-lg:hidden'>

@@ -4,7 +4,7 @@ import React from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { MoveLeft } from "lucide-react";
+import { ArrowLeft } from "lucide-react";
 
 import { cn } from "@/lib/utils";
 import { Button } from "@/components"; 
@@ -23,8 +23,10 @@ export default function GoogleSignInPage() {
   };
 
   return (
-    <main className="min-h-screen gap-x-[132px] w-full bg-white flex flex-col lg:flex-row overflow-x-hidden p-16">
-      
+    // Mobile: full-bleed photo with a floating card pinned to the bottom.
+    // Desktop (lg+): two-column layout with the artwork grid on the left.
+    <main className="relative flex min-h-dvh w-full flex-col overflow-x-hidden bg-white lg:flex-row lg:gap-x-[132px] lg:p-16">
+
       {/* =====================================================================
         LEFT: Variant Masonry (Desktop Only) - Wrapped exactly like SignUp
       ===================================================================== */}
@@ -33,47 +35,55 @@ export default function GoogleSignInPage() {
       </section>
 
       {/* =====================================================================
-        MOBILE HEADER: Artist Chip and Back Button (Exact match to SignUp)
+        MOBILE: full-screen backdrop + top bar (back button and artist chip)
       ===================================================================== */}
-      <div className="lg:hidden absolute inset-0 h-[40vh] w-full z-0">
-        <Image src="/images/mountain-lake-bg.jpg" alt="BG" fill className="object-cover" priority />
-        <div className="absolute inset-0 bg-black/20" />
-        <div className="relative z-10 p-6 flex justify-between items-center">
-          <button onClick={() => router.back()} className="w-10 h-10 rounded-full border border-white/50 flex items-center justify-center text-white backdrop-blur-sm">
-            <MoveLeft className="w-5 h-5" />
-          </button>
-          <div className="flex items-center gap-2 bg-white/20 backdrop-blur-md px-3 py-1.5 rounded-full border border-white/30">
-            <div className="w-6 h-6 rounded-full overflow-hidden relative">
-              <Image src="/images/avatar-placeholder.png" alt="User" fill className="object-cover" />
-            </div>
-            <span className="text-white text-xs font-medium">Username</span>
-          </div>
-        </div>
+      <div aria-hidden="true" className="absolute inset-0 lg:hidden">
+        <Image src="/images/mountain-lake-bg.jpg" alt="" fill className="object-cover" priority />
+        <div className="absolute inset-0 bg-black/10" />
       </div>
 
+      <header className="absolute inset-x-0 top-0 z-10 flex items-center justify-between px-4 pt-[calc(env(safe-area-inset-top,0px)+1.5rem)] lg:hidden">
+        <button
+          type="button"
+          onClick={() => router.back()}
+          aria-label="Go back"
+          className="flex h-10 w-10 items-center justify-center rounded-full border-2 border-white/60 text-white"
+        >
+          <ArrowLeft className="h-5 w-5" strokeWidth={1.5} />
+        </button>
+
+        <div className="flex items-center gap-x-3">
+          <div className="relative h-10 w-10 overflow-hidden rounded-full border-2 border-white">
+            <Image src="/images/avatar-placeholder.png" alt="" fill className="object-cover" />
+          </div>
+          <span className="font-poppins text-sm font-medium tracking-wide text-white">Username</span>
+        </div>
+      </header>
+
       {/* =====================================================================
-        RIGHT: Form Section
+        RIGHT: Form Section (floating card on mobile, plain column on desktop)
       ===================================================================== */}
-      <section className="relative z-10 flex-1 flex flex-col items-center mt-[30vh] lg:mt-0">
-        <div className="w-full bg-white rounded-t-[40px] lg:rounded-none flex flex-col justify-between h-full pt-12 lg:pt-0 px-6 lg:px-0">
-          
+      <section className="relative z-10 mt-auto flex w-full flex-col px-4 pb-[max(2.25rem,env(safe-area-inset-bottom))] lg:mt-0 lg:flex-1 lg:items-center lg:px-0 lg:pb-0">
+        <div className="flex w-full flex-col rounded-[32px] bg-white px-4 pb-6 pt-7 lg:h-full lg:justify-between lg:rounded-none lg:p-0">
+
           {/* Logo Section */}
-          <div className="flex justify-center mb-auto">
+          <div className="flex justify-center lg:mb-auto">
             <Image src="/icons/logo.svg" alt="ARTSONY" width={180} height={48} className="h-auto" />
           </div>
 
-          <div className="w-full space-y-8 mt-12 lg:mt-0">
-            <h4 className="font-raleway font-medium text-gray-500 text-[32px] tracking-wide leading-10">
+          <div className="mt-10 w-full space-y-6 lg:mt-0 lg:space-y-8">
+            <h4 className="font-raleway text-2xl font-medium leading-8 tracking-wide text-gray-500 lg:text-[32px] lg:leading-10">
               Welcome Back
             </h4>
 
             <div className="space-y-4">
               {/* Google Input Lookalike */}
               <button
+                type="button"
                 onClick={handleGoogleLogin}
                 disabled={isLoading}
                 className={cn(
-                  "flex h-14 w-full items-center rounded-full border border-gray-50 bg-white px-6 py-3 transition-all duration-150",
+                  "flex h-12 w-full items-center rounded-full border border-gray-50 bg-white px-6 py-3 transition-all duration-150 lg:h-14",
                   "hover:border-primary-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-600",
                   isLoading && "opacity-70 pointer-events-none"
                 )}
@@ -99,7 +109,7 @@ export default function GoogleSignInPage() {
           </div>
 
           {/* Social Logins Alternate */}
-          <div className="mt-10 text-center space-y-4">
+          <div className="mt-6 space-y-2 text-center lg:mt-10 lg:space-y-4">
             <p className="text-sm font-poppins font-medium text-black tracking-wide leading-6">
               Or sign in with
             </p>
