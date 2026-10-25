@@ -22,6 +22,9 @@ export const userService = {
   updatePrivacySettings: (body: Partial<PrivacySettings>) =>
     apiClient.patch<ApiResponse<PrivacySettings>>('/api/users/me/privacy', body),
 
+  reportUser: (userId: string, body: { reason: string; notes?: string; conversation_id?: string }) =>
+    apiClient.post<ApiResponse<void>>(`/api/users/${userId}/report`, body),
+
   // Viewer-relative preview of another user's message/comment/purchase
   // privacy settings — used to show/disable the message button, comment
   // box, and buy button on someone else's profile or artwork ahead of time.

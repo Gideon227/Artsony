@@ -14,16 +14,16 @@ export function MessageBubble({ message, isMe }: MessageBubbleProps) {
   return (
     <div className={`flex w-full ${isMe ? 'justify-end' : 'justify-start'}`}>
       <div
-        className={`relative max-w-[65%] rounded-[20px] px-4 py-3 text-[14px] leading-relaxed text-white transition-opacity ${
+        className={`relative lg:max-w-[65%] max-lg:max-w-full rounded-m px-4 py-3 text-[14px] leading-relaxed text-white transition-opacity ${
           isMe
-            ? 'rounded-br-[4px] bg-primary-500'
-            : 'rounded-bl-[4px] bg-[#49A0A0]'
+            ? 'rounded-tr-[4px] bg-primary-500 max-lg:ml-8'
+            : 'rounded-tl-[4px] bg-secondary-600 max-lg:mr-8'
         } ${isTemp ? 'opacity-70' : ''}`}
       >
         {message.deleted_at ? (
           <span className="italic opacity-70">Message deleted</span>
         ) : (
-          <p>{message.body}</p>
+          <p className='text-body-xs lg:text-body-s leading-4 lg:leading-6 font-poppins font-light text-white'>{message.body}</p>
         )}
 
         <div className="mt-1 flex items-center justify-end gap-1">

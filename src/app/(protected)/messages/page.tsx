@@ -132,6 +132,7 @@ export default function MessagesPage() {
             conversation={activeConv}
             myId={myId}
             goBack={() => setSelectedConvId("")}
+            onClose={() => setSelectedConvId(null)}
           />
         ) : (
           <ConversationList
@@ -165,6 +166,7 @@ export default function MessagesPage() {
               conversationId={selectedConvId}
               conversation={activeConv}
               myId={myId}
+              onClose={() => setSelectedConvId(null)}
             />
           )}
         </main>

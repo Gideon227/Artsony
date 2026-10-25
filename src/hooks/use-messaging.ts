@@ -232,8 +232,9 @@ export function useBlockUser() {
 
   return useMutation({
     mutationFn: (userId: string) => blockService.blockUser(userId),
-    onSuccess: () => {
+    onSuccess: (_data, userId) => {
       queryClient.invalidateQueries({ queryKey: BLOCK_KEYS.list() })
+      queryClient.invalidateQueries({ queryKey: ['interactionPermissions', userId] })
       success('User blocked')
     },
     onError: () => {

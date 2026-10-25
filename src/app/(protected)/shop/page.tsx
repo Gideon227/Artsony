@@ -118,7 +118,7 @@ function ShopContent() {
             onCardClick={(_, index) => handleGridClick(index)}
           />
 
-          <div className="flex justify-center pb-16">
+          <div className="flex justify-center lg:pb-16">
             {hasNextPage && (
               <button
                 onClick={() => fetchNextPage()}
