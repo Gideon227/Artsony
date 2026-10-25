@@ -49,7 +49,7 @@ function LoginContent() {
             <Image src="/icons/logo.svg" alt="ARTSONY" width={272} height={48} className="h-auto max-lg:w-[160px]" priority />
           </div>
 
-          <div className="w-full space-y-4 lg:space-y-8">
+          <div className="w-full space-y-4 lg:space-y- max-lg:mt-12">
             <h1 className="font-raleway font-medium text-heading text-h6 lg:text-h4 tracking-wide leading-tight lg:leading-10">
               Welcome Back
             </h1>
@@ -70,7 +70,7 @@ function LoginContent() {
                 )}
               </div>
 
-              <div className="flex flex-col gap-1.5">
+              <div className="flex flex-col gap-1.5 max-lg:mb-6">
                 <Input
                   {...register('password')}
                   type="password"
@@ -97,7 +97,7 @@ function LoginContent() {
               </Button>
             </form>
 
-            <div className="mt-2 lg:mt-4 flex justify-center items-center gap-x-1">
+            <div className="mt-6 lg:mt-4 flex justify-center items-center gap-x-1">
               <p className="text-xs lg:text-sm text-black leading-6 font-medium">Don&apos;t have an account?</p>
               <Link href="/signup" className="text-xs lg:text-sm text-primary-500 font-medium leading-6 hover:underline">
                 Sign Up
