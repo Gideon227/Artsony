@@ -31,7 +31,7 @@ function LoginContent() {
   const onSubmit = (data: LoginInput) => login(data)
 
   return (
-    <main className="min-h-screen gap-x-[132px] w-full bg-white flex flex-col lg:flex-row overflow-x-hidden p-4 md:p-16">
+    <main className="min-h-screen max-lg:h-[100dvh] max-lg:overflow-hidden gap-x-[132px] w-full bg-white flex flex-col lg:flex-row overflow-x-hidden p-4 md:p-16">
 
       {/* Desktop: artwork grid */}
       <section className="hidden lg:block w-1/2 h-screen sticky top-16">
