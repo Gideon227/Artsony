@@ -7,6 +7,8 @@ import { LiveOrderDetails } from './live-order-details'
 import { OrderDetails } from './order-details'
 import { EmptyDetailState } from './empty-detail-state'
 import { OrdersEmptyState } from './orders-empty-state'
+import { MobileOrdersView } from '@/features/orders/my-orders/mobile/orders-view'
+import { useLayoutMode } from '@/features/orders/my-orders/mobile/use-layout-mode'
 import {
   useBuyerPhysicalOrders,
   useBuyerPhysicalOrdersInfinite,
@@ -38,6 +40,7 @@ export function OrdersPageContent() {
   const router = useRouter()
   const pathname = usePathname()
   const searchParams = useSearchParams()
+  const layout = useLayoutMode()
 
   const view = parseView(searchParams.get('view'))
   const sort = parseSort(searchParams.get('sort'))
@@ -69,9 +72,11 @@ export function OrdersPageContent() {
   )
 
   const firstOrderId = orders[0]?.id
+  // Desktop shows the first order beside the list. On mobile the list is its
+  // own screen, so nothing is opened until the user taps an order.
   useEffect(() => {
-    if (!physicalId && firstOrderId) updateParams({ physicalId: firstOrderId }, 'replace')
-  }, [physicalId, firstOrderId, updateParams])
+    if (layout === 'desktop' && !physicalId && firstOrderId) updateParams({ physicalId: firstOrderId }, 'replace')
+  }, [layout, physicalId, firstOrderId, updateParams])
 
   const detailStatus = detailQuery.data?.data.physical.delivery_status
   useEffect(() => {
@@ -85,6 +90,34 @@ export function OrdersPageContent() {
   const handleRetry = useCallback(() => void refetch(), [refetch])
 
   if (anyOrders.data?.total === 0) return <OrdersEmptyState />
+
+  // `null` only while hydrating server HTML; avoids flashing the wrong layout.
+  if (layout === null) return null
+
+  if (layout === 'mobile') {
+    return (
+      <MobileOrdersView
+        view={view}
+        orders={orders}
+        isLoading={listQuery.isLoading}
+        isError={listQuery.isError}
+        error={listQuery.error}
+        hasNextPage={listQuery.hasNextPage}
+        isFetchingNextPage={listQuery.isFetchingNextPage}
+        search={search}
+        sort={sort}
+        physicalId={physicalId}
+        detailQuery={detailQuery}
+        onViewChange={(nextView) => updateParams({ view: nextView, physicalId: null })}
+        onSearchChange={setSearch}
+        onSortChange={(nextSort) => updateParams({ sort: nextSort }, 'replace')}
+        onSelect={(id) => updateParams({ physicalId: id })}
+        onCloseDetail={() => updateParams({ physicalId: null }, 'replace')}
+        onLoadMore={handleLoadMore}
+        onRetry={handleRetry}
+      />
+    )
+  }
 
   const layoutStatus = detailStatus ?? STATUS_FOR_VIEW[view]
 
