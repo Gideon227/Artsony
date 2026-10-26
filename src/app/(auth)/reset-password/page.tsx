@@ -19,12 +19,12 @@ import AuthFooter from '@/components/layout/auth-footer'
 function InvalidLinkPanel() {
   return (
     <div className="animate-in fade-in zoom-in-95 duration-500 flex flex-col items-center text-center">
-      <p className="text-neutral-600 mb-8 leading-relaxed">
+      <p className="text-neutral-600 mb-5 lg:mb-8 leading-relaxed">
         This password reset link is missing or malformed. Request a new one to continue.
       </p>
       <Link
         href="/forgot-password"
-        className="w-full h-14 bg-primary-500 hover:bg-primary-600 active:scale-[0.98] text-white rounded-full font-medium text-lg transition-all flex items-center justify-center shadow-sm gap-2"
+        className="w-full h-12 lg:h-14 bg-primary-500 hover:bg-primary-600 active:scale-[0.98] text-white rounded-full font-medium text-base lg:text-lg transition-all flex items-center justify-center shadow-sm gap-2"
       >
         <ArrowLeft className="h-5 w-5" />
         Request a New Link
@@ -35,7 +35,7 @@ function InvalidLinkPanel() {
 
 function ResetPasswordForm({ token, email }: { token: string; email: string }) {
   const router = useRouter()
-  const [step, setStep] = useState< 1 | 2 | 3 | 4 >(3)
+  const [step, setStep] = useState<1 | 2 | 3 | 4>(3)
   const { mutate: resetPassword, isPending } = useResetPassword()
 
   const {
@@ -58,10 +58,10 @@ function ResetPasswordForm({ token, email }: { token: string; email: string }) {
     <>
       {step === 3 && (
         <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
-          <h1 className="font-raleway text-2xl lg:text-3xl font-medium text-neutral-900 mb-6 lg:mb-8 text-center lg:text-left">
+          <h1 className="font-raleway text-2xl lg:text-3xl font-medium text-neutral-900 mb-4 lg:mb-8 text-center lg:text-left">
             New Password
           </h1>
-          <form onSubmit={handleSubmit(onSubmit)} noValidate className="flex flex-col gap-6">
+          <form onSubmit={handleSubmit(onSubmit)} noValidate className="flex flex-col gap-3 lg:gap-6">
             <div className="flex flex-col gap-1.5">
               <Input
                 {...register('newPassword')}
@@ -70,10 +70,10 @@ function ResetPasswordForm({ token, email }: { token: string; email: string }) {
                 disabled={isPending}
                 autoComplete="new-password"
                 variant={touchedFields.newPassword && errors.newPassword ? 'error' : 'default'}
-                className="h-14 rounded-full px-6 text-base"
+                className="h-11 lg:h-14 rounded-full px-6 text-base"
               />
               {touchedFields.newPassword && errors.newPassword && (
-                <span className="text-sm text-error-600 pl-4">{errors.newPassword.message}</span>
+                <span className="text-xs lg:text-sm text-error-600 pl-4">{errors.newPassword.message}</span>
               )}
             </div>
 
@@ -85,17 +85,17 @@ function ResetPasswordForm({ token, email }: { token: string; email: string }) {
                 disabled={isPending}
                 autoComplete="new-password"
                 variant={touchedFields.confirmPassword && errors.confirmPassword ? 'error' : 'default'}
-                className="h-14 rounded-full px-6 text-base"
+                className="h-11 lg:h-14 rounded-full px-6 text-base"
               />
               {touchedFields.confirmPassword && errors.confirmPassword && (
-                <span className="text-sm text-error-600 pl-4">{errors.confirmPassword.message}</span>
+                <span className="text-xs lg:text-sm text-error-600 pl-4">{errors.confirmPassword.message}</span>
               )}
             </div>
 
             <button
               type="submit"
               disabled={isPending}
-              className="w-full h-14 cursor-pointer bg-primary-500 hover:bg-primary-600 active:scale-[0.98] text-white rounded-full font-medium text-lg transition-all flex items-center justify-center disabled:opacity-70 disabled:pointer-events-none shadow-sm"
+              className="w-full h-12 lg:h-14 cursor-pointer bg-primary-500 hover:bg-primary-600 active:scale-[0.98] text-white rounded-full font-medium text-base lg:text-lg transition-all flex items-center justify-center disabled:opacity-70 disabled:pointer-events-none shadow-sm"
             >
               {isPending
                 ? <span className="flex items-center gap-2"><span className="animate-spin h-5 w-5 border-2 border-white border-t-transparent rounded-full inline-block" />Updating…</span>
@@ -108,13 +108,13 @@ function ResetPasswordForm({ token, email }: { token: string; email: string }) {
 
       {step === 4 && (
         <div className="animate-in fade-in zoom-in-95 duration-500 flex flex-col items-center text-center">
-          <p className="text-neutral-600 mb-8 leading-relaxed">
+          <p className="text-neutral-600 mb-5 lg:mb-8 leading-relaxed">
             Your password has been updated. You can now sign in with your new password.
           </p>
           <button
             type="button"
             onClick={() => router.push('/login')}
-            className="w-full h-14 bg-primary-500 hover:bg-primary-600 active:scale-[0.98] text-white rounded-full font-medium text-lg transition-all flex items-center justify-center shadow-sm gap-2"
+            className="w-full h-12 lg:h-14 bg-primary-500 hover:bg-primary-600 active:scale-[0.98] text-white rounded-full font-medium text-base lg:text-lg transition-all flex items-center justify-center shadow-sm gap-2"
           >
             <ArrowLeft className="h-5 w-5" />
             Back to Sign In
@@ -122,7 +122,7 @@ function ResetPasswordForm({ token, email }: { token: string; email: string }) {
         </div>
       )}
 
-      <div className="flex justify-center gap-2 mt-12 mb-10">
+      <div className="flex justify-center gap-2 mt-6 mb-4 lg:mt-12 lg:mb-10">
         <div className={cn('h-2 rounded-full transition-all duration-300', step === 1 ? 'w-6 bg-primary-500' : 'w-2 bg-neutral-200')} />
         <div className={cn('h-2 rounded-full transition-all duration-300', step === 2 ? 'w-6 bg-primary-500' : 'w-2 bg-neutral-200')} />
         <div className={cn('h-2 rounded-full transition-all duration-300', step === 3 ? 'w-6 bg-primary-500' : 'w-2 bg-neutral-200')} />
@@ -139,25 +139,27 @@ function ResetPasswordContent() {
   const isValidLink = Boolean(token && email)
 
   return (
-    <main className="min-h-screen w-full flex gap-x-[132px] bg-white relative overflow-hidden lg:p-16">
+    <main className="relative w-full flex flex-col lg:flex-row gap-x-[132px] bg-white overflow-hidden lg:p-16 max-lg:h-dvh max-lg:overscroll-none lg:min-h-screen">
 
-      {/* Mobile hero */}
-      <MobileAuthHero onBack={() => router.back()} className="h-auto" />
+      {/* Mobile hero: fills the whole screen behind the sheet */}
+      <div className="lg:hidden flex-1 min-h-0 overflow-hidden">
+        <MobileAuthHero onBack={() => router.back()} className="h-full" />
+      </div>
 
       {/* Desktop artwork grid */}
       <section className="hidden lg:block w-1/2 h-[calc(100vh-128px)] sticky top-16">
         <ForgotPasswordArtworkGrid />
       </section>
 
-      {/* Form panel */}
+      {/* Form panel: bottom sheet on mobile, plain column on desktop */}
       <Suspense>
-        <div className="w-full lg:w-1/2 flex flex-col justify-end lg:justify-center lg:items-center z-10 bg-white">
-          <div className="rounded-t-[2.5rem] lg:rounded-none w-full min-h-[50vh] lg:min-h-screen py-10 lg:py-16 flex flex-col items-center shadow-[0_-8px_30px_rgba(0,0,0,0.12)] lg:shadow-none overflow-y-auto">
-            <div className="w-full min-w-[420px] flex flex-col relative h-full flex-1">
+        <div className="max-lg:absolute max-lg:inset-x-0 max-lg:bottom-0 w-full lg:w-1/2 flex flex-col justify-end lg:justify-center lg:items-center z-10 lg:bg-white">
+          <div className="bg-white rounded-t-[2.5rem] lg:rounded-none w-full max-lg:max-h-dvh max-lg:overflow-hidden lg:min-h-screen py-6 lg:py-16 flex flex-col items-center shadow-[0_-8px_30px_rgba(0,0,0,0.12)] lg:shadow-none lg:overflow-y-auto">
+            <div className="w-full lg:min-w-[420px] px-6 lg:px-0 flex flex-col relative h-full flex-1">
               <div className="flex-1 flex flex-col justify-center">
 
-                <div className="flex justify-center mb-10 lg:mb-20">
-                  <Image src="/icons/logo.svg" alt="Artsony" width={160} height={40} priority />
+                <div className="flex justify-center mb-4 lg:mb-20">
+                  <Image src="/icons/logo.svg" alt="Artsony" width={160} height={40} className="h-auto max-lg:w-[130px]" priority />
                 </div>
 
                 {isValidLink

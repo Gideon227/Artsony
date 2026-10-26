@@ -7,7 +7,7 @@ import { useRouter } from "next/navigation";
 import { ArrowLeft } from "lucide-react";
 
 import { cn } from "@/lib/utils";
-import { Button } from "@/components"; 
+import { Button } from "@/components";
 import { ArtworkGrid } from "@/features/auth/components/artwork-grid";
 
 export default function GoogleSignInPage() {
@@ -23,9 +23,9 @@ export default function GoogleSignInPage() {
   };
 
   return (
-    // Mobile: full-bleed photo with a floating card pinned to the bottom.
+    // Mobile: locked to the visible viewport (dvh), full-bleed photo with a floating card pinned to the bottom.
     // Desktop (lg+): two-column layout with the artwork grid on the left.
-    <main className="relative flex min-h-dvh w-full flex-col overflow-x-hidden bg-white lg:flex-row lg:gap-x-[132px] lg:p-16">
+    <main className="relative flex w-full flex-col overflow-x-hidden bg-white max-lg:h-dvh max-lg:overflow-hidden max-lg:overscroll-none lg:min-h-dvh lg:flex-row lg:gap-x-[132px] lg:p-16">
 
       {/* =====================================================================
         LEFT: Variant Masonry (Desktop Only) - Wrapped exactly like SignUp
@@ -63,27 +63,27 @@ export default function GoogleSignInPage() {
       {/* =====================================================================
         RIGHT: Form Section (floating card on mobile, plain column on desktop)
       ===================================================================== */}
-      <section className="relative z-10 mt-auto flex w-full flex-col px-4 pb-[max(2.25rem,env(safe-area-inset-bottom))] lg:mt-0 lg:flex-1 lg:items-center lg:px-0 lg:pb-0">
-        <div className="flex w-full flex-col rounded-[32px] bg-white px-4 pb-6 pt-7 lg:h-full lg:justify-between lg:rounded-none lg:p-0">
+      <section className="relative z-10 mt-auto flex w-full flex-col px-4 pb-[max(1.25rem,env(safe-area-inset-bottom))] max-lg:max-h-full lg:mt-0 lg:flex-1 lg:items-center lg:px-0 lg:pb-0">
+        <div className="flex w-full flex-col rounded-[32px] bg-white px-4 pb-5 pt-6 max-lg:overflow-hidden lg:h-full lg:justify-between lg:rounded-none lg:p-0">
 
           {/* Logo Section */}
           <div className="flex justify-center lg:mb-auto">
-            <Image src="/icons/logo.svg" alt="ARTSONY" width={180} height={48} className="h-auto" />
+            <Image src="/icons/logo.svg" alt="ARTSONY" width={180} height={48} className="h-auto max-lg:w-[140px]" />
           </div>
 
-          <div className="mt-10 w-full space-y-6 lg:mt-0 lg:space-y-8">
+          <div className="mt-6 w-full space-y-4 lg:mt-0 lg:space-y-8">
             <h4 className="font-raleway text-2xl font-medium leading-8 tracking-wide text-gray-500 lg:text-[32px] lg:leading-10">
               Welcome Back
             </h4>
 
-            <div className="space-y-4">
+            <div className="space-y-3 lg:space-y-4">
               {/* Google Input Lookalike */}
               <button
                 type="button"
                 onClick={handleGoogleLogin}
                 disabled={isLoading}
                 className={cn(
-                  "flex h-12 w-full items-center rounded-full border border-gray-50 bg-white px-6 py-3 transition-all duration-150 lg:h-14",
+                  "flex h-11 w-full items-center rounded-full border border-gray-50 bg-white px-6 py-2 transition-all duration-150 lg:h-14 lg:py-3",
                   "hover:border-primary-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-600",
                   isLoading && "opacity-70 pointer-events-none"
                 )}
@@ -109,7 +109,7 @@ export default function GoogleSignInPage() {
           </div>
 
           {/* Social Logins Alternate */}
-          <div className="mt-6 space-y-2 text-center lg:mt-10 lg:space-y-4">
+          <div className="mt-4 space-y-1 text-center lg:mt-10 lg:space-y-4">
             <p className="text-sm font-poppins font-medium text-black tracking-wide leading-6">
               Or sign in with
             </p>

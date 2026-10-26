@@ -5,7 +5,6 @@ import Image from 'next/image'
 import Link from 'next/link'
 import { useForm, Controller } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { Mail } from 'lucide-react'
 
 import { Input } from '@/components/ui/input'
 import { Button, Checkbox } from '@/components'
@@ -25,9 +24,8 @@ const OAUTH_LABELS: Record<(typeof OAUTH_PROVIDERS)[number], string> = {
 const OAUTH_ICONS: Record<(typeof OAUTH_PROVIDERS)[number], string> = {
   google: '/socials/google.svg',
   apple: '/socials/apple.svg',
-  facebook: '/socials/facebook-blue.svg'
+  facebook: '/socials/facebook-blue.svg',
 }
-
 
 export default function SignUpPage() {
   const { mutate: registerUser, isPending } = useRegister()
@@ -59,35 +57,38 @@ export default function SignUpPage() {
   }
 
   return (
-    <main className="min-h-screen w-full flex gap-x-[132px] bg-white relative overflow-hidden p-4 md:p-16">
+    <main className="relative w-full flex flex-col lg:flex-row gap-x-[132px] bg-white overflow-hidden p-4 lg:p-16 max-lg:h-dvh max-lg:overscroll-none lg:min-h-screen">
 
       {/* Desktop: artwork grid */}
       <section className="hidden lg:block w-1/2 min-h-screen sticky top-0">
         <ArtworkGrid />
       </section>
 
-      <MobileAuthHero onBack={mobileStep === 'form' ? () => setMobileStep('choose') : undefined} />
+      {/* Mobile: hero fills the whole screen behind the form */}
+      <div className="lg:hidden flex-1 min-h-0 overflow-hidden">
+        <MobileAuthHero onBack={mobileStep === 'form' ? () => setMobileStep('choose') : undefined} />
+      </div>
 
       {/* Form panel */}
-      <section className="max-lg:absolute max-lg:h-fit scrollbar-hide max-lg:left-4 max-lg:right-4 max-lg:bottom-4 relative z-10 flex-1 flex flex-col self-center items-center w-[calc(100vw_-_32px)]">
-        <div className="w-full bg-white rounded-xl lg:rounded-none flex flex-col lg:justify-between h-auto lg:h-full py-6 lg:py-0 px-4 lg:px-0">
+      <section className="max-lg:absolute max-lg:h-fit max-lg:left-4 max-lg:right-4 max-lg:bottom-4 max-lg:w-auto max-lg:max-h-[calc(100dvh-2rem)] lg:w-[calc(100vw_-_32px)] scrollbar-hide relative z-10 flex-1 flex flex-col self-center items-center">
+        <div className="w-full bg-white rounded-xl lg:rounded-none flex flex-col lg:justify-between h-auto lg:h-full py-4 lg:py-0 px-4 lg:px-0 max-lg:overflow-hidden">
           <div className="flex flex-col justify-center lg:flex-1">
-            
-            <div className="flex justify-center mb-4 lg:mb-auto">
-              <Image src="/icons/logo.svg" alt="ARTSONY" width={272} height={48} className="h-auto max-lg:w-[160px]" priority />
+
+            <div className="flex justify-center mb-12 lg:mb-auto">
+              <Image src="/icons/logo.svg" alt="ARTSONY" width={272} height={48} className="h-auto max-lg:w-[130px]" priority />
             </div>
 
             {/* MOBILE — step 1: choose sign up method */}
-            <div className={cn('lg:hidden w-full space-y-3', mobileStep !== 'choose' && 'hidden')}>
+            <div className={cn('lg:hidden w-full space-y-2.5', mobileStep !== 'choose' && 'hidden')}>
               <p className="text-center text-body-xxs text-heading font-poppins px-2">
                 Welcome to Artsony , please choose a sign up option
               </p>
-              <div className="space-y-3">
+              <div className="space-y-2.5">
                 {OAUTH_PROVIDERS.map((provider) => (
                   <a
                     key={provider}
                     href={`${process.env.NEXT_PUBLIC_API_URL}/api/auth/oauth/${provider}`}
-                    className="w-full h-12 rounded-2xl border border-gray-50 flex items-center justify-start gap-3 py-3 px-6 hover:border-primary-500 transition-colors"
+                    className="w-full h-11 rounded-2xl border border-gray-50 flex items-center justify-start gap-3 py-2 px-6 hover:border-primary-500 transition-colors"
                   >
                     <Image src={OAUTH_ICONS[provider]} alt="" width={20} height={20} />
                     <span className="text-xs font-poppins text-text-disabled text-center leading-4 flex-1 w-full">{OAUTH_LABELS[provider]}</span>
@@ -96,9 +97,9 @@ export default function SignUpPage() {
                 <button
                   type="button"
                   onClick={() => setMobileStep('form')}
-                  className="w-full h-12 rounded-2xl border border-gray-50 flex items-center justify-start gap-3 py-3 px-6 hover:bg-gray-50 transition-colors"
+                  className="w-full h-11 rounded-2xl border border-gray-50 flex items-center justify-start gap-3 py-2 px-6 hover:bg-gray-50 transition-colors"
                 >
-                  <Image src='/icons/mail.svg' width={20} height={20} alt='mail icon' />
+                  <Image src="/icons/mail.svg" width={20} height={20} alt="mail icon" />
                   <span className="text-xs font-poppins text-text-disabled text-center leading-4 flex-1 w-full">Sign up with Email & Password</span>
                 </button>
               </div>
@@ -106,11 +107,11 @@ export default function SignUpPage() {
 
             {/* Step 2 (mobile) / always (desktop): email & password form */}
             <div className={cn('w-full lg:space-y-6', mobileStep !== 'form' && 'hidden lg:block')}>
-              <h1 className="font-raleway font-medium text-heading text-h6 lg:text-h4 tracking-wide leading-tight lg:leading-10 max-lg:mt-12">
+              <h1 className="font-raleway font-medium text-heading text-h6 lg:text-h4 tracking-wide leading-tight lg:leading-10 max-lg:mt-2">
                 Hello
               </h1>
 
-              <form onSubmit={handleSubmit(onSubmit)} noValidate className="space-y-3 lg:space-y-4 max-lg:mt-6">
+              <form onSubmit={handleSubmit(onSubmit)} noValidate className="space-y-2.5 lg:space-y-4 max-lg:mt-3">
 
                 <div>
                   <Input
@@ -118,7 +119,7 @@ export default function SignUpPage() {
                     placeholder="Username (e.g. leggyman)"
                     disabled={isPending}
                     autoCapitalize="none"
-                    className='h-12'
+                    className="h-11 lg:h-12"
                     variant={touchedFields.username && errors.username ? 'error' : 'default'}
                   />
                   {touchedFields.username && errors.username && (
@@ -132,7 +133,7 @@ export default function SignUpPage() {
                     type="email"
                     placeholder="example@gmail.com"
                     disabled={isPending}
-                    className='h-12'
+                    className="h-11 lg:h-12"
                     variant={touchedFields.email && errors.email ? 'error' : 'default'}
                   />
                   {touchedFields.email && errors.email && (
@@ -146,7 +147,7 @@ export default function SignUpPage() {
                     type="password"
                     placeholder="Password"
                     disabled={isPending}
-                    className='h-12'
+                    className="h-11 lg:h-12"
                     variant={touchedFields.password && errors.password ? 'error' : 'default'}
                   />
                   {touchedFields.password && errors.password && (
@@ -155,7 +156,7 @@ export default function SignUpPage() {
                 </div>
 
                 {/* Checkbox via Controller so RHF gets the boolean value correctly */}
-                <div className="flex items-center justify-start gap-3 pt-1 max-lg:mb-6">
+                <div className="flex items-center justify-start gap-3 pt-1 max-lg:mb-3">
                   <Controller
                     name="termsAccepted"
                     control={control}
@@ -171,7 +172,7 @@ export default function SignUpPage() {
                   <div>
                     <label
                       htmlFor="termsAccepted"
-                      className="text-body-xs font-poppins text-body cursor-pointer"
+                      className="text-body-xs font-poppins text-body cursor-pointer whitespace-nowrap"
                     >
                       I hereby agree to Artsony&apos;s{' '}
                       <Link href="/terms" className="font-semibold text-body hover:underline hover:text-primary-500">
@@ -196,7 +197,7 @@ export default function SignUpPage() {
                 </Button>
               </form>
 
-              <p className="text-[14px] text-center font-poppins text-gray-500 tracking-wide mt-2 max-lg:mt-6">
+              <p className="text-[14px] max-lg:p-2 text-center font-poppins text-gray-500 tracking-wide mt-2 max-lg:mt-6">
                 Have an account?{' '}
                 <Link href="/login" className="text-primary-500 hover:underline">
                   Log in now
@@ -207,7 +208,7 @@ export default function SignUpPage() {
                   alongside the OAuth icon row */}
               <Link
                 href="/forgot-password"
-                className="lg:hidden block text-center text-primary-500 font-medium text-sm hover:underline max-lg:mt-6 mt-2"
+                className="lg:hidden block p-2 text-center text-primary-500 font-medium text-sm hover:underline mt-2"
               >
                 Forgot Password? Reset
               </Link>
