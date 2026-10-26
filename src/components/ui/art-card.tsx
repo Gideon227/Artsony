@@ -436,7 +436,7 @@ export function ArtCard({
       >
         {/* --- Image Container --- */}
         <div ref={revealRef} className={cn(
-          'relative group overflow-hidden rounded-2xl bg-neutral-100 w-full',
+          'relative group overflow-hidden rounded-3xl bg-neutral-100 w-full',
           fillContainer ? 'h-full' : 'aspect-square'
         )}>
           {isPlayingVideo && videoSrc ? (

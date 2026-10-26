@@ -205,7 +205,7 @@ export default function ShareArtworkWizardPage() {
                 <UploadPreview
                     key="step-4"
                     onSaveAndExit={handleSaveAndExit}
-                    onBack={() => setStepIndex(2)} // FIXED: Added missing onBack
+                    onBack={() => setStepIndex(2)} 
                     onNext={handleFinishUpload}
                     steps="4"
                     number="4"

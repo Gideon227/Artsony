@@ -92,7 +92,7 @@ const UploadPreview = ({ id, onNext, onBack, onSaveAndExit, steps, number, loadi
 
         {/* PREVIEW ART CARD */}
         <div className='p-6 py-12 gap-8 flex flex-col items-center justify-center w-full'>
-          <div className="w-full max-w-[332px] flex flex-col gap-6">
+          <div className="w-full w-full flex flex-col gap-6">
             
             {/* The Artwork Card mapped to the current slide */}
             <ArtCard 

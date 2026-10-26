@@ -73,7 +73,7 @@ export function ArtworkCreatorWorks({
                 const artistName = work.creator?.profile?.display_name || work.creator?.username || 'Unknown artist'
 
                 return (
-                  <div key={work.id} className="w-[300px] shrink-0">
+                  <div key={work.id} className="w-[332px] shrink-0">
                     <ArtCard
                       image={img}
                       title={work.title}
