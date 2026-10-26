@@ -13,6 +13,7 @@ import { getAssetDisplaySrc } from '@/utils'
 import HomeArtworkViewOverlay from '@/features/artwork/components/home/artwork-view-overlay'
 import ShopArtworkViewOverlay from '@/features/artwork/components/shop/artwork-view-overlay'
 import { buildPreviewArtwork } from '../lib/build-preview-artwork'
+import Image from 'next/image'
 
 interface UploadPreviewProps {
   id?: string;
@@ -152,7 +153,18 @@ const UploadPreview = ({ id, onNext, onBack, onSaveAndExit, steps, number, loadi
       </div>
 
       {/* FOOTER */}
-      <div className="py-6 px-6 flex gap-4 border-t border-gray-50 bg-white sticky bottom-0 z-10">
+      {/* <div className="py-6 px-6 flex gap-4 border-t border-gray-50 bg-white sticky bottom-0 z-10"> */}
+      <div className="py-6 px-6 flex gap-4 border-t border-gray-50 bg-white sticky bottom-0">
+        <Button
+          variant="outline"
+          fullWidth
+          onClick={onBack}
+          className="rounded-full py-4 border-primary-500 text-primary-500 flex items-center justify-center gap-2 hover:bg-primary-50"
+        >
+          <Image src="/icons/alt-arrow-left-double-red.svg" width={18} height={18} alt="back icon" />
+          Back
+        </Button>
+
         <Button
           fullWidth
           onClick={onNext}
