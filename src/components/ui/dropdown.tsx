@@ -58,6 +58,12 @@ interface DropdownProps {
   customBody?: React.ReactNode;
   valueLabel?: string;
   hideChips?: boolean
+  /**
+   * Render only the options panel (chips, search, list/grid or customBody) in
+   * normal flow — no trigger and no popover. Used by accordion-style filter
+   * cards, where the parent owns the header and open/close state.
+   */
+  inline?: boolean;
 }
 
 const MOBILE_BREAKPOINT = 640;
@@ -103,7 +109,8 @@ const Dropdown = ({
   emptyMessage = "No results found",
   customBody,
   valueLabel,
-  hideChips
+  hideChips,
+  inline = false,
 }: DropdownProps) => {
   const [isOpen, setIsOpen] = React.useState(false);
   const [mounted, setMounted] = React.useState(false);
@@ -280,6 +287,28 @@ const Dropdown = ({
     <p className="text-sm text-neutral-400 text-center py-6">{emptyMessage}</p>
   ) : null;
 
+  const chipList =
+    multiple && !hideChips && selectedValues.length > 0 ? (
+      <div className="flex flex-wrap gap-2">
+        {selectedValues.map((v) => (
+          <span
+            key={v.id}
+            className="inline-flex items-center gap-2 pl-4 pr-1 py-1 rounded-full bg-primary-500 text-white text-sm font-medium"
+          >
+            {v.label}
+            <button
+              type="button"
+              onClick={() => removeChip(v.id)}
+              aria-label={`Remove ${v.label}`}
+              className="w-5 h-5 rounded-full bg-white/25 hover:bg-white/40 flex items-center justify-center transition-colors"
+            >
+              <span className="text-xs leading-none">✕</span>
+            </button>
+          </span>
+        ))}
+      </div>
+    ) : null;
+
   const chipsSection = multiple && !hideChips  ? (
     <div className="p-4 flex flex-col gap-y-2">
       <div className="flex items-center justify-between mb-2">
@@ -293,31 +322,12 @@ const Dropdown = ({
           <span className="text-xs text-neutral-400">{maxSelected} max</span>
         )}
       </div>
-      {selectedValues.length > 0 && (
-        <div className="flex flex-wrap gap-2">
-          {selectedValues.map((v) => (
-            <span
-              key={v.id}
-              className="inline-flex items-center gap-2 pl-4 pr-1 py-1 rounded-full bg-primary-500 text-white text-sm font-medium"
-            >
-              {v.label}
-              <button
-                type="button"
-                onClick={() => removeChip(v.id)}
-                aria-label={`Remove ${v.label}`}
-                className="w-5 h-5 rounded-full bg-white/25 hover:bg-white/40 flex items-center justify-center transition-colors"
-              >
-                <span className="text-xs leading-none">✕</span>
-              </button>
-            </span>
-          ))}
-        </div>
-      )}
+      {chipList}
     </div>
   ) : null;
 
   const searchSection = searchable ? (
-    <div className="p-4 flex items-center gap-2">
+    <div className={cn("flex items-center gap-2", !inline && "p-4")}>
       <div className="relative flex-1">
         {searchVariant === "inline" && (
           <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-neutral-400" />
@@ -327,7 +337,7 @@ const Dropdown = ({
           value={query}
           onChange={handleSearchInputChange}
           placeholder={searchPlaceholder}
-          autoFocus
+          autoFocus={!inline}
           className={cn(
             "w-full h-12 rounded-full border border-neutral-200 bg-white text-sm text-neutral-700 outline-none",
             "focus:ring-2 focus:ring-primary-500 focus:border-primary-50",
@@ -349,7 +359,12 @@ const Dropdown = ({
   ) : null;
 
   const gridSection = (
-    <div className={cn("p-4", !isMobile && "max-h-[320px] overflow-y-auto custom-scrollbar")}>
+    <div
+      className={cn(
+        inline ? "py-1" : "p-4",
+        !inline && !isMobile && "max-h-[320px] overflow-y-auto custom-scrollbar"
+      )}
+    >
       {statusBlock ?? (
         <div className="grid grid-cols-4 gap-3 place-items-center">
           {filteredOptions.map((option) => {
@@ -589,6 +604,26 @@ const Dropdown = ({
       )}
     </div>
   );
+
+  if (inline) {
+    return (
+      <div className={cn("flex w-full flex-col gap-y-4", className)}>
+        {customBody ?? (
+          <>
+            {chipList}
+            {searchSection}
+            {layout === "grid" ? (
+              gridSection
+            ) : (
+              <div className={cn("max-h-[300px] overflow-y-auto overscroll-contain pr-3", MOBILE_SCROLLBAR)}>
+                {mobileList}
+              </div>
+            )}
+          </>
+        )}
+      </div>
+    );
+  }
 
   return (
     <div className={cn("relative w-full", className)} ref={containerRef}>

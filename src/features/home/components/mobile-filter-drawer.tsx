@@ -3,8 +3,8 @@
 import React from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
 import { Button } from '@/components'
-import { Dropdown } from '@/components/ui/dropdown'
 import type { FilterDropdownConfig } from './filter'
+import { FilterAccordionItem } from './filter-accordion-item'
 
 interface MobileFilterDrawerProps {
   open: boolean
@@ -39,51 +39,16 @@ export function MobileFilterDrawer({ open, onClose, dropdowns, onClear, filterNu
               </svg>
             </button>
             
-            <h2 className="font-raleway font-semibold text-h6 text-body">Filters</h2>
+            <h2 className="font-raleway font-semibold text-h6 text-body">Filter</h2>
           </div>
 
-          <div className="flex-1 overflow-y-auto px-6 py-6 flex flex-col gap-5">
+          <div className="flex flex-1 flex-col gap-6 overflow-y-auto overscroll-contain px-4 py-6">
             {dropdowns.map((item) => (
-              <div
-                key={item.id}
-                className="flex flex-col gap-y-6 p-4 border border-gray-50 rounded-2xl shrink-0"
-              >
-                <div className="flex justify-between items-center w-full">
-                  <span className="font-poppins text-body-s font-medium text-heading">
-                    {item.placeholder}
-                  </span>
-                </div>
-
-                <div className="w-full">
-                  <Dropdown
-                    options={item.options}
-                    value={item.value ?? undefined}
-                    onChange={item.onChange}
-                    multiple={item.multiple}
-                    values={item.values}
-                    onChangeMultiple={item.onChangeMultiple}
-                    maxSelected={item.maxSelected}
-                    placeholder={item.placeholder}
-                    leftIcon={item.leftIcon}
-                    disabled={item.disabled}
-                    searchable={item.searchable}
-                    searchPlaceholder={item.searchPlaceholder}
-                    searchValue={item.searchValue}
-                    onSearchChange={item.onSearchChange}
-                    searchVariant={item.searchVariant}
-                    onSearchSubmit={item.onSearchSubmit}
-                    layout={item.layout}
-                    indicator={item.indicator}
-                    isLoading={item.isLoading}
-                    emptyMessage={item.emptyMessage}
-                  />
-                </div>
-
-              </div>
+              <FilterAccordionItem key={item.id} item={item} />
             ))}
           </div>
 
-          <div className="shrink-0 border-t border-gray-50 px-6 py-4 flex gap-3">
+          <div className="shrink-0 border-t border-gray-50 px-4 py-4 flex gap-3">
             <Button variant="outline" className="flex-1" onClick={() => { onClear(); onClose() }}>
               Reset
             </Button>

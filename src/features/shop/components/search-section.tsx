@@ -178,7 +178,7 @@ export function SearchSection({ query, onSearch, filters, onFilterChange, onClea
     {
       id: 'location',
       options: countryOptions,
-      value: filters.country ? countryOptions.find((o) => String(o.id) === String(filters.country)) : undefined,
+      value: filters.country ? { id: filters.country, label: filters.country } : undefined,
       onChange: (option) =>
         onFilterChange({ country: option ? String(option.id) : null, state: null, city: null }),
       searchable: true,
@@ -226,7 +226,7 @@ export function SearchSection({ query, onSearch, filters, onFilterChange, onClea
         <button
           onClick={() => setIsMobileFiltersOpen(true)}
           className="lg:hidden cursor-pointer shrink-0"
-          aria-label="Clear filters"
+          aria-label="Open filters"
         >
           <svg width="40" height="40" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
             <mask id="path-1-inside-1_10340_64186" fill="white">
