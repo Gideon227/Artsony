@@ -97,10 +97,15 @@ function HomePage() {
   const feedQuery = useFeed({
     sort: activeTab,
     categories: selectedCategories.map((c) => String(c.id)),
+    // Homepage feed is portfolio work only — for-sale pieces live in the Artsony Shop section
+    listingType: 'PORTFOLIO',
     ...(selectedCountry ? { country: String(selectedCountry.id) } : {})
   })
 
-  const allArtworks = feedQuery.data?.pages.flatMap((p) => p.data) ?? []
+  // Server-side filter above does the real work; this guards against any listing type slipping through
+  const allArtworks = (feedQuery.data?.pages.flatMap((p) => p.data) ?? []).filter(
+    (a) => a.listing_type !== 'MARKETPLACE'
+  )
   const midpoint = Math.ceil(allArtworks.length / 2)
   const firstHalf = allArtworks.slice(0, midpoint)
   const secondHalf = allArtworks.slice(midpoint)
@@ -174,7 +179,7 @@ function HomePage() {
   }
 
   return (
-    <div className="min-h-screen bg-white max-lg:pb-20">
+    <div className="min-h-screen bg-white max-md:pb-20">
       <Navbar />
       <HeroSection />
       <div className='max-lg:hidden'>

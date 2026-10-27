@@ -8,6 +8,7 @@ import { motion } from 'framer-motion'
 import { ArtCard } from '@/components/ui/art-card'
 import { Skeleton } from '@/components/ui/skeleton'
 import type { Artwork } from '@/types'
+import { formatCardPrice } from '@/utils'
 import EmptySearch from '../../search/components/empty-search'
 
 // ─── ResultsGrid ──────────────────────────────────────────────────────────────
@@ -103,6 +104,7 @@ export function ShopResultsGrid({
                 likes: String(artwork.like_count),
                 views: String(artwork.view_count),
               }}
+              price={artwork.listing_type === 'MARKETPLACE' && artwork.price != null ? formatCardPrice(artwork.price) : undefined}
               variant="standard"
             />
           </motion.div>

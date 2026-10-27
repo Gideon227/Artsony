@@ -1,6 +1,6 @@
 'use client'
 
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { useMutation, useQueries, useQuery, useQueryClient } from '@tanstack/react-query'
 import { moodboardService } from '@/services/moodboard.service'
 import { useToast } from '@/components/ui/toaster'
 import { HttpError } from '@/lib/api-client'
@@ -8,24 +8,13 @@ import { HttpError } from '@/lib/api-client'
 const MOODBOARD_KEYS = {
   all: ['moodboards'] as const,
   mine: () => [...MOODBOARD_KEYS.all, 'mine'] as const,
-  user: (userId: string) => [...MOODBOARD_KEYS.all, 'user', userId] as const,
   detail: (id: string) => [...MOODBOARD_KEYS.all, id] as const,
 }
 
-export function useMoodboards({ enabled = true }: { enabled?: boolean } = {}) {
+export function useMoodboards() {
   return useQuery({
     queryKey: MOODBOARD_KEYS.mine(),
     queryFn: () => moodboardService.list().then((r) => r.data),
-    enabled,
-  })
-}
-
-// Another user's moodboards (profile → Moodboard tab). Pass undefined to skip.
-export function useUserMoodboards(userId?: string) {
-  return useQuery({
-    queryKey: MOODBOARD_KEYS.user(userId ?? ''),
-    queryFn: () => moodboardService.listByUser(userId as string).then((r) => r.data),
-    enabled: Boolean(userId),
   })
 }
 
@@ -35,6 +24,36 @@ export function useMoodboard(id: string) {
     queryFn: () => moodboardService.getById(id).then((r) => r.data),
     enabled: Boolean(id),
   })
+}
+
+// Which of the given moodboards already contain this artwork. There's no
+// lightweight "is artwork X in board Y" endpoint, so this reads each board's
+// detail (shares the cache with useMoodboard, and the add/remove mutations
+// below invalidate it). If the API grows a `contains_artwork` flag on the list
+// response, this hook is the only thing that needs to change.
+export function useArtworkMoodboardMembership(artworkId: string, moodboardIds: string[], enabled = true) {
+  const results = useQueries({
+    queries: moodboardIds.map((id) => ({
+      queryKey: MOODBOARD_KEYS.detail(id),
+      queryFn: () => moodboardService.getById(id).then((r) => r.data),
+      enabled: enabled && Boolean(artworkId),
+      staleTime: 30_000,
+    })),
+  })
+
+  const containing = new Set<string>()
+  const checking = new Set<string>()
+  results.forEach((res, i) => {
+    const id = moodboardIds[i]
+    if (!id) return
+    if (res.data) {
+      if (res.data.artworks?.some((a) => a.id === artworkId)) containing.add(id)
+    } else if (res.isPending && res.fetchStatus !== 'idle') {
+      checking.add(id)
+    }
+  })
+
+  return { containing, checking }
 }
 
 export function useCreateMoodboard() {
@@ -82,7 +101,7 @@ export function useDeleteMoodboard() {
 
 export function useAddToMoodboard() {
   const qc = useQueryClient()
-  const { success, error } = useToast()
+  const { success, error, info } = useToast()
 
   return useMutation({
     mutationFn: ({ moodboardId, artworkId }: { moodboardId: string; artworkId: string }) =>
@@ -95,6 +114,8 @@ export function useAddToMoodboard() {
     onError: (err: Error) => {
       if (err instanceof HttpError && err.statusCode === 403) {
         error('Cannot save this artwork', "The artist has disabled saving this piece to moodboards.")
+      } else if (err instanceof HttpError && err.statusCode === 409) {
+        info('Already in this moodboard')
       } else {
         error('Could not save to moodboard')
       }

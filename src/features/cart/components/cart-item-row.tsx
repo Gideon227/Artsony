@@ -85,7 +85,7 @@ export function CartItemRow({ item }: { item: CartItemWithArtwork }) {
         </div>
 
         {/* Main content */}
-        <div className="flex flex-1 items-center max-lg:items-start max-lg:gap-3 lg:gap-6 lg:py-4 lg:pr-6">
+        <div className="flex flex-1 items-center max-lg:items-start max-lg:gap-3 lg:gap-4 lg:py-4 lg:pr-6">
           
           {/* 1. Thumbnail (Fixed width) */}
           <div className="relative h-[132px] w-[132px] lg:h-[152px] lg:w-[152px] shrink-0 overflow-hidden rounded-2xl bg-neutral-100">
@@ -98,7 +98,7 @@ export function CartItemRow({ item }: { item: CartItemWithArtwork }) {
           </div>
 
           {/* 2. Title / seller / price / type */}
-          <div className="flex flex-[2] min-w-0 flex-col gap-1 font-poppins">
+          <div className="flex min-w-0 flex-col gap-1 font-poppins">
             <h3 className="truncate font-poppins max-lg:text-body-s lg:text-body-m font-medium text-heading">
               {item.artwork.title}
             </h3>
@@ -158,7 +158,7 @@ export function CartItemRow({ item }: { item: CartItemWithArtwork }) {
           </div>
 
           {/* 5. Line total (Last Div - Fixed width) */}
-          <div className="hidden lg:block w-[120px] shrink-0 text-right font-poppins text-body-s font-semibold text-heading">
+          <div className="hidden lg:block flex-1 shrink-0 text-center font-poppins text-body-s font-semibold text-heading">
             $ {lineTotal.toLocaleString('en-US')} {item.currency_at_add}
           </div>
           

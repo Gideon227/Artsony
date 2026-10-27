@@ -65,6 +65,12 @@ export function formatPrice(amount: number, currency = 'USD'): string {
   }).format(amount)
 }
 
+/** Price label for art cards, e.g. "$ 6,344" (decimals only when the amount has cents). */
+export function formatCardPrice(amount: number): string {
+  const digits = Number.isInteger(amount) ? 0 : 2
+  return `$ ${amount.toLocaleString('en-US', { minimumFractionDigits: digits, maximumFractionDigits: 2 })}`
+}
+
 export function formatNumber(n: number): string {
   if (n >= 1_000_000) return `${(n / 1_000_000).toFixed(1)}M`
   if (n >= 1_000) return `${(n / 1_000).toFixed(1)}K`

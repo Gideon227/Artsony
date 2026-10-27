@@ -14,7 +14,8 @@ import type { PrivacySettings } from '@/types'
 // These mirror what the backend sets so middleware sees the flags immediately
 // after a client-side login — without waiting for a page reload.
 
-const COOKIE_BASE = `path=/; SameSite=Strict${process.env.NODE_ENV === 'production' ? '; Secure' : ''}`
+// const COOKIE_BASE = `path=/; SameSite=Strict${process.env.NODE_ENV === 'production' ? '; Secure' : ''}`
+const COOKIE_BASE = `path=/; SameSite=Lax${process.env.NODE_ENV === 'production' ? '; Secure' : ''}`
 const ONE_YEAR = 365 * 24 * 60 * 60
 
 export function setClientCookie(name: string, value: string, maxAge = ONE_YEAR) {

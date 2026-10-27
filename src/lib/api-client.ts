@@ -69,6 +69,18 @@ async function requestNewAccessToken(): Promise<string> {
   return body.data.accessToken
 }
 
+async function requestNewAccessTokenWithRetry(): Promise<string> {
+  try {
+    return await requestNewAccessToken()
+  } catch (err) {
+    if (err instanceof HttpError && err.statusCode === 401 && err.code === 'INVALID_TOKEN') {
+      await new Promise((r) => setTimeout(r, 400))
+      return requestNewAccessToken() // re-reads the freshest cookie
+    }
+    throw err
+  }
+}
+
 async function endSession(): Promise<void> {
   setMemoryToken(null)
   // Dynamic import avoids a circular dependency with the auth store
@@ -77,14 +89,15 @@ async function endSession(): Promise<void> {
   // Keep the proxy in sync so a gated route bounces to /login on the next
   // navigation without force-navigating the user away from where they are.
   if (typeof document !== 'undefined') {
-    document.cookie = 'artsony_session=; max-age=0; path=/; SameSite=Strict'
+    // document.cookie = 'artsony_session=; max-age=0; path=/; SameSite=Strict'
+    document.cookie = 'artsony_session=; max-age=0; path=/; SameSite=Lax'
   }
 }
 
 export function refreshAccessToken(): Promise<string> {
   refreshInFlight ??= (async () => {
     try {
-      const token = await requestNewAccessToken()
+      const token = await requestNewAccessTokenWithRetry()
       setMemoryToken(token)
       return token
     } catch (err) {

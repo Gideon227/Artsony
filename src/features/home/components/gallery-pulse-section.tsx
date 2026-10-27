@@ -23,7 +23,7 @@ export function GalleryPulseSection() {
   // last 7 days instead, which is why an older artwork picking up likes
   // this week never showed here. useTrendingArtworks scores by windowed
   // engagement (artwork_engagement_daily) instead of created_at.
-  const { data: FEATURED_ARTWORKS, isLoading, isError } = useTrendingArtworks(8, 7)
+  const { data: FEATURED_ARTWORKS, isLoading, isError } = useTrendingArtworks(8, 7, 'PORTFOLIO')
 
   // ── Measure the carousel's available width ────────────────────────────────
   // Callback ref + state (not useRef) because the viewport only mounts after

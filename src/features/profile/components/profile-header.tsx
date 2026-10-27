@@ -46,14 +46,16 @@ const ProfileHeader = ({ user, isOwnProfile, onPostArtwork }: Props) => {
 
       <div
         className={cn(
-          'relative z-20 mx-auto -mt-40 w-[92vw] max-w-[420px] rounded-2xl border-2 border-transparent',
-          'bg-gradient-to-b from-[090A0B/0] to-[#1B1B1B] via-85% opacity-90 bg-clip-padding',
-          '[background-origin:border-box] backdrop-blur-xl md:-mt-48 lg:-mt-56'
+          'relative z-20 mx-auto -mt-40 w-[92vw] max-w-[420px] rounded-2xl',
+          'backdrop-blur-xl md:-mt-48 lg:-mt-56'
         )}
       >
         <div
           className="flex w-full flex-col items-center gap-8 rounded-2xl px-4 py-6 md:gap-12 md:px-8 md:py-12"
-          style={{ background: 'linear-gradient(180deg, rgba(9, 10, 11, 0) 0%, rgba(27, 27, 27, 0.9) 85.35%)' }}
+          style={{
+            background:
+              'linear-gradient(180deg, rgba(9, 10, 11, 0) 0%, rgba(27, 27, 27, 0.9) 85.35%)',
+          }}
         >
           <div className="flex flex-col items-center justify-center gap-4">
             <div className="relative w-36 h-36 flex items-center justify-center shrink-0">

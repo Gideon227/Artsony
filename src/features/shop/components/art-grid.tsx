@@ -1,5 +1,6 @@
 import { ArtCard, Artist } from '@/components/ui/art-card'
 import { Artwork } from '@/types'
+import { formatCardPrice } from '@/utils'
 import React from 'react'
 
 interface Props {
@@ -37,6 +38,7 @@ const ArtGrid = ({ artworks, num, artVariant = "standard", onCardClick }: Props)
                         showVideo={art.assets?.[0]?.media_type === 'VIDEO'}
                         artist={mappedArtists}
                         stats={{ likes: String(art.like_count ?? 0), views: String(art.view_count ?? 0) }}
+                        price={art.listing_type === 'MARKETPLACE' && art.price != null ? formatCardPrice(art.price) : undefined}
                         variant={artVariant}
                     />
                 )

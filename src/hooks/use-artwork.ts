@@ -75,6 +75,8 @@ export function useFeed(
     city?: string
     size_label?: string
     sort?: 'for_you' | 'following' | 'new' | 'trending' | 'newbies'
+    // Restrict the feed to one listing type (e.g. 'PORTFOLIO' = not for sale)
+    listingType?: ListingType
   } = {},
 ) {
   return useInfiniteQuery<PaginatedArtworksResponse>({
@@ -133,12 +135,12 @@ export function useViewArtwork() {
   })
 }
 
-// Other published artworks by a given creator — powers the ArtCard hover
-// profile's "recent artworks" strip. Lazy: pass `enabled` so it only fires
+// Latest published artworks by a given creator (any listing type) — powers the
+// ArtCard hover profile's works strip. Lazy: pass `enabled` so it only fires
 // once the hover card is actually shown, not for every card mounted in a grid.
-export function useCreatorArtworks(creatorId: string, enabled: boolean) {
+export function useCreatorArtworks(creatorId: string, enabled: boolean, limit = 6) {
   return useQuery({
-    queryKey: ['artworks', 'by-creator', creatorId],
+    queryKey: ['artworks', 'by-creator', creatorId, limit],
     queryFn: () =>
       artworkService.list({
         creator_id: creatorId,
@@ -146,7 +148,7 @@ export function useCreatorArtworks(creatorId: string, enabled: boolean) {
         visibility: 'PUBLIC',
         sort_by: 'created_at',
         sort_order: 'desc',
-        limit: 4,
+        limit,
       }),
     enabled: enabled && Boolean(creatorId),
     staleTime: STALE_TIMES.medium,
