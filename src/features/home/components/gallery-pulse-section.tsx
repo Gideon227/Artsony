@@ -23,7 +23,7 @@ export function GalleryPulseSection() {
   // last 7 days instead, which is why an older artwork picking up likes
   // this week never showed here. useTrendingArtworks scores by windowed
   // engagement (artwork_engagement_daily) instead of created_at.
-  const { data: FEATURED_ARTWORKS, isLoading, isError } = useTrendingArtworks(8, 7, 'PORTFOLIO')
+  const { data: FEATURED_ARTWORKS, isLoading, isError } = useTrendingArtworks(8, 7)
 
   // ── Measure the carousel's available width ────────────────────────────────
   // Callback ref + state (not useRef) because the viewport only mounts after
@@ -44,21 +44,11 @@ export function GalleryPulseSection() {
   const list = FEATURED_ARTWORKS ?? []
   const n = list.length
 
-  // Card is 448px, but never wider than the space we have (phones: 1 card that
-  // fills the row). `visible` = how many cards fit *fully*; whatever width is
-  // left over simply shows the start of the next card, because the viewport
-  // clips it (e.g. 448 + 16 + 448 + 50px of room => 2 cards + 50px of a third).
   const cardW = width > 0 ? Math.min(CARD_WIDTH, width) : CARD_WIDTH
   const step = cardW + GAP
   const visible = Math.max(1, Math.floor((width + GAP) / step))
-
-  // Only scroll/loop when there are more artworks than fit. Otherwise a loop
-  // would show the same artwork twice on screen, so just lay them out.
   const isCarousel = width > 0 && n > visible
-
-  // Auto-advance. `pos` is a dependency so the 6s countdown restarts after
-  // every step (including manual ones); paused while the pointer is over it so
-  // hover cards / overlays aren't yanked away mid-interaction.
+  
   useEffect(() => {
     if (!isCarousel || paused) return
     const t = setTimeout(() => setPos((p) => p + 1), AUTOPLAY_MS)
@@ -105,17 +95,12 @@ export function GalleryPulseSection() {
   const nextStep = () => setPos((p) => p + 1)
   const prevStep = () => setPos((p) => p - 1)
 
-  // Jump so artwork `i` becomes the first visible one, taking the shorter way
-  // round the loop.
   const goToArtwork = (i: number) => {
     let delta = (i - activeDot + n) % n
     if (delta > n / 2) delta -= n
     if (delta !== 0) setPos((p) => p + delta)
   }
 
-  // Slots to render: the visible ones, one partial "peek" slot, plus a buffer
-  // slot on each side so cards are already mounted (just off-screen) before
-  // they slide in.
   const slots: number[] = []
   for (let abs = pos - 1; abs <= pos + visible + 1; abs++) slots.push(abs)
 
@@ -126,15 +111,13 @@ export function GalleryPulseSection() {
   return (
     <section className="w-full bg-[#EBF5F5] py-12 px-8 overflow-hidden min-h-[500px] flex items-center">
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-29 items-center w-full">
-        <div className="lg:col-span-4 flex flex-col space-y-8">
-          <div className="space-y-6">
-            <h2 className="text-h6 lg:text-h3 font-semibold font-raleway leading-8 tracking-wide">
-              <span className="text-primary-500">Gallery</span> <span className="text-gray-500">Pulse</span>
-            </h2>
-            <p className="text-body font-poppins text-body-xs lg:text-body-m tracking-wide max-w-[332px]">
-              These are the artworks that captured the most hearts and eyes this week — across every corner of the gallery.
-            </p>
-          </div>
+        <div className="lg:col-span-4 flex flex-col space-y-6">
+          <h2 className="text-h6 lg:text-h3 font-semibold font-raleway leading-8 tracking-wide">
+            <span className="text-primary-500">Gallery</span> <span className="text-gray-500">Pulse</span>
+          </h2>
+          <p className="text-body font-poppins text-body-xs lg:text-body-m tracking-wide max-w-[332px]">
+            These are the artworks that captured the most hearts and eyes this week — across every corner of the gallery.
+          </p>
 
           {isCarousel && (
             <div className="flex items-center gap-2 px-6">

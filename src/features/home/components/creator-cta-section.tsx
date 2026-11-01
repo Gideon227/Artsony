@@ -9,7 +9,7 @@ import { useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import { ArtCard } from '@/components/ui/art-card'
 import { useMarketplaceArtworks } from '@/hooks/use-artwork'
-import { formatNumber, cn, getDisplayThumbnail } from '@/utils'
+import { formatNumber, cn, getDisplayThumbnail, formatCardPrice } from '@/utils'
 import { useOpenArtwork } from '@/hooks/use-artwork-viewer'
 
 export function CreatorCTASection() {
@@ -70,7 +70,7 @@ export function CreatorCTASection() {
                       image={getDisplayThumbnail(artwork.assets)}
                       title={artwork.title}
                       // artworkId={artwork.id}
-                      onCardClick={() => openArtwork(artwork, { siblings: artworks, variant: 'shop' })}
+                      onCardClick={() => openArtwork(artwork, { siblings: artworks, variant: 'home' })}
                       artist={[{
                         id: artwork.creator?.id || artwork.creator_id,
                         name: artwork.creator?.profile?.display_name || artwork.creator?.username || 'Artist',
@@ -82,7 +82,7 @@ export function CreatorCTASection() {
                           following: String(artwork.creator?.profile?.following_count ?? 0),
                         },
                       }]}
-                      stats={{ likes: formatNumber(artwork.like_count), views: formatNumber(artwork.view_count) }}
+                      price={artwork.listing_type === 'MARKETPLACE' && artwork.price != null ? formatCardPrice(artwork.price) : undefined}
                       variant="standard"
                     />
                   </div>

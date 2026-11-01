@@ -83,15 +83,19 @@ export default function GoogleSignInPage() {
                 onClick={handleGoogleLogin}
                 disabled={isLoading}
                 className={cn(
-                  "flex h-11 w-full items-center rounded-full border border-gray-50 bg-white px-6 py-2 transition-all duration-150 lg:h-14 lg:py-3",
-                  "hover:border-primary-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-600",
+                  "flex cursor-pointer w-full items-center rounded-full border border-gray-50 bg-white px-6 py-2 transition-all duration-150 h-12 lg:py-3",
+                  "hover:border-primary-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-600",
                   isLoading && "opacity-70 pointer-events-none"
                 )}
               >
                 <div className="flex items-center w-full">
-                  <Image src="/icons/google.svg" alt="Google" width={24} height={24} />
-                  <span className="flex-1 text-center text-sm font-medium text-neutral-800">
-                    Continue with Google
+                  <Image src="/icons/google.svg" alt="Google" width={24} height={24} className="max-md:hidden" />
+                  <Image src="/socials/google.svg" alt="Google" width={24} height={24} className="md:hidden" />
+                  <span className="flex-1 text-center text-body-s font-poppins text-text-disabled max-md:hidden">
+                    Google
+                  </span>
+                  <span className="flex-1 text-center text-body-s font-poppins text-text-disabled md:hidden">
+                    forexample@gmail.com
                   </span>
                 </div>
               </button>

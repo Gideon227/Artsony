@@ -75,8 +75,8 @@ export function OrdersTable({ rows, isFetching, isRefreshError, onRetry, page, t
           <div className="overflow-hidden rounded-[32px] border border-gray-50 bg-white">
             {isRefreshError && <RefreshBanner onRetry={onRetry} />}
             <div role="rowgroup" className={cn('transition-opacity', isFetching && 'opacity-60')}>
-              {rows.map((row, index) => (
-                <div key={row.order_item_id} role="row" className={cn('grid h-16 items-center gap-4 px-4 py-3 font-poppins text-body-s tracking-wide text-body', GRID, `${rows.length > 1 && 'border-b border-gray-50'}`)}>
+              {rows.map((row) => (
+                <div key={row.order_item_id} role="row" className={cn('grid h-16 items-center gap-4 px-4 py-3 font-poppins text-body-s tracking-wide text-body border-b border-gray-50', GRID)}>
                   <div role="cell" className="flex min-w-0 items-center gap-2">
                     <PackageBadge />
                     <span className="truncate font-poppins text-body-xs text-center text-heading">{row.order_code}</span>
@@ -91,8 +91,13 @@ export function OrdersTable({ rows, isFetching, isRefreshError, onRetry, page, t
                   <div role="cell"><ActionLink href={getRowHref(row)} code={row.order_code} /></div>
                 </div>
               ))}
+              {/* Keep the table the same height on every page: pad up to a full
+                  page of rows with empty, bordered slots. */}
+              {Array.from({ length: Math.max(0, ORDER_PAGE_SIZE - rows.length) }).map((_, index) => (
+                <div key={`empty-${index}`} role="presentation" aria-hidden="true" className="h-16 border-b border-gray-50" />
+              ))}
             </div>
-            <OrdersPagination page={page} totalPages={totalPages} onPageChange={onPageChange} />
+            <OrdersPagination page={page} totalPages={totalPages} onPageChange={onPageChange} alwaysVisible />
           </div>
         </div>
       </div>

@@ -6,6 +6,10 @@ import React, { useEffect, useState } from 'react'
 import ArtGrid from './art-grid';
 import { useAuthStore } from '@/store';
 import { useOpenArtwork } from '@/hooks/use-artwork-viewer'
+import { Button } from '@/components';
+import Link from 'next/link';
+import { useRouter } from 'next/navigation';
+import Image from 'next/image';
 
 // Matches the Figma dropdown exactly: "For You" is the default/current value,
 // the rest are the selectable list. The first 5 are feed *modes* (mutually
@@ -46,53 +50,106 @@ const FORMAT_BY_OPTION: Record<string, 'DIGITAL' | 'PHYSICAL' | undefined> = {
     'physical-only': 'PHYSICAL',
 }
 
-const TopArt = () => {
+// The shop page's filter bar, narrowed to what the feed endpoint understands.
+export type TopArtFilters = {
+    categories?: string[]
+    minPrice?: number
+    maxPrice?: number
+    color?: string
+    format?: 'DIGITAL' | 'PHYSICAL'
+    country?: string
+    state?: string
+    city?: string
+}
+
+interface TopArtProps {
+    filters?: TopArtFilters
+    onClearFilters?: () => void;
+}
+
+const hasActiveFilters = (f?: TopArtFilters) =>
+    Boolean(
+        f &&
+            (f.categories?.length ||
+                f.minPrice !== undefined ||
+                f.maxPrice !== undefined ||
+                f.color ||
+                f.format ||
+                f.country ||
+                f.state ||
+                f.city),
+    )
+
+const TopArt = ({ filters, onClearFilters }: TopArtProps) => {
     const { user } = useAuthStore()
     const [selected, setSelected] = useState<DropdownOption>(searchOptions[0]!)
     const [artworks, setArtworks] = useState<Artwork[]>([])
     const [isLoading, setIsLoading] = useState<boolean>(true)
     const [error, setError] = useState<string | null>(null)
     const openArtwork = useOpenArtwork()
+    const router = useRouter()
 
     // console.log('Top Art Artworks: ', artworks, isLoading, error)
 
+    // Stable dependency: re-fetch when the filter *values* change, not on every new object identity.
+    const filtersKey = JSON.stringify(filters ?? {})
+    const filtersActive = hasActiveFilters(filters)
+
     useEffect(() => {
+        // Ignore a response that arrives after the filters/option changed again.
+        let cancelled = false
+
         const fetchMarketplaceArtworks = async () => {
             try {
                 setIsLoading(true)
                 setError(null)
 
                 const optionId = String(selected.id)
-                const format = FORMAT_BY_OPTION[optionId]
+                // The dropdown's Digital/Physical Only is an explicit choice, so it wins over the page's Medium filter.
+                const format = FORMAT_BY_OPTION[optionId] ?? filters?.format
 
-                if (optionId === 'trending') {
+                // The activity-based trending endpoint can't be filtered, so with filters
+                // on we use the feed's trending sort instead (it applies every filter).
+                if (optionId === 'trending' && !filtersActive) {
                     const trendingResponse = await artworkService.getTrending(12, 7, 'MARKETPLACE')
-                    setArtworks(trendingResponse.data)
+                    if (!cancelled) setArtworks(trendingResponse.data)
                     return
                 }
 
-                const mode = FEED_MODE_BY_OPTION[optionId] ?? 'new'
+                const mode = FEED_MODE_BY_OPTION[optionId] ?? (optionId === 'trending' ? 'trending' : 'new')
                 const response = await artworkService.getFeed({
                     sort: mode,
                     perPage: 12,
                     listingType: 'MARKETPLACE',
                     format,
+                    categories: filters?.categories,
+                    minPrice: filters?.minPrice,
+                    maxPrice: filters?.maxPrice,
+                    color: filters?.color,
+                    country: filters?.country,
+                    state: filters?.state,
+                    city: filters?.city,
                 })
 
+                if (cancelled) return
                 if (response.success) {
                     setArtworks(response.data)
                 } else {
                     setError('Failed to load top picks.')
                 }
             } catch (err: any) {
-                setError('An unexpected error occurred while fetching artworks.')
+                if (!cancelled) setError('An unexpected error occurred while fetching artworks.')
             } finally {
-                setIsLoading(false)
+                if (!cancelled) setIsLoading(false)
             }
         }
 
         fetchMarketplaceArtworks()
-    }, [selected, user?.id])
+        return () => {
+            cancelled = true
+        }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [selected, user?.id, filtersKey])
 
     const handleOpenArtwork = (index: number) => {
         const target = artworks[index]
@@ -119,12 +176,33 @@ const TopArt = () => {
             )}
 
             {!isLoading && !error && artworks.length === 0 && (
-                <div className="text-center py-10 text-gray-500 font-poppins min-h-[200px]">
-                    No marketplace artworks available right now.
+                <div className="text-center py-10 text-gray-500 font-poppins min-h-[400px] flex flex-col gap-12 items-center justify-center">
+                    <div className='w-[515px] h-100 max-lg:w-[343px] max-lg:h-[267px] relative'>
+                        <Image src='/images/empty_search.png' fill className='object-contain' alt='empty search' />
+                    </div>
+
+                    <div className='flex flex-col gap-2 items-center justify-center'>
+                        <p className='font-poppins font-medium text-heading text-h6 text-center'>Looks Like This Canvas is Empty</p>
+                        <p className='font-poppins text-body text-body-m text-center mb-2'>
+                            {filtersActive ? 'No artworks match your filters.' : 'No marketplace artworks available right now.'}
+                        </p>
+
+                        <Button 
+                            onClick={() => {
+                            if (filtersActive) {
+                                onClearFilters?.()
+                            } else {
+                                router.push('/explore')
+                            }
+                            }}
+                        >
+                            {filtersActive ? 'Clear Filters' : 'Explore'}
+                        </Button>
+                    </div>
                 </div>
             )}
 
-            {(!isLoading || artworks.length > 0) && !error && (
+            {!isLoading && artworks.length > 0 && !error && (
                 <ArtGrid
                     artworks={artworks}
                     // artVariant='shop'

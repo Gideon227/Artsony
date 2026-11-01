@@ -55,6 +55,55 @@ interface ArtworkViewOverlayProps {
   preview?: boolean
 }
 
+const MEDIA_SIZES = '(min-width: 1024px) calc(min(90vw, 1600px) - 348px), 100vw'
+
+// Renders an asset at its natural height: full column width, height follows the
+// asset's own aspect ratio. Uses the stored width/height when we have them (so
+// space is reserved and nothing jumps on load); otherwise the browser sizes it
+// once loaded (width/height 0 + h-auto is next/image's pattern for unknown sizes).
+function AssetMedia({
+  asset,
+  src,
+  alt,
+  priority = false,
+}: {
+  asset: ArtworkAsset
+  src: string
+  alt: string
+  priority?: boolean
+}) {
+  const hasDims = Boolean(asset.width && asset.height)
+
+  if (asset.media_type === 'VIDEO') {
+    return (
+      <video
+        key={src}
+        src={src}
+        poster={asset.thumbnail_url ?? undefined}
+        autoPlay
+        muted
+        loop
+        playsInline
+        controls
+        className="block h-auto w-full"
+        style={hasDims ? { aspectRatio: `${asset.width} / ${asset.height}` } : undefined}
+      />
+    )
+  }
+
+  return (
+    <Image
+      src={src}
+      alt={alt}
+      width={hasDims ? asset.width! : 0}
+      height={hasDims ? asset.height! : 0}
+      sizes={MEDIA_SIZES}
+      priority={priority}
+      className="block h-auto w-full"
+    />
+  )
+}
+
 export default function ArtworkViewOverlay({ artwork: artworkProp, onClose, onNavigate, onSwapArtwork, preview = false }: ArtworkViewOverlayProps) {
   // Clicking a related work in "Also by" / "For sale by" swaps the displayed
   // artwork in place, without needing a navigation-index prop threaded through
@@ -460,13 +509,10 @@ export default function ArtworkViewOverlay({ artwork: artworkProp, onClose, onNa
 
   const descriptionSection = (
     <div className="py-6 lg:py-12">
-      <h3 className="mb-4 font-raleway text-h5 lg:text-h3 font-semibold text-black">Description</h3>
-      <p className="whitespace-pre-line font-poppins max-lg:text-light text-body-s leading-6 text-[#333333]">{artwork.description}</p>
+      <h3 className="mb-4 lg:mb-6 font-raleway text-h5 lg:text-h3 font-semibold text-black">Description</h3>
+      <p className="whitespace-pre-line font-poppins text-light text-body-s leading-6 text-[#333333]">{artwork.description}</p>
       {artwork.creator && (
         <div className="mt-12 flex flex-col items-center gap-3 text-center">
-          {/* <div className="relative h-16 w-16 overflow-hidden rounded-full bg-gray-100">
-            <Image src={artwork.creator.profile?.avatar_url || '/images/image-avatar.svg'} alt={creatorName} fill className="object-cover" />
-          </div> */}
           <div className="relative w-36 h-36 flex items-center justify-center shrink-0">
             <Image
               src="/home/profile-ring.svg"
@@ -489,7 +535,7 @@ export default function ArtworkViewOverlay({ artwork: artworkProp, onClose, onNa
             </div>
           </div>
 
-          <span className="font-raleway text-h6 font-medium text-black tracking-wide">{creatorName}</span>
+          <span className="font-raleway text-h6 lg:text-h5 font-medium text-black tracking-wide">{creatorName}</span>
         </div>
 
       )}
@@ -543,25 +589,11 @@ export default function ArtworkViewOverlay({ artwork: artworkProp, onClose, onNa
 
   const heroMediaMarketplace = (
     <div className="flex flex-col">
-      <div className="relative flex h-[70vh] max-h-[640px] items-center justify-center overflow-hidden bg-secondary-100 lg:h-[60vh]">
-        {mainImageSrc ? (
-          activeAsset?.media_type === 'VIDEO' ? (
-            <video
-              key={mainImageSrc}
-              src={mainImageSrc}
-              poster={activeAsset.thumbnail_url ?? undefined}
-              autoPlay
-              muted
-              loop
-              playsInline
-              controls
-              className="h-full w-full object-cover object-center"
-            />
-          ) : (
-            <Image src={mainImageSrc} alt={displayTitle} fill className="object-cover object-center" />
-          )
+      <div className="relative w-full bg-secondary-100">
+        {mainImageSrc && activeAsset ? (
+          <AssetMedia key={activeAsset.id} asset={activeAsset} src={mainImageSrc} alt={displayTitle} priority />
         ) : (
-          <div className="flex h-full w-full items-center justify-center font-poppins text-gray-400">No image available</div>
+          <div className="flex h-64 w-full items-center justify-center font-poppins text-gray-400">No image available</div>
         )}
         {activeAsset?.media_type === 'VIDEO' && (
           <span className="absolute left-4 top-4 flex h-9 w-9 items-center justify-center rounded-full bg-black/40 text-white backdrop-blur-sm">
@@ -576,9 +608,11 @@ export default function ArtworkViewOverlay({ artwork: artworkProp, onClose, onNa
           <button
             onClick={handlePrevAsset}
             disabled={activeAssetIndex === 0}
-            className="absolute left-2 z-10 flex h-9 w-9 cursor-pointer items-center justify-center rounded-full bg-primary-500 text-white shadow-md transition-colors hover:bg-primary-600 disabled:cursor-not-allowed disabled:opacity-50 lg:left-8 lg:h-10 lg:w-10"
+            className="absolute left-2 z-10 flex h-9 w-9 cursor-pointer items-center justify-center rounded-full bg-primary-500 text-white shadow-md transition-colors hover:bg-primary-600 disabled:cursor-not-allowed disabled:bg-gray-100 disabled:text-gray-300 lg:left-8 lg:h-10 lg:w-10"
           >
-            <ChevronLeft size={20} strokeWidth={3} />
+            <svg width="8" height="14" viewBox="0 0 8 14" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M0.164852 6.62959L6.79533 0.199898C7.20906 -0.201305 8 0.0418882 8 0.570304L8 13.4297C8 13.9581 7.20906 14.2013 6.79533 13.8001L0.164852 7.37041C-0.0549501 7.15726 -0.0549501 6.84274 0.164852 6.62959Z" fill={activeAssetIndex === 0 ? '#788191' : '#ffffff'}/>
+            </svg>
           </button>
 
           <div
@@ -595,7 +629,7 @@ export default function ArtworkViewOverlay({ artwork: artworkProp, onClose, onNa
                   ref={isActive ? activeThumbRef : undefined}
                   onClick={() => setActiveAssetIndex(idx)}
                   className={cn(
-                    'relative cursor-pointer h-[140px] w-[110px] shrink-0 overflow-hidden rounded-[18px] transition-transform hover:-translate-y-1 lg:h-[220px] lg:w-[180px] lg:rounded-[24px] lg:hover:-translate-y-2',
+                    'relative cursor-pointer h-[140px] w-[110px] shrink-0 overflow-hidden rounded-2xl transition-transform hover:-translate-y-1 lg:h-[216px] lg:w-[216px] lg:rounded-[24px] lg:hover:-translate-y-2',
                     isActive && 'ring-2 ring-primary-500'
                   )}
                 >
@@ -613,9 +647,11 @@ export default function ArtworkViewOverlay({ artwork: artworkProp, onClose, onNa
           <button
             onClick={handleNextAsset}
             disabled={activeAssetIndex === assets.length - 1}
-            className="absolute right-2 z-10 flex h-9 w-9 cursor-pointer items-center justify-center rounded-full bg-primary-500 text-white shadow-md transition-colors hover:bg-primary-600 disabled:cursor-not-allowed disabled:opacity-50 lg:right-8 lg:h-10 lg:w-10"
+            className="absolute right-2 z-10 flex h-9 w-9 cursor-pointer items-center justify-center rounded-full bg-primary-500 text-white shadow-md transition-colors hover:bg-primary-600 disabled:cursor-not-allowed disabled:bg-gray-100 disabled:text-gray-300 lg:right-8 lg:h-10 lg:w-10"
           >
-            <ChevronRight size={20} strokeWidth={3} />
+            <svg width="8" height="14" viewBox="0 0 8 14" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M7.83515 6.62959L1.20467 0.199897C0.790939 -0.201306 5.852e-07 0.0418875 5.62102e-07 0.570303L0 13.4297C-2.30978e-08 13.9581 0.790938 14.2013 1.20467 13.8001L7.83515 7.37041C8.05495 7.15726 8.05495 6.84274 7.83515 6.62959Z" fill={activeAssetIndex === assets.length - 1 ? '#788191' : '#ffffff'} />
+            </svg>
           </button>
         </div>
       )}
@@ -633,22 +669,11 @@ export default function ArtworkViewOverlay({ artwork: artworkProp, onClose, onNa
           const src = getAssetDisplaySrc(asset)
           const isVideo = asset.media_type === 'VIDEO'
           return (
-            <div key={asset.id} className="relative h-[70vh] max-h-[640px] w-full overflow-hidden bg-secondary-100 lg:h-[60vh]">
-              {isVideo && src ? (
-                <video
-                  src={src}
-                  poster={asset.thumbnail_url ?? undefined}
-                  autoPlay
-                  muted
-                  loop
-                  playsInline
-                  controls
-                  className="h-full w-full object-cover object-center"
-                />
-              ) : src ? (
-                <Image src={src} alt={`${displayTitle} ${idx + 1}`} fill className="object-cover object-center" />
+            <div key={asset.id} className="relative w-full bg-secondary-100">
+              {src ? (
+                <AssetMedia asset={asset} src={src} alt={`${displayTitle} ${idx + 1}`} priority={idx === 0} />
               ) : (
-                <div className="flex h-full w-full items-center justify-center font-poppins text-gray-400">No image available</div>
+                <div className="flex h-64 w-full items-center justify-center font-poppins text-gray-400">No image available</div>
               )}
               {isVideo && (
                 <span className="absolute left-4 top-4 flex h-9 w-9 items-center justify-center rounded-full bg-black/40 text-white backdrop-blur-sm">
@@ -660,7 +685,7 @@ export default function ArtworkViewOverlay({ artwork: artworkProp, onClose, onNa
           )
         })
       ) : (
-        <div className="flex h-[70vh] max-h-[640px] w-full items-center justify-center bg-secondary-100 font-poppins text-gray-400 lg:h-[60vh]">
+        <div className="flex h-64 w-full items-center justify-center bg-secondary-100 font-poppins text-gray-400">
           No image available
         </div>
       )}
@@ -681,7 +706,7 @@ export default function ArtworkViewOverlay({ artwork: artworkProp, onClose, onNa
           <button
             onClick={() => onNavigate('prev')}
             aria-label="Previous artwork"
-            className="fixed cursor-pointer left-4 top-1/2 z-[60] hidden h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full border border-gray-50 text-gray-400 transition-transform hover:scale-105 lg:flex"
+            className="fixed cursor-pointer left-4 top-1/2 z-[60] hidden h-10 w-10 -translate-y-1/2 items-center justify-center rounded-4xl border border-gray-50 text-gray-400 transition-transform hover:scale-105 lg:flex"
           >
             <svg width="8" height="14" viewBox="0 0 8 14" fill="none" xmlns="http://www.w3.org/2000/svg">
               <path d="M0.164852 7.37041L6.79533 13.8001C7.20906 14.2013 8 13.9581 8 13.4297L8 0.570303C8 0.0418882 7.20906 -0.201306 6.79533 0.199896L0.164852 6.62959C-0.0549501 6.84274 -0.0549501 7.15726 0.164852 7.37041Z" fill="#525965"/>
@@ -705,7 +730,7 @@ export default function ArtworkViewOverlay({ artwork: artworkProp, onClose, onNa
           animate={{ y: isClosing ? '100%' : 0 }}
           transition={{ type: 'spring', damping: 32, stiffness: 320 }}
           onAnimationComplete={() => { if (isClosing) onClose() }}
-          className="relative flex min-h-screen w-full flex-col scrollbar-hide rounded-none bg-white lg:mt-auto lg:h-[90vh] lg:min-h-0 lg:w-[90%] lg:max-w-[1600px] lg:flex-row lg:overflow-hidden lg:rounded-t-2xl"
+          className="relative flex min-h-screen w-full flex-col scrollbar-hide rounded-none bg-white lg:mt-auto lg:h-[90vh] lg:min-h-0 lg:w-[90%] lg:max-w-[1600px] lg:flex-row lg:overflow-hidden lg:rounded-t-4xl lg:border-2 lg:border-gray-50"
         >
           {/* Fixed mobile header */}
           <div className='lg:hidden fixed inset-x-0 top-0 z-[65] border-b border-gray-50 bg-white/95 px-4 pb-3 pt-6 flex flex-col gap-y-4'>
@@ -799,11 +824,11 @@ export default function ArtworkViewOverlay({ artwork: artworkProp, onClose, onNa
               </div>
 
               {/* Desktop-only: Description lives in the main column here */}
-              <div className="hidden lg:block px-6 lg:px-8">{descriptionSection}</div>
+              <div className="hidden lg:block px-8">{descriptionSection}</div>
 
               {!preview && artwork.creator?.id && (
                 <>
-                  <div className='bg-secondary-100'>
+                  <div className='bg-secondary-100 max-lg:w-screen'>
                     <ArtworkCreatorWorks
                       title="Also by "
                       creatorId={artwork.creator.id}

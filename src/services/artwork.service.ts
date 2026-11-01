@@ -71,6 +71,9 @@ export const artworkService = {
     sort?: 'for_you' | 'following' | 'new' | 'trending' | 'newbies'
     listingType?: ListingType
     format?: 'DIGITAL' | 'PHYSICAL'
+    minPrice?: number
+    maxPrice?: number
+    color?: string
   } = {}): Promise<PaginatedArtworksResponse> => {
     const searchParams = new URLSearchParams()
     searchParams.set('mode', params.sort ?? 'new')
@@ -83,6 +86,9 @@ export const artworkService = {
     if (params.size_label)  searchParams.set('size_label', params.size_label)
     if (params.listingType) searchParams.set('listing_type', params.listingType)
     if (params.format)      searchParams.set('artwork_format', params.format)
+    if (params.minPrice !== undefined) searchParams.set('min_price', String(params.minPrice))
+    if (params.maxPrice !== undefined) searchParams.set('max_price', String(params.maxPrice))
+    if (params.color)       searchParams.set('color', params.color)
 
     return apiClient.get<PaginatedArtworksResponse>(`/api/artworks/feed?${searchParams.toString()}`)
   },

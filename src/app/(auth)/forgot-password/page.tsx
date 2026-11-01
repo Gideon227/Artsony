@@ -35,10 +35,9 @@ export default function ForgotPasswordPage() {
   }
 
   return (
-    <main className="relative w-full bg-white flex flex-col lg:flex-row overflow-x-hidden gap-x-[132px] p-4 lg:p-16 max-lg:h-dvh max-lg:overflow-hidden max-lg:overscroll-none lg:min-h-screen">
-
+    <main className="relative w-full bg-white flex flex-col lg:flex-row overflow-x-hidden gap-x-[132px] p-4 lg:p-16 max-lg:h-dvh max-lg:overflow-hidden max-lg:overscroll-none lg:h-dvh lg:overflow-hidden">
       {/* Desktop: artwork grid */}
-      <section className="hidden lg:block w-1/2 h-screen sticky top-16">
+      <section className="hidden lg:block w-1/2 h-full min-h-0">
         <ForgotPasswordArtworkGrid />
       </section>
 
@@ -48,10 +47,19 @@ export default function ForgotPasswordPage() {
       </div>
 
       {/* Form panel */}
-      <section className="max-lg:absolute max-lg:h-fit max-lg:left-4 max-lg:right-4 max-lg:bottom-4 max-lg:w-auto max-lg:max-h-[calc(100dvh-2rem)] lg:w-[calc(100vw_-_32px)] scrollbar-hide relative z-10 flex-1 flex flex-col self-center items-center">
-        <div className="w-full bg-white rounded-xl max-lg:overflow-hidden lg:rounded-none flex flex-col lg:justify-between h-auto lg:h-full py-5 lg:py-0 px-4 lg:px-0">
+      <section className="max-lg:absolute max-lg:h-fit max-lg:left-4 max-lg:right-4 max-lg:bottom-4 max-lg:w-auto max-lg:max-h-[calc(100dvh-2rem)] lg:w-[calc(100vw_-_32px)] lg:h-full lg:min-h-0 scrollbar-hide relative z-10 flex-1 flex flex-col self-center items-center">        
+        <button onClick={() => router.back()} className='hidden lg:flex shrink-0 cursor-pointer mb-18 w-full items-start justify-start'>          
+          <svg width="40" height="40" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <mask id="path-1-inside-1_5252_973" fill="white">
+              <path d="M0 20C0 8.95431 8.95431 0 20 0C31.0457 0 40 8.95431 40 20C40 31.0457 31.0457 40 20 40C8.95431 40 0 31.0457 0 20Z"/>
+            </mask>
+            <path d="M20 40V38C10.0589 38 2 29.9411 2 20H0H-2C-2 32.1503 7.84974 42 20 42V40ZM40 20H38C38 29.9411 29.9411 38 20 38V40V42C32.1503 42 42 32.1503 42 20H40ZM20 0V2C29.9411 2 38 10.0589 38 20H40H42C42 7.84974 32.1503 -2 20 -2V0ZM20 0V-2C7.84974 -2 -2 7.84974 -2 20H0H2C2 10.0589 10.0589 2 20 2V0Z" fill="#E6E8EB" mask="url(#path-1-inside-1_5252_973)"/>
+            <path d="M28 20H12M18 26L12 20L18 14" stroke-width="1.5" stroke-linecap="round" strokeLinejoin="round" stroke="#525965"/>
+          </svg>
+        </button>
 
-          <div className="flex justify-center mb-12">
+        <div className="w-full bg-white rounded-xl max-lg:overflow-hidden lg:rounded-none flex flex-col lg:justify-between h-auto lg:h-full lg:min-h-0 py-5 lg:py-0 px-4 lg:px-0">
+          <div className="flex justify-center mb-12 shrink-0">
             <Image src="/icons/logo.svg" alt="ARTSONY" width={272} height={48} className="h-auto max-lg:w-[140px]" priority />
           </div>
 
@@ -114,7 +122,7 @@ export default function ForgotPasswordPage() {
             )}
 
             {/* Step indicator dots */}
-            <div className="flex justify-center gap-2 mt-4 lg:mt-10">
+            <div className="flex justify-center gap-2 mt-4">
               <div className={cn('h-2 rounded-full transition-all duration-300', step === 1 ? 'w-4 bg-primary-500' : 'w-2 bg-neutral-200')} />
               <div className={cn('h-2 rounded-full transition-all duration-300', step === 2 ? 'w-4 bg-primary-500' : 'w-2 bg-neutral-200')} />
               {/* <div className={cn('h-2 rounded-full transition-all duration-300', step === 3 ? 'w-4 bg-primary-500' : 'w-2 bg-neutral-200')} /> */}

@@ -16,7 +16,7 @@ const EmptySearch = () => {
             <div className='flex flex-col gap-y-6 items-center justify-center'>
                 <div className='flex flex-col items-center justify-center gap-y-4'>
                     <p className='font-poppins font-medium text-heading text-h6 '>Looks Like This Canvas Is Empty</p>
-                    <p className='font-poppins max-w-[680px] text-body-m text-body max-md:text-center '>We couldn’t find a match for your search. Browse the explore page and uncover artwork from creators around the world.</p>
+                    <p className='font-poppins max-w-[680px] text-body-m text-body text-center '>We couldn’t find a match for your search. Browse the explore page and uncover artwork from creators around the world.</p>
                 </div>
                 <Button rightIcon='/icons/alt-arrow-right-double.svg' onClick={() => router.push('/discover')}>Explore</Button>
             </div>

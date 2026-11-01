@@ -100,7 +100,7 @@ export const HeroSection = () => {
   if (!currentSlide) return <div className="h-screen w-full bg-black" />;
 
   return (
-    <div className="relative h-[75vh] md:h-screen w-full overflow-hidden bg-black">
+    <div className="relative h-[75vh] md:h-[90vh] w-full overflow-hidden bg-black">
       {/* Dynamic Animated Content (Background Image + Artist Info) */}
       <AnimatePresence mode="wait">
         <motion.div

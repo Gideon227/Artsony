@@ -13,7 +13,7 @@ import { DeleteConfirmSheet } from './delete-confirm-sheet'
 import { useAuthStore } from '@/store'
 import { useIsFollowing, useToggleFollow } from '@/hooks/use-follow'
 import { useUsersByIds } from '@/hooks/use-user'
-import { useLikeArtwork } from '@/hooks/use-artwork'
+import { useLikeArtwork, useCreatorArtworks } from '@/hooks/use-artwork'
 import { useQuickAddToCart } from '@/hooks/use-cart-actions'
 import { useOpenArtwork } from '@/hooks/use-artwork-viewer'
 import { useScrollReveal } from '@/hooks/use-scroll-reveal'
@@ -68,6 +68,7 @@ interface ArtCardProps {
   fillContainer?: boolean;
   /** Discover variant's "Sale" pill — opt-in per usage rather than implied by variant. */
   showSaleBadge?: boolean;
+  showDiscoverStats?: boolean;
 }
 
 // Small icon-only follow button, backed by the same hooks as the pill-style
@@ -106,6 +107,46 @@ function FollowIconButton({ userId, size = 'md' }: { userId: string; size?: 'md'
   )
 }
 
+function getPrimaryAsset(work: Artwork) {
+  return [...(work.assets ?? [])].sort((a, b) => a.ordering_index - b.ordering_index)[0]
+}
+
+// Same URL order as the main card (optimized first), because thumbnail_url is
+// the one that 404s. A non-image primary (video, 3D, link) can't be drawn by
+// <Image>, so for those only a real thumbnail_url counts.
+function getWorkThumb(work: Artwork): string | null {
+  const primary = getPrimaryAsset(work)
+  if (!primary) return null
+  if (primary.media_type !== 'IMAGE') return primary.thumbnail_url
+  return primary.optimized_url || primary.original_url || primary.thumbnail_url
+}
+
+function WorkTile({ work }: { work: Artwork }) {
+  const [failed, setFailed] = useState(false)
+  const src = getWorkThumb(work)
+  const isVideo = getPrimaryAsset(work)?.media_type === 'VIDEO'
+
+  return (
+    <div className="relative aspect-square rounded-[16px] overflow-hidden bg-slate-100">
+      {src && !failed && (
+        <Image
+          src={src}
+          alt=""
+          fill
+          sizes="100px"
+          className="object-cover"
+          onError={() => setFailed(true)}
+        />
+      )}
+      {isVideo && (
+        <span className="absolute left-1 top-1 flex h-5 w-5 items-center justify-center rounded-full bg-black/50 text-white">
+          <Image src="/icons/play-icon.svg" width={9} height={9} alt="Video" />
+        </span>
+      )}
+    </div>
+  )
+}
+
 // Hover Profile Component — shows the primary creator's stats + this
 // artwork's own media (not the creator's other/recent work), plus a
 // separate contributors card when the artwork has collaborators.
@@ -129,7 +170,15 @@ function ArtistHoverProfile({
     }
   })
 
-  const previewAssets = (artwork?.assets ?? []).slice(0, 3)
+  // const previewAssets = (artwork?.assets ?? []).slice(0, 3)
+  // Hover card only mounts while hovering, so this fetch is already lazy.
+
+  // Ask for 4 so we still have 3 after dropping the artwork being hovered.
+  const { data: creatorWorks, isLoading: worksLoading } =
+    useCreatorArtworks(primaryArtist.id, true, 4)
+  const otherWorks = (creatorWorks?.data ?? [])
+    .filter((w) => w.id !== artwork?.id)
+    .slice(0, 3)
 
   return (
     <div className="flex flex-col gap-3">
@@ -176,7 +225,17 @@ function ArtistHoverProfile({
             </div>
           </div>
 
-          <div className="flex gap-2 w-full justify-between">
+          {(worksLoading || otherWorks.length > 0) && (
+            <div className="grid grid-cols-3 gap-2 w-full">
+              {worksLoading
+                ? [0, 1, 2].map((i) => (
+                    <div key={i} className="aspect-square rounded-[16px] bg-slate-100 animate-pulse" />
+                  ))
+                : otherWorks.map((w) => <WorkTile key={w.id} work={w} />)}
+            </div>
+          )}
+
+          {/* <div className="flex gap-2 w-full justify-between">
             {(previewAssets.length > 0 ? previewAssets : [null, null, null]).map((asset, idx) => {
               const src = asset?.thumbnail_url || asset?.optimized_url || asset?.original_url
               const isVideo = asset?.media_type === 'VIDEO'
@@ -191,7 +250,7 @@ function ArtistHoverProfile({
                 </div>
               )
             })}
-          </div>
+          </div> */}
         </div>
       </motion.div>
 
@@ -276,6 +335,7 @@ export function ArtCard({
   alternate = false,
   fillContainer = false,
   showSaleBadge = false,
+  showDiscoverStats = true,
 }: ArtCardProps) {
   const currentUserId = useAuthStore((s) => s.user?.id)
 
@@ -308,13 +368,15 @@ export function ArtCard({
 
   const hasVideoAsset = Boolean(artwork?.assets?.some((a) => a.media_type === 'VIDEO'))
   const isOwner = Boolean(artwork && currentUserId && artwork.creator_id === currentUserId)
+  const isDiscover = variant === 'discover'
 
   // An explicit prop always wins; otherwise fall back to what the artwork implies.
   const effectiveShowCat   = showCat   ?? (artwork ? (artwork.allow_moodboard_save ?? true) : true)
   const effectiveShowHeart = showHeart ?? (artwork ? true : false)
-  const effectiveShowCart  = showCart  ?? (artwork ? artwork.listing_type === 'MARKETPLACE' : false)
-  const effectiveShowVideo = showVideo ?? (artwork ? hasVideoAsset : false)
-  const effectiveShowTrash = showTrash ?? (artwork ? isOwner : false)
+  const effectiveShowCart  = isDiscover ? false : (showCart  ?? (artwork ? artwork.listing_type === 'MARKETPLACE' : false))
+  const effectiveShowVideo = isDiscover ? false : (showVideo ?? (artwork ? hasVideoAsset : false))
+  const effectiveShowTrash = isDiscover ? false : (showTrash ?? (artwork ? isOwner : false))
+
 
   const primaryArtist = derivedArtist?.[0]
   const artistImages = derivedArtist?.map((a) => a.avatarUrl) || []
@@ -536,17 +598,34 @@ export function ArtCard({
 
                 )}
 
-                {/* Inline Artist (Discover Variant Only) */}
-                {variant === 'discover' && (
-                  <div
-                    className="flex items-center gap-2"
-                    onMouseEnter={handleArtistEnter}
-                    onMouseLeave={handleMouseLeave}
-                  >
-                    <div className="relative h-8 w-8 overflow-hidden rounded-full border border-white/20">
-                      <AvatarGroup images={artistImages} />
+                {/* Inline Artist + stats (Discover Variant Only) */}
+                {isDiscover && (
+                  <div className="flex items-center justify-between w-full">
+                    <div
+                      className="flex items-center gap-2 min-w-0 flex-1 mr-1"
+                      onMouseEnter={handleArtistEnter}
+                      onMouseLeave={handleMouseLeave}
+                    >
+                      <div className="relative h-8 w-8 shrink-0 overflow-hidden rounded-full border border-white/20">
+                        <AvatarGroup images={artistImages} />
+                      </div>
+                      <span data-artist-name className="text-[12px] truncate leading-4 tracking-wide font-poppins font-medium text-white">
+                        {primaryArtist?.name} {artistCount > 1 && `+ ${artistCount - 1}`}
+                      </span>
                     </div>
-                      <span data-artist-name className="text-[12px] truncate leading-4 tracking-wide font-poppins font-medium text-white">{primaryArtist?.name} {artistCount > 1 && `+ ${artistCount - 1}`}</span>
+
+                    {showDiscoverStats && derivedStats && (
+                      <div className="flex gap-x-4 shrink-0">
+                        <div className="flex gap-x-1">
+                          <Image src="/icons/heart-red.svg" alt="Likes" width={20} height={20} className="object-contain" />
+                          <span className="text-body-xs leading-4 tracking-wide font-poppins font-medium text-white">{derivedStats.likes}</span>
+                        </div>
+                        <div className="flex gap-x-1">
+                          <Image src="/icons/eye-red.svg" alt="Views" width={20} height={20} className="object-contain" />
+                          <span className="text-body-xs leading-4 tracking-wide font-poppins font-medium text-white">{derivedStats.views}</span>
+                        </div>
+                      </div>
+                    )}
                   </div>
                 )}
               </div>

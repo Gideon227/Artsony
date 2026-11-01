@@ -9,6 +9,7 @@ import { PriceRangeSlider } from '@/components/ui/price-range-slider'
 import { INTERESTS } from '@/features/onboarding/data/interests'
 import { useArtworkLocations } from '@/hooks/use-artwork'
 import { MobileFilterDrawer } from '@/features/home/components/mobile-filter-drawer'
+import { getCountryName, useCountryOptions } from '@/hooks/use-location-data'
 
 export type ShopFilterState = {
   category: string | null
@@ -68,38 +69,15 @@ export function SearchSection({ query, onSearch, filters, onFilterChange, onClea
   const [isMobileFiltersOpen, setIsMobileFiltersOpen] = useState(false)
 
 
-  const [countries, setCountries] = useState<DropdownOption[]>([])
-  const [isLoadingCountries, setIsLoadingCountries] = useState(false)
+  // The API filters on the 2-letter ISO code (that's what profiles store and what
+  // the endpoint validates), so options carry the code as id and the name as label.
+  const { countries, isLoading: isLoadingCountries } = useCountryOptions()
 
-  useEffect(() => {
-    const fetchCountries = async () => {
-      setIsLoadingCountries(true)
-      try {
-        const response = await fetch('https://countriesnow.space/api/v0.1/countries')
-        if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`)
-        const resData = await response.json()
-            
-        if (!resData.error && Array.isArray(resData.data)) {
-          const formattedCountries: DropdownOption[] = resData.data.map((item: { country: string }) => ({
-            id: item.country, 
-            label: item.country,
-          }))
-          setCountries(formattedCountries)
-        }
-      } catch (error) {
-        console.error('Failed to load countries selection table:', error)
-      } finally {
-        setIsLoadingCountries(false)
-      }
-    }
-
-    fetchCountries()
-  }, [])
-
-  const countryOptions = useMemo(() => {
-    if (!countryQuery.trim()) return countries
+  const countryOptions = useMemo<DropdownOption[]>(() => {
+    const all = countries.map((c) => ({ id: c.code, label: c.name }))
+    if (!countryQuery.trim()) return all
     const q = countryQuery.trim().toLowerCase()
-    return countries.filter((c) => c.label.toLowerCase().includes(q))
+    return all.filter((c) => c.label.toLowerCase().includes(q))
   }, [countries, countryQuery])
 
   useEffect(() => {
@@ -178,7 +156,7 @@ export function SearchSection({ query, onSearch, filters, onFilterChange, onClea
     {
       id: 'location',
       options: countryOptions,
-      value: filters.country ? { id: filters.country, label: filters.country } : undefined,
+      value: filters.country ? { id: filters.country, label: getCountryName(filters.country) ?? filters.country } : undefined,
       onChange: (option) =>
         onFilterChange({ country: option ? String(option.id) : null, state: null, city: null }),
       searchable: true,

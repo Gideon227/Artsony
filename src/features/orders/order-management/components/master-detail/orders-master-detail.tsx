@@ -10,6 +10,8 @@ import { useIsDesktop } from '../../hooks/use-is-desktop'
 import type { OrderFilters } from '../../lib/filters'
 import { OrderDetailPanel } from './order-detail-panel'
 import { OrderListPanel } from './order-list-panel'
+import { OrdersEmptyState } from '../orders-empty-state'
+// import { OrdersEmptyState } from '../orders-empty-state'
 
 type SelectOptions = { replace?: boolean }
 
@@ -50,11 +52,34 @@ export function OrdersMasterDetail({ filters, sort, onSortChange, status, orderP
     if (hasNextPage && !isFetchingNextPage) void fetchNextPage()
   }, [hasNextPage, isFetchingNextPage, fetchNextPage])
 
-  const showList = isDesktop || orderParam === null
+    const showList = isDesktop || orderParam === null
   const showDetail = isDesktop || orderParam !== null
 
+  // Show the appropriate empty state when there are no matching orders.
+  if (!list.isPending && !list.isError && rows.length === 0) {
+    if (filters.search.trim()) {
+      return (
+        <div className="min-w-0 lg:col-span-3 overflow-hidden">
+          <OrdersEmptyState
+            kind="none"
+            // onClear={() => onSearchChange('')}
+          />
+        </div>
+      )
+    }
+
+    return (
+      <div className="min-w-0 lg:col-span-3 overflow-hidden">
+        <OrdersEmptyState
+          kind="none"
+          // groupLabel={emptyLabel}
+        />
+      </div>
+    )
+  }
+
   return (
-    <div className="grid min-w-0 gap-4 lg:rounded-2xl lg:bg-secondary-50 lg:p-4 lg:col-span-3 lg:grid-cols-[minmax(0,5fr)_minmax(0,8fr)]">
+    <div className="grid min-w-0 gap-4 lg:rounded-2xl lg:bg-secondary-50 lg:p-4 lg:col-span-3 lg:grid-cols-[341px_minmax(0,1fr)]">
       {showList && (
         <OrderListPanel
           rows={rows}

@@ -62,7 +62,7 @@ export function ResultsGrid({
 
   if (isLoading) {
     return (
-      <div className="max-w-[1440px] mx-auto px-4 md:px-8 py-8">
+      <div className="mx-auto px-4 md:px-8 py-8">
         <Skeleton className="h-5 w-48 mb-6 rounded-full" />
         <ResultsSkeleton />
       </div>
@@ -74,7 +74,7 @@ export function ResultsGrid({
   }
 
   return (
-    <div className="max-w-[1440px] mx-auto px-4 md:px-8 py-6">
+    <div className="px-4 md:px-8 py-6">
 
       <div className='flex items-center justify-between mb-6'>
         {/* Result count */} 
@@ -85,19 +85,8 @@ export function ResultsGrid({
           </p>
         )}
 
-        <div style={{ width: 132 }} className=''>
-          <Dropdown
-            options={FEED_TAB_OPTIONS}
-            value={activeOption}
-            onChange={(opt) => setActiveTab(opt.id as FeedSort)}
-            multiple={false}
-            indicator="highlight"
-            placeholder='Sort By'
-          />
-        </div>
       </div>
 
-      {/* 4-col grid — matches design exactly: 364px cards, 332px image, 55px pill */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-x-4 gap-y-10">
         {artworks.map((artwork, i) => (
           <motion.div

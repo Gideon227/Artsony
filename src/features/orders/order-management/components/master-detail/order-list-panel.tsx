@@ -142,7 +142,7 @@ export function OrderListPanel({
   }
 
   return (
-    <section aria-label="Orders list" className="flex min-h-0 min-w-0 flex-col gap-4">
+    <section aria-label="Orders list" className="flex min-h-0 min-w-0 flex-col gap-4 w-[341px]">
       <div className="flex items-center gap-3">
         <label className="relative flex h-12 min-w-0 flex-1 items-center rounded-full border border-gray-50 bg-white">
           <Search className="pointer-events-none absolute left-4 h-5 w-5 text-gray-400" aria-hidden="true" />

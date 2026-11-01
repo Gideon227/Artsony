@@ -9,13 +9,17 @@ import ArtGrid from '@/features/shop/components/art-grid'
 // import { HeroSection } from '@/features/shop/components/hero-section'
 import { HeroSection } from '@/features/home/components/hero'
 import { SearchSection, ShopFilterState, EMPTY_SHOP_FILTERS } from '@/features/shop/components/search-section'
-import TopArt from '@/features/shop/components/top-arts'
+import TopArt, { type TopArtFilters } from '@/features/shop/components/top-arts'
 import TopPicks from '@/features/shop/components/top-picks'
 import { useInfiniteArtworkResults } from '@/hooks/use-artwork'
+import { useDebouncedValue } from '@/hooks/queries/use-debounce'
 import type { ArtworkFilters } from '@/types/artwork'
 import { useOpenArtwork } from '@/hooks/use-artwork-viewer'
 import { ShopResultsGrid } from '@/features/shop/components/shop-result-grid'
 import Footer from '@/components/layout/footer'
+
+// Filters (the price slider especially) change rapidly — wait for them to settle before refetching.
+const FILTER_DEBOUNCE_MS = 400
 
 function toArtworkFilters(query: string, filters: ShopFilterState): ArtworkFilters {
   return {
@@ -23,10 +27,25 @@ function toArtworkFilters(query: string, filters: ShopFilterState): ArtworkFilte
     status: 'PUBLISHED',
     visibility: 'PUBLIC',
     search: query || undefined,
-    categories: filters.category ? [filters.category] : undefined,
+    // `category` holds the multi-select as "a,b,c" — the API wants one param per category
+    categories: filters.category ? filters.category.split(',') : undefined,
+    color: filters.color ?? undefined,
     min_price: filters.minPrice ?? undefined,
     max_price: filters.maxPrice ?? undefined,
     artwork_format: filters.format ?? undefined,
+    country: filters.country ?? undefined,
+    state: filters.state ?? undefined,
+    city: filters.city ?? undefined,
+  }
+}
+
+function toTopArtFilters(filters: ShopFilterState): TopArtFilters {
+  return {
+    categories: filters.category ? filters.category.split(',') : undefined,
+    minPrice: filters.minPrice ?? undefined,
+    maxPrice: filters.maxPrice ?? undefined,
+    color: filters.color ?? undefined,
+    format: filters.format ?? undefined,
     country: filters.country ?? undefined,
     state: filters.state ?? undefined,
     city: filters.city ?? undefined,
@@ -57,7 +76,9 @@ function ShopContent() {
     setFilters(EMPTY_SHOP_FILTERS)
   }, [])
 
-  const artworkFilters = useMemo(() => toArtworkFilters(query, filters), [query, filters])
+  const debouncedFilters = useDebouncedValue(filters, FILTER_DEBOUNCE_MS)
+  const artworkFilters = useMemo(() => toArtworkFilters(query, debouncedFilters), [query, debouncedFilters])
+  const topArtFilters = useMemo(() => toTopArtFilters(debouncedFilters), [debouncedFilters])
 
   const {
     data,
@@ -65,7 +86,7 @@ function ShopContent() {
     isFetchingNextPage,
     hasNextPage,
     fetchNextPage,
-  } = useInfiniteArtworkResults(artworkFilters)
+  } = useInfiniteArtworkResults(artworkFilters, { keepPreviousData: true })
 
   const artworks = useMemo(() => data?.pages.flatMap((p) => p.data) ?? [], [data])
   const total = data?.pages[0]?.total
@@ -78,7 +99,7 @@ function ShopContent() {
   }
 
   return (
-    <div className="bg-white max-lg:pb-20">
+    <div className="bg-white">
       <Navbar />
       <HeroSection />
       <SearchSection
@@ -104,13 +125,14 @@ function ShopContent() {
           <div className='max-md:hidden'>
             <TopPicks />
           </div>
-          <TopArt />
+          <TopArt filters={topArtFilters} onClearFilters={handleClearFilters} />
           <div className='max-md:hidden'>
             <AroundTheWorld />
           </div>
           <div className='md:hidden'>
             <TopPicks />
           </div>
+          
           <ArtGrid
             artworks={artworks}
             num={0}
@@ -118,7 +140,7 @@ function ShopContent() {
             onCardClick={(_, index) => handleGridClick(index)}
           />
 
-          <div className="flex justify-center lg:pb-16">
+          <div className="flex justify-center pb-16">
             {hasNextPage && (
               <button
                 onClick={() => fetchNextPage()}

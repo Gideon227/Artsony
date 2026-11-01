@@ -310,7 +310,8 @@ const Dropdown = ({
     ) : null;
 
   const chipsSection = multiple && !hideChips  ? (
-    <div className="p-4 flex flex-col gap-y-2">
+    <div className="px-6 py-4 flex flex-col gap-y-4">
+      <p className="text-left font-poppins text-body-s text-text-alt-grey max-lg:hidden">{title && title}</p>
       <div className="flex items-center justify-between mb-2">
         <span className="text-sm font-semibold text-neutral-900">
           Selected&nbsp;

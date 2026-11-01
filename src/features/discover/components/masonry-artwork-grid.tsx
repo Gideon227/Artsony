@@ -82,6 +82,7 @@ export function MasonryArtworkGrid({ artworks, onArtworkClick }: MasonryArtworkG
                 stats={{ likes: String(artwork.like_count), views: String(artwork.view_count) }}
                 variant="discover"
                 fillContainer
+                showDiscoverStats={false}
               />
             </div>
           )

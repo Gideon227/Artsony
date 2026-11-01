@@ -9,7 +9,7 @@ import { Navbar } from '@/components/layout/navbar'
 import Footer from '@/components/layout/footer'
 import { SearchInput } from '@/components/ui/search-input'
 import { ResultsGrid } from '@/features/search/components/results-grid'
-import { useArtworkLocations, useHeroArtworks, useInfiniteArtworkResults } from '@/hooks/use-artwork'
+import { useHeroArtworks, useInfiniteArtworkResults } from '@/hooks/use-artwork'
 import type { Artwork, ArtworkFilters } from '@/types'
 import { useOpenArtwork } from '@/hooks/use-artwork-viewer'
 import FilterComponent, { FilterDropdownConfig } from '@/features/home/components/filter'
@@ -17,13 +17,20 @@ import { DropdownOption } from '@/components/ui/dropdown'
 import { INTERESTS } from '@/features/onboarding/data/interests'
 import { buildSlides } from '@/features/home/components/hero'
 import { MobileFilterDrawer } from '@/features/home/components/mobile-filter-drawer'
+import { COLOR_SWATCHES, findClosestSwatch } from '@/features/home/data/color-swatches'
+import { useCountryOptions } from '@/hooks/use-location-data'
 
-// Price dropdown options translation
-function parsePriceRange(id: string): Pick<ArtworkFilters, 'min_price' | 'max_price'> {
-  if (id === '5000+') return { min_price: 5000 }
-  const [min, max] = id.split('-').map(Number)
-  return { min_price: min, max_price: max }
-}
+const MAX_CATEGORIES = 5
+
+const CATEGORY_OPTIONS: DropdownOption[] = [...INTERESTS]
+  .sort((a, b) => a.label.localeCompare(b.label))
+  .map((item) => ({ id: item.id, label: item.label }))
+
+const COLOR_OPTIONS: DropdownOption[] = COLOR_SWATCHES.map((c) => ({
+  id: c.id,
+  label: c.label,
+  hex: c.hex,
+}))
 
 function SearchContent() {
   const searchParams = useSearchParams()
@@ -46,15 +53,17 @@ function SearchContent() {
   }, [urlQuery])
 
   // Filter state
-  const [selectedCategory, setSelectedCategory] = useState<DropdownOption | null>(null)
-  const [selectedPrice, setSelectedPrice] = useState<DropdownOption | null>(null)
-  const [selectedColor, setSelectedColor] = useState<DropdownOption | null>(null)
-  const [selectedSize, setSelectedSize] = useState<DropdownOption | null>(null)
+  const [selectedCategories, setSelectedCategories] = useState<DropdownOption[]>([])
   const [selectedCountry, setSelectedCountry] = useState<DropdownOption | null>(null)
+  const [selectedColor, setSelectedColor] = useState<DropdownOption | null>(null)
+  const [hexQuery, setHexQuery] = useState('')
   const [countryQuery, setCountryQuery] = useState('')
 
-  const { data: countries, isLoading: isLoadingCountries } = useArtworkLocations('country')
+  const { countries, isLoading: isLoadingCountries } = useCountryOptions()
   const { data: featured, isError } = useHeroArtworks(5)
+
+  // const { data: countries, isLoading: isLoadingCountries } = useArtworkLocations('country')
+  // const { data: featured, isError } = useHeroArtworks(5)
 
   useEffect(() => {
     if (isError) {
@@ -80,115 +89,106 @@ function SearchContent() {
     return () => clearInterval(timer)
   }, [slides.length])
 
-  function toSearchableOptions(
-    raw: { label: string; artwork_count: number }[] | undefined,
-    q: string,
-  ): DropdownOption[] {
-    const list = (raw ?? []).map((l) => ({ id: l.label, label: l.label }))
-    if (!q.trim()) return list
-    const lower = q.trim().toLowerCase()
-    return list.filter((c) => c.label.toLowerCase().includes(lower))
+  // function toSearchableOptions(
+  //   raw: { label: string; artwork_count: number }[] | undefined,
+  //   q: string,
+  // ): DropdownOption[] {
+  //   const list = (raw ?? []).map((l) => ({ id: l.label, label: l.label }))
+  //   if (!q.trim()) return list
+  //   const lower = q.trim().toLowerCase()
+  //   return list.filter((c) => c.label.toLowerCase().includes(lower))
+  // }
+
+  const countryOptions = useMemo(() => {
+    const all: DropdownOption[] = countries.map((c) => ({ id: c.code, label: c.name }))
+    if (!countryQuery.trim()) return all
+    const q = countryQuery.trim().toLowerCase()
+    return all.filter((c) => c.label.toLowerCase().includes(q))
+  }, [countries, countryQuery])
+
+  // const categoriesOption: DropdownOption[] = useMemo(
+  //   () => INTERESTS.map((item) => ({ id: item.id, icon: item.image, label: item.label })),
+  //   []
+  // )
+
+  // const priceOptions: DropdownOption[] = [
+  //   { id: '0-500', label: 'Under $500' },
+  //   { id: '500-1000', label: '$500 - $1,000' },
+  //   { id: '1000-5000', label: '$1,000 - $5,000' },
+  //   { id: '5000+', label: 'Over $5,000' },
+  // ]
+
+  // const colorOptions: DropdownOption[] = [
+  //   { id: 'red', label: 'Red', icon: '/icons/colors/red.svg' },
+  //   { id: 'blue', label: 'Blue', icon: '/icons/colors/blue.svg' },
+  //   { id: 'green', label: 'Green', icon: '/icons/colors/green.svg' },
+  //   { id: 'monochrome', label: 'Black & White' },
+  // ]
+
+  // const sizeOptions: DropdownOption[] = [
+  //   { id: 'small', label: 'Small (Under 40cm)' },
+  //   { id: 'medium', label: 'Medium (40-100cm)' },
+  //   { id: 'large', label: 'Large (Over 100cm)' },
+  // ]
+
+  const handleClearFilters = () => {
+    setSelectedCategories([])
+    setSelectedCountry(null)
+    setSelectedColor(null)
+    setCountryQuery('')
+    setHexQuery('')
   }
 
-  const countryOptions = useMemo(() => toSearchableOptions(countries, countryQuery), [countries, countryQuery])
-
-  const categoriesOption: DropdownOption[] = useMemo(
-    () => INTERESTS.map((item) => ({ id: item.id, icon: item.image, label: item.label })),
-    []
-  )
-
-  const priceOptions: DropdownOption[] = [
-    { id: '0-500', label: 'Under $500' },
-    { id: '500-1000', label: '$500 - $1,000' },
-    { id: '1000-5000', label: '$1,000 - $5,000' },
-    { id: '5000+', label: 'Over $5,000' },
+  const filterDropdowns: FilterDropdownConfig[] = [
+    {
+      id: 'category',
+      options: CATEGORY_OPTIONS,
+      title: 'category',
+      multiple: true,
+      values: selectedCategories,
+      onChangeMultiple: setSelectedCategories,
+      maxSelected: MAX_CATEGORIES,
+      indicator: 'checkmark',
+      placeholder: 'Categories',
+      leftIcon: '/icons/widget.svg',
+    },
+    {
+      id: 'color',
+      title: 'colour',
+      options: COLOR_OPTIONS,
+      value: selectedColor,
+      onChange: setSelectedColor,
+      layout: 'grid',
+      searchable: true,
+      searchPlaceholder: 'Color',
+      searchValue: hexQuery,
+      searchVariant: 'button',
+      onSearchChange: setHexQuery,
+      onSearchSubmit: () => {
+        const closest = findClosestSwatch(hexQuery)
+        if (closest) setSelectedColor({ id: closest.id, label: closest.label, hex: closest.hex })
+      },
+      placeholder: 'Color',
+      leftIcon: '/icons/palette.svg',
+    },
+    {
+      id: 'location',
+      options: countryOptions,
+      value: selectedCountry,
+      onChange: (opt) => {
+        setSelectedCountry(opt)
+      },
+      indicator: 'checkmark',
+      searchable: true,
+      searchPlaceholder: 'Search country',
+      searchValue: countryQuery,
+      onSearchChange: setCountryQuery,
+      isLoading: isLoadingCountries,
+      emptyMessage: 'No matching countries',
+      placeholder: 'Location',
+      leftIcon: '/icons/map-point.svg',
+    }
   ]
-
-  const colorOptions: DropdownOption[] = [
-    { id: 'red', label: 'Red', icon: '/icons/colors/red.svg' },
-    { id: 'blue', label: 'Blue', icon: '/icons/colors/blue.svg' },
-    { id: 'green', label: 'Green', icon: '/icons/colors/green.svg' },
-    { id: 'monochrome', label: 'Black & White' },
-  ]
-
-  const sizeOptions: DropdownOption[] = [
-    { id: 'small', label: 'Small (Under 40cm)' },
-    { id: 'medium', label: 'Medium (40-100cm)' },
-    { id: 'large', label: 'Large (Over 100cm)' },
-  ]
-
-  const handleClearFilters = useCallback(() => {
-    setSelectedCategory(null)
-    setSelectedPrice(null)
-    setSelectedColor(null)
-    setSelectedSize(null)
-    setSelectedCountry(null)
-    setCountryQuery('')
-  }, [])
-
-  const filterDropdowns: FilterDropdownConfig[] = useMemo(
-    () => [
-      {
-        id: 'category',
-        options: categoriesOption,
-        value: selectedCategory,
-        onChange: setSelectedCategory,
-        placeholder: 'Categories',
-        leftIcon: '/icons/widget.svg',
-      },
-      {
-        id: 'price',
-        options: priceOptions,
-        value: selectedPrice,
-        onChange: setSelectedPrice,
-        placeholder: 'Price',
-        leftIcon: '/icons/dollar-circle.svg',
-      },
-      {
-        id: 'color',
-        options: colorOptions,
-        value: selectedColor,
-        onChange: setSelectedColor,
-        placeholder: 'Color',
-        leftIcon: '/icons/palette.svg',
-      },
-      {
-        id: 'size',
-        options: sizeOptions,
-        value: selectedSize,
-        onChange: setSelectedSize,
-        placeholder: 'Size',
-        leftIcon: '/icons/maximize.svg',
-      },
-      {
-        id: 'location',
-        options: countryOptions,
-        value: selectedCountry,
-        onChange: (opt: DropdownOption | null) => {
-          setSelectedCountry(opt)
-        },
-        searchable: true,
-        searchPlaceholder: 'Search country',
-        searchValue: countryQuery,
-        onSearchChange: setCountryQuery,
-        isLoading: isLoadingCountries,
-        emptyMessage: 'No matching countries',
-        placeholder: 'Location',
-        leftIcon: '/icons/map-point.svg',
-      }
-    ],
-    [
-      categoriesOption,
-      selectedCategory,
-      selectedPrice,
-      selectedColor,
-      selectedSize,
-      selectedCountry,
-      countryOptions,
-      countryQuery,
-      isLoadingCountries,
-    ]
-  )
 
   const handleSearch = (q: string) => {
     const trimmed = q.trim()
@@ -200,12 +200,15 @@ function SearchContent() {
   const searchFilters: ArtworkFilters = useMemo(
     () => ({
       search: urlQuery || undefined,
-      categories: selectedCategory ? [String(selectedCategory.id)] : undefined,
-      size_label: selectedSize ? String(selectedSize.id) : undefined,
+      categories: selectedCategories.length
+        ? selectedCategories.map((c) => String(c.id))
+        : undefined,
       country: selectedCountry ? String(selectedCountry.id) : undefined,
-      ...(selectedPrice ? parsePriceRange(String(selectedPrice.id)) : {}),
+      // The color filter matches seller-entered color labels ("Crimson red"), so
+      // send the swatch's label ("Light Gray"), not its id ("light-gray").
+      color: selectedColor ? selectedColor.label : undefined,
     }),
-    [urlQuery, selectedCategory, selectedPrice, selectedSize, selectedCountry]
+    [urlQuery, selectedCategories, selectedCountry, selectedColor]
   )
 
   const { data, isLoading, isFetchingNextPage, hasNextPage, fetchNextPage } =
@@ -223,7 +226,7 @@ function SearchContent() {
     <div className="min-h-screen bg-white flex flex-col">
       <Navbar hideSearchBar />
 
-      <section className="relative h-[80vh] md:h-[calc(95vh-72px)] w-full overflow-hidden bg-black">
+      <section className="relative h-[360px] md:h-[calc(95vh-72px)] w-full overflow-hidden bg-black">
         <AnimatePresence>
           <motion.div
             key={currentSlide.id}
@@ -343,7 +346,7 @@ function SearchContent() {
         </button>
       </div>
 
-      <FilterComponent dropdowns={filterDropdowns} onClear={handleClearFilters} hideClearButton={true} />
+      <FilterComponent dropdowns={filterDropdowns} onClear={handleClearFilters} hideClearButton={false} />
       
       <main className="flex-1">
         <ResultsGrid

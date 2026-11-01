@@ -177,6 +177,7 @@ export type ArtworkFilters = {
   state?: string
   city?: string
   size_label?: string
+  color?: string
 }
 
 export type PaginatedArtworksResponse = {

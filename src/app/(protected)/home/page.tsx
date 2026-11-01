@@ -20,6 +20,7 @@ import { useFeed } from '@/hooks/use-artwork'
 import type { FeedSort } from '@/features/home/types'
 import { useOpenArtwork } from '@/hooks/use-artwork-viewer'
 import type { Artwork } from '@/types/artwork'
+import { useCountryOptions } from '@/hooks/use-location-data'
 
 const MAX_CATEGORIES = 5
 
@@ -45,9 +46,7 @@ function HomePage() {
   const [isMobileFiltersOpen, setIsMobileFiltersOpen] = useState(false)
   const openArtwork = useOpenArtwork()
 
-  // Explicit state for countries fetched from third-party API
-  const [countries, setCountries] = useState<DropdownOption[]>([])
-  const [isLoadingCountries, setIsLoadingCountries] = useState(false)
+  const { countries, isLoading: isLoadingCountries } = useCountryOptions()
 
   const router = useRouter()
   const searchParams = useSearchParams()
@@ -62,36 +61,11 @@ function HomePage() {
     [router]
   )
 
-  useEffect(() => {
-    const fetchCountries = async () => {
-      setIsLoadingCountries(true)
-      try {
-        const response = await fetch('https://countriesnow.space/api/v0.1/countries')
-        if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`)
-        const resData = await response.json()
-            
-        if (!resData.error && Array.isArray(resData.data)) {
-          const formattedCountries: DropdownOption[] = resData.data.map((item: { country: string }) => ({
-            id: item.country, 
-            label: item.country,
-          }))
-          setCountries(formattedCountries)
-        }
-      } catch (error) {
-        console.error('Failed to load countries selection table:', error)
-      } finally {
-        setIsLoadingCountries(false)
-      }
-    }
-
-    fetchCountries()
-  }, [])
-
-  // Filter fetched countries based on user input query
   const countryOptions = useMemo(() => {
-    if (!countryQuery.trim()) return countries
+    const all: DropdownOption[] = countries.map((c) => ({ id: c.code, label: c.name }))
+    if (!countryQuery.trim()) return all
     const q = countryQuery.trim().toLowerCase()
-    return countries.filter((c) => c.label.toLowerCase().includes(q))
+    return all.filter((c) => c.label.toLowerCase().includes(q))
   }, [countries, countryQuery])
 
   const feedQuery = useFeed({
@@ -125,6 +99,7 @@ function HomePage() {
     {
       id: 'category',
       options: CATEGORY_OPTIONS,
+      title: 'category',
       multiple: true,
       values: selectedCategories,
       onChangeMultiple: setSelectedCategories,
@@ -135,12 +110,13 @@ function HomePage() {
     },
     {
       id: 'color',
+      title: 'colour',
       options: COLOR_OPTIONS,
       value: selectedColor,
       onChange: setSelectedColor,
       layout: 'grid',
       searchable: true,
-      searchPlaceholder: 'Hex code',
+      searchPlaceholder: 'Color',
       searchValue: hexQuery,
       searchVariant: 'button',
       onSearchChange: setHexQuery,

@@ -9,6 +9,7 @@ import { ArtCard } from '@/components/ui/art-card'
 import { Skeleton } from '@/components/ui/skeleton'
 import type { Artwork } from '@/types'
 import { formatCardPrice } from '@/utils'
+import { useOpenArtwork } from '@/hooks/use-artwork-viewer'
 import EmptySearch from '../../search/components/empty-search'
 
 // ─── ResultsGrid ──────────────────────────────────────────────────────────────
@@ -33,6 +34,7 @@ export function ShopResultsGrid({
   total,
 }: ResultsGridProps) {
   const observerRef = useRef<IntersectionObserver | null>(null)
+  const openArtwork = useOpenArtwork()
 
   const sentinelRef = useCallback(
     (node: HTMLDivElement | null) => {
@@ -51,7 +53,7 @@ export function ShopResultsGrid({
 
   if (isLoading) {
     return (
-      <div className="max-w-[1440px] mx-auto px-4 md:px-8 py-8">
+      <div className="mx-auto px-4 md:px-8 py-8">
         <Skeleton className="h-5 w-48 mb-6 rounded-full" />
         <ResultsSkeleton />
       </div>
@@ -65,7 +67,7 @@ export function ShopResultsGrid({
   {console.log("Artworks: ", artworks)}
 
   return (
-    <div className="max-w-[1440px] mx-auto px-4 md:px-8 py-8">
+    <div className="mx-auto px-4 md:px-8 py-8">
       {/* Result count */}
       {total !== undefined && (
         <p className="font-raleway font-semibold text-h5 text-body mb-6">
@@ -89,6 +91,7 @@ export function ShopResultsGrid({
               title={artwork.title}
               // artworkId={artwork.id}
               // cardLink={`/artwork/${artwork.id}`}
+              onCardClick={() => openArtwork(artwork, { siblings: artworks, variant: 'home' })}
               artist={[{
                 id: artwork.creator?.id || artwork.creator_id,
                 name: artwork.creator?.profile?.display_name || artwork.creator?.username as string,

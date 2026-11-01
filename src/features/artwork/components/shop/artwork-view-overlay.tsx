@@ -625,8 +625,8 @@ export default function ArtworkViewOverlay({ artwork: artworkProp, onClose, onNa
                   key={asset.id}
                   onClick={() => setActiveAssetIndex(idx)}
                   className={cn(
-                    'relative h-[140px] w-[110px] shrink-0 overflow-hidden rounded-[18px] bg-secondary-100 transition-transform hover:-translate-y-1 lg:h-[220px] lg:w-[180px] lg:rounded-[24px] lg:hover:-translate-y-2',
-                    isActive && 'ring-2 ring-primary-500'
+                    'relative h-[216px] w-[216px] shrink-0 overflow-hidden rounded-[18px] bg-secondary-100 transition-transform hover:-translate-y-1 lg:h-[220px] lg:w-[180px] lg:rounded-[24px] lg:hover:-translate-y-2',
+                    isActive && 'ring-2 ring-offset-2 ring-primary-500'
                   )}
                 >
                   <Image src={thumbSrc} alt={`Asset ${idx + 1}`} fill className="object-contain p-2" />
@@ -853,7 +853,7 @@ export default function ArtworkViewOverlay({ artwork: artworkProp, onClose, onNa
             </div>
 
             {/* ================= RIGHT: details panel, content-height (desktop only) === */}
-            <div className="hidden h-full overflow-y-auto lg:flex lg:w-[348px] lg:flex-col lg:self-start lg:px-6 lg:py-8">
+            <div style={{ "height": "-webkit-fill-available" }} className="hidden h-full overflow-y-auto lg:flex lg:w-[348px] lg:flex-col lg:self-start lg:px-6 lg:py-8">
               <div className="mb-6 pr-8">{profileHeader}</div>
               <div className="mb-6">{likeFollowRow}</div>
               <div className="mb-4">{artworkInfoStats}</div>

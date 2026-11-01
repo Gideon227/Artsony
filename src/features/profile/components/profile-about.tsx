@@ -64,7 +64,7 @@ const ProfileAboutTab = ({ user }: { user: User }) => {
                             <p className='font-raleway font-semibold text-gray-500 text-body-xl leading-8 tracking-wide'>Art Focus</p>
                             <div className='flex w-full flex-col gap-3'>
                                 {user.interests.map((item, index) => (
-                                    <div key={index} className='w-full rounded-2xl border border-gray-50 px-6 py-3 h-10 flex items-center justify-center '>
+                                    <div key={index} className='w-full rounded-2xl border border-gray-50 px-6 py-3 h-12 flex items-center justify-center '>
                                         <p className='font-poppins font-medium text-body-s text-primary-500 leading-6 tracking-wide'>{item.charAt(0).toUpperCase() + item.slice(1)}</p>
                                     </div>
                                 ))}
@@ -120,7 +120,7 @@ const ProfileAboutTab = ({ user }: { user: User }) => {
 
                             <div className='flex w-full flex-col gap-2'>
                                 {user?.website && (
-                                    <div className='flex w-full mb-4 items-center justify-center h-10 gap-3 rounded-2xl border border-gray-50'>
+                                    <div className='flex w-full mb-4 items-center justify-center h-12 gap-3 rounded-2xl border border-gray-50'>
                                         <LinkIcon color='#525965' width={20} height={20} className='shrink-0' />
                                         <a href={user.website} target='_blank' rel="noopener noreferrer" className='truncate font-poppins text-primary-500 text-body-s leading-6 underline'>
                                             {user.website}

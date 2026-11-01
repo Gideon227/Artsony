@@ -107,7 +107,7 @@ export const DiscoverHero = () => {
   if (!currentSlide) return <div className="h-[320px] w-full bg-black" />;
 
   return (
-    <div className="relative h-120 w-full overflow-hidden bg-black">
+    <div className="relative h-screen lg:h-120 w-full overflow-hidden bg-black">
       {/* Animated Backgrounds & Artist Info (Changes every 6s) */}
       <AnimatePresence mode="wait">
         <motion.div
@@ -173,19 +173,6 @@ export const DiscoverHero = () => {
           </p>
         </motion.div>
       </div>
-
-      {/* Slide Indicators */}
-      {/* <div className="absolute bottom-10 right-10 z-30 flex gap-3">
-        {slides.map((_, i) => (
-          <button
-            key={i}
-            onClick={() => setIndex(i)}
-            className={`h-1 transition-all duration-500 rounded-full ${
-              i === index ? 'w-12 bg-white' : 'w-4 bg-white/30'
-            }`}
-          />
-        ))}
-      </div> */}
     </div>
   );
 };

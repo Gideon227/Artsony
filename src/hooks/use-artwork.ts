@@ -7,6 +7,7 @@ import {
   useMutation,
   useInfiniteQuery,
   useQueryClient,
+  keepPreviousData,
   type InfiniteData,
 } from '@tanstack/react-query'
 import { useRouter } from 'next/navigation'
@@ -219,7 +220,13 @@ export function useSearchArtworks(query: string, filters?: ArtworkFilters) {
 // query too, since browse mode reuses the same grid/filters as search mode.
 const RESULTS_PAGE_SIZE = 12
 
-export function useInfiniteArtworkResults(filters: ArtworkFilters) {
+// `keepPreviousData` keeps the current cards on screen while a new filter set
+// loads, so changing a filter swaps the cards in place instead of collapsing
+// the grid to empty (and shifting the page) first.
+export function useInfiniteArtworkResults(
+  filters: ArtworkFilters,
+  options: { keepPreviousData?: boolean } = {},
+) {
   return useInfiniteQuery({
     queryKey: [...ART_KEYS.lists(), 'shop-results', filters],
     queryFn: ({ pageParam }) =>
@@ -227,6 +234,7 @@ export function useInfiniteArtworkResults(filters: ArtworkFilters) {
     initialPageParam: 1,
     getNextPageParam: (lastPage) => (lastPage.has_next ? lastPage.page + 1 : undefined),
     staleTime: STALE_TIMES.medium,
+    ...(options.keepPreviousData ? { placeholderData: keepPreviousData } : {}),
   })
 }
 

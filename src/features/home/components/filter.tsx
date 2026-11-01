@@ -61,6 +61,7 @@ const FilterComponent: React.FC<FilterComponentProps> = ({ dropdowns, onClear, h
               <Dropdown
                 key={item.id}
                 options={item.options}
+                title={item.title}
                 value={item.value ?? undefined}
                 onChange={item.onChange}
                 multiple={item.multiple}
