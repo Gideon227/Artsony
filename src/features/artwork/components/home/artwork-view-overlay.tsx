@@ -66,11 +66,15 @@ function AssetMedia({
   src,
   alt,
   priority = false,
+  fit = 'natural',
 }: {
   asset: ArtworkAsset
   src: string
   alt: string
   priority?: boolean
+  // 'natural': full column width, height follows the asset (portfolio).
+  // 'fixed': fills a parent that has its own fixed height, whole asset visible (marketplace hero).
+  fit?: 'natural' | 'fixed'
 }) {
   const hasDims = Boolean(asset.width && asset.height)
 
@@ -85,8 +89,21 @@ function AssetMedia({
         loop
         playsInline
         controls
-        className="block h-auto w-full"
-        style={hasDims ? { aspectRatio: `${asset.width} / ${asset.height}` } : undefined}
+        className={fit === 'fixed' ? 'h-full w-full object-contain object-center' : 'block h-auto w-full'}
+        style={fit === 'natural' && hasDims ? { aspectRatio: `${asset.width} / ${asset.height}` } : undefined}
+      />
+    )
+  }
+
+  if (fit === 'fixed') {
+    return (
+      <Image
+        src={src}
+        alt={alt}
+        fill
+        sizes={MEDIA_SIZES}
+        priority={priority}
+        className="object-contain object-center"
       />
     )
   }
@@ -194,6 +211,19 @@ export default function ArtworkViewOverlay({ artwork: artworkProp, onClose, onNa
     window.addEventListener('keydown', handleKeyDown)
     return () => window.removeEventListener('keydown', handleKeyDown)
   }, [onNavigate])
+
+    // Keep the active thumbnail visible by scrolling only the strip sideways —
+  // scrollIntoView would also scroll the whole left column and make the page jump.
+  useEffect(() => {
+    const strip = thumbStripRef.current
+    const thumb = activeThumbRef.current
+    if (!strip || !thumb) return
+    const stripRect = strip.getBoundingClientRect()
+    const thumbRect = thumb.getBoundingClientRect()
+    const target =
+      strip.scrollLeft + (thumbRect.left - stripRect.left) - (strip.clientWidth - thumbRect.width) / 2
+    strip.scrollTo({ left: target, behavior: 'smooth' })
+  }, [activeAssetIndex])
 
   // ── Derived data ─────────────────────────────────────────────────────────
   const assets: ArtworkAsset[] = artwork.assets ?? []
@@ -589,11 +619,12 @@ export default function ArtworkViewOverlay({ artwork: artworkProp, onClose, onNa
 
   const heroMediaMarketplace = (
     <div className="flex flex-col">
-      <div className="relative w-full bg-secondary-100">
+
+      <div className="relative h-[70vh] max-h-[640px] w-full overflow-hidden bg-secondary-100 lg:h-[60vh]">
         {mainImageSrc && activeAsset ? (
-          <AssetMedia key={activeAsset.id} asset={activeAsset} src={mainImageSrc} alt={displayTitle} priority />
+          <AssetMedia key={activeAsset.id} asset={activeAsset} src={mainImageSrc} alt={displayTitle} priority fit="fixed" />
         ) : (
-          <div className="flex h-64 w-full items-center justify-center font-poppins text-gray-400">No image available</div>
+          <div className="flex h-full w-full items-center justify-center font-poppins text-gray-400">No image available</div>
         )}
         {activeAsset?.media_type === 'VIDEO' && (
           <span className="absolute left-4 top-4 flex h-9 w-9 items-center justify-center rounded-full bg-black/40 text-white backdrop-blur-sm">

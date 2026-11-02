@@ -70,21 +70,28 @@ export function ShopResultsGrid({
     <div className="mx-auto px-4 md:px-8 py-8">
       {/* Result count */}
       {total !== undefined && (
-        <p className="font-raleway font-semibold text-h5 text-body mb-6">
-          <span className="font-semibold text-primary-600">{total.toLocaleString()}</span>{' '}
-            Search Result {total !== 1 ? 's' : ''}
-        </p>
+        <>
+          <p className="font-raleway font-semibold text-h5 text-body mb-6 lg:hidden">
+            <span className="font-semibold text-primary-600">{total.toLocaleString()}</span>{' '}
+              Search Result {total !== 1 ? 's' : ''}
+          </p>
+
+          <p className="font-raleway font-semibold text-h5 text-body mb-6 max-lg:hidden">
+            <span className="font-semibold text-primary-600">{total.toLocaleString()}</span>{' '}
+              Result{total !== 1 ? 's' : ''} For {query}
+          </p>
+        </>
       )}
 
       {/* 4-col grid — matches design exactly: 364px cards, 332px image, 55px pill */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-x-0 gap-y-10">
+      <div className="gap-x-4 gap-y-12 grid grid-cols-[repeat(auto-fill,minmax(min(332px,100%),1fr))] justify-center">
         {artworks.map((artwork, i) => (
           <motion.div
             key={artwork.id}
             initial={{ opacity: 0, y: 16 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: Math.min(i * 0.04, 0.32), duration: 0.4 }}
-            className="flex justify-center"
+            className="flex"
           >
             <ArtCard
               image={artwork.assets[0]?.original_url as string}

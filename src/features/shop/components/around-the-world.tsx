@@ -10,13 +10,13 @@ import { cn } from '@/utils'
 import { useOpenArtwork } from '@/hooks/use-artwork-viewer'
 
 const POPULAR_CITIES = [
+    { id: 'lagos', name: 'Lagos', queryParams: { city: 'Lagos', country: 'Nigeria' } },
     { id: 'berlin', name: 'Berlin', queryParams: { city: 'Berlin', country: 'Germany' } },
     { id: 'tokyo', name: 'Tokyo', queryParams: { city: 'Tokyo', country: 'Japan' } },
     { id: 'new-york', name: 'New York', queryParams: { city: 'New York', country: 'USA' } },
     { id: 'london', name: 'London', queryParams: { city: 'London', country: 'UK' } },
     { id: 'paris', name: 'Paris', queryParams: { city: 'Paris', country: 'France' } },
     { id: 'seoul', name: 'Seoul', queryParams: { city: 'Seoul', country: 'South Korea' } },
-    { id: 'lagos', name: 'Lagos', queryParams: { city: 'Lagos', country: 'Nigeria' } },
     { id: 'sao-paulo', name: 'São Paulo', queryParams: { city: 'São Paulo', country: 'Brazil' } },
 ]
 
@@ -30,7 +30,7 @@ export default function AroundTheWorld() {
 
     const handleOpenArtwork = (index: number) => {
         const target = artworks[index]
-        if (target) openArtwork(target, { siblings: artworks, variant: 'shop' })
+        if (target) openArtwork(target, { siblings: artworks, variant: 'home' })
     }
 
     const carouselRef = useRef<HTMLDivElement>(null)

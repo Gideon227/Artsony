@@ -11,6 +11,9 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 
+// How many artworks Top Art shows; the grid below the section shows the rest.
+export const TOP_ART_COUNT = 4
+
 // Matches the Figma dropdown exactly: "For You" is the default/current value,
 // the rest are the selectable list. The first 5 are feed *modes* (mutually
 // exclusive ranking/selection algorithms); the last 2 are a format filter,
@@ -27,19 +30,14 @@ const searchOptions: DropdownOption[] = [
     { id: 'physical-only', label: 'Physical Only' },
 ]
 
-// The backend's getFeed() already implements for_you/trending/new/newbies as
-// real distinct queries (see artwork.service.ts) — "Trending" here maps to
-// the genuine recency-decayed hot-right-now ranking (getTrendingArtworks),
-// not getFeed's mode:'trending' (which is really just an all-time
-// like_count sort — that's what "Most Popular" below uses instead).
-// ASSUMPTION flagged for Shallom: this Trending-vs-Most-Popular split is my
-// read of the two distinct ranking implementations already in the codebase,
-// not something stated — flag if "Trending" should mean something else.
-const FEED_MODE_BY_OPTION: Record<string, 'for_you' | 'trending' | 'new' | 'newbies' | null> = {
+// "Trending" = gaining traction in the last few days (windowed likes/views),
+// served by the feed's 'hot' mode, which applies every page filter.
+// "Most Popular" = all-time like_count, served by the feed's 'trending' mode.
+const FEED_MODE_BY_OPTION: Record<string, 'for_you' | 'hot' | 'trending' | 'new' | 'newbies' | null> = {
     'for-you': 'for_you',
-    'trending': null, // handled via useTrendingArtworks-equivalent call below, not getFeed
+    'trending': 'hot',
     'new-arrivals': 'new',
-    'most-popular': 'trending', // getFeed's mode:'trending' = sort by all-time like_count
+    'most-popular': 'trending',
     'newbies': 'newbies',
     'digital-only': null,
     'physical-only': null,
@@ -65,6 +63,10 @@ export type TopArtFilters = {
 interface TopArtProps {
     filters?: TopArtFilters
     onClearFilters?: () => void;
+    /** How many artworks to show here. */
+    limit?: number
+    /** Fires each time a fetch settles, so the page can keep the grid below from repeating these. */
+    onLoaded?: (artworks: Artwork[]) => void
 }
 
 const hasActiveFilters = (f?: TopArtFilters) =>
@@ -80,7 +82,7 @@ const hasActiveFilters = (f?: TopArtFilters) =>
                 f.city),
     )
 
-const TopArt = ({ filters, onClearFilters }: TopArtProps) => {
+const TopArt = ({ filters, onClearFilters, limit = TOP_ART_COUNT, onLoaded }: TopArtProps) => {
     const { user } = useAuthStore()
     const [selected, setSelected] = useState<DropdownOption>(searchOptions[0]!)
     const [artworks, setArtworks] = useState<Artwork[]>([])
@@ -88,8 +90,6 @@ const TopArt = ({ filters, onClearFilters }: TopArtProps) => {
     const [error, setError] = useState<string | null>(null)
     const openArtwork = useOpenArtwork()
     const router = useRouter()
-
-    // console.log('Top Art Artworks: ', artworks, isLoading, error)
 
     // Stable dependency: re-fetch when the filter *values* change, not on every new object identity.
     const filtersKey = JSON.stringify(filters ?? {})
@@ -108,18 +108,10 @@ const TopArt = ({ filters, onClearFilters }: TopArtProps) => {
                 // The dropdown's Digital/Physical Only is an explicit choice, so it wins over the page's Medium filter.
                 const format = FORMAT_BY_OPTION[optionId] ?? filters?.format
 
-                // The activity-based trending endpoint can't be filtered, so with filters
-                // on we use the feed's trending sort instead (it applies every filter).
-                if (optionId === 'trending' && !filtersActive) {
-                    const trendingResponse = await artworkService.getTrending(12, 7, 'MARKETPLACE')
-                    if (!cancelled) setArtworks(trendingResponse.data)
-                    return
-                }
-
-                const mode = FEED_MODE_BY_OPTION[optionId] ?? (optionId === 'trending' ? 'trending' : 'new')
+                const mode = FEED_MODE_BY_OPTION[optionId] ?? 'new'
                 const response = await artworkService.getFeed({
                     sort: mode,
-                    perPage: 12,
+                    perPage: limit,
                     listingType: 'MARKETPLACE',
                     format,
                     categories: filters?.categories,
@@ -149,11 +141,16 @@ const TopArt = ({ filters, onClearFilters }: TopArtProps) => {
             cancelled = true
         }
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [selected, user?.id, filtersKey])
+    }, [selected, user?.id, filtersKey, limit])
+
+    // Tell the page what's showing here once a fetch settles.
+    useEffect(() => {
+        if (!isLoading) onLoaded?.(artworks)
+    }, [artworks, isLoading, onLoaded])
 
     const handleOpenArtwork = (index: number) => {
         const target = artworks[index]
-        if (target) openArtwork(target, { siblings: artworks, variant: 'shop' })
+        if (target) openArtwork(target, { siblings: artworks, variant: 'home' })
     }
 
     return (

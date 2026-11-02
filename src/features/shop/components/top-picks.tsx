@@ -61,7 +61,7 @@ const TopPicks = () => {
     // ── Overlay handlers ──────────────────────────────────────────────────────
     const handleOpenArtwork = (index: number) => {
         const target = artworks[index]
-        if (target) openArtwork(target, { siblings: artworks, variant: 'shop' })
+        if (target) openArtwork(target, { siblings: artworks, variant: 'home' })
     }
 
     return (

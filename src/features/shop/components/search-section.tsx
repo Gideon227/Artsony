@@ -53,7 +53,7 @@ const COLOR_OPTIONS: DropdownOption[] = [
 ]
 
 const PRICE_MIN = 0
-const PRICE_MAX = 10000
+const PRICE_MAX = 1000000
 
 interface SearchSectionProps {
   query: string

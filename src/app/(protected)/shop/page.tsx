@@ -1,6 +1,6 @@
 'use client'
 
-import { useCallback, useMemo, useState, Suspense } from 'react'
+import { useCallback, useEffect, useMemo, useState, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { Loader2 } from 'lucide-react'
 import { Navbar } from '@/components/layout/navbar'
@@ -13,7 +13,7 @@ import TopArt, { type TopArtFilters } from '@/features/shop/components/top-arts'
 import TopPicks from '@/features/shop/components/top-picks'
 import { useInfiniteArtworkResults } from '@/hooks/use-artwork'
 import { useDebouncedValue } from '@/hooks/queries/use-debounce'
-import type { ArtworkFilters } from '@/types/artwork'
+import type { Artwork, ArtworkFilters } from '@/types/artwork'
 import { useOpenArtwork } from '@/hooks/use-artwork-viewer'
 import { ShopResultsGrid } from '@/features/shop/components/shop-result-grid'
 import Footer from '@/components/layout/footer'
@@ -91,11 +91,29 @@ function ShopContent() {
   const artworks = useMemo(() => data?.pages.flatMap((p) => p.data) ?? [], [data])
   const total = data?.pages[0]?.total
 
+  // Ids Top Art is currently showing. null = Top Art hasn't reported yet, so the
+  // grid waits instead of flashing the same artworks before they get filtered out.
+  const [topArtIds, setTopArtIds] = useState<Set<string> | null>(null)
+
+  const handleTopArtLoaded = useCallback((items: Artwork[]) => {
+    setTopArtIds(new Set(items.map((a) => a.id)))
+  }, [])
+
+  // Top Art unmounts in search mode; forget its ids so they're fresh when it returns.
+  useEffect(() => {
+    if (isSearchMode) setTopArtIds(null)
+  }, [isSearchMode])
+
+  const gridArtworks = useMemo(
+    () => (topArtIds ? artworks.filter((a) => !topArtIds.has(a.id)) : artworks),
+    [artworks, topArtIds],
+  )
+
   const openArtwork = useOpenArtwork()
 
   const handleGridClick = (index: number) => {
-    const artwork = artworks[index]
-    if (artwork) openArtwork(artwork, { siblings: artworks, variant: 'shop' })
+    const artwork = gridArtworks[index]
+    if (artwork) openArtwork(artwork, { siblings: gridArtworks, variant: 'home' })
   }
 
   return (
@@ -125,33 +143,37 @@ function ShopContent() {
           <div className='max-md:hidden'>
             <TopPicks />
           </div>
-          <TopArt filters={topArtFilters} onClearFilters={handleClearFilters} />
+          <TopArt filters={topArtFilters} onClearFilters={handleClearFilters} onLoaded={handleTopArtLoaded} />
           <div className='max-md:hidden'>
             <AroundTheWorld />
           </div>
           <div className='md:hidden'>
             <TopPicks />
           </div>
-          
-          <ArtGrid
-            artworks={artworks}
-            num={0}
-            // artVariant="shop"
-            onCardClick={(_, index) => handleGridClick(index)}
-          />
 
-          <div className="flex justify-center pb-16">
-            {hasNextPage && (
-              <button
-                onClick={() => fetchNextPage()}
-                disabled={isFetchingNextPage}
-                className="flex items-center gap-2 font-poppins text-[14px] text-neutral-500 border border-gray-100 rounded-full px-6 py-3 hover:border-primary-500 hover:text-primary-500 transition-colors disabled:opacity-50"
-              >
-                {isFetchingNextPage && <Loader2 className="w-4 h-4 animate-spin" />}
-                Load more Art
-              </button>
-            )}
-          </div>
+          {topArtIds && (
+            <>
+              <ArtGrid
+                artworks={gridArtworks}
+                num={0}
+                // artVariant="shop"
+                onCardClick={(_, index) => handleGridClick(index)}
+              />
+
+              <div className="flex justify-center pb-16">
+                {hasNextPage && (
+                  <button
+                    onClick={() => fetchNextPage()}
+                    disabled={isFetchingNextPage}
+                    className="flex items-center gap-2 font-poppins text-[14px] text-neutral-500 border border-gray-100 rounded-full px-6 py-3 hover:border-primary-500 hover:text-primary-500 transition-colors disabled:opacity-50"
+                  >
+                    {isFetchingNextPage && <Loader2 className="w-4 h-4 animate-spin" />}
+                    Load more Art
+                  </button>
+                )}
+              </div>
+            </>
+          )}
         </>
       )}
 

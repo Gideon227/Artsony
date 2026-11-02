@@ -68,7 +68,7 @@ export const artworkService = {
     state?: string
     city?: string
     size_label?: string
-    sort?: 'for_you' | 'following' | 'new' | 'trending' | 'newbies'
+    sort?: 'for_you' | 'following' | 'new' | 'trending' | 'hot' | 'newbies'
     listingType?: ListingType
     format?: 'DIGITAL' | 'PHYSICAL'
     minPrice?: number
