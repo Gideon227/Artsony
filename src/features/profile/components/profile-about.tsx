@@ -6,7 +6,7 @@ import { LinkIcon, MapPin } from 'lucide-react'
 import Image from 'next/image'
 import ProfileBioOverlay from './profile-bio-overlay'
 import ProfileAboutEmpty from './profile-about-empty'
-import { COUNTRIES } from '@/features/checkout/data/countries'
+import { getCountryName } from '@/hooks/use-location-data'
 
 const ProfileAboutTab = ({ user }: { user: User }) => {
     const [showBioOverlay, setShowBioOverlay] = useState(false)
@@ -21,7 +21,7 @@ const ProfileAboutTab = ({ user }: { user: User }) => {
     ].filter(social => social.link)
 
     const countryName = user?.country
-        ? (COUNTRIES.find((c) => c.code === user.country)?.name ?? user.country)
+        ? (getCountryName(user.country) ?? user.country)
         : null
     const locationLabel = [user?.city, user?.state, countryName].filter(Boolean).join(', ')
     const hasLocation = locationLabel.length > 0
@@ -92,21 +92,21 @@ const ProfileAboutTab = ({ user }: { user: User }) => {
                     {/* STATS */}
                     <div className='flex w-full flex-col gap-6'>
                         <p className='font-raleway font-semibold text-gray-500 text-body-xl leading-8 tracking-wide'>Stats</p>
-                        <div className='flex w-full flex-wrap items-center justify-between gap-6 rounded-2xl border border-gray-50 p-6'>
+                        <div className='flex w-full flex-wrap items-center justify-between rounded-2xl border border-gray-50 p-6'>
                             <div className='flex flex-col gap-4'>
-                                <p className='font-poppins text-gray-400 text-body-xl leading-8 tracking-wide'>
-                                    <span className='text-primary-500'>{(user?.followingCount ?? 0).toLocaleString()}</span> Following
+                                <p className='font-poppins text-gray-400 text-body-m lg:text-body-xl leading-8 tracking-wide'>
+                                    <span className='text-primary-500'>{(user?.following_count ?? 0).toLocaleString()}</span> Following
                                 </p>
-                                <p className='font-poppins text-gray-400 text-body-xl leading-8 tracking-wide'>
+                                <p className='font-poppins text-gray-400 text-body-m lg:text-body-xl leading-8 tracking-wide'>
                                     <span className='text-primary-500'>{(user?.likesCount ?? 0).toLocaleString()}</span> Likes
                                 </p>
                             </div>
 
                             <div className='flex flex-col gap-4'>
-                                <p className='font-poppins text-gray-400 text-body-xl leading-8 tracking-wide'>
-                                    <span className='text-primary-500'>{(user?.followersCount ?? 0).toLocaleString()}</span> Followers
+                                <p className='font-poppins text-gray-400 text-body-m lg:text-body-xl leading-8 tracking-wide'>
+                                    <span className='text-primary-500'>{(user?.followers_count ?? 0).toLocaleString()}</span> Followers
                                 </p>
-                                <p className='font-poppins text-gray-400 text-body-xl leading-8 tracking-wide'>
+                                <p className='font-poppins text-gray-400 text-body-m lg:text-body-xl leading-8 tracking-wide'>
                                     <span className='text-primary-500'>{(user?.viewsCount ?? 0).toLocaleString()}</span> Views
                                 </p>
                             </div>

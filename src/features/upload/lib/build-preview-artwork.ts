@@ -31,9 +31,9 @@ export function buildPreviewArtwork(draft: ArtworkDraft, user: User | null): Art
           is_following: false,
           profile: {
             display_name: user.username,
-            avatar_url: user.avatarUrl ?? null,
-            followers_count: user.followersCount ?? 0,
-            following_count: user.followingCount ?? 0,
+            avatar_url: user.avatar_url ?? null,
+            followers_count: user.followers_count ?? 0,
+            following_count: user.following_count ?? 0,
             artworks_count: 0,
             sales_count: 0,
           },

@@ -27,3 +27,4 @@ export const REFUND_PRESENTATION: Record<RefundStatus, { label: string; tone: st
   PARTIAL: { label: 'Partially refunded', tone: 'text-info-500' },
   FAILED: { label: 'Failed', tone: 'text-error-500' },
 }
+

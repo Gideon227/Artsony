@@ -202,7 +202,7 @@ export default function AroundTheWorld() {
                                     const mappedArtists: Artist[] = art.creator ? [{
                                         id: art.creator.id,
                                         name: art.creator.profile?.display_name || art.creator.username || 'Unknown',
-                                        avatarUrl: art.creator.profile?.avatar_url || '/default-avatar.png',
+                                        avatar_url: art.creator.profile?.avatar_url || '/default-avatar.png',
                                         role: art.creator.role || 'Artist',
                                         stats: {
                                             followers: String(art.creator.profile?.followers_count ?? 0),

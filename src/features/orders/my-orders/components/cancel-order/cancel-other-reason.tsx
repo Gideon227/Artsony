@@ -32,9 +32,11 @@ export function CancelOtherReason({ onClose, onBack, onContinue }: Props) {
   return (
     <form
       onSubmit={handleSubmit((values) => onContinue(values.reason))}
-      className="py-16 px-10 rounded-2xl border border-gray-50 relative bg-white flex flex-col gap-y-12"
+      className="relative py-16 px-10 rounded-2xl border border-gray-50 relative bg-white flex flex-col gap-y-12"
     >
-      <CloseButton onClose={onClose} />
+      <div className='absolute left-6 top-6 -translate-x-1/2 -translate-y-1/2'>
+        <CloseButton onClose={onClose} />
+      </div>
 
       <h4 className="font-raleway font-medium text-h4 text-[#333333] leading-10 tracking-wide text-center">Cancel Order</h4>
 

@@ -52,6 +52,13 @@ export const userService = {
   getSuggested: () =>
     apiClient.get<ApiResponse<User[]>>('/api/users/suggested'),
 
+  // Public-safe user search (username or display name, excludes the caller).
+  // Backed by GET /api/users/search/public — never returns email.
+  searchPublic: (q: string, limit = 8) =>
+    apiClient.get<ApiResponse<PublicProfileSummary[]>>('/api/users/search/public', {
+      params: { q, limit },
+    }),
+
   // Batch-resolves user ids to public profile summaries (id/username/role/
   // display_name/avatar_url). Backed by the real GET /api/users/by-ids route.
   getByIds: (ids: string[]) => {

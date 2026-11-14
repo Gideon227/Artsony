@@ -33,6 +33,8 @@ import Link from 'next/link'
 import { ShareModal } from '../../modals/share-modal'
 import ReportModal from '../../modals/report-modal'
 import { StepperInput } from '@/components/ui/quantity-input'
+import { useRouter } from 'next/navigation'
+import { MoodboardPickerSheet } from '@/components/ui/moodboard-picker-sheet'
 
 // ── Formatting ────────────────────────────────────────────────────────────────
 function formatCount(n: number): string {
@@ -128,6 +130,7 @@ export default function ArtworkViewOverlay({ artwork: artworkProp, onClose, onNa
   // parent actually navigates prev/next (see the artworkProp.id effect below).
   const [viewOverride, setViewOverride] = useState<Artwork | null>(null)
   const artwork = viewOverride ?? artworkProp
+  const router = useRouter()
 
   const [activeAssetIndex, setActiveAssetIndex] = useState(0)
   const [quantity, setQuantity] = useState(1)
@@ -145,6 +148,9 @@ export default function ArtworkViewOverlay({ artwork: artworkProp, onClose, onNa
   const [shareOpen, setShareOpen] = useState(false)
   const [saveDialogOpen, setSaveDialogOpen] = useState(false)
   const [reportDialogOpen, setReportDialogOpen] = useState(false)
+  const [moreMenuOpen, setMoreMenuOpen] = useState(false)
+  const [moodboardSheetOpen, setMoodboardSheetOpen] = useState(false)
+  const moreMenuRef = useRef<HTMLDivElement>(null)
 
   // Fixed-size centered dialog on desktop (90% viewport width, 90vh tall) —
   // the left and right columns each scroll independently inside it. Mobile
@@ -177,6 +183,7 @@ export default function ArtworkViewOverlay({ artwork: artworkProp, onClose, onNa
     setLikeCount(artwork.like_count ?? 0)
     setIsFollowing(artwork.creator?.is_following ?? false)
     setCartError(null)
+    setMoreMenuOpen(false)  
     backdropRef.current?.scrollTo({ top: 0, behavior: 'auto' })
     leftColRef.current?.scrollTo({ top: 0, behavior: 'auto' })
   }, [artwork.id])
@@ -188,6 +195,27 @@ export default function ArtworkViewOverlay({ artwork: artworkProp, onClose, onNa
     if (preview) return
     trackView(artwork.id)
   }, [artwork.id, trackView])
+
+  // Close on outside tap; Escape closes the menu first, not the whole overlay
+  // (capture + stopImmediatePropagation so the overlay's own Escape handler never sees it).
+  useEffect(() => {
+    if (!moreMenuOpen) return
+    const handlePointerDown = (e: PointerEvent) => {
+      if (moreMenuRef.current && !moreMenuRef.current.contains(e.target as Node)) setMoreMenuOpen(false)
+    }
+    const handleEscape = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        e.stopImmediatePropagation()
+        setMoreMenuOpen(false)
+      }
+    }
+    document.addEventListener('pointerdown', handlePointerDown)
+    window.addEventListener('keydown', handleEscape, true)
+    return () => {
+      document.removeEventListener('pointerdown', handlePointerDown)
+      window.removeEventListener('keydown', handleEscape, true)
+    }
+  }, [moreMenuOpen])
 
   useEffect(() => {
     const previousOverflow = document.body.style.overflow
@@ -328,19 +356,62 @@ export default function ArtworkViewOverlay({ artwork: artworkProp, onClose, onNa
     setIsClosing(true)
   }
 
+  // Native share sheet where available (most phones), otherwise copy the link.
+  // textarea fallback covers browsers without navigator.clipboard (non-secure contexts).
+  const handleMobileShare = async () => {
+    setMoreMenuOpen(false)
+    if (preview) return
+    if (typeof navigator.share === 'function') {
+      try {
+        await navigator.share({ title: artwork.title, url: shareUrl })
+        return
+      } catch (err) {
+        if ((err as DOMException)?.name === 'AbortError') return
+      }
+    }
+    try {
+      if (navigator.clipboard?.writeText) {
+        await navigator.clipboard.writeText(shareUrl)
+      } else {
+        const el = document.createElement('textarea')
+        el.value = shareUrl
+        el.setAttribute('readonly', '')
+        el.style.position = 'fixed'
+        el.style.opacity = '0'
+        document.body.appendChild(el)
+        el.select()
+        const ok = document.execCommand('copy')
+        document.body.removeChild(el)
+        if (!ok) throw new Error('copy failed')
+      }
+      toastSuccess('Link copied', 'The artwork link is on your clipboard.')
+    } catch {
+      toastError('Could not share', shareUrl)
+    }
+  }
+
+  const moreMenuItemClass =
+    'flex h-[60px] w-full items-center border-b border-gray-100 px-6 text-left font-poppins text-body-s font-medium text-body transition-colors last:border-b-0 hover:bg-primary-500 hover:text-white focus-visible:bg-primary-500 focus-visible:text-white active:bg-primary-500 active:text-white'
+
   // ── Sub-renders (shared between the desktop sticky panel and the mobile
   //    inline placement, so the two layouts never drift out of sync) ───────
 
   const profileHeader = (
     <div className="hidden lg:flex items-center gap-2">
-      <Link href={`/profile/${artwork.creator_id}`} className="relative h-14 w-14 shrink-0 overflow-hidden rounded-full bg-gray-100">
+      <button 
+        onClick={() => {
+          router.push(`/profile/${artwork.creator_id}`)
+          // onClose()
+        }}
+        className="cursor-pointer relative h-14 w-14 shrink-0 overflow-hidden rounded-full bg-gray-100"
+      >
         <Image
           src={artwork.creator?.profile?.avatar_url || '/images/image-avatar.svg'}
           alt={artwork.creator?.username ?? 'Creator'}
           fill
           className="object-cover"
         />
-      </Link>
+      </button>
       <div className="flex min-w-0 flex-col">
         <Link href={`/profile/${artwork.creator_id}`} className="truncate font-poppins font-medium text-body-m leading-6 text-primary-500 tracking-wide">
           {creatorName}
@@ -729,7 +800,7 @@ export default function ArtworkViewOverlay({ artwork: artworkProp, onClose, onNa
     <>
     <div
       ref={backdropRef}
-      className="fixed inset-0 z-50 overflow-y-auto bg-black/80 lg:overflow-hidden"
+      className="fixed inset-0 z-50 overflow-y-auto bg-black/80 lg:overflow-hidden scrollbar-hide"
     >
       {/* Global prev/next artwork arrows*/}
       {onNavigate && (
@@ -795,13 +866,52 @@ export default function ArtworkViewOverlay({ artwork: artworkProp, onClose, onNa
                 </span>
               </Link>
 
-              <button
-                onClick={() => setShareOpen((v) => !v)}
-                aria-label="More options"
-                className="flex h-9 w-9 ml-auto items-center justify-center rounded-full border border-gray-50 text-gray-400 transition-colors hover:bg-gray-50"
-              >
-                <MoreHorizontal size={20} strokeWidth={2.5} />
-              </button>
+              <div ref={moreMenuRef} className="relative ml-auto shrink-0">
+                <button
+                  onClick={() => setMoreMenuOpen((v) => !v)}
+                  aria-label="More options"
+                  aria-haspopup="menu"
+                  aria-expanded={moreMenuOpen}
+                  className="flex h-9 w-9 items-center justify-center rounded-full border border-gray-50 text-gray-400 transition-colors hover:bg-gray-50"
+                >
+                  <MoreHorizontal size={20} strokeWidth={2.5} />
+                </button>
+
+                {moreMenuOpen && (
+                  <div
+                    role="menu"
+                    className="absolute right-0 top-full z-[80] mt-2 w-[220px] overflow-hidden rounded-[16px] border border-gray-100 bg-white"
+                  >
+                    <Link
+                      role="menuitem"
+                      href={`/profile/${artwork.creator_id}`}
+                      onClick={() => setMoreMenuOpen(false)}
+                      className={moreMenuItemClass}
+                    >
+                      View Profile
+                    </Link>
+                    <button
+                      role="menuitem"
+                      type="button"
+                      onClick={() => { setMoreMenuOpen(false); setMoodboardSheetOpen(true) }}
+                      className={moreMenuItemClass}
+                    >
+                      Add to Moodboard
+                    </button>
+                    <button role="menuitem" type="button" onClick={handleMobileShare} className={moreMenuItemClass}>
+                      Share Artwork
+                    </button>
+                    <button
+                      role="menuitem"
+                      type="button"
+                      onClick={() => { setMoreMenuOpen(false); setReportDialogOpen(true) }}
+                      className={moreMenuItemClass}
+                    >
+                      Report Artwork
+                    </button>
+                  </div>
+                )}
+              </div>
             </div>
 
             <div className='flex items-center justify-between'>
@@ -935,6 +1045,7 @@ export default function ArtworkViewOverlay({ artwork: artworkProp, onClose, onNa
       <>
         <SaveToMoodboardDialog artworkId={artwork.id} open={saveDialogOpen} onOpenChange={setSaveDialogOpen} />
         <ReportModal artworkId={artwork.id} open={reportDialogOpen} onOpenChange={setReportDialogOpen} />
+        <MoodboardPickerSheet artworkId={artwork.id} open={moodboardSheetOpen} onOpenChange={setMoodboardSheetOpen} />
       </>
     )}
     </>

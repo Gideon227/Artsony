@@ -1,55 +1,82 @@
-import { Check, Truck, X } from 'lucide-react'
 import { getTimelineProgress } from '../constant'
+import { BusIcon } from '../ui/bus-icon'
+import { CheckGlyph, CrossGlyph } from '../ui/track-glyphs'
 import type { DeliveryStatus, TimelineStatus } from '@/types/order'
-import { cn } from '@/lib/utils'
+// clsx (not cn/twMerge): twMerge treats the custom `text-body-*` size tokens as colours
+// and would drop them next to a `text-<color>` class.
+import { clsx } from 'clsx'
 
 interface Props {
   deliveryStatus: DeliveryStatus
   timelineStatus: TimelineStatus
+  /** Keep the courier marker at the very start of the line (trip not started). */
+  atStart?: boolean
 }
 
-const TRACK_COLOR: Record<DeliveryStatus, string> = {
-  LIVE: 'bg-info-500',
-  CANCELLED: 'bg-error-500',
-  DELIVERED: 'bg-successful-500',
+const TONE: Record<DeliveryStatus, { line: string; dot: string; filled: string }> = {
+  LIVE: { line: 'bg-info-500', dot: 'bg-info-500', filled: 'bg-info-500' },
+  CANCELLED: { line: 'bg-error-500', dot: 'bg-error-500', filled: 'bg-error-500' },
+  DELIVERED: { line: 'bg-successful-500', dot: 'bg-successful-500', filled: 'bg-successful-500' },
 }
 
-const DOT_COLOR: Record<DeliveryStatus, string> = {
-  LIVE: 'bg-info-500',
-  CANCELLED: 'bg-error-500',
-  DELIVERED: 'bg-successful-500',
+// Keeps a sliver of solid line and of dashes visible at both ends of the trip.
+const MIN_PROGRESS = 0.05
+const MAX_PROGRESS = 0.95
+
+/** Ringed node: gray ring, 12px dot. */
+function RingNode({ dotClassName }: { dotClassName: string }) {
+  return (
+    <span className="relative flex size-6 shrink-0 rounded-full border-[1.5px] border-gray-50">
+      <span className={clsx('absolute inset-0 m-auto size-3 rounded-full', dotClassName)} />
+    </span>
+  )
 }
 
-export function OrderProgressTrack({ deliveryStatus, timelineStatus }: Props) {
-  const progress = deliveryStatus === 'LIVE' ? getTimelineProgress(timelineStatus) : 1
-  const percent = `${Math.max(progress, 0.04) * 100}%`
+/** Filled end node (delivered / canceled): 20px disc with a white glyph. */
+function FilledNode({ className, children }: { className: string; children: React.ReactNode }) {
+  return (
+    <span className="flex size-[21px] shrink-0 items-center justify-center">
+      <span className={clsx('flex size-5 items-center justify-center rounded-full', className)}>{children}</span>
+    </span>
+  )
+}
+
+export function OrderProgressTrack({ deliveryStatus, timelineStatus, atStart = false }: Props) {
+  const tone = TONE[deliveryStatus]
+  const isLive = deliveryStatus === 'LIVE'
+  const progress = !isLive ? 1 : atStart ? 0 : Math.min(Math.max(getTimelineProgress(timelineStatus), MIN_PROGRESS), MAX_PROGRESS)
 
   return (
-    <div className="relative flex items-center h-6 w-full" role="progressbar" aria-valuenow={Math.round(progress * 100)}>
-      <div className="absolute inset-y-0 left-0 right-0 my-auto h-[2px] bg-gray-50 rounded-full" />
-      <div
-        className={cn('absolute left-0 my-auto h-[2px] rounded-full transition-all', TRACK_COLOR[deliveryStatus])}
-        style={{ width: percent }}
-      />
-      <span className={cn('absolute left-0 w-2.5 h-2.5 rounded-full', DOT_COLOR[deliveryStatus])} />
+    <div
+      className="flex h-6 w-full items-center gap-1 px-px pb-px"
+      role="progressbar"
+      aria-label="Order progress"
+      aria-valuemin={0}
+      aria-valuemax={100}
+      aria-valuenow={Math.round(progress * 100)}
+    >
+      <RingNode dotClassName={tone.dot} />
 
-      {deliveryStatus === 'LIVE' && (
-        <span
-          className="absolute -translate-x-1/2 w-6 h-6 rounded-full bg-info-500 flex items-center justify-center"
-          style={{ left: percent }}
-        >
-          <Truck size={14} className="text-white" />
-        </span>
-      )}
-      {deliveryStatus === 'DELIVERED' && (
-        <span className="absolute right-0 w-5 h-5 rounded-full bg-successful-500 flex items-center justify-center">
-          <Check size={12} className="text-white" />
-        </span>
-      )}
-      {deliveryStatus === 'CANCELLED' && (
-        <span className="absolute right-0 w-5 h-5 rounded-full bg-error-500 flex items-center justify-center">
-          <X size={12} className="text-white" />
-        </span>
+      {isLive ? (
+        <>
+          {/* Travelled distance: solid line up to the courier marker. */}
+          <span className={clsx('h-0.5 basis-0', tone.line)} style={{ flexGrow: progress }} />
+          {/* Marker sits 2px from each line end (the row gap is 4px). */}
+          <BusIcon className="-mx-0.5 shrink-0 text-info-500" />
+          {/* Remaining distance: dashed. */}
+          <span
+            className="h-0.5 basis-0 bg-[repeating-linear-gradient(to_right,var(--color-gray-50)_0,var(--color-gray-50)_8px,transparent_8px,transparent_12px)]"
+            style={{ flexGrow: 1 - progress }}
+          />
+          <RingNode dotClassName="bg-gray-400" />
+        </>
+      ) : (
+        <>
+          <span className={clsx('h-0.5 flex-1', tone.line)} />
+          <FilledNode className={tone.filled}>
+            {deliveryStatus === 'DELIVERED' ? <CheckGlyph /> : <CrossGlyph />}
+          </FilledNode>
+        </>
       )}
     </div>
   )

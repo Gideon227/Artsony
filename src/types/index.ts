@@ -81,7 +81,7 @@ export type User = Timestamp & {
   username: string
   displayName: string
   role: UserRole
-  avatarUrl: Nullable<string>
+  avatar_url: Nullable<string>
   bio: Nullable<string>
   artworks: Artwork
   website: Nullable<string>
@@ -91,9 +91,10 @@ export type User = Timestamp & {
   behanceLink: Nullable<string>
   pinterestLink: Nullable<string>
   linkedinLink: Nullable<string>
-  backgroundUrl: Nullable<string>
-  followersCount: number
-  followingCount: number
+  background_url: Nullable<string>
+  followersCount?: number
+  followers_count?: number
+  following_count?: number
   likesCount: number
   viewsCount: number
   artworksCount: number
@@ -123,7 +124,7 @@ export type Comment = Timestamp & {
   id: ID
   body: string
   artworkId: ID
-  author: Pick<User, 'id' | 'username' | 'displayName' | 'avatarUrl'>
+  author: Pick<User, 'id' | 'username' | 'displayName' | 'avatar_url'>
   repliesCount: number
   likesCount: number
   isLiked: boolean

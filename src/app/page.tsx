@@ -23,17 +23,17 @@
 //     {
 //       id: '0',
 //       name: "Ivan Kovačević",
-//       avatarUrl: "/images/image-avatar.svg"
+//       avatar_url: "/images/image-avatar.svg"
 //     },
 //     {
 //       id: '1',
 //       name: "Ivan Kovačević",
-//       avatarUrl: "/images/image-avatar.svg"
+//       avatar_url: "/images/image-avatar.svg"
 //     },
 //     {
 //       id: '2',
 //       name: "Ivan Kovačević",
-//       avatarUrl: "/images/image-avatar.svg"
+//       avatar_url: "/images/image-avatar.svg"
 //     },
 //   ],
 //   stats: { likes: "55.5k", views: "108k" },

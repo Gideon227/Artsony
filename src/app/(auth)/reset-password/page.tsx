@@ -159,7 +159,7 @@ function ResetPasswordContent() {
               <div className="flex-1 flex flex-col justify-center">
 
                 <div className="flex justify-center mb-4 lg:mb-20">
-                  <Image src="/icons/logo.svg" alt="Artsony" width={160} height={40} className="h-auto max-lg:w-[130px]" priority />
+                  <Image src="/icons/logo.svg" alt="Artsony" width={160} height={40} className="h-auto max-lg:w-[182px]" priority />
                 </div>
 
                 {isValidLink

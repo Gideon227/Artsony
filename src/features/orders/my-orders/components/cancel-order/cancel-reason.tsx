@@ -22,8 +22,10 @@ export function CancelReason({ onClose, onContinue }: Props) {
   const [selected, setSelected] = useState<string | null>(null)
 
   return (
-    <div className="py-16 px-10 rounded-2xl border border-gray-50 relative bg-white flex flex-col gap-y-12">
-      <CloseButton onClose={onClose} />
+    <div className="relative py-16 px-10 rounded-2xl border border-gray-50 relative bg-white flex flex-col gap-y-12">
+      <div className='absolute left-6 top-6 -translate-x-1/2 -translate-y-1/2'>
+        <CloseButton onClose={onClose} />
+      </div>
 
       <h4 className="font-raleway font-medium text-h4 text-[#333333] leading-10 tracking-wide text-center">Cancel Order</h4>
 
@@ -45,7 +47,7 @@ export function CancelReason({ onClose, onContinue }: Props) {
                 role="radio"
                 aria-checked={isSelected}
                 onClick={() => setSelected(text)}
-                className={`py-3 px-6 flex items-center gap-x-3 w-full text-left transition-colors ${
+                className={`cursor-pointer py-3 px-6 flex items-center gap-x-3 w-full text-left transition-colors ${
                   isSelected ? 'bg-action' : 'bg-white border-b border-gray-50'
                 }`}
               >

@@ -1,8 +1,9 @@
-import { useQuery, useMutation } from '@tanstack/react-query'
+import { useQuery, useMutation, keepPreviousData } from '@tanstack/react-query'
 import { userService, type PublicProfileSummary } from '@/services/user.service'
 import { useAuthStore } from '@/store/auth.store'
 import type { InteractionPermissions } from '@/types'
 import { useToast } from '@/components/ui/toaster'
+import { useDebouncedValue } from '@/hooks/queries/use-debounce'
 
 // Resolves a set of user ids (e.g. artwork collaborator ids) to public
 // profile summaries in one request. Keyed on the sorted id list so the same
@@ -16,6 +17,32 @@ export function useUsersByIds(ids: string[]) {
     enabled: unique.length > 0,
     staleTime: 5 * 60_000,
   })
+}
+
+// Debounced public user search (username or display name) for pickers such as
+// tagging upload collaborators. Needs at least 2 characters, matching the
+// backend. `isSearching` is true while the typed text is still waiting on the
+// debounce or the request, so the UI can avoid flashing "no results".
+export function useUserSearch(query: string, limit = 8) {
+  const trimmed = query.trim()
+  const debounced = useDebouncedValue(trimmed, 300)
+  const enabled = debounced.length >= 2
+
+  const result = useQuery({
+    queryKey: ['users', 'search-public', debounced, limit],
+    queryFn: async (): Promise<PublicProfileSummary[]> =>
+      (await userService.searchPublic(debounced, limit)).data,
+    enabled,
+    staleTime: 30_000,
+    placeholderData: keepPreviousData,
+  })
+
+  return {
+    results: enabled ? (result.data ?? []) : [],
+    isSearching: trimmed.length >= 2 && (trimmed !== debounced || result.isFetching),
+    isError: result.isError,
+    hasMinLength: trimmed.length >= 2,
+  }
 }
 
 export function useReportUser() {

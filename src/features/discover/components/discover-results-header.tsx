@@ -38,6 +38,7 @@ export function DiscoverResultsHeader({
             value={activeOption}
             onChange={(opt) => onSortChange(opt.id as FeedSort | 'all')}
             indicator="highlight"
+            mobileVariant="menu"
             placeholder="All"
             className='w-83 max-md:w-33'
           />

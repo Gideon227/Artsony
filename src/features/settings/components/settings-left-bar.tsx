@@ -101,7 +101,7 @@ const SettingLeftBar = ({ onDeleteAccountRequest, activeTab, setActiveTab }: Set
 
                     <div className="absolute rounded-full overflow-hidden" style={{ width: 86, height: 86 }}>
                         <Image
-                            src={user.avatarUrl || '/images/image-avatar.svg'}
+                            src={user.avatar_url || '/images/image-avatar.svg'}
                             alt={`${user.username}'s profile picture`}
                             width={86}
                             height={86}

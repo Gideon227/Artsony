@@ -24,7 +24,7 @@ const ImageSection = ({ draft, setField }: Props) => {
 
   const handleUpload = async (
     file: File,
-    field: 'avatarUrl' | 'backgroundUrl',
+    field: 'avatar_url' | 'background_url',
     setUploading: (v: boolean) => void,
   ) => {
     setUploading(true)
@@ -49,7 +49,7 @@ const ImageSection = ({ draft, setField }: Props) => {
           <div className='flex items-center justify-center mx-auto w-full'>
             <div className='relative lg:w-36 lg:h-36 max-lg:w-26 max-lg:h-26'>
               <Image
-                src={draft.avatarUrl || '/images/image-avatar.svg'}
+                src={draft.avatar_url || '/images/image-avatar.svg'}
                 width={144}
                 height={144}
                 alt='profile image'
@@ -67,7 +67,7 @@ const ImageSection = ({ draft, setField }: Props) => {
                 className='hidden'
                 onChange={(e) => {
                   const file = e.target.files?.[0]
-                  if (file) void handleUpload(file, 'avatarUrl', setUploadingAvatar)
+                  if (file) void handleUpload(file, 'avatar_url', setUploadingAvatar)
                   e.target.value = ''
                 }}
               />
@@ -88,8 +88,8 @@ const ImageSection = ({ draft, setField }: Props) => {
           <p className='font-poppins font-medium text-body-s text-heading leading-6 tracking-wide'>Profile Background</p>
 
           <div className='rounded-m relative bg-gray-400 overflow-hidden w-ful h-43 lg:h-77'>
-            {draft.backgroundUrl && (
-              <Image src={draft.backgroundUrl} alt='profile background' fill className='object-cover' />
+            {draft.background_url && (
+              <Image src={draft.background_url} alt='profile background' fill className='object-cover' />
             )}
             <div className='bg-[#00000080] absolute inset-0' />
             <input
@@ -99,7 +99,7 @@ const ImageSection = ({ draft, setField }: Props) => {
               className='hidden'
               onChange={(e) => {
                 const file = e.target.files?.[0]
-                if (file) void handleUpload(file, 'backgroundUrl', setUploadingBackground)
+                if (file) void handleUpload(file, 'background_url', setUploadingBackground)
                 e.target.value = ''
               }}
             />

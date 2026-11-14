@@ -47,7 +47,7 @@ function toFrontendUser(raw: BackendUser): User {
     displayName: raw.display_name ?? raw.username,
     role: raw.role,
     provider: raw.provider,
-    avatarUrl: raw.avatar_url,
+    avatar_url: raw.avatar_url,
     bio: raw.bio,
     country: raw.country,
     state: raw.state,
@@ -62,9 +62,9 @@ function toFrontendUser(raw: BackendUser): User {
     behanceLink: raw.behance_url,
     pinterestLink: raw.pinterest_url,
     linkedinLink: raw.linkedin_url,
-    backgroundUrl: raw.background_url,
-    followersCount: raw.followers_count,
-    followingCount: raw.following_count,
+    background_url: raw.background_url,
+    followers_count: raw.followers_count,
+    following_count: raw.following_count,
     // No per-user aggregate endpoint for these yet (artwork-level view/like
     // counts exist but aren't summed to the user) — 0 rather than fabricated.
     likesCount: 0,

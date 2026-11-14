@@ -6,7 +6,9 @@ import { LeftSideBar } from './left-sidebar'
 import { LiveOrderDetails } from './live-order-details'
 import { OrderDetails } from './order-details'
 import { EmptyDetailState } from './empty-detail-state'
+import { DetailSkeleton } from './detail-skeleton'
 import { OrdersEmptyState } from './orders-empty-state'
+import { NonPhysicalOrderDetails } from './non-physical-order-details'
 import { MobileOrdersView } from '@/features/orders/my-orders/mobile/orders-view'
 import { useLayoutMode } from '@/features/orders/my-orders/mobile/use-layout-mode'
 import {
@@ -16,6 +18,7 @@ import {
 } from '@/hooks/use-physical-order'
 import { useDebounce } from '@/hooks'
 import { ORDER_SORT_OPTIONS, ORDER_SORT_QUERY, VIEW_FOR_STATUS, type OrderSort } from '../constant'
+import { isPhysicalArtwork } from '../utils'
 import type { BuyerOrderView, DeliveryStatus } from '@/types/physical-order'
 
 const VALID_VIEWS: BuyerOrderView[] = ['live', 'delivered', 'cancelled']
@@ -56,7 +59,14 @@ export function OrdersPageContent() {
 
   const listQuery = useBuyerPhysicalOrdersInfinite(view, filters)
   const orders = useMemo(() => listQuery.data?.pages.flatMap((page) => page.data) ?? [], [listQuery.data])
-  const detailQuery = usePhysicalOrderDetail(physicalId)
+  // Only a digital purchase (a download) uses the non-physical panel. Every physical
+  // artwork opens the physical detail, whatever its payment state: when no physical
+  // row exists yet the backend answers with a provisional view for the same id.
+  const nonPhysicalOrder = useMemo(() => {
+    const selected = orders.find((o) => o.id === physicalId)
+    return selected && !isPhysicalArtwork(selected) ? selected : undefined
+  }, [orders, physicalId])
+  const detailQuery = usePhysicalOrderDetail(nonPhysicalOrder ? undefined : physicalId)
   const anyOrders = useBuyerPhysicalOrders('all', { limit: 1 })
 
   const updateParams = useCallback(
@@ -71,7 +81,8 @@ export function OrdersPageContent() {
     [pathname, router, searchParams],
   )
 
-  const firstOrderId = orders[0]?.id
+  // Any physical artwork may be auto-opened, including ones still awaiting payment.
+  const firstOrderId = orders.find(isPhysicalArtwork)?.id
   // Desktop shows the first order beside the list. On mobile the list is its
   // own screen, so nothing is opened until the user taps an order.
   useEffect(() => {
@@ -107,6 +118,7 @@ export function OrdersPageContent() {
         search={search}
         sort={sort}
         physicalId={physicalId}
+        nonPhysicalOrder={nonPhysicalOrder}
         detailQuery={detailQuery}
         onViewChange={(nextView) => updateParams({ view: nextView, physicalId: null })}
         onSearchChange={setSearch}
@@ -142,10 +154,17 @@ export function OrdersPageContent() {
         onRetry={handleRetry}
       />
 
-      <div className="flex-1 min-h-0">
-        {!physicalId && <EmptyDetailState />}
-        {physicalId && layoutStatus === 'LIVE' && <LiveOrderDetails query={detailQuery} />}
-        {physicalId && layoutStatus !== 'LIVE' && (
+      <div className="flex min-h-0 min-w-0 flex-1 flex-col">
+        {/* Nothing open: wait for the list / auto-open, then fall back to the empty-orders design. */}
+        {!physicalId &&
+          (listQuery.isLoading || firstOrderId ? (
+            <DetailSkeleton />
+          ) : (
+            <EmptyDetailState view={view} searching={debouncedSearch !== ''} hasEntries={orders.length > 0} />
+          ))}
+        {nonPhysicalOrder && <NonPhysicalOrderDetails order={nonPhysicalOrder} />}
+        {!nonPhysicalOrder && physicalId && layoutStatus === 'LIVE' && <LiveOrderDetails query={detailQuery} />}
+        {!nonPhysicalOrder && physicalId && layoutStatus !== 'LIVE' && (
           <OrderDetails query={detailQuery} status={layoutStatus === 'DELIVERED' ? 'completed' : 'canceled'} />
         )}
       </div>

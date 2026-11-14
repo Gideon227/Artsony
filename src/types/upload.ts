@@ -31,7 +31,7 @@ export interface CloudinaryFile {
 export interface UserProfile {
   id: string;
   name: string;
-  avatarUrl?: string;
+  avatar_url?: string;
 }
 
 export interface ArtworkShippingConfig {

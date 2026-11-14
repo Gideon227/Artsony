@@ -48,9 +48,9 @@ const UploadPreview = ({ id, onNext, onBack, onSaveAndExit, steps, number, loadi
   const currentUser: Artist = {
     id: user?.id as string,
     name: user?.username!,
-    avatarUrl: user?.avatarUrl!,
+    avatar_url: user?.avatar_url!,
     role: 'Artist',
-    stats: { followers: String(user?.followersCount) || '0', likes: String(user?.likesCount) || '0' , following: String(user?.followingCount) || '0' }
+    stats: { followers: String(user?.followers_count) || '0', likes: String(user?.likesCount) || '0' , following: String(user?.following_count) || '0' }
   }
 
   const collaboratorIds = (draft?.collaborator_ids || []).map((collabId) =>
@@ -66,7 +66,7 @@ const UploadPreview = ({ id, onNext, onBack, onSaveAndExit, steps, number, loadi
     return {
       id: collabId,
       name: profile?.profile?.display_name || profile?.username || (collaboratorsLoading ? 'Loading…' : 'Unknown collaborator'),
-      avatarUrl: profile?.profile?.avatar_url || '/default-avatar.png',
+      avatar_url: profile?.profile?.avatar_url || '/default-avatar.png',
       role: profile?.role === 'ARTIST' ? 'Artist' : 'Collaborator',
     }
   })

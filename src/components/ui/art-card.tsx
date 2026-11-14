@@ -22,7 +22,7 @@ import type { Artwork } from '@/types/artwork'
 export interface Artist {
   id: string
   name: string
-  avatarUrl: string
+  avatar_url: string
   role?: string
   stats?: {
     followers: string
@@ -166,7 +166,7 @@ function ArtistHoverProfile({
     return {
       id,
       name: p?.profile?.display_name || p?.username || 'Loading…',
-      avatarUrl: p?.profile?.avatar_url || '/images/image-avatar.svg',
+      avatar_url: p?.profile?.avatar_url || '/images/image-avatar.svg',
     }
   })
 
@@ -188,14 +188,14 @@ function ArtistHoverProfile({
         exit={{ opacity: 0, y: 10, scale: 0.95 }}
         transition={{ duration: 0.2, ease: "easeOut" }}
         className="w-[280px] sm:w-[300px] bg-white shadow-[0_8px_30px_rgb(0,0,0,0.12)] rounded-[24px] p-5 font-poppins cursor-pointer"
-        onClick={(e) => { e.stopPropagation(); onViewArtwork() }}
+        // onClick={(e) => { e.stopPropagation(); onViewArtwork() }}
       >
         <div className="flex flex-col">
           <div className="flex items-start justify-between">
             <div className="flex gap-3 items-center min-w-0">
-              <div className="relative h-12 w-12 rounded-full overflow-hidden shrink-0 bg-slate-100">
-                <Image src={primaryArtist.avatarUrl} alt={primaryArtist.name} fill className="object-cover" />
-              </div>
+              <Link href={`/profile/${primaryArtist.id}`} className="relative h-12 w-12 rounded-full overflow-hidden shrink-0 bg-slate-100">
+                <Image src={primaryArtist.avatar_url} alt={primaryArtist.name} fill className="object-cover" />
+              </Link>
               <div className="flex flex-col min-w-0">
                 <span className="text-[15px] font-semibold text-[#F15A2B] leading-tight truncate max-w-[140px]">
                   {primaryArtist.name}
@@ -268,7 +268,7 @@ function ArtistHoverProfile({
               <div key={c.id} className="flex items-center justify-between w-full">
                 <div className="flex gap-3 items-center min-w-0">
                   <div className="relative h-10 w-10 rounded-full overflow-hidden shrink-0 bg-slate-100">
-                    <Image src={c.avatarUrl} alt={c.name} fill className="object-cover" />
+                    <Image src={c.avatar_url} alt={c.name} fill className="object-cover" />
                   </div>
                   <div className="flex flex-col min-w-0">
                     <span className="text-[14px] font-semibold text-[#F15A2B] leading-tight truncate">
@@ -356,7 +356,7 @@ export function ArtCard({
     ? [{
         id: artwork.creator_id,
         name: artwork.creator?.profile?.display_name || artwork.creator?.username || 'Unknown Artist',
-        avatarUrl: artwork.creator?.profile?.avatar_url || '/images/image-avatar.svg',
+        avatar_url: artwork.creator?.profile?.avatar_url || '/images/image-avatar.svg',
         role: 'Artist',
         stats: {
           followers: formatNumber(artwork.creator?.profile?.followers_count ?? 0),
@@ -379,7 +379,7 @@ export function ArtCard({
 
 
   const primaryArtist = derivedArtist?.[0]
-  const artistImages = derivedArtist?.map((a) => a.avatarUrl) || []
+  const artistImages = derivedArtist?.map((a) => a.avatar_url) || []
   const artistCount = derivedArtist?.length || 0
 
   // ── Hover state ──

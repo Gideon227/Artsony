@@ -44,7 +44,7 @@ export type FeaturedArtwork = {
 export type SpotlightArtist = {
   id: string
   name: string
-  avatarUrl: string
+  avatar_url: string
   quote: string
   artworks: Pick<Artwork, 'id' | 'assets' | 'title'>[]
 }

@@ -30,7 +30,7 @@ export function LeftSideBar({ view, onViewChange, ...listProps }: Props) {
   const router = useRouter()
 
   return (
-    <div className="flex flex-col gap-y-4 w-[396px] min-h-0">
+    <div className="flex min-h-0 w-[396px] shrink-0 flex-col gap-y-4 min-xl:w-[532px]">
       <div className="flex flex-col gap-y-8 pb-4">
         <div className="flex items-center justify-start gap-x-4">
           <button

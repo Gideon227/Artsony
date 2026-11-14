@@ -20,7 +20,7 @@ export function ProfileMoodboardDetail({ moodboardId, onBack, onSelectArtwork, i
   const artworks = (moodboard?.artworks ?? []) as unknown as Artwork[]
 
   return (
-    <div className="flex flex-col gap-6 px-4 py-8 md:px-8">
+    <div className="flex flex-col gap-6 px-4 py-8 md:px-8 max-lg:pb-26">
       <div className="flex items-center justify-between">
         <button
           type="button"
@@ -68,7 +68,7 @@ export function ProfileMoodboardDetail({ moodboardId, onBack, onSelectArtwork, i
                 {
                   id: art.creator?.id || art.creator_id,
                   name: art.creator?.profile?.display_name || art.creator?.username || 'Unknown Artist',
-                  avatarUrl: art.creator?.profile?.avatar_url || '/images/image-avatar.svg',
+                  avatar_url: art.creator?.profile?.avatar_url || '/images/image-avatar.svg',
                   role: art.creator?.role || 'Artist',
                   stats: {
                     followers: String(art.creator?.profile?.followers_count ?? 0),

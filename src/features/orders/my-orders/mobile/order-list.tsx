@@ -8,6 +8,8 @@ import { useIntersectionObserver } from '@/hooks'
 import { describeOrdersLoadError } from '@/lib/orders/errors'
 import { SortByMenu } from '@/features/orders/order-management/components/sort-by-menu'
 import { MobileOrderCard } from './order-card'
+import { NonPhysicalOrderCard } from '../components/non-physical-order-card'
+import { isPhysicalArtwork } from '../utils'
 import { EMPTY_COPY, MOBILE_ORDER_TABS } from './constants'
 import type { OrderSort } from '../constant'
 import type { BuyerOrderView, OrderItemPhysicalListEntry } from '@/types/physical-order'
@@ -140,7 +142,13 @@ export function MobileOrderList({
 
           {!isLoading &&
             hasOrders &&
-            orders.map((order) => <MobileOrderCard key={order.id} order={order} onSelect={onSelect} />)}
+            orders.map((order) =>
+              isPhysicalArtwork(order) ? (
+                <MobileOrderCard key={order.id} order={order} onSelect={onSelect} />
+              ) : (
+                <NonPhysicalOrderCard key={order.id} order={order} onSelect={onSelect} />
+              ),
+            )}
 
           {isFetchingNextPage && (
             <div className="flex justify-center py-3" role="status" aria-label="Loading more orders">

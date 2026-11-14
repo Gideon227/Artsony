@@ -3,15 +3,15 @@
 import { useCallback } from 'react'
 import {
   Controller,
+  useWatch,
   type Control,
   type FieldErrors,
   type UseFormRegister,
   type UseFormSetValue,
 } from 'react-hook-form'
 import { Input, Checkbox } from '@/components'
-import { Dropdown } from '@/components/ui/dropdown'
+import { CountryField, StateField } from '@/components/forms/location-fields'
 import { PhoneInput } from '@/components/ui/phone-input'
-import { COUNTRIES } from '../data/countries'
 import type { CheckoutInfoInput } from '../schemas/shipping-info.schema'
 
 type Props = {
@@ -22,8 +22,6 @@ type Props = {
   requiresShipping: boolean
 }
 
-const countryOptions = COUNTRIES.map((c) => ({ id: c.code, label: c.name }))
-
 export function ShippingInformationForm({
   register,
   control,
@@ -31,6 +29,8 @@ export function ShippingInformationForm({
   setValue,
   requiresShipping,
 }: Props) {
+  const country = useWatch({ control, name: 'country_code' }) ?? ''
+
   const handleDialCodeChange = useCallback(
     (dialCode: string) => setValue('phone_dial_code', dialCode),
     [setValue],
@@ -77,53 +77,57 @@ export function ShippingInformationForm({
               error={errors.address_line_1?.message}
             />
 
+            {/* Country + state share the same data source as Settings,
+                seller registration and the shop filters (use-location-data). */}
             <Controller
               control={control}
               name="country_code"
               render={({ field }) => (
-                <div className="flex flex-col gap-1.5">
-                  <Dropdown
-                    options={countryOptions}
-                    value={countryOptions.find((o) => o.id === field.value)}
-                    onChange={(opt) => field.onChange(opt.id)}
-                    placeholder="Country"
-                    variant={errors.country_code ? 'error' : 'default'}
-                    indicator="none"
-                  />
-                  {errors.country_code?.message && (
-                    <p className="pl-4 text-xs font-semibold text-error-500">
-                      {errors.country_code.message}
-                    </p>
-                  )}
-                </div>
+                <CountryField
+                  arrow="triangle"
+                  value={field.value ?? ''}
+                  error={errors.country_code?.message}
+                  onChange={(code) => {
+                    field.onChange(code)
+                    // A state belongs to one country — never carry it across.
+                    setValue('state', '', { shouldValidate: false })
+                  }}
+                />
               )}
             />
 
-            <div className="flex flex-col gap-4 lg:flex-row">
-              <div className="order-2 w-full lg:order-1">
-                <Input
-                  placeholder="City"
-                  autoComplete="address-level2"
-                  {...register('city')}
-                  error={errors.city?.message}
+            <Input
+              placeholder="City"
+              autoComplete="address-level2"
+              {...register('city')}
+              error={errors.city?.message}
+            />
+
+            <div className="flex flex-col gap-4 sm:flex-row">
+              <div className="min-w-0 flex-1">
+                <Controller
+                  control={control}
+                  name="state"
+                  render={({ field }) => (
+                    <StateField
+                      arrow="triangle"
+                      country={country}
+                      value={field.value ?? ''}
+                      error={errors.state?.message}
+                      onChange={field.onChange}
+                    />
+                  )}
                 />
               </div>
-              <div className="order-1 w-full lg:order-2">
+              <div className="min-w-0 flex-1">
                 <Input
-                  placeholder="State/Province"
-                  autoComplete="address-level1"
-                  {...register('state')}
-                  error={errors.state?.message}
+                  placeholder="Postal Code"
+                  autoComplete="postal-code"
+                  {...register('postal_code')}
+                  error={errors.postal_code?.message}
                 />
               </div>
             </div>
-
-            <Input
-              placeholder="Postal Code"
-              autoComplete="postal-code"
-              {...register('postal_code')}
-              error={errors.postal_code?.message}
-            />
           </>
         )}
       </div>

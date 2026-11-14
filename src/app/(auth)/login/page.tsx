@@ -48,7 +48,7 @@ function LoginContent() {
         <div className="w-full bg-white rounded-xl lg:rounded-none flex flex-col lg:justify-between h-auto lg:h-full py-4 lg:py-0 px-4 lg:px-0 max-lg:overflow-hidden">
 
           <div className="flex justify-center mb-12">
-            <Image src="/icons/logo.svg" alt="ARTSONY" width={272} height={48} className="h-auto max-lg:w-[130px]" priority />
+            <Image src="/icons/logo.svg" alt="ARTSONY" width={272} height={48} className="h-auto max-lg:w-[182px]" priority />
           </div>
 
           <div className="w-full space-y-3 lg:space-y-4 max-lg:mt-2">

@@ -320,7 +320,7 @@ function presentSocial(
         avatar: 'actor',
         title: header('Sent you a message'),
         ...(p.preview ? { description: p.preview } : {}),
-        href: notificationRoutes.messages,
+        href: notificationRoutes.messages(p.conversationId),
       }
 
     case 'follow':

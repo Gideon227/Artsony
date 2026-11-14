@@ -70,7 +70,7 @@ export function CancelOrderFlow({ physicalId, open, onOpenChange }: Props) {
           animate={{ opacity: 1, y: 0 }}
           exit={{ opacity: 0, y: -8 }}
           transition={{ duration: 0.18 }}
-          className="w-full max-w-[520px]"
+          className="w-full max-w-[564px]"
         >
           {step === 'reason' && <CancelReason onClose={requestClose} onContinue={handleReasonPicked} />}
           {step === 'other' && (

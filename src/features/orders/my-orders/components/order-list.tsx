@@ -5,8 +5,10 @@ import { Loader2, Search } from 'lucide-react'
 import { Input } from '@/components'
 import { useIntersectionObserver } from '@/hooks'
 import { OrderCard } from './order-card'
+import { NonPhysicalOrderCard } from './non-physical-order-card'
+import { isPhysicalArtwork, isPhysicalEntry } from '../utils'
 import { OrderSortMenu } from '@/features/orders/my-orders/ui/order-sort-menu'
-import type { OrderSort } from '../constant'
+import { EMPTY_COPY, type OrderSort } from '../constant'
 import type { BuyerOrderView, OrderItemPhysicalListEntry } from '@/types/physical-order'
 import { describeOrdersLoadError } from '@/lib/orders/errors'
 
@@ -26,13 +28,6 @@ interface Props {
   onSelect: (physicalId: string) => void
   onLoadMore: () => void
   onRetry: () => void
-}
-
-const EMPTY_COPY: Record<BuyerOrderView, string> = {
-  all: 'No orders yet.',
-  delivered: 'No delivered orders yet.',
-  live: 'No live orders right now.',
-  cancelled: 'No canceled orders.',
 }
 
 const SENTINEL_OPTIONS: IntersectionObserverInit = { rootMargin: '240px' }
@@ -77,10 +72,11 @@ export function OrderList({
         <OrderSortMenu value={sort} onChange={onSortChange} />
       </div>
 
-      <div className="flex flex-col gap-y-3 overflow-y-auto flex-1 min-h-0">
+      {/* -m-1/p-1: room for the 2px + 2px-offset ring of the open card, which would otherwise be clipped. */}
+      <div className="-m-1 flex min-h-0 flex-1 flex-col gap-y-3 overflow-y-auto p-1">
         {isLoading &&
           Array.from({ length: 3 }).map((_, i) => (
-            <div key={i} className="h-[220px] rounded-xl bg-gray-50 animate-pulse" />
+            <div key={i} className="h-[272px] rounded-xl bg-gray-50 animate-pulse" />
           ))}
 
         {loadError && !isLoading && !hasOrders && (
@@ -106,9 +102,20 @@ export function OrderList({
 
         {!isLoading &&
           hasOrders &&
-          orders.map((order) => (
-            <OrderCard key={order.id} order={order} selected={order.id === selectedId} onSelect={onSelect} />
-          ))}
+          orders.map((order) =>
+            isPhysicalArtwork(order) ? (
+              <OrderCard
+                key={order.id}
+                order={order}
+                selected={order.id === selectedId}
+                onSelect={onSelect}
+                // No physical row yet (payment pending / failed / expired): the trip hasn't started.
+                tripStarted={isPhysicalEntry(order)}
+              />
+            ) : (
+              <NonPhysicalOrderCard key={order.id} order={order} selected={order.id === selectedId} onSelect={onSelect} />
+            ),
+          )}
 
         {isFetchingNextPage && (
           <div className="flex justify-center py-3" role="status" aria-label="Loading more orders">

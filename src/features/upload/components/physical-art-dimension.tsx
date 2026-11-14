@@ -18,6 +18,8 @@ interface PhysicalArtDimensionProps {
   onBack: () => void;
   number: string;
   hideVariationSection?: boolean;
+  /** Digital products have no physical size or weight — hides the Dimensions section and its validation. */
+  hideDimensionsSection?: boolean;
 }
 
 export default function PhysicalArtDimension({
@@ -27,6 +29,7 @@ export default function PhysicalArtDimension({
   onBack,
   number,
   hideVariationSection,
+  hideDimensionsSection,
 }: PhysicalArtDimensionProps) {
   const draft = useArtworkStore((state) => state.draft);
   const setDraftField = useArtworkStore((state) => state.setDraftField);
@@ -52,19 +55,20 @@ export default function PhysicalArtDimension({
 
     const { length, weight, height } = physicalDetails;
     const hasDimensions =
-      typeof length === "number" &&
-      length > 0 &&
-      typeof weight === "number" &&
-      weight > 0 &&
-      typeof height === "number" &&
-      height > 0;
+      hideDimensionsSection ||
+      (typeof length === "number" &&
+        length > 0 &&
+        typeof weight === "number" &&
+        weight > 0 &&
+        typeof height === "number" &&
+        height > 0);
 
     const hasAvailableQty =
       typeof physicalDetails.available_quantity === "number" &&
       physicalDetails.available_quantity > 0;
 
     return hasPrice && hasDimensions && hasAvailableQty;
-  }, [draft.price, physicalDetails]);
+  }, [draft.price, physicalDetails, hideDimensionsSection]);
   
   // Merge a single dimension key into physical_details
   const handleDimensionChange = (key: string, val: number) => {
@@ -149,22 +153,25 @@ export default function PhysicalArtDimension({
           </div>
         </section>
 
-        {/* DIMENSIONS — draft.physical_details: { length, width, height, unit } */}
-        <section className="space-y-4">
-          <div className="flex items-center gap-2">
-            <label className="text-body-s font-medium font-poppins text-gray-500 tracking-wide">
-              <span className="text-primary-600 mr-1">*</span>Dimensions
-            </label>
-            <DynamicTooltip
-              title="Dimensions"
-              content="Enter the artwork's physical dimensions and weight. Accurate measurements help buyers understand the size of the piece and support shipping and delivery calculations."
+        {/* DIMENSIONS — draft.physical_details: { length, width, height, unit }.
+            Hidden for digital products, which have no physical size or weight. */}
+        {!hideDimensionsSection && (
+          <section className="space-y-4">
+            <div className="flex items-center gap-2">
+              <label className="text-body-s font-medium font-poppins text-gray-500 tracking-wide">
+                <span className="text-primary-600 mr-1">*</span>Dimensions
+              </label>
+              <DynamicTooltip
+                title="Dimensions"
+                content="Enter the artwork's physical dimensions and weight. Accurate measurements help buyers understand the size of the piece and support shipping and delivery calculations."
+              />
+            </div>
+            <DimensionsRow
+              values={physicalDetails}
+              onChange={handleDimensionChange}
             />
-          </div>
-          <DimensionsRow
-            values={physicalDetails}
-            onChange={handleDimensionChange}
-          />
-        </section>
+          </section>
+        )}
 
         {/* QUANTITY — physical_details.available_quantity + draft.max_purchase_quantity */}
         <section className="space-y-6">

@@ -41,7 +41,7 @@ const ProfileHeader = ({ user, isOwnProfile, onPostArtwork }: Props) => {
   return (
     <div className="relative w-full bg-white">
       <div className="h-[220px] w-full bg-[#D9D9D9] md:h-[280px] lg:h-[344px] relative">
-        <Image fill src={user?.backgroundUrl || ''} alt='user background image' objectFit='cover' />
+        <Image fill src={user?.background_url || ''} alt='user background image' objectFit='cover' />
       </div>
 
       <div
@@ -49,6 +49,11 @@ const ProfileHeader = ({ user, isOwnProfile, onPostArtwork }: Props) => {
           'relative z-20 mx-auto -mt-40 w-[92vw] max-w-[420px] rounded-2xl',
           'backdrop-blur-xl md:-mt-48 lg:-mt-56'
         )}
+        // style={{
+        //   background: "linear-gradient(#ffffff, #ffffff) padding-box, linear-gradient(196deg, #ffffff 0%, #F25B38 100%) border-box",
+        //   backgroundClip: "padding-box, border-box",
+        //   border: "2px solid transparent"
+        // }}
       >
         <div
           className="flex w-full flex-col items-center gap-8 rounded-2xl px-4 py-6 md:gap-12 md:px-8 md:py-12"
@@ -71,7 +76,7 @@ const ProfileHeader = ({ user, isOwnProfile, onPostArtwork }: Props) => {
               {/* The actual User Avatar */}
               <div className="relative w-[104px] h-[104px] rounded-full overflow-hidden z-10 bg-gray-50">
                 <Image
-                  src={user?.avatarUrl || '/images/image-avatar.svg'}
+                  src={user?.avatar_url || '/images/image-avatar.svg'}
                   alt={user?.username ? `${user.username}'s profile` : 'User avatar'}
                   width={104}
                   height={104}
@@ -90,7 +95,7 @@ const ProfileHeader = ({ user, isOwnProfile, onPostArtwork }: Props) => {
             <div className="flex w-full items-center justify-center">
               <button onClick={() => setFollowListType('followers')} className="flex cursor-pointer w-1/3 flex-col items-center justify-center gap-2 transition-opacity hover:opacity-80">
                 <p className="text-center font-poppins text-body-m font-medium leading-6 tracking-wide text-secondary-500">
-                  {(user.followersCount ?? 0).toLocaleString()}
+                  {(user.followers_count ?? 0).toLocaleString()}
                 </p>
                 <p className="text-center font-poppins text-body-m leading-6 tracking-wide text-white">Followers</p>
               </button>
@@ -102,7 +107,7 @@ const ProfileHeader = ({ user, isOwnProfile, onPostArtwork }: Props) => {
               </div>
               <button onClick={() => setFollowListType('following')} className="flex cursor-pointer w-1/3 flex-col items-center justify-center gap-2 transition-opacity hover:opacity-80">
                 <p className="text-center font-poppins text-body-m font-medium leading-6 tracking-wide text-secondary-500">
-                  {(user.followingCount ?? 0).toLocaleString()}
+                  {(user.following_count ?? 0).toLocaleString()}
                 </p>
                 <p className="text-center font-poppins text-body-m leading-6 tracking-wide text-white">Following</p>
               </button>
@@ -121,7 +126,7 @@ const ProfileHeader = ({ user, isOwnProfile, onPostArtwork }: Props) => {
                   isLoading={isTogglingFollow}
                   onClick={() => toggleFollow()}
                   aria-pressed={isFollowing}
-                  className='max-lg:hidden'
+                  className='max-lg:hidden '
                 >
                   {isFollowing ? 'Following' : 'Follow'}
                 </Button>
@@ -139,8 +144,9 @@ const ProfileHeader = ({ user, isOwnProfile, onPostArtwork }: Props) => {
                   onClick={handleMessage}
                   disabled={!canMessage}
                   title={!canMessage ? `${user.displayName || user.username} limits who can message them` : undefined}
+                  className='outline-white border-white text-white'
                 >
-                  {canMessage ? 'Message' : 'Message restricted'}
+                  {canMessage ? 'Inbox' : 'Message restricted'}
                 </Button>
               )}
             </div>
@@ -165,7 +171,7 @@ const ProfileHeader = ({ user, isOwnProfile, onPostArtwork }: Props) => {
               </button>
 
               {menuOpen && (
-                <div className="absolute right-0 top-full mt-2 w-[180px] rounded-[16px] border border-gray-100 bg-white p-2 shadow-[0_8px_30px_rgba(0,0,0,0.12)]">
+                <div className="absolute z-50 right-0 top-full mt-2 w-[180px] rounded-[16px] border border-gray-100 bg-white p-2 shadow-[0_8px_30px_rgba(0,0,0,0.12)]">
                   {/* No report/block endpoint exists on the backend yet — these
                       are wired to a "coming soon" toast rather than faking a
                       success state, until that contract exists. */}
@@ -192,7 +198,7 @@ const ProfileHeader = ({ user, isOwnProfile, onPostArtwork }: Props) => {
         <ProfileFollowersModal
           userId={user.id}
           type={followListType}
-          totalCount={followListType === 'followers' ? (user.followersCount ?? 0) : (user.followingCount ?? 0)}
+          totalCount={followListType === 'followers' ? (user.followers_count ?? 0) : (user.following_count ?? 0)}
           onClose={() => setFollowListType(null)}
           onSelectUser={(id) => router.push(`/profile/${id}`)}
         />

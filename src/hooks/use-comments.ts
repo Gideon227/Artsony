@@ -58,7 +58,7 @@ export function useCreateComment(artworkId: string) {
             id: user.id,
             username: user.username,
             display_name: user.displayName ?? null,
-            avatar_url: user.avatarUrl ?? null,
+            avatar_url: user.avatar_url ?? null,
           },
         }
         queryClient.setQueryData(key, {

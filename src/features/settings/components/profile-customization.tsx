@@ -14,8 +14,8 @@ export type ProfileDraft = {
   displayName: string
   bio: string
   interests: string[]
-  avatarUrl: string | null
-  backgroundUrl: string | null
+  avatar_url: string | null
+  background_url: string | null
   website: string
   behanceLink: string
   pinterestLink: string
@@ -36,8 +36,8 @@ const ProfileCustomization = ({ goBack }: { goBack?: () => void }) => {
     displayName: user?.displayName ?? '',
     bio: user?.bio ?? '',
     interests: user?.interests ?? [],
-    avatarUrl: user?.avatarUrl ?? null,
-    backgroundUrl: user?.backgroundUrl ?? null,
+    avatar_url: user?.avatar_url ?? null,
+    background_url: user?.background_url ?? null,
     website: user?.website ?? '',
     behanceLink: user?.behanceLink ?? '',
     pinterestLink: user?.pinterestLink ?? '',
@@ -66,8 +66,8 @@ const ProfileCustomization = ({ goBack }: { goBack?: () => void }) => {
     if (draft.displayName.trim() !== (user.displayName ?? '')) payload.display_name = draft.displayName.trim() || null
     if (draft.bio.trim() !== (user.bio ?? '')) payload.bio = draft.bio.trim() || null
     if (!arraysEqual(draft.interests, user.interests ?? [])) payload.interests = draft.interests
-    if (draft.avatarUrl !== user.avatarUrl) payload.avatar_url = draft.avatarUrl
-    if (draft.backgroundUrl !== user.backgroundUrl) payload.background_url = draft.backgroundUrl
+    if (draft.avatar_url !== user.avatar_url) payload.avatar_url = draft.avatar_url
+    if (draft.background_url !== user.background_url) payload.background_url = draft.background_url
     if (draft.website.trim() !== (user.website ?? '')) payload.website_url = draft.website.trim() || null
     if (draft.behanceLink.trim() !== (user.behanceLink ?? '')) payload.behance_url = draft.behanceLink.trim() || null
     if (draft.pinterestLink.trim() !== (user.pinterestLink ?? '')) payload.pinterest_url = draft.pinterestLink.trim() || null

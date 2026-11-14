@@ -70,7 +70,7 @@ export const PhysicalArtPreview = ({
   const artOwner = {
     name: user?.username,
     role: 'Landscape Photography', //Placeholder
-    avatar: user?.avatarUrl || '/images/image-avatar.svg' 
+    avatar: user?.avatar_url || '/images/image-avatar.svg' 
   }
 
   return (
@@ -137,7 +137,7 @@ export const PhysicalArtPreview = ({
                     <div className="flex items-start justify-between">
                         <div className="flex items-center gap-2">
                             <div className="relative h-14 w-14 overflow-hidden rounded-full bg-gray-200">
-                                <Image src={user?.avatarUrl as string} alt={user?.username as string} fill className="object-cover" />
+                                <Image src={user?.avatar_url as string} alt={user?.username as string} fill className="object-cover" />
                             </div>
                             <div className="flex flex-col">
                                 <span className="font-poppins font-medium text-body-m leading-6 text-primary-500 tracking-wide">{user?.username}</span>

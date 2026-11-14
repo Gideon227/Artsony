@@ -154,7 +154,7 @@ const TopArt = ({ filters, onClearFilters, limit = TOP_ART_COUNT, onLoaded }: To
     }
 
     return (
-        <div className='bg-white py-12 md:gap-y-6 flex flex-col'>
+        <div className='bg-white py-6 lg:py-12 md:gap-y-6 flex flex-col'>
             <div className='flex px-4 lg:px-8 justify-between items-center w-full'>
                 <h2 className='font-raleway font-semibold text-primary-500 text-h6 md:text-h4 leading-10 tracking-wide'>Top Art</h2>
                 <Dropdown
@@ -162,6 +162,8 @@ const TopArt = ({ filters, onClearFilters, limit = TOP_ART_COUNT, onLoaded }: To
                     value={selected}
                     onChange={(option) => setSelected(option)}
                     placeholder="For You"
+                    indicator="highlight"
+                    mobileVariant="menu"
                     className='w-33 md:w-67'
                 />
             </div>

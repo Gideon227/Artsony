@@ -26,17 +26,17 @@ export default function UserMenuOverlay({ onClose }: { onClose?: () => void }) {
   const { user } = useAuthStore();
   const { mutate: logout, isPending: isLoggingOut } = useLogout();
 
-  // `user?.avatarUrl` can be null, undefined, or an empty string depending on
+  // `user?.avatar_url` can be null, undefined, or an empty string depending on
   // what the API sends — `||` catches all three, unlike `??`. `onError` covers
   // the remaining case: a stored URL that 404s or points at a domain not
   // whitelisted in next.config's image loader.
-  const [avatarSrc, setAvatarSrc] = useState(user?.avatarUrl || FALLBACK_AVATAR);
+  const [avatarSrc, setAvatarSrc] = useState(user?.avatar_url || FALLBACK_AVATAR);
 
   // useAuthStore hydrates from persisted storage after first paint, so
   // `user` can go from null → populated post-mount; keep the avatar in sync.
   useEffect(() => {
-    setAvatarSrc(user?.avatarUrl || FALLBACK_AVATAR);
-  }, [user?.avatarUrl]);
+    setAvatarSrc(user?.avatar_url || FALLBACK_AVATAR);
+  }, [user?.avatar_url]);
 
   const navLinks = user?.role === "ADMIN" ? [...NAV_LINKS, ...ADMIN_LINKS] : NAV_LINKS;
 

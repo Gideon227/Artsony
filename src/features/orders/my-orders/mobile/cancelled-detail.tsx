@@ -49,13 +49,18 @@ export function MobileCancelledDetail({ data, onClose }: Props) {
     : '—'
 
   const menuItems: OrderActionsMenuItem[] = [
-    {
-      id: 'receipt',
-      label: 'Download Receipt',
-      isPending: downloadReceipt.isPending,
-      onSelect: () =>
-        void openDocumentAfter(() => downloadReceipt.mutateAsync(physical.id).then((doc) => doc.receipt_url)),
-    },
+    // A receipt needs a real physical row (a provisional order was never paid).
+    ...(data.is_provisional
+      ? []
+      : [
+          {
+            id: 'receipt',
+            label: 'Download Receipt',
+            isPending: downloadReceipt.isPending,
+            onSelect: () =>
+              void openDocumentAfter(() => downloadReceipt.mutateAsync(physical.id).then((doc) => doc.receipt_url)),
+          },
+        ]),
     {
       id: 'proof',
       label: 'View Packaging Proof',

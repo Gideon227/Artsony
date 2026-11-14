@@ -9,7 +9,7 @@ export type AvatarSize = 'sm' | 'md' | 'lg'
 interface User {
   id: string | number
   name: string
-  avatarUrl?: string
+  avatar_url?: string
 }
 
 interface AvatarStackProps {
@@ -67,8 +67,8 @@ export function AvatarStack({ users = [], max = 4, size = 'md', showCount = fals
               )}
               style={{ zIndex: i + 1 }}
             >
-              {user.avatarUrl ? (
-                <Image src={user.avatarUrl} alt={user.name} fill className="object-cover" />
+              {user.avatar_url ? (
+                <Image src={user.avatar_url} alt={user.name} fill className="object-cover" />
               ) : (
                 <span className={cn("font-bold select-none", color?.text, cfg.text)}>
                   {getInitials(user.name)}

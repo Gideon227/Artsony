@@ -14,8 +14,10 @@ export function useMessageArtist() {
   return useMutation({
     mutationFn: (artistId: string) => messagingService.createDirect(artistId),
 
-    onSuccess: (conversation) => {
-      void queryClient.invalidateQueries({ queryKey: ['conversations'] })
+    onSuccess: async (conversation) => {
+      // The messages page only selects a deep-linked conversation that is already in its
+      // list, so refresh the list (even when that page isn't mounted) before navigating.
+      await queryClient.invalidateQueries({ queryKey: ['conversations'], refetchType: 'all' })
       router.push(`/messages?conversation=${conversation.id}`)
     },
 

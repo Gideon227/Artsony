@@ -13,6 +13,7 @@ export type DropdownIndicator = "checkbox" | "checkmark" | "highlight" | "radio"
 export type DropdownLayout = "list" | "grid";
 export type DropdownSearchVariant = "inline" | "button";
 export type DropdownArrow = "chevron" | "triangle";
+export type DropdownMobileVariant = "sheet" | "menu";
 
 export interface DropdownOption {
   id: string | number;
@@ -57,13 +58,19 @@ interface DropdownProps {
 
   customBody?: React.ReactNode;
   valueLabel?: string;
-  hideChips?: boolean
+  hideChips?: boolean;
   /**
    * Render only the options panel (chips, search, list/grid or customBody) in
    * normal flow — no trigger and no popover. Used by accordion-style filter
    * cards, where the parent owns the header and open/close state.
    */
   inline?: boolean;
+  /**
+   * Mobile presentation (screens < 640px).
+   * "sheet" (default): titled panel with a close button.
+   * "menu": compact, title-less list anchored under the trigger.
+   */
+  mobileVariant?: DropdownMobileVariant;
 }
 
 const MOBILE_BREAKPOINT = 640;
@@ -72,6 +79,8 @@ const MENU_OFFSET = 8;
 // The mobile sheet never gets squeezed below this, even when its trigger sits
 // near the bottom of the screen (it then overlaps the trigger instead).
 const MOBILE_MIN_SHEET_HEIGHT = 360;
+// Minimum width of the compact mobile menu, even if the trigger is narrower.
+const MOBILE_MENU_MIN_WIDTH = 220;
 
 const MOBILE_SCROLLBAR = [
   "[scrollbar-width:thin] [scrollbar-color:#D1D5DB_transparent]",
@@ -111,6 +120,7 @@ const Dropdown = ({
   valueLabel,
   hideChips,
   inline = false,
+  mobileVariant = "sheet",
 }: DropdownProps) => {
   const [isOpen, setIsOpen] = React.useState(false);
   const [mounted, setMounted] = React.useState(false);
@@ -123,6 +133,7 @@ const Dropdown = ({
   const reduceMotion = useReducedMotion();
   const resolvedIndicator: DropdownIndicator = indicator ?? "checkbox";
   const sheetTitle = title ?? placeholder;
+  const isMenuVariant = mobileVariant === "menu";
 
   const query = searchValue !== undefined ? searchValue : internalSearch;
 
@@ -143,6 +154,21 @@ const Dropdown = ({
     if (!rect) return;
     const mobile = window.innerWidth < MOBILE_BREAKPOINT;
     const below = rect.bottom + MENU_OFFSET;
+
+    // Compact menu: anchored under the trigger, kept inside the viewport.
+    if (mobile && mobileVariant === "menu") {
+      const width = Math.min(
+        Math.max(rect.width, MOBILE_MENU_MIN_WIDTH),
+        window.innerWidth - MOBILE_MARGIN * 2
+      );
+      const left = Math.max(
+        MOBILE_MARGIN,
+        Math.min(rect.left, window.innerWidth - width - MOBILE_MARGIN)
+      );
+      setMenuPos({ top: below, left, width });
+      return;
+    }
+
     const top = mobile
       ? Math.max(
           MOBILE_MARGIN,
@@ -154,7 +180,7 @@ const Dropdown = ({
       left: mobile ? MOBILE_MARGIN : rect.left,
       width: mobile ? window.innerWidth - MOBILE_MARGIN * 2 : rect.width,
     });
-  }, []);
+  }, [mobileVariant]);
 
   React.useLayoutEffect(() => {
     if (!isOpen) return;
@@ -309,7 +335,7 @@ const Dropdown = ({
       </div>
     ) : null;
 
-  const chipsSection = multiple && !hideChips  ? (
+  const chipsSection = multiple && !hideChips ? (
     <div className="px-6 py-4 flex flex-col gap-y-4">
       <p className="text-left font-poppins text-body-s text-text-alt-grey max-lg:hidden">{title && title}</p>
       <div className="flex items-center justify-between mb-2">
@@ -418,7 +444,7 @@ const Dropdown = ({
             selected && !multiple &&
             (resolvedIndicator === "highlight" || resolvedIndicator === "radio" || resolvedIndicator === "checkbox");
 
-            return (
+          return (
             <li key={option.id}>
               <div
                 role="button"
@@ -468,7 +494,6 @@ const Dropdown = ({
                   <span
                     className={cn(
                       "font-poppins font-medium text-body-xs truncate leading-tight transition-colors",
-                      // selected ? "text-white" : "text-neutral-800",
                       filled ? "text-white" : "text-neutral-800"
                     )}
                   >
@@ -478,7 +503,6 @@ const Dropdown = ({
                     <span
                       className={cn(
                         "text-[12px] block font-normal font-poppins leading-5 mt-1 transition-colors",
-                        // selected && !multiple ? "text-white/80" : "text-neutral-400",
                         filled ? "text-white/80" : "text-neutral-400"
                       )}
                     >
@@ -557,6 +581,38 @@ const Dropdown = ({
     </ul>
   );
 
+  // Compact mobile menu: no title, no close button, no indicator.
+  // The selected row is filled with the primary color.
+  const mobileMenuBody = (
+    <ul className="min-h-0 flex-1 overflow-y-auto overscroll-contain">
+      {statusBlock ??
+        filteredOptions.map((option) => {
+          const selected = isSelected(option);
+          const disabledRow = option.disabled || (multiple && !selected && atMax);
+
+          return (
+            <li key={option.id} className="border-b border-neutral-200 last:border-b-0">
+              <button
+                type="button"
+                onClick={() => handleSelect(option)}
+                disabled={disabledRow}
+                aria-pressed={selected}
+                className={cn(
+                  "flex h-15 w-full items-center px-6 text-left font-poppins text-sm font-medium outline-none transition-colors",
+                  "disabled:cursor-not-allowed disabled:opacity-50",
+                  selected
+                    ? "bg-primary-500 text-white"
+                    : "text-[#525965] active:bg-neutral-50 focus-visible:bg-neutral-50"
+                )}
+              >
+                <span className="truncate">{option.label}</span>
+              </button>
+            </li>
+          );
+        })}
+    </ul>
+  );
+
   const desktopBody = customBody ? (
     <div className="p-4">{customBody}</div>
   ) : (
@@ -616,7 +672,7 @@ const Dropdown = ({
             {layout === "grid" ? (
               gridSection
             ) : (
-              <div className={cn("max-h-[300px] overflow-y-auto overscroll-contain pr-3", MOBILE_SCROLLBAR)}>
+              <div className={cn("max-h-[300px] overflow-y-auto scrollbar-hide overscroll-contain pr-3")}>
                 {mobileList}
               </div>
             )}
@@ -686,8 +742,8 @@ const Dropdown = ({
               <motion.div
                 ref={menuRef}
                 key="dropdown-menu"
-                role={isMobile ? "dialog" : undefined}
-                aria-label={isMobile ? sheetTitle : undefined}
+                role={isMobile && !isMenuVariant ? "dialog" : undefined}
+                aria-label={isMobile && !isMenuVariant ? sheetTitle : undefined}
                 initial={menuMotion.initial}
                 animate={menuMotion.animate}
                 exit={menuMotion.exit}
@@ -697,7 +753,7 @@ const Dropdown = ({
                   width: menuPos.width,
                   ...(isMobile
                     ? {
-                        borderRadius: 32,
+                        borderRadius: isMenuVariant ? 24 : 32,
                         maxHeight: `calc(100dvh - ${menuPos.top}px - ${MOBILE_MARGIN}px)`,
                       }
                     : { borderBottomLeftRadius: 32, borderBottomRightRadius: 32 }),
@@ -708,7 +764,11 @@ const Dropdown = ({
                 )}
               >
                 {isMobile ? (
-                  mobileBody
+                  isMenuVariant ? (
+                    mobileMenuBody
+                  ) : (
+                    mobileBody
+                  )
                 ) : (
                   <div
                     className="flex flex-col gap-y-2 overflow-y-auto"

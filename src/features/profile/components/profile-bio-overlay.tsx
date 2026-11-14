@@ -62,9 +62,9 @@ export default function ProfileBioOverlay({ user, onClose }: { user: User; onClo
         </div>
 
         <div className="relative h-[296px] w-full shrink-0 bg-[#D9D9D9] md:h-[280px] max-md:pb-24">
-          <Image fill src={user?.backgroundUrl || ''} alt='user background image' objectFit='cover' />
-          {user.avatarUrl && (
-            <Image src={user.avatarUrl} alt="" fill className="object-cover" />
+          <Image fill src={user?.background_url || ''} alt='user background image' objectFit='cover' />
+          {user.avatar_url && (
+            <Image src={user.avatar_url} alt="" fill className="object-cover" />
           )}
           <button
             onClick={onClose}
@@ -85,7 +85,7 @@ export default function ProfileBioOverlay({ user, onClose }: { user: User; onClo
           <div className="flex flex-row md:flex-col shrink-0 md:w-[160px] md:h-full">
             <div className='flex flex-col gap-4 max-md:grid max-md:grid-cols-2 max-md:grid-rows-2'>
               <div className="flex flex-col gap-1">
-                <span className="font-poppins text-[20px] font-medium text-primary-500">{(user.followersCount ?? 0).toLocaleString()}</span>
+                <span className="font-poppins text-[20px] font-medium text-primary-500">{(user.followers_count ?? 0).toLocaleString()}</span>
                 <span className="font-poppins text-body-s text-body">Followers</span>
               </div>
               <div className="flex flex-col gap-1">
@@ -97,7 +97,7 @@ export default function ProfileBioOverlay({ user, onClose }: { user: User; onClo
                 <span className="font-poppins text-body-s text-body">Likes</span>
               </div>
               <div className="flex flex-col gap-1">
-                <span className="font-poppins text-[20px] font-medium text-primary-500">{(user.followingCount ?? 0).toLocaleString()}</span>
+                <span className="font-poppins text-[20px] font-medium text-primary-500">{(user.following_count ?? 0).toLocaleString()}</span>
                 <span className="font-poppins text-body-s text-body">Following</span>
               </div>
             </div>
@@ -125,7 +125,7 @@ export default function ProfileBioOverlay({ user, onClose }: { user: User; onClo
             </p>
             <div className='mx-auto flex items-center justify-center gap-2 mt-auto'>
               <Image
-                src={user?.avatarUrl || '/images/image-avatar.svg'}
+                src={user?.avatar_url || '/images/image-avatar.svg'}
                 alt={user?.username ? `${user.username}'s profile` : 'User avatar'}
                 width={40}
                 height={40}

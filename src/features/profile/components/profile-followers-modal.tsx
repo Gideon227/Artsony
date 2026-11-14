@@ -124,7 +124,7 @@ export function ProfileFollowersModal({ userId, type, totalCount, onClose, onSel
 
           {/* Desktop Wrapper (Hidden on mobile) */}
           <div className='relative max-lg:hidden flex items-center gap-4 flex-1 max-md:mt-4'>
-            <SearchInput value={query} onChange={setQuery} leftIconPath={'home/magnifier.svg'} rightIconPath={'/icons/cancel.svg'} placeholder="Search Username" />
+            <SearchInput value={query} onChange={setQuery} leftIconPath={'/home/magnifier.svg'} rightIconPath={'/icons/cancel.svg'} placeholder="Search Username" />
             
             <button onClick={onClose} aria-label="Close" className="cursor-pointer hidden lg:flex hover:bg-gray-50">
               <svg width="40" height="40" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">

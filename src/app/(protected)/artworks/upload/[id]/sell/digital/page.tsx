@@ -171,7 +171,8 @@ export default function DigitalSellWizardPage() {
                     }}
                     steps="6"
                     number="3"
-                    hideVariationSection = {true}
+                    hideVariationSection={true}
+                    hideDimensionsSection={true}
                 />
             ]}
         />,

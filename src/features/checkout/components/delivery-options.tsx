@@ -4,7 +4,7 @@ import { Controller, type Control } from 'react-hook-form'
 import { Check } from 'lucide-react'
 import { cn } from '@/utils'
 import { DynamicTooltip } from '@/components/ui/dynamic-tooltip'
-import { DELIVERY_OPTIONS } from '../data/countries'
+import { DELIVERY_OPTIONS } from '../data/delivery-options'
 import type { CheckoutInfoInput } from '../schemas/shipping-info.schema'
 
 export function DeliveryOptions({ control }: { control: Control<CheckoutInfoInput> }) {

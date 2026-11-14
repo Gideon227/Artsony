@@ -45,7 +45,7 @@ export function ArtworkComments({ artworkId, creatorId, allowComments }: Artwork
           <div className="flex max-lg:flex-col gap-4">
             <div className="relative h-11 w-11 shrink-0 overflow-hidden rounded-full bg-gray-100">
               <Image
-                src={user?.avatarUrl || '/images/image-avatar.svg'}
+                src={user?.avatar_url || '/images/image-avatar.svg'}
                 alt={user?.username ?? 'You'}
                 fill
                 className="object-cover"

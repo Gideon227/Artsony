@@ -175,7 +175,7 @@ const Footer = () => {
                 <div className="h-10 flex items-center mb-6">
                   <Link href="/profile" className="flex items-center gap-3 group cursor-pointer w-fit">
                     <Image 
-                      src={user.avatarUrl ?? "/images/image-avatar.svg"} 
+                      src={user.avatar_url ?? "/images/image-avatar.svg"} 
                       alt={user.username ?? "User"} 
                       width={40} 
                       height={40} 

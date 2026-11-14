@@ -103,7 +103,8 @@ export function Navbar({ hideSearchBar = false }: { hideSearchBar?: boolean }) {
                   <Link href='/my-orders'>
                     <IconButton icon='/home/delivery.svg' hideOnMobile />
                   </Link>
-                  <IconButton onClick={handleNotificationClick} icon='/home/notification-bell.svg' />
+                  <IconButton onClick={handleNotificationClick} icon='/home/notification-bell.svg' hideOnMobile />
+                  <IconButton onClick={() => router.push('/notifications')} icon='/home/notification-bell.svg' className="lg:hidden" />
                   <Link href='/cart'>
                     <IconButton icon='/home/cart.svg' hideOnMobile />
                   </Link>
@@ -118,7 +119,7 @@ export function Navbar({ hideSearchBar = false }: { hideSearchBar?: boolean }) {
                   className="hidden lg:flex items-center gap-2 ml-2 group cursor-pointer"
                 >
                   <div className="relative w-10 h-10 rounded-full border border-neutral-200 overflow-hidden">
-                    <Image src={user?.avatarUrl ?? "/images/image-avatar.svg"} alt="User Avatar" fill className="object-cover" />
+                    <Image src={user?.avatar_url ?? "/images/image-avatar.svg"} alt="User Avatar" fill className="object-cover" />
                   </div>
                   <Image src='/icons/arrow-down.svg' width={14} height={8} alt="arrow down" />
                 </button>

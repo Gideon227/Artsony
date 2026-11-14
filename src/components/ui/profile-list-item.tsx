@@ -9,7 +9,7 @@ interface ProfileUser {
   id: string | number
   name: string
   username?: string
-  avatarUrl?: string
+  avatar_url?: string
   subtitle?: string
 }
 
@@ -38,8 +38,8 @@ export function ProfileListItem({ user, variant = 'default', onClick, onSort, di
         "relative w-[39px] h-[39px] rounded-full overflow-hidden shrink-0 border",
         isActive ? "border-white/20" : "border-[#E6E8EB] bg-[#DAD0FC]"
       )}>
-        {user.avatarUrl ? (
-          <Image src={user.avatarUrl} alt={user.name} fill className="object-cover" />
+        {user.avatar_url ? (
+          <Image src={user.avatar_url} alt={user.name} fill className="object-cover" />
         ) : (
           <div className="w-full h-full flex items-center justify-center bg-[#DAD0FC]">
             <span className="text-[13px] font-bold text-[#6C47E8]">

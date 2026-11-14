@@ -1,6 +1,6 @@
 import { createElement } from 'react'
 import { PackageCheck, ClipboardCheck, Clock, Truck, MapPin, Home } from 'lucide-react'
-import type { BuyerOrderView, DeliveryStatus, TimelineStatus } from '@/types/order'
+import type { BuyerOrderView, DeliveryStatus, RefundStatus, TimelineStatus } from '@/types/order'
 
 export const ORDER_TABS: { value: BuyerOrderView; label: string }[] = [
   { value: 'delivered', label: 'Delivered' },
@@ -30,10 +30,35 @@ export const VIEW_FOR_STATUS: Record<DeliveryStatus, BuyerOrderView> = {
   CANCELLED: 'cancelled',
 }
 
+// Status pill: tinted `-100` background, `-500` text and border (see the order card design).
 export const STATUS_PILL: Record<DeliveryStatus, { bg: string; text: string; label: string }> = {
-  LIVE: { bg: 'bg-info-50', text: 'text-info-500', label: 'Live' },
-  CANCELLED: { bg: 'bg-error-50', text: 'text-error-500', label: 'Canceled' },
-  DELIVERED: { bg: 'bg-successful-50', text: 'text-successful-500', label: 'Delivered' },
+  LIVE: { bg: 'bg-info-100', text: 'text-info-500', label: 'Live' },
+  CANCELLED: { bg: 'bg-error-100', text: 'text-error-500', label: 'Canceled' },
+  DELIVERED: { bg: 'bg-successful-100', text: 'text-successful-500', label: 'Delivered' },
+}
+
+// The ring drawn around the order card that is currently open. It only exists
+// while the card is active; an inactive card keeps its plain gray border.
+export const ACTIVE_CARD_RING: Record<DeliveryStatus, string> = {
+  DELIVERED: 'outline-2 outline-offset-2 outline-primary-500',
+  LIVE: 'outline-2 outline-offset-2 outline-info-500',
+  CANCELLED: 'outline-2 outline-offset-2 outline-error-500',
+}
+
+export const EMPTY_COPY: Record<BuyerOrderView, string> = {
+  all: 'No orders yet.',
+  delivered: 'No delivered orders yet.',
+  live: 'No live orders right now.',
+  cancelled: 'No canceled orders.',
+}
+
+export const REFUND_PRESENTATION: Record<RefundStatus, { label: string; tone: string }> = {
+  NONE: { label: 'Not started', tone: 'text-body' },
+  PENDING: { label: 'Pending', tone: 'text-warning-500' },
+  PROCESSING: { label: 'In Progress', tone: 'text-info-500' },
+  COMPLETED: { label: 'Completed', tone: 'text-successful-500' },
+  PARTIAL: { label: 'Partially refunded', tone: 'text-info-500' },
+  FAILED: { label: 'Failed', tone: 'text-error-500' },
 }
 
 export const TIMELINE_SEQUENCE: TimelineStatus[] = [
@@ -71,7 +96,8 @@ interface TimelineMilestone {
   statuses: TimelineStatus[]
   title: string
   description: string
-  Icon: typeof PackageCheck
+  icon: string
+  activeIcon: string
 }
 
 export const TIMELINE_MILESTONES: TimelineMilestone[] = [
@@ -79,42 +105,49 @@ export const TIMELINE_MILESTONES: TimelineMilestone[] = [
     statuses: ['ORDER_RECEIVED', 'ORDER_RECEIVED_ACTIVE'],
     title: 'Order Received',
     description: 'Your order has been received and is being prepared',
-    Icon: PackageCheck,
+    activeIcon: '/illustrations/orders-timeline/order-confirm-active.svg',
+    icon: 'illustrations/orders-timeline/order-confirm.svg'
   },
   {
     statuses: ['AWAITING_CONFIRMATION', 'AWAITING_CONFIRMATION_ACTIVE', 'ORDER_FAILED_TO_CONFIRM'],
     title: 'Awaiting Activation',
     description: 'Your order is being prepared and will be activated soon',
-    Icon: ClipboardCheck,
+    activeIcon: '/illustrations/orders-timeline/await-activation-active.svg',
+    icon: 'illustrations/orders-timeline/await-activation.svg'
   },
   {
     statuses: ['AWAITING_PICKUP', 'AWAITING_PICKUP_ACTIVE', 'PICKUP_FAILED', 'COURIER_REJECTED_PICKUP'],
     title: 'Awaiting Pickup',
     description: 'Your order will be picked up by the courier soon',
-    Icon: Clock,
+    activeIcon: '/illustrations/orders-timeline/await-pickup-active.svg',
+    icon: 'illustrations/orders-timeline/await-pickup.svg'
   },
   {
     statuses: ['PICKED_UP', 'PICKED_UP_ACTIVE'],
     title: 'Picked Up',
     description: 'Your order has been picked up and is on its way',
-    Icon: Truck,
+    activeIcon: '/illustrations/orders-timeline/pick-up-active.svg',
+    icon: 'illustrations/orders-timeline/pick-up.svg'
   },
   {
     statuses: ['IN_TRANSIT', 'IN_TRANSIT_ACTIVE', 'DELAYED_DELIVERY'],
     title: 'In Transit',
     description: 'Your order is on the way to its destination',
-    Icon: Truck,
+    activeIcon: '/illustrations/orders-timeline/transit-active.svg',
+    icon: 'illustrations/orders-timeline/transit.svg'
   },
   {
     statuses: ['OUT_FOR_DELIVERY', 'OUT_FOR_DELIVERY_ACTIVE', 'DELIVERY_FAILED'],
     title: 'Out for Delivery',
     description: 'Your order is out for delivery and arriving soon',
-    Icon: MapPin,
+    activeIcon: '/illustrations/orders-timeline/delivery-active.svg',
+    icon: 'illustrations/orders-timeline/delivery.svg'
   },
   {
     statuses: ['DELIVERED'],
     title: 'Delivered',
     description: 'Your order has been delivered successfully',
-    Icon: Home,
+    activeIcon: '/illustrations/orders-timeline/delivered-active.svg',
+    icon: 'illustrations/orders-timeline/delivered.svg'
   },
 ]

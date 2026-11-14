@@ -45,7 +45,7 @@ export function OrderActionsMenu({ items }: Props) {
         aria-haspopup="menu"
         aria-expanded={open}
         aria-label="Order actions"
-        className="w-10 h-10 rounded-full flex items-center justify-center hover:border-gray-100 transition-colors"
+        className="cursor-pointer w-10 h-10 rounded-full flex items-center justify-center hover:border-gray-100 transition-colors"
       >
         <svg width="40" height="40" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
           <mask id="path-1-inside-1_10941_9828" fill="white">
@@ -81,7 +81,7 @@ export function OrderActionsMenu({ items }: Props) {
                     if (!item.isPending) setOpen(false)
                   }}
                   className={cn(
-                    'w-full flex items-center justify-between px-6 py-3 text-left border-b border-gray-50 last:border-b-0',
+                    'w-full cursor-pointer flex items-center justify-between px-6 py-3 text-left border-b border-gray-50 last:border-b-0',
                     'font-poppins font-medium text-[12px] text-body transition-colors',
                     'hover:bg-primary-500 hover:text-white',
                     isDisabled && 'opacity-50 cursor-not-allowed hover:bg-transparent hover:text-gray-200',

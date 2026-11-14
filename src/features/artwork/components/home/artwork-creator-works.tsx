@@ -89,7 +89,7 @@ export function ArtworkCreatorWorks({
                         {
                           id: work.creator_id,
                           name: artistName,
-                          avatarUrl: work.creator?.profile?.avatar_url || '/images/image-avatar.svg',
+                          avatar_url: work.creator?.profile?.avatar_url || '/images/image-avatar.svg',
                         },
                       ]}
                       variant="standard"

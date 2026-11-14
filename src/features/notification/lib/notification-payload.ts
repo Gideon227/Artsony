@@ -39,6 +39,7 @@ export type NotificationPayload = {
   audience: NotificationAudience | null
   orderId: string | null
   physicalId: string | null
+  conversationId: string | null
   artwork: NotificationArtwork | null
   amount: number | null
   currency: string
@@ -91,6 +92,7 @@ export function parseNotificationPayload(notification: Notification): Notificati
     audience: parseAudience(data['audience']),
     orderId: str(data['order_id']) ?? (isOrder ? notification.entity_id : null),
     physicalId: str(data['physical_id']),
+    conversationId: str(data['conversation_id']),
     artwork: parseArtwork(data['artwork']),
     amount: num(data['refund_amount']) ?? num(data['amount']),
     currency: str(data['currency']) ?? 'USDT',

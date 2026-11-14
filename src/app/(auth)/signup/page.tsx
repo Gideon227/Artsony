@@ -75,7 +75,7 @@ export default function SignUpPage() {
           <div className="flex flex-col justify-center lg:flex-1">
 
             <div className="flex justify-center mb-12 lg:mb-auto">
-              <Image src="/icons/logo.svg" alt="ARTSONY" width={272} height={48} className="h-auto max-lg:w-[130px]" priority />
+              <Image src="/icons/logo.svg" alt="ARTSONY" width={272} height={48} className="h-auto max-lg:w-[182px]" priority />
             </div>
 
             {/* MOBILE — step 1: choose sign up method */}

@@ -60,7 +60,7 @@ export default function ForgotPasswordPage() {
 
         <div className="w-full bg-white rounded-xl max-lg:overflow-hidden lg:rounded-none flex flex-col lg:justify-between h-auto lg:h-full lg:min-h-0 py-5 lg:py-0 px-4 lg:px-0">
           <div className="flex justify-center mb-12 shrink-0">
-            <Image src="/icons/logo.svg" alt="ARTSONY" width={272} height={48} className="h-auto max-lg:w-[140px]" priority />
+            <Image src="/icons/logo.svg" alt="ARTSONY" width={272} height={48} className="h-auto max-lg:w-[182px]" priority />
           </div>
 
           {/* Form Content / Steps */}

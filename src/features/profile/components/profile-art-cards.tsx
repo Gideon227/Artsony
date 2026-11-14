@@ -13,7 +13,7 @@ const ProfileArtCard = ({ artworks }: { artworks: Artwork[] }) => {
                     {
                         id: art.creator?.id || art.creator_id,
                         name: art.creator?.profile?.display_name || art.creator?.username || 'Unknown Artist',
-                        avatarUrl: art.creator?.profile?.avatar_url || '/images/image-avatar.svg',
+                        avatar_url: art.creator?.profile?.avatar_url || '/images/image-avatar.svg',
                         role: art.creator?.role || 'Artist',
                         stats: {
                             followers: String(art.creator?.profile?.followers_count ?? 0),

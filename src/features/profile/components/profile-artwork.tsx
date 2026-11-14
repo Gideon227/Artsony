@@ -5,7 +5,7 @@ import Image from 'next/image'
 import { Button } from '@/components'
 import { ArtCard } from '@/components/ui/art-card'
 import { artworkService } from '@/services'
-import { Artwork, ArtworkStatus } from '@/types/artwork'
+import { Artwork, ArtworkStatus, ListingType } from '@/types/artwork'
 import { getAssetDisplaySrc } from '@/utils'
 import Link from 'next/link'
 
@@ -42,17 +42,17 @@ const ProfileArtwork = ({ userId, tabType, isOwnProfile, onArtworkClick, onPostA
         try {
             setIsLoading(true)
             
-            // Determine API filters based on the selected tab
-            let statusFilter:ArtworkStatus = 'PUBLISHED'
-            let listingTypeFilter = undefined
+            // Determine API filters based on the selected tab.
+            // The Shop tab only lists items that are actually for sale
+            // (listing_type MARKETPLACE); portfolio pieces stay on the
+            // Artworks tab.
+            let statusFilter: ArtworkStatus = 'PUBLISHED'
+            let listingTypeFilter: ListingType | undefined
 
             if (currentTab === 'draft') {
                 statusFilter = 'DRAFT'
             } else if (currentTab === 'shop') {
-                statusFilter = 'PUBLISHED'
-                // Assuming your backend uses a specific listing type for store items.
-                // Adjust this value ('SALE', 'COMMERCIAL', etc.) to match your actual Supabase enum.
-                // listingTypeFilter = 'SALE' 
+                listingTypeFilter = 'MARKETPLACE'
             }
 
             const response = await artworkService.list({ 
@@ -84,7 +84,7 @@ const ProfileArtwork = ({ userId, tabType, isOwnProfile, onArtworkClick, onPostA
     }
 
     return (
-        <div className='flex flex-col'>
+        <div className='flex flex-col max-lg:pb-20'>
             {isLoading && artworks.length === 0 ? (
                 <div className='grid grid-cols-1 gap-x-4 gap-y-12 px-4 py-12 sm:grid-cols-2 md:grid-cols-3 md:px-8 lg:grid-cols-4'>
                     {Array.from({ length: 8 }).map((_, i) => (
@@ -132,7 +132,7 @@ const ProfileArtwork = ({ userId, tabType, isOwnProfile, onArtworkClick, onPostA
                             artist={[{
                                 id: art.creator?.id || art.creator_id,
                                 name: art.creator?.profile?.display_name || art.creator?.username || 'Unknown Artist',
-                                avatarUrl: art.creator?.profile?.avatar_url || '/images/image-avatar.svg',
+                                avatar_url: art.creator?.profile?.avatar_url || '/images/image-avatar.svg',
                                 role: art.creator?.role || 'Artist',
                                 stats: {
                                     followers: String(art.creator?.profile?.followers_count ?? 0),

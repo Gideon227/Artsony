@@ -138,7 +138,7 @@ const DigitalArtPreview = ({
                         <div className="flex items-center gap-3">
                             <div className="relative h-12 w-12 overflow-hidden rounded-full border border-gray-100 bg-gray-200">
                                 <Image 
-                                    src={user?.avatarUrl || '/images/avatar-placeholder.png'} 
+                                    src={user?.avatar_url || '/images/avatar-placeholder.png'} 
                                     alt={user?.username || 'User'} 
                                     fill 
                                     className="object-cover" 

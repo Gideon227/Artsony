@@ -64,7 +64,7 @@ export function FeedSection({ query, onSearch, activeTab, onTabChange, artworks,
         <div className="flex flex-row sm:items-center sm:justify-between gap-4 mb-8">
           <h2 className="flex-1 font-raleway font-semibold text-h6 lg:text-h4 text-primary-500 leading-10">Top Art</h2>
 
-          <div style={{ width: 332 }} className="w-80 max-sm:w-full max-md:hidden">
+          <div style={{ width: 332 }} className="w-80 max-sm:w-full max-lg:hidden">
             <Dropdown
               options={FEED_TAB_OPTIONS}
               value={activeOption}
@@ -73,14 +73,15 @@ export function FeedSection({ query, onSearch, activeTab, onTabChange, artworks,
             />
           </div>
 
-          <div style={{ width: 132 }} className='lg:hidden'>
+          {/* Mobile / tablet: compact title-less menu (< lg) */}
+          <div style={{ width: 132 }} className="lg:hidden">
             <Dropdown
               options={FEED_TAB_OPTIONS}
               value={activeOption}
               onChange={(opt) => onTabChange(opt.id as FeedSort)}
               multiple={false}
               indicator="highlight"
-              placeholder='Sort By'
+              mobileVariant="menu"
             />
           </div>
         </div>
@@ -108,7 +109,7 @@ export function FeedSection({ query, onSearch, activeTab, onTabChange, artworks,
                   artist={[{
                     id: artwork.creator?.id || artwork.creator_id,
                     name: artwork.creator?.profile?.display_name || artwork.creator?.username || 'Artist',
-                    avatarUrl: artwork.creator?.profile?.avatar_url ?? '/images/image-avatar.svg',
+                    avatar_url: artwork.creator?.profile?.avatar_url ?? '/images/image-avatar.svg',
                     role: artwork.creator?.role || 'Artist',
                     stats: {
                       followers: String(artwork.creator?.profile?.followers_count ?? 0),

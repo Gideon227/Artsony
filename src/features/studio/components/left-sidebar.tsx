@@ -87,7 +87,7 @@ export function StudioLeftSidebar({
             <Image src="/home/profile-ring.svg" alt="" width={96} height={96} className="object-contain" priority />
             <div className="absolute overflow-hidden rounded-full" style={{ width: 74, height: 74 }}>
               <Image
-                src={user.avatarUrl || '/images/image-avatar.svg'}
+                src={user.avatar_url || '/images/image-avatar.svg'}
                 alt={`${user.username}'s profile picture`}
                 width={74}
                 height={74}

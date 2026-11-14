@@ -186,6 +186,13 @@ export type OrderItemPhysicalListEntry = OrderItemPhysical & {
   cancelled_at: string | null
   buyer: OrderPartySummary | null
   seller: OrderPartySummary | null
+  // 'physical' = real order_item_physical row. 'digital' / 'unfulfilled' entries
+  // (digital purchases, unpaid or expired orders) carry the order_item id as
+  // `id` and have no physical-order detail page — never pass it to
+  // usePhysicalOrderDetail. Optional so older cached responses still type-check.
+  source?: 'physical' | 'digital' | 'unfulfilled'
+  order_status?: string | null
+  payment_status?: 'PENDING' | 'CONFIRMING' | 'CONFIRMED' | 'FAILED' | 'EXPIRED' | null
 }
 
 export type PaginatedPhysicalOrdersResponse = {
@@ -215,6 +222,12 @@ export type PhysicalOrderDetailView = {
   delivery_address: ShippingAddressSnapshot | null
   buyer: OrderPartyProfile | null
   seller: OrderPartyProfile | null
+  /**
+   * True when no order_item_physical row exists yet (payment pending / failed / expired):
+   * `physical` is built from the order item, so cancel / invoice / receipt (which need a
+   * real physical id) are not available.
+   */
+  is_provisional?: boolean
 }
 
 // ── DTOs ──────────────────────────────────────────────────────────────────────

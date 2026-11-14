@@ -1,0 +1,256 @@
+// ── Enums (mirrors backend commerce.types.ts — kept in sync manually) ────────
+
+import { OrderItem, OrderPartyProfile } from "./order"
+
+export type TimelineStatus =
+  | 'ORDER_RECEIVED'
+  | 'ORDER_RECEIVED_ACTIVE'
+  | 'AWAITING_CONFIRMATION'
+  | 'AWAITING_CONFIRMATION_ACTIVE'
+  | 'ORDER_FAILED_TO_CONFIRM'
+  | 'AWAITING_PICKUP'
+  | 'AWAITING_PICKUP_ACTIVE'
+  | 'PICKUP_FAILED'
+  | 'COURIER_REJECTED_PICKUP'
+  | 'PICKED_UP'
+  | 'PICKED_UP_ACTIVE'
+  | 'IN_TRANSIT'
+  | 'IN_TRANSIT_ACTIVE'
+  | 'DELAYED_DELIVERY'
+  | 'OUT_FOR_DELIVERY'
+  | 'OUT_FOR_DELIVERY_ACTIVE'
+  | 'DELIVERED'
+  | 'DELIVERY_FAILED'
+
+export type DeliveryStatus = 'LIVE' | 'DELIVERED' | 'CANCELLED'
+export type RefundStatus = 'NONE' | 'PENDING' | 'PROCESSING' | 'COMPLETED' | 'FAILED' | 'PARTIAL'
+export type CourierServiceType = 'STANDARD' | 'EXPRESS' | 'OVERNIGHT' | 'ECONOMY'
+
+export type BuyerOrderView = 'all' | 'live' | 'delivered' | 'cancelled'
+export type ArtistOrderView = 'all' | 'live' | 'pending' | 'completed' | 'cancelled'
+
+export const CANCELLABLE_TIMELINE_STATUSES = new Set<TimelineStatus>([
+  'ORDER_RECEIVED',
+  'ORDER_RECEIVED_ACTIVE',
+  'AWAITING_CONFIRMATION',
+  'AWAITING_CONFIRMATION_ACTIVE',
+])
+
+// ── Domain types ───────────────────────────────────────────────────────────────
+
+export type ShippingAddressSnapshot = {
+  full_name: string
+  phone: string
+  address_line_1: string
+  address_line_2: string | null
+  city: string
+  state: string
+  postal_code: string
+  country_code: string
+}
+
+export type OrderItemPhysical = {
+  id: string
+  order_item_id: string
+  order_id: string
+  timeline_status: TimelineStatus
+  delivery_status: DeliveryStatus
+  shipping_cost: number | null
+  courier_name: string | null
+  courier_service_type: CourierServiceType | null
+  tracking_id: string | null
+  estimated_delivery_date: string | null
+  pickup_address: string | null
+  refund_status: RefundStatus
+  refund_amount: number | null
+  refund_initiated_at: string | null
+  refund_completed_at: string | null
+  refund_notes: string | null
+  confirmed_at: string | null
+  picked_up_at: string | null
+  in_transit_at: string | null
+  delivered_at: string | null
+  created_at: string
+  updated_at: string
+}
+
+export type OrderTimelineEvent = {
+  id: string
+  order_item_physical_id: string
+  order_id: string
+  order_item_id: string
+  timeline_status: TimelineStatus
+  is_pending: boolean
+  actor_id: string | null
+  actor_role: 'buyer' | 'artist' | 'admin' | 'system' | 'courier'
+  notes: string | null
+  metadata: Record<string, unknown>
+  occurred_at: string
+}
+
+export type DeliveryProof = {
+  id: string
+  order_item_physical_id: string
+  order_id: string
+  cloudinary_public_id: string
+  secure_url: string
+  mime_type: string
+  file_size_bytes: number
+  uploaded_by: string
+  uploader_role: 'admin' | 'courier'
+  uploaded_at: string
+}
+
+export type RefundRequest = {
+  id: string
+  order_item_physical_id: string
+  order_id: string
+  requested_by: string
+  reason: string
+  status: 'PENDING_ADMIN' | 'APPROVED' | 'REJECTED'
+  admin_notes: string | null
+  reviewed_by: string | null
+  reviewed_at: string | null
+  created_at: string
+}
+
+export type OrderInvoice = {
+  id: string
+  order_id: string
+  version: number
+  pdf_cloudinary_public_id: string
+  pdf_url: string
+  generated_at: string
+  generated_by: string
+  trigger: 'order_created' | 'refund_processed' | 'admin_request'
+}
+
+export type OrderReceipt = {
+  id: string
+  order_id: string
+  pdf_cloudinary_public_id: string
+  pdf_url: string
+  amount_paid: number
+  currency: string
+  payment_method: string
+  transaction_reference: string | null
+  generated_at: string
+  generated_by: string
+}
+
+// ── List / detail response shapes ─────────────────────────────────────────────
+
+export type PhysicalOrderFilters = {
+  delivery_status?: DeliveryStatus
+  timeline_status?: TimelineStatus
+  timeline_status_in?: TimelineStatus[]
+  refund_status?: RefundStatus
+  courier_name?: string
+  tracking_id?: string
+  date_from?: string
+  date_to?: string
+  order_number?: string
+  artist_id?: string
+  buyer_id?: string
+  sort_order?: 'asc' | 'desc'
+  sort_by?: 'date' | 'value'
+  search?: string
+  page?: number
+  limit?: number
+}
+
+// Public-safe buyer/seller summary embedded in list rows.
+export type OrderPartySummary = {
+  id: string
+  username: string | null
+  display_name: string | null
+  avatar_url: string | null
+}
+
+// findByBuyerWithItems/findBySellerWithItems/findAllAdminList now join the
+// order_item's product snapshot (already denormalized at checkout, so no
+// separate artwork fetch needed) plus buyer/seller public profiles.
+export type OrderItemPhysicalListEntry = OrderItemPhysical & {
+  order_number: string | null
+  order_item: {
+    artwork_id: string
+    artwork_title: string
+    artwork_slug: string
+    artwork_thumbnail_url: string | null
+    artwork_format: OrderItem['artwork_format']
+    unit_price: number
+    quantity: number
+    created_at: string
+  }
+  cancelled_by: OrderTimelineEvent['actor_role'] | null
+  cancelled_at: string | null
+  buyer: OrderPartySummary | null
+  seller: OrderPartySummary | null
+  // 'physical' = real order_item_physical row. 'digital' / 'unfulfilled' entries
+  // (digital purchases, unpaid or expired orders) carry the order_item id as
+  // `id` and have no physical-order detail page — never pass it to
+  // usePhysicalOrderDetail. Optional so older cached responses still type-check.
+  source?: 'physical' | 'digital' | 'unfulfilled'
+  order_status?: string | null
+  payment_status?: 'PENDING' | 'CONFIRMING' | 'CONFIRMED' | 'FAILED' | 'EXPIRED' | null
+}
+
+export type PaginatedPhysicalOrdersResponse = {
+  success: boolean
+  data: OrderItemPhysicalListEntry[]
+  total: number
+  page: number
+  limit: number
+  total_pages: number
+  has_next: boolean
+  has_prev: boolean
+}
+
+/** @deprecated superseded by OrderItemPhysicalListEntry. Kept temporarily in
+ *  case any in-flight code still imports it. */
+export type OrderItemPhysicalWithArtwork = OrderItemPhysicalListEntry
+
+export type PhysicalOrderDetailView = {
+  physical: OrderItemPhysical
+  order_item: OrderItem
+  order_number: string | null
+  timeline: OrderTimelineEvent[]
+  delivery_proofs: DeliveryProof[]
+  invoice: OrderInvoice | null
+  receipt: OrderReceipt | null
+  refund_requests: RefundRequest[]
+  delivery_address: ShippingAddressSnapshot | null
+  buyer: OrderPartyProfile | null
+  seller: OrderPartyProfile | null
+  /**
+   * True when no order_item_physical row exists yet (payment pending / failed / expired):
+   * `physical` is built from the order item, so cancel / invoice / receipt (which need a
+   * real physical id) are not available.
+   */
+  is_provisional?: boolean
+}
+
+// ── DTOs ──────────────────────────────────────────────────────────────────────
+
+export type ActivatePickupInput = {
+  courier_name: string
+  courier_service_type: CourierServiceType
+  shipping_cost: number
+  pickup_address: string
+  estimated_delivery_date?: string
+}
+export type UpdateCourierInfoInput = Partial<ActivatePickupInput> & { tracking_id?: string }
+export type NotesInput = { notes?: string }
+export type TransitUpdateInput = { tracking_id?: string; notes?: string }
+export type PickupFailureInput = { reason: 'PICKUP_FAILED' | 'COURIER_REJECTED_PICKUP'; notes: string }
+export type CancelItemInput = { reason: string }
+export type RefundRequestInput = { reason: string }
+export type ProcessRefundInput = {
+  decision: 'APPROVED' | 'REJECTED'
+  admin_notes?: string
+  item_cost?: number
+  order_number?: string
+}
+export type ProcessRefundResult = { request: RefundRequest; physical: OrderItemPhysical }
+export type DeliveryProofInput = { cloudinary_public_id: string; secure_url: string; mime_type: string; file_size_bytes: number }
+export type UpdateShippingAddressInput = ShippingAddressSnapshot

@@ -8,9 +8,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { cn } from '@/utils'
 import type { Notification } from '@/types'
 import { presentNotification, timeAgo, type NotificationPresentation } from '../lib/notification-presenter'
-import { NotificationIcon } from './notification-icon'
 import { ROUTES } from '@/constants'
-import { Button } from '@/components'
 
 const SYSTEM_AVATAR_SRC = '/images/notification-system-avatar.svg'
 const FALLBACK_AVATAR_SRC = '/images/image-avatar.svg'
@@ -26,16 +24,16 @@ function SystemAvatar() {
   const [failed, setFailed] = useState(false)
 
   if (failed) {
-    return <div aria-hidden='true' className='h-12 w-12 rounded-full bg-primary-500' />
+    return <div aria-hidden='true' className='h-12 w-12 shrink-0 rounded-full bg-primary-500 md:h-14 md:w-14' />
   }
 
   return (
     <Image
       src={SYSTEM_AVATAR_SRC}
-      width={48}
-      height={48}
+      width={56}
+      height={56}
       alt='Artsony'
-      className='h-12 w-12 rounded-full object-cover'
+      className='h-12 w-12 rounded-full object-cover md:h-14 md:w-14'
       onError={() => setFailed(true)}
     />
   )
@@ -48,10 +46,10 @@ function ActorAvatar({ src, name }: { src: string | null; name: string }) {
   return (
     <Image
       src={imgSrc}
-      width={48}
-      height={48}
+      width={56}
+      height={56}
       alt={name}
-      className='h-12 w-12 rounded-full border border-gray-50 object-cover'
+      className='h-12 w-12 rounded-full border border-gray-50 object-cover md:h-14 md:w-14'
       onError={() => setFailed(true)}
     />
   )
@@ -131,11 +129,6 @@ export function NotificationCard({ notification: n, onRead, isDeleting }: Notifi
   const isRowLink = target !== null && action === undefined
   const actorName = n.actor?.display_name || n.actor?.username || 'Artsony'
 
-  const isMessage = n.type === 'message'
-  const preview = typeof n.data?.['preview'] === 'string' ? (n.data['preview'] as string) : null
-  const body = typeof n.data?.['body'] === 'string' ? (n.data['body'] as string) : null
-  const conversationId = typeof n.data?.['conversation_id'] === 'string' ? (n.data['conversation_id'] as string) : null
-
   const markRead = () => {
     if (!n.is_read) onRead(n.id)
   }
@@ -177,14 +170,12 @@ export function NotificationCard({ notification: n, onRead, isDeleting }: Notifi
             n.is_read ? 'bg-white border-neutral-100 hover:bg-neutral-50' : 'bg-primary-50 border-primary-100 hover:bg-primary-50/80',
           )}
         >
-          {/* Avatar Container with Overlaid Notification Icon */}
-          <div className='relative shrink-0'>
+          <div className='shrink-0'>
             {presentation.avatar === 'actor' ? (
               <ActorAvatar src={n.actor?.avatar_url ?? null} name={actorName} />
             ) : (
               <SystemAvatar />
             )}
-            <NotificationIcon type={n.type} className='absolute -bottom-1 -right-1' />
           </div>
 
           <div className='flex min-w-0 flex-1 flex-col gap-2'>
@@ -196,39 +187,8 @@ export function NotificationCard({ notification: n, onRead, isDeleting }: Notifi
               </p>
             )}
 
-            {isMessage && preview && (
-              <p className='font-poppins font-light text-body-xs text-body'>{preview}</p>
-            )}
-
-            {!isMessage && body && (
-              <p className='font-poppins font-light text-body-xs text-body'>{body}</p>
-            )}
-
             {card ? (
               <CardBody presentation={presentation} onActivate={handleActionClick} />
-            ) : isMessage && conversationId ? (
-              <div className='border border-gray-50 bg-white flex gap-4 py-2 pl-2 pr-4 rounded-m w-full'>
-                <Image
-                  src={n.actor?.avatar_url || FALLBACK_AVATAR_SRC}
-                  width={72}
-                  height={72}
-                  className='object-cover rounded-m'
-                  alt='sender avatar'
-                />
-                <div className='h-full flex flex-col gap-2 justify-center'>
-                  <Button
-                    variant='outline'
-                    size='md'
-                    onClick={(e) => {
-                      e.stopPropagation()
-                      markRead()
-                      router.push(`/messages/${conversationId}`)
-                    }}
-                  >
-                    Send a Message
-                  </Button>
-                </div>
-              </div>
             ) : (
               action && <ActionLink {...action} onActivate={handleActionClick} />
             )}

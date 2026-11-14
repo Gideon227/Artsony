@@ -14,7 +14,7 @@ interface Props {
     deliveryDate: string;
     artist: {
         name: string;
-        avatarUrl: string
+        avatar_url: string
         artistId: string
     }
     status: 'delivered' | 'live' | 'canceled';

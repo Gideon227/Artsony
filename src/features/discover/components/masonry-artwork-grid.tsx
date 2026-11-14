@@ -76,7 +76,7 @@ export function MasonryArtworkGrid({ artworks, onArtworkClick }: MasonryArtworkG
                     id: artwork.creator_id,
                     name:
                       artwork.creator?.profile?.display_name || artwork.creator?.username || 'Artist',
-                    avatarUrl: artwork.creator?.profile?.avatar_url ?? '/images/image-avatar.svg',
+                    avatar_url: artwork.creator?.profile?.avatar_url ?? '/images/image-avatar.svg',
                   },
                 ]}
                 stats={{ likes: String(artwork.like_count), views: String(artwork.view_count) }}

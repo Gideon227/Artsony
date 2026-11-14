@@ -15,7 +15,10 @@ export const notificationRoutes = {
       : '/order-management',
 
   wallet: '/artsony-studio',
-  messages: '/messages',
+  messages: (conversationId?: string | null): string =>
+    conversationId
+      ? `/messages?${new URLSearchParams({ conversation: conversationId }).toString()}`
+      : '/messages',
   settings: '/settings/profile-customization',
 
   artwork: (slug: string | null | undefined): string | null =>

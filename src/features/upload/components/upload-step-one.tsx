@@ -174,6 +174,9 @@ const UploadStepOne = ({ onNext, onSaveAndExit, steps, number }: UploadStepOnePr
               options={availableDropdownOptions}
               onChange={handleSelectCategory}
               placeholder="Select structural interests..."
+              searchable
+              searchPlaceholder="Search categories"
+              emptyMessage="No matching categories"
               disabled={categories.length >= 10}
               variant="default"
               leftIcon="/home/magnifier.svg"

@@ -36,7 +36,9 @@ export function MobileLiveDetail({ data, onClose, onRefresh, isRefreshing }: Pro
   const { physical, order_item, order_number, delivery_address } = data
   const orderNumber = formatOrderNumber(order_number, physical.order_id)
   const total = getOrderTotal(order_item?.unit_price, order_item?.quantity, physical.shipping_cost)
-  const canCancel = BUYER_ARTIST_CANCELLABLE_STATES.has(physical.timeline_status)
+  // Cancel and invoice need a real physical row (not yet there while payment is unconfirmed).
+  const hasPhysicalRow = !data.is_provisional
+  const canCancel = hasPhysicalRow && BUYER_ARTIST_CANCELLABLE_STATES.has(physical.timeline_status)
   const variant = order_item?.variant_snapshot
     ? `${order_item.variant_snapshot.variant_type}: ${order_item.variant_snapshot.option_label}`
     : '—'
@@ -46,13 +48,17 @@ export function MobileLiveDetail({ data, onClose, onRefresh, isRefreshing }: Pro
 
   const menuItems: OrderActionsMenuItem[] = [
     ...(canCancel ? [{ id: 'cancel', label: 'Cancel Order', onSelect: () => setCancelOpen(true) }] : []),
-    {
-      id: 'invoice',
-      label: 'Download Invoice',
-      isPending: downloadInvoice.isPending,
-      onSelect: () =>
-        void openDocumentAfter(() => downloadInvoice.mutateAsync(physical.id).then((doc) => doc.invoice_url)),
-    },
+    ...(hasPhysicalRow
+      ? [
+          {
+            id: 'invoice',
+            label: 'Download Invoice',
+            isPending: downloadInvoice.isPending,
+            onSelect: () =>
+              void openDocumentAfter(() => downloadInvoice.mutateAsync(physical.id).then((doc) => doc.invoice_url)),
+          },
+        ]
+      : []),
     {
       id: 'support',
       label: 'Contact Support',
