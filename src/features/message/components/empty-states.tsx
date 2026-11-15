@@ -1,36 +1,41 @@
 import React from 'react'
 import Image from 'next/image'
-import { Plus } from 'lucide-react'
 import { Navbar } from '@/components/layout/navbar'
 import { Button } from '@/components'
 
 export function EmptyInbox({ onNewChat }: { onNewChat: () => void }) {
   return (
-    <>
+    <div className="flex h-dvh w-full flex-col overflow-hidden bg-white">
       <Navbar />
-      <div className="px-4 flex min-h-screen w-full flex-col items-center justify-center gap-6 bg-white font-poppins">
-        <Image
-          src="/illustrations/empty-inbox.svg"
-          alt="Empty inbox"
-          width={384}
-          height={400}
-          className="object-cover md:w-[384px] md:h-100 w-[203px] h-[220px]"
-        />
-        <div className="flex flex-col items-center text-center">
-          <h2 className="font-poppins text-body-m lg:text-h6 mb-4 font-medium text-heading text-center tracking-wide">
+
+      <div className="flex min-h-0 flex-1 flex-col items-center justify-center gap-4 px-4 font-poppins md:gap-6">
+        <div className="relative min-h-0 w-[203px] flex-1 basis-0 md:w-[384px] md:max-h-[400px]">
+          <Image
+            src="/illustrations/empty-inbox.svg"
+            alt="Empty inbox"
+            fill
+            priority
+            className="object-contain"
+          />
+        </div>
+
+        <div className="flex shrink-0 flex-col items-center text-center">
+          <h2 className="mb-4 text-center font-poppins text-body-m font-medium tracking-wide text-heading lg:text-h6">
             Your inbox is empty
           </h2>
-          <p className="w-full lg:w-[552px] mb-6 text-body-xs lg:text-body-m text-center text-wrap leading-7 text-body font-normal font-poppins ">
+          <p className="mb-6 w-full text-center font-poppins text-body-xs font-normal text-body lg:w-[552px] lg:text-body-m lg:leading-7">
             When someone sends you a message, it will appear here. Start a
             conversation to ask about an artwork or connect with an artist.
           </p>
         </div>
 
-        <Button onClick={onNewChat} leftIcon='/icons/plus-white-bg.svg'>
-          New Chat
-        </Button>
+        <div className="shrink-0 pb-4 md:pb-0">
+          <Button onClick={onNewChat} leftIcon="/icons/plus-white-bg.svg">
+            New Chat
+          </Button>
+        </div>
       </div>
-    </>
+    </div>
   )
 }
 

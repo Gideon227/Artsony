@@ -119,65 +119,71 @@ function ShopContent() {
   return (
     <div className="bg-white">
       <Navbar />
-      <HeroSection />
-      <SearchSection
-        query={query}
-        onSearch={handleSearch}
-        filters={filters}
-        onFilterChange={handleFilterChange}
-        onClearFilters={handleClearFilters}
-      />
 
-      {isSearchMode ? (
-        <ShopResultsGrid
-          artworks={artworks}
-          isLoading={isLoading}
-          isFetchingNextPage={isFetchingNextPage}
-          hasNextPage={Boolean(hasNextPage)}
-          fetchNextPage={fetchNextPage}
+      <div className="max-md:sticky max-md:top-0 max-md:z-0">
+        <HeroSection />
+      </div>
+
+      <div className="relative z-10 bg-white max-md:-mt-1 max-md:min-h-screen">
+        <SearchSection
           query={query}
-          total={total}
+          onSearch={handleSearch}
+          filters={filters}
+          onFilterChange={handleFilterChange}
+          onClearFilters={handleClearFilters}
         />
-      ) : (
-        <>
-          <div className='max-md:hidden'>
-            <TopPicks />
-          </div>
-          <TopArt filters={topArtFilters} onClearFilters={handleClearFilters} onLoaded={handleTopArtLoaded} />
-          <div className='max-md:hidden'>
-            <AroundTheWorld />
-          </div>
-          <div className='md:hidden'>
-            <TopPicks />
-          </div>
 
-          {topArtIds && (
-            <>
-              <ArtGrid
-                artworks={gridArtworks}
-                num={0}
-                // artVariant="shop"
-                onCardClick={(_, index) => handleGridClick(index)}
-              />
+        {isSearchMode ? (
+          <ShopResultsGrid
+            artworks={artworks}
+            isLoading={isLoading}
+            isFetchingNextPage={isFetchingNextPage}
+            hasNextPage={Boolean(hasNextPage)}
+            fetchNextPage={fetchNextPage}
+            query={query}
+            total={total}
+          />
+        ) : (
+          <>
+            <div className="max-md:hidden">
+              <TopPicks />
+            </div>
+            <TopArt filters={topArtFilters} onClearFilters={handleClearFilters} onLoaded={handleTopArtLoaded} />
+            <div className="max-md:hidden">
+              <AroundTheWorld />
+            </div>
+            <div className="md:hidden">
+              <TopPicks />
+            </div>
 
-              <div className="flex justify-center pb-16">
-                {hasNextPage && (
-                  <button
-                    onClick={() => fetchNextPage()}
-                    disabled={isFetchingNextPage}
-                    className="flex items-center gap-2 font-poppins text-[14px] text-neutral-500 border border-gray-100 rounded-full px-6 py-3 hover:border-primary-500 hover:text-primary-500 transition-colors disabled:opacity-50"
-                  >
-                    {isFetchingNextPage && <Loader2 className="w-4 h-4 animate-spin" />}
-                    Load more Art
-                  </button>
-                )}
-              </div>
-            </>
-          )}
-        </>
-      )}
+            {topArtIds && (
+              <>
+                <ArtGrid
+                  artworks={gridArtworks}
+                  num={0}
+                  // artVariant="shop"
+                  onCardClick={(_, index) => handleGridClick(index)}
+                />
 
-      <Footer />
+                <div className="flex justify-center pb-16">
+                  {hasNextPage && (
+                    <button
+                      onClick={() => fetchNextPage()}
+                      disabled={isFetchingNextPage}
+                      className="flex items-center gap-2 font-poppins text-[14px] text-neutral-500 border border-gray-100 rounded-full px-6 py-3 hover:border-primary-500 hover:text-primary-500 transition-colors disabled:opacity-50"
+                    >
+                      {isFetchingNextPage && <Loader2 className="w-4 h-4 animate-spin" />}
+                      Load more Art
+                    </button>
+                  )}
+                </div>
+              </>
+            )}
+          </>
+        )}
+
+        <Footer />
+      </div>
     </div>
   )
 }

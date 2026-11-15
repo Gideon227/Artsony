@@ -1,7 +1,7 @@
 'use client'
 
 import React, { useState, useEffect, useMemo } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence, useScroll, useTransform } from 'framer-motion';
 import { ChevronsRight } from 'lucide-react';
 import Image from 'next/image';
 import { useHeroArtworks } from '@/hooks/use-artwork';
@@ -97,6 +97,10 @@ export const HeroSection = () => {
     return () => clearInterval(timer);
   }, [slides.length]);
 
+  const { scrollY } = useScroll()
+  const dim = useTransform(scrollY, [0, 500], [1, 0.4])
+  const scale = useTransform(scrollY, [0, 500], [1, 0.95])
+
   if (!currentSlide) return <div className="h-screen w-full bg-black" />;
 
   return (
@@ -104,6 +108,7 @@ export const HeroSection = () => {
       {/* Dynamic Animated Content (Background Image + Artist Info) */}
       <AnimatePresence mode="wait">
         <motion.div
+          style={{ opacity: dim, scale }}
           key={currentSlide.id}
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
@@ -150,7 +155,7 @@ export const HeroSection = () => {
               initial={{ y: 10, opacity: 0 }}
               animate={{ y: 0, opacity: 1 }}
               transition={{ delay: 1, duration: 0.6 }}
-              className="line-clamp-2 text-white/80 text-body-xs md:text-body-s font-medium italic leading-relaxed max-w-lg"
+              className="line-clamp-2 text-white/80 text-body-xs md:text-body-s font-medium italic leading-relaxed max-w-lg max-lg:pr-8"
             >
               “{currentSlide.bio}”
             </motion.p>

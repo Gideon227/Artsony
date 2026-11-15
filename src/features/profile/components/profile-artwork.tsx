@@ -84,7 +84,7 @@ const ProfileArtwork = ({ userId, tabType, isOwnProfile, onArtworkClick, onPostA
     }
 
     return (
-        <div className='flex flex-col max-lg:pb-20'>
+        <div className='flex flex-col'>
             {isLoading && artworks.length === 0 ? (
                 <div className='grid grid-cols-1 gap-x-4 gap-y-12 px-4 py-12 sm:grid-cols-2 md:grid-cols-3 md:px-8 lg:grid-cols-4'>
                     {Array.from({ length: 8 }).map((_, i) => (

@@ -570,7 +570,7 @@ export default function ArtworkViewOverlay({ artwork: artworkProp, onClose, onNa
           </svg>
         </button>
 
-        {shareOpen && <ShareModal isOpen={shareOpen} onClose={() => setShareOpen(false)} />}
+        {/* {shareOpen && <ShareModal isOpen={shareOpen} onClose={() => setShareOpen(false)} />} */}
 
       </div>
 
@@ -609,7 +609,7 @@ export default function ArtworkViewOverlay({ artwork: artworkProp, onClose, onNa
   )
 
   const descriptionSection = (
-    <div className="py-6 lg:py-12">
+    <div className="max-lg:pt-6 lg:py-12">
       <h3 className="mb-4 lg:mb-6 font-raleway text-h5 lg:text-h3 font-semibold text-black">Description</h3>
       <p className="whitespace-pre-line font-poppins text-light text-body-s leading-6 text-[#333333]">{artwork.description}</p>
       {artwork.creator && (
@@ -644,7 +644,7 @@ export default function ArtworkViewOverlay({ artwork: artworkProp, onClose, onNa
   )
 
   const categoriesTagsLicense = (
-    <div className="flex flex-col justify-between h-full border border-border p-6 rounded-xl">
+    <div className="flex flex-col justify-between h-full border border-border p-6 rounded-xl max-lg:h-[448px]">
       <div className='flex flex-col gap-6'>
         {categories.length > 0 && (
           <div>
@@ -835,7 +835,7 @@ export default function ArtworkViewOverlay({ artwork: artworkProp, onClose, onNa
           className="relative flex min-h-screen w-full flex-col scrollbar-hide rounded-none bg-white lg:mt-auto lg:h-[90vh] lg:min-h-0 lg:w-[90%] lg:max-w-[1600px] lg:flex-row lg:overflow-hidden lg:rounded-t-4xl lg:border-2 lg:border-gray-50"
         >
           {/* Fixed mobile header */}
-          <div className='lg:hidden fixed inset-x-0 top-0 z-[65] border-b border-gray-50 bg-white/95 px-4 pb-3 pt-6 flex flex-col gap-y-4'>
+          <div className='lg:hidden fixed inset-x-0 top-0 z-[65] border-b border-gray-50 bg-white px-4 pb-3 pt-6 flex flex-col gap-y-4'>
             <div className="flex items-center gap-2 lg:hidden">
               {/* Mobile Close button */}
               <button
@@ -898,7 +898,7 @@ export default function ArtworkViewOverlay({ artwork: artworkProp, onClose, onNa
                     >
                       Add to Moodboard
                     </button>
-                    <button role="menuitem" type="button" onClick={handleMobileShare} className={moreMenuItemClass}>
+                    <button role="menuitem" type="button" onClick={() => { setMoreMenuOpen(false); setShareOpen(true) }} className={moreMenuItemClass}>
                       Share Artwork
                     </button>
                     <button
@@ -943,7 +943,7 @@ export default function ArtworkViewOverlay({ artwork: artworkProp, onClose, onNa
                     {formControls}
                   </div>
                 )}
-                <div className="flex flex-col items-center gap-4 lg:border-t border-gray-50 py-6">
+                <div className="flex flex-col items-center gap-4 lg:border-t border-gray-50 py-6 max-lg:py-12">
                   {profileHeader}
                   <div className="w-full">{likeFollowRow}</div>
                   <p className='lg:hidden font-poppins font-light text-body-xs text-text-disabled text-center w-full'>Published: {formatOrdinalDate(artwork.created_at)}</p>
@@ -1043,6 +1043,7 @@ export default function ArtworkViewOverlay({ artwork: artworkProp, onClose, onNa
     </div>
     {!preview && (
       <>
+        <ShareModal isOpen={shareOpen} onClose={() => setShareOpen(false)} url={shareUrl} />
         <SaveToMoodboardDialog artworkId={artwork.id} open={saveDialogOpen} onOpenChange={setSaveDialogOpen} />
         <ReportModal artworkId={artwork.id} open={reportDialogOpen} onOpenChange={setReportDialogOpen} />
         <MoodboardPickerSheet artworkId={artwork.id} open={moodboardSheetOpen} onOpenChange={setMoodboardSheetOpen} />

@@ -109,7 +109,7 @@ export default function MessagesPage() {
         </div>
       )}
 
-      <div className={`flex justify-between items-center lg:mb-6 px-4 max-lg:pt-6 lg:px-8 lg:pt-20`}>
+      <div className={`flex justify-between items-center lg:mb-6 px-4 max-lg:pt-6 lg:px-8 lg:pt-20 ${selectedConvId && 'max-lg:hidden'}`}>
         <div className='flex items-center gap-4'>
           <button onClick={() => router.back()} className='cursor-pointer'>
             <svg width="40" height="40" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -122,7 +122,7 @@ export default function MessagesPage() {
           </button>
           <h2 className='font-raleway font-semibold text-h6 lg:text-h4 text-body leading-10'>Messages</h2>
         </div>
-        <Button onClick={() => setIsNewChatOpen(true)} leftIcon='/icons/plus-white-bg.svg' className='max-lg:h-12 max-lg:w-31'>New Chat</Button>
+        <Button onClick={() => setIsNewChatOpen(true)} leftIcon='/icons/plus-white-bg.svg' className='max-lg:hidden max-lg:w-31'>New Chat</Button>
       </div>
 
       <main className='lg:hidden relative flex flex-1 w-full'>
@@ -135,15 +135,21 @@ export default function MessagesPage() {
             onClose={() => setSelectedConvId(null)}
           />
         ) : (
-          <ConversationList
-            conversations={filtered}
-            selectedId={selectedConvId}
-            myId={myId}
-            isLoading={isLoading}
-            searchQuery={searchQuery}
-            onSearchChange={setSearchQuery}
-            onSelect={setSelectedConvId}
-          />
+          <>
+            <ConversationList
+              conversations={filtered}
+              selectedId={selectedConvId}
+              myId={myId}
+              isLoading={isLoading}
+              searchQuery={searchQuery}
+              onSearchChange={setSearchQuery}
+              onSelect={setSelectedConvId}
+            />
+          
+            <button className='lg:hidden absolute bottom-12 right-6 rounded-2xl bg-primary-500 w-14 h-14 justify-center flex items-center' onClick={() => setIsNewChatOpen(true)}>
+              <Image src='/icons/plus-white-bg.svg' width={24} height={24} alt='plus icon' />
+            </button>
+          </>
         )}
       </main>
 

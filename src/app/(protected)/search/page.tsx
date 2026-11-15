@@ -89,47 +89,12 @@ function SearchContent() {
     return () => clearInterval(timer)
   }, [slides.length])
 
-  // function toSearchableOptions(
-  //   raw: { label: string; artwork_count: number }[] | undefined,
-  //   q: string,
-  // ): DropdownOption[] {
-  //   const list = (raw ?? []).map((l) => ({ id: l.label, label: l.label }))
-  //   if (!q.trim()) return list
-  //   const lower = q.trim().toLowerCase()
-  //   return list.filter((c) => c.label.toLowerCase().includes(lower))
-  // }
-
   const countryOptions = useMemo(() => {
     const all: DropdownOption[] = countries.map((c) => ({ id: c.code, label: c.name }))
     if (!countryQuery.trim()) return all
     const q = countryQuery.trim().toLowerCase()
     return all.filter((c) => c.label.toLowerCase().includes(q))
   }, [countries, countryQuery])
-
-  // const categoriesOption: DropdownOption[] = useMemo(
-  //   () => INTERESTS.map((item) => ({ id: item.id, icon: item.image, label: item.label })),
-  //   []
-  // )
-
-  // const priceOptions: DropdownOption[] = [
-  //   { id: '0-500', label: 'Under $500' },
-  //   { id: '500-1000', label: '$500 - $1,000' },
-  //   { id: '1000-5000', label: '$1,000 - $5,000' },
-  //   { id: '5000+', label: 'Over $5,000' },
-  // ]
-
-  // const colorOptions: DropdownOption[] = [
-  //   { id: 'red', label: 'Red', icon: '/icons/colors/red.svg' },
-  //   { id: 'blue', label: 'Blue', icon: '/icons/colors/blue.svg' },
-  //   { id: 'green', label: 'Green', icon: '/icons/colors/green.svg' },
-  //   { id: 'monochrome', label: 'Black & White' },
-  // ]
-
-  // const sizeOptions: DropdownOption[] = [
-  //   { id: 'small', label: 'Small (Under 40cm)' },
-  //   { id: 'medium', label: 'Medium (40-100cm)' },
-  //   { id: 'large', label: 'Large (Over 100cm)' },
-  // ]
 
   const handleClearFilters = () => {
     setSelectedCategories([])
@@ -226,7 +191,7 @@ function SearchContent() {
     <div className="min-h-screen bg-white flex flex-col">
       <Navbar hideSearchBar />
 
-      <section className="relative h-[360px] md:h-[calc(95vh-72px)] w-full overflow-hidden bg-black">
+      <section className="relative h-[65vh] md:h-[calc(95vh-72px)] w-full overflow-hidden bg-black">
         <AnimatePresence>
           <motion.div
             key={currentSlide.id}
@@ -253,7 +218,7 @@ function SearchContent() {
                 initial={{ x: -30, opacity: 0 }}
                 animate={{ x: 0, opacity: 1 }}
                 transition={{ delay: 1.5, duration: 1.5, ease: 'easeOut' }}
-                className="flex items-center gap-2 mb-4 group cursor-pointer w-fit"
+                className="flex items-center gap-2 group cursor-pointer w-fit"
               >
                 <Image
                   src={currentSlide.artistAvatar}
@@ -270,14 +235,6 @@ function SearchContent() {
                 </div>
               </motion.div>
 
-              <motion.p
-                initial={{ y: 20, opacity: 0 }}
-                animate={{ y: 0, opacity: 1 }}
-                transition={{ delay: 2, duration: 1.5, ease: 'easeOut' }}
-                className="text-white/80 text-[12px] md:text-[14px] font-medium italic leading-relaxed max-w-lg"
-              >
-                “{currentSlide.bio}”
-              </motion.p>
             </div>
           </motion.div>
         </AnimatePresence>
@@ -319,19 +276,17 @@ function SearchContent() {
       </section>
 
       {/* Mobile header */}
-      <div className="hidden max-lg:flex gap-4 items-center md:hidden my-6 mx-4">
-        <SearchInput
-          value={draftQuery}
-          onChange={setDraftQuery}
-          onSearch={handleSearch}
-          placeholder="Find your next art obsession"
-          leftIconPath='home/magnifier.svg'
-          rightIconPath={draftQuery ? '/icons/cancel.svg' : undefined}
-          onRightIconClick={() => {
-            setDraftQuery('')
-            handleSearch('')
-          }}
-        />
+      <div className="hidden max-lg:flex items-center justify-between my-6 mx-4">
+        <div className='flex items-center justify-between w-full'>
+          {/* Result count */} 
+          {total !== undefined && (
+            <p className="font-raleway font-semibold text-h6 lg:text-h5 text-body">
+              <span className="font-semibold text-primary-600">{total.toLocaleString()}</span>{' '}
+                Result{total !== 1 ? 's' : ''} <span className='max-md:hidden'>For {query}</span>
+            </p>
+          )}
+
+        </div>
 
         <button onClick={() => setIsMobileFiltersOpen(true)} aria-label="Open filters">
           <svg width="40" height="40" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">

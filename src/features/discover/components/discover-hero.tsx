@@ -107,7 +107,7 @@ export const DiscoverHero = () => {
   if (!currentSlide) return <div className="h-[320px] w-full bg-black" />;
 
   return (
-    <div className="relative h-screen lg:h-120 w-full overflow-hidden bg-black">
+    <div className="relative h-[80vh] lg:h-120 w-full overflow-hidden bg-black">
       {/* Animated Backgrounds & Artist Info (Changes every 6s) */}
       <AnimatePresence mode="wait">
         <motion.div
@@ -168,7 +168,7 @@ export const DiscoverHero = () => {
             Discover What the World is Creating
           </h1>
 
-          <p className="font-poppins max-w-[557px] text-white text-body-s leading-6 tracking-wide text-center">
+          <p className="font-poppins max-w-[557px] text-white text-body-xs lg:text-body-s leading-6 tracking-wide text-center">
             Explore new uploads, trending art, and standout creators — all in one stream, all in real time. Your next favorite piece might be a scroll away.
           </p>
         </motion.div>

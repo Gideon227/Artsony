@@ -53,45 +53,51 @@ export default function DiscoverPage() {
     <div className="min-h-screen bg-white max-lg:pb-16">
       <Navbar />
 
-      <DiscoverHero />
+      {/* Hero: pinned on mobile, normal flow on md+ */}
+      <div className="max-md:sticky max-md:top-0 max-md:z-0">
+        <DiscoverHero />
+      </div>
 
-      <CategoryPills value={category} onChange={setCategory} />
+      {/* Curtain: covers the hero as you scroll */}
+      <div className="relative z-10 bg-white max-md:-mt-6 max-md:rounded-t-3xl max-md:shadow-[0_-8px_24px_rgba(0,0,0,0.15)]">
+        <CategoryPills value={category} onChange={setCategory} />
 
-      <DiscoverResultsHeader
-        activeLabel={activeLabel}
-        total={total}
-        sort={sort}
-        onSortChange={setSort}
-      />
+        <DiscoverResultsHeader
+          activeLabel={activeLabel}
+          total={total}
+          sort={sort}
+          onSortChange={setSort}
+        />
 
-      {isLoading ? (
-        <div className="flex justify-center py-24">
-          <Spinner size="lg" />
-        </div>
-      ) : isError ? (
-        <div className="max-w-[1440px] mx-auto px-4 md:px-8">
-          <ErrorState
-            description="Could not load artworks. Check your connection and try again."
-            onRetry={() => refetch()}
-          />
-        </div>
-      ) : artworks.length === 0 ? (
-        <div className="max-w-[1440px] mx-auto px-4 md:px-8">
-          <EmptyState
-            title="No artworks found"
-            description="Try a different category, or check back soon."
-          />
-        </div>
-      ) : (
-        <>
-          <MasonryArtworkGrid artworks={artworks} onArtworkClick={handleArtworkClick} />
-          {hasNextPage && (
-            <LoadMoreButton onClick={() => fetchNextPage()} isLoading={isFetchingNextPage} />
-          )}
-        </>
-      )}
+        {isLoading ? (
+          <div className="flex justify-center py-24">
+            <Spinner size="lg" />
+          </div>
+        ) : isError ? (
+          <div className="max-w-[1440px] mx-auto px-4 md:px-8">
+            <ErrorState
+              description="Could not load artworks. Check your connection and try again."
+              onRetry={() => refetch()}
+            />
+          </div>
+        ) : artworks.length === 0 ? (
+          <div className="max-w-[1440px] mx-auto px-4 md:px-8">
+            <EmptyState
+              title="No artworks found"
+              description="Try a different category, or check back soon."
+            />
+          </div>
+        ) : (
+          <>
+            <MasonryArtworkGrid artworks={artworks} onArtworkClick={handleArtworkClick} />
+            {hasNextPage && (
+              <LoadMoreButton onClick={() => fetchNextPage()} isLoading={isFetchingNextPage} />
+            )}
+          </>
+        )}
 
-      <Footer />
+        <Footer />
+      </div>
     </div>
   )
 }

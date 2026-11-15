@@ -171,6 +171,72 @@ export function SearchSection({ query, onSearch, filters, onFilterChange, onClea
     }
   ]
 
+  const mobileDropdowns: FilterDropdownConfig[] = [
+    {
+      id: 'categories',
+      leftIcon: '/icons/widget.svg',
+      placeholder: 'Categories',
+      indicator: 'checkmark',
+      maxSelected: 5,
+      multiple: true,
+      options: CATEGORY_OPTIONS,
+      values: selectedCategories,
+      onChangeMultiple: (options) =>
+        onFilterChange({
+          category: options.length > 0 ? options.map((o) => o.id).join(',') : null,
+        }),
+    },
+    {
+      id: 'price',
+      leftIcon: '/icons/tag.svg',
+      placeholder: 'Price',
+      options: [],
+      valueLabel: priceLabel,
+      customBody: (
+        <PriceRangeSlider
+          min={PRICE_MIN}
+          max={PRICE_MAX}
+          value={[filters.minPrice ?? PRICE_MIN, filters.maxPrice ?? PRICE_MAX]}
+          onChange={([min, max]) => onFilterChange({ minPrice: min, maxPrice: max })}
+        />
+      ),
+    },
+    {
+      id: 'medium',
+      leftIcon: '/icons/filters.svg',
+      placeholder: 'Medium',
+      options: MEDIUM_OPTIONS,
+      value: filters.format ? MEDIUM_OPTIONS.find((o) => o.id === filters.format) : MEDIUM_OPTIONS[0],
+      onChange: (option) =>
+        onFilterChange({ format: option && option.id !== 'ALL' ? (option.id as 'PHYSICAL' | 'DIGITAL') : null }),
+    },
+    {
+      id: 'location',
+      options: countryOptions,
+      value: filters.country ? { id: filters.country, label: getCountryName(filters.country) ?? filters.country } : undefined,
+      onChange: (option) =>
+        onFilterChange({ country: option ? String(option.id) : null, state: null, city: null }),
+      searchable: true,
+      indicator: 'checkmark',
+      searchPlaceholder: 'Search country',
+      searchValue: countryQuery,
+      onSearchChange: setCountryQuery,
+      isLoading: isLoadingCountries,
+      emptyMessage: 'No matching countries',
+      placeholder: 'Location',
+      leftIcon: '/icons/map-point.svg',
+    },
+    {
+      id: 'color',
+      leftIcon: '/icons/palette.svg',
+      placeholder: 'Color',
+      layout: 'grid',
+      options: COLOR_OPTIONS,
+      value: filters.color ? COLOR_OPTIONS.find((o) => o.id === filters.color) : undefined,
+      onChange: (option) => onFilterChange({ color: option ? String(option.id) : null }),
+    }
+  ]
+
   return (
     <div className="w-full max-w-full overflow-hidden px-4 py-6 md:px-2 bg-white box-border">
       <div className="flex justify-between items-center gap-3 sm:gap-4 lg:pt-12 lg:pb-4 lg:px-6 w-full max-w-full min-w-0">
@@ -225,7 +291,7 @@ export function SearchSection({ query, onSearch, filters, onFilterChange, onClea
       <MobileFilterDrawer
         open={isMobileFiltersOpen}
         onClose={() => setIsMobileFiltersOpen(false)}
-        dropdowns={dropdowns}
+        dropdowns={mobileDropdowns}
         onClear={() => {
           setDraftQuery('')
           onSearch('')

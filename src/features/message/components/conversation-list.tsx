@@ -79,13 +79,17 @@ function ConversationItem({ conv, myId, isSelected, onSelect }: ConversationItem
   const name = getConvDisplayName(conv, myId)
   const avatar = getConvAvatar(conv)
 
+  const hasUnread = conv.unread_count > 0
+
+  const stateClasses = isSelected
+    ? 'border-l-primary-500 bg-[#FFF1EE]'
+    : hasUnread
+      ? 'border-l-primary-500 bg-primary-50'
+      : 'border-l-transparent hover:bg-primary-50'
+
   return (
     <div
-      className={`group relative flex w-full items-center gap-3 border-l-[3px] p-4 text-left transition-colors ${conv.unread_count > 0 && 'border-l-4 border-primary-500 bg-primary-50'} ${
-        isSelected
-          ? 'border-l-primary-500 bg-[#FFF1EE]'
-          : 'border-l-transparent hover:bg-primary-50'
-      }`}
+      className={`group relative flex w-full items-center gap-3 border-l-4 p-4 text-left transition-colors ${stateClasses}`}
     >
       <button onClick={onSelect} className="flex min-w-0 flex-1 items-center gap-3 cursor-pointer text-left">
         <ConversationAvatar name={name} avatar={avatar} />
@@ -93,7 +97,7 @@ function ConversationItem({ conv, myId, isSelected, onSelect }: ConversationItem
         <div className='flex-1 min-w-0 flex items-center justify-between w-full'>
           <div className='flex flex-col gap-y-1 flex-1'>
             <p className='font-poppins text-body-xs lg:text-body-s text-black leading-6'>{name}</p>
-            <p className='font-poppins font-light text-body-xxs lg:text-body-xs text-[#333333]'>
+            <p className='font-poppins font-light text-body-xxs lg:text-body-xs text-[#333333] max-lg:line-clamp-1 truncate'>
               {conv.last_message?.deleted_at ? 'Deleted Message' : (conv.last_message?.body ?? '')}
             </p>
           </div>

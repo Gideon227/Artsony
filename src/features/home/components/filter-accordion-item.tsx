@@ -11,12 +11,11 @@ interface FilterAccordionItemProps {
   item: FilterDropdownConfig
 }
 
-/** "Selected (03) 5 max" for multi-selects, "Selected (Nigeria)" for single values. */
 function SelectionSummary({ item }: { item: FilterDropdownConfig }) {
   if (item.multiple) {
     const count = item.values?.length ?? 0
     return (
-      <span className="flex items-center gap-x-2 font-poppins text-body-s text-body">
+      <span className="flex items-center gap-x-2 font-poppins text-body-xs lg:text-body-s text-body">
         <span>
           Selected <span className="text-primary-500">({String(count).padStart(2, '0')})</span>
         </span>
@@ -54,9 +53,9 @@ export function FilterAccordionItem({ item }: FilterAccordionItemProps) {
         disabled={item.disabled}
         aria-expanded={open}
         aria-controls={panelId}
-        className="flex w-full cursor-pointer items-center justify-between gap-x-3 px-4 py-5 text-left outline-none focus-visible:ring-2 focus-visible:ring-primary-500 disabled:cursor-not-allowed disabled:opacity-50 rounded-[28px]"
+        className="flex w-full cursor-pointer items-center justify-between gap-x-3 px-6 py-4 text-left outline-none focus-visible:ring-2 focus-visible:ring-primary-500 disabled:cursor-not-allowed disabled:opacity-50 rounded-[28px]"
       >
-        <span className="font-poppins text-body-m font-medium text-heading">{item.placeholder}</span>
+        <span className="font-poppins text-body-s lg:text-body-m font-medium text-heading">{item.placeholder}</span>
 
         {hasSummary ? (
           <SelectionSummary item={item} />

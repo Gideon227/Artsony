@@ -14,13 +14,26 @@ const SOCIAL_ICONS: { key: keyof User; icon: string; label: string }[] = [
 ]
 
 export default function ProfileBioOverlay({ user, onClose }: { user: User; onClose: () => void }) {
+  // useEffect(() => {
+  //   const previousOverflow = document.body.style.overflow
+  //   document.body.style.overflow = 'hidden'
+  //   const handleKeyDown = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose() }
+  //   window.addEventListener('keydown', handleKeyDown)
+  //   return () => {
+  //     document.body.style.overflow = previousOverflow
+  //     window.removeEventListener('keydown', handleKeyDown)
+  //   }
+  // }, [onClose])
+
   useEffect(() => {
     const previousOverflow = document.body.style.overflow
     document.body.style.overflow = 'hidden'
+    document.body.setAttribute('data-hide-mobile-nav', 'true')
     const handleKeyDown = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose() }
     window.addEventListener('keydown', handleKeyDown)
     return () => {
       document.body.style.overflow = previousOverflow
+      document.body.removeAttribute('data-hide-mobile-nav')
       window.removeEventListener('keydown', handleKeyDown)
     }
   }, [onClose])
@@ -120,10 +133,10 @@ export default function ProfileBioOverlay({ user, onClose }: { user: User; onClo
                 <CheckCircle2 size={16} className="fill-primary-500 text-white" /> Verified Artsony Artist
               </span>
             )}
-            <p className="whitespace-pre-line font-poppins text-body-m leading-7 mt-4 text-gray-500">
+            <p className="whitespace-pre-line font-poppins max-lg:text-light text-body-xs lg:text-body-m mt-4 text-gray-500">
               {user.bio || 'This artist hasn\'t written a bio yet.'}
             </p>
-            <div className='mx-auto flex items-center justify-center gap-2 mt-auto'>
+            <div className='mx-auto flex items-center justify-center gap-2 mt-6 lg:mt-auto'>
               <Image
                 src={user?.avatar_url || '/images/image-avatar.svg'}
                 alt={user?.username ? `${user.username}'s profile` : 'User avatar'}
@@ -131,7 +144,8 @@ export default function ProfileBioOverlay({ user, onClose }: { user: User; onClo
                 height={40}
               />
               <p className='font-poppins text-body text-body-s items-center tracking-wide whitespace-nowrap'>Posted by {user?.username}</p>
-            </div>
+            </div> 
+            <p className='font-poppins text-[#A19D9D] text-body-xs text-center pt-12 lg:hidden'>Member since {user?.created_at.slice(0, 4)}</p>
           </div>
         </div>
       </motion.div>

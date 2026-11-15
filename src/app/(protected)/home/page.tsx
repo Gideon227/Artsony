@@ -146,6 +146,58 @@ function HomePage() {
     }
   ]
 
+
+  const mobileFilterDropdowns: FilterDropdownConfig[] = [
+    {
+      id: 'category',
+      options: CATEGORY_OPTIONS,
+      title: 'category',
+      multiple: true,
+      values: selectedCategories,
+      onChangeMultiple: setSelectedCategories,
+      maxSelected: MAX_CATEGORIES,
+      indicator: 'checkmark',
+      placeholder: 'Categories',
+      leftIcon: '/icons/widget.svg',
+    },
+    {
+      id: 'location',
+      options: countryOptions,
+      value: selectedCountry,
+      onChange: (opt) => {
+        setSelectedCountry(opt)
+      },
+      indicator: 'checkmark',
+      searchable: true,
+      searchPlaceholder: 'Search country',
+      searchValue: countryQuery,
+      onSearchChange: setCountryQuery,
+      isLoading: isLoadingCountries,
+      emptyMessage: 'No matching countries',
+      placeholder: 'Location',
+      leftIcon: '/icons/map-point.svg',
+    },
+    {
+      id: 'color',
+      title: 'colour',
+      options: COLOR_OPTIONS,
+      value: selectedColor,
+      onChange: setSelectedColor,
+      layout: 'grid',
+      searchable: true,
+      searchPlaceholder: 'Color',
+      searchValue: hexQuery,
+      searchVariant: 'button',
+      onSearchChange: setHexQuery,
+      onSearchSubmit: () => {
+        const closest = findClosestSwatch(hexQuery)
+        if (closest) setSelectedColor({ id: closest.id, label: closest.label, hex: closest.hex })
+      },
+      placeholder: 'Color',
+      leftIcon: '/icons/palette.svg',
+    },
+  ]
+
   if (!isHydrated) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-white">
@@ -157,41 +209,48 @@ function HomePage() {
   return (
     <div className="min-h-screen bg-white max-md:pb-20">
       <Navbar />
-      <HeroSection />
-      <div className='max-lg:hidden'>
-        <GalleryPulseSection />
+
+      <div className="max-md:sticky max-md:top-0 max-md:z-0">
+        <HeroSection />
       </div>
 
-      <FilterComponent dropdowns={filterDropdowns} onClear={handleClearFilters} />
+      <div className="relative z-10 bg-white">
+        <div className="max-lg:hidden">
+          <GalleryPulseSection />
+        </div>
 
-      <FeedSection
-        query={query}
-        onSearch={handleSearch}
-        activeTab={activeTab}
-        onTabChange={setActiveTab}
-        artworks={firstHalf}
-        isLoading={feedQuery.isLoading}
-        onOpenMobileFilters={() => setIsMobileFiltersOpen(true)}
-        onArtworkClick={handleArtworkClick}
-      />
+        <FilterComponent dropdowns={filterDropdowns} onClear={handleClearFilters} />
 
-      <CreatorCTASection />
+        <FeedSection
+          query={query}
+          onSearch={handleSearch}
+          activeTab={activeTab}
+          onTabChange={setActiveTab}
+          artworks={firstHalf}
+          isLoading={feedQuery.isLoading}
+          onOpenMobileFilters={() => setIsMobileFiltersOpen(true)}
+          onArtworkClick={handleArtworkClick}
+        />
 
-      <FeedContinuation
-        artworks={secondHalf}
-        isLoading={feedQuery.isLoading}
-        hasNextPage={feedQuery.hasNextPage}
-        isFetchingNextPage={feedQuery.isFetchingNextPage}
-        onLoadMore={() => feedQuery.fetchNextPage()}
-        onArtworkClick={handleArtworkClick}
-      />
+        <CreatorCTASection />
 
-      <Footer />
+        <FeedContinuation
+          artworks={secondHalf}
+          isLoading={feedQuery.isLoading}
+          hasNextPage={feedQuery.hasNextPage}
+          isFetchingNextPage={feedQuery.isFetchingNextPage}
+          onLoadMore={() => feedQuery.fetchNextPage()}
+          onArtworkClick={handleArtworkClick}
+        />
 
+        <Footer />
+      </div>
+
+      {/* Keep the drawer outside the curtain so its z-index isn't trapped in that stacking context */}
       <MobileFilterDrawer
         open={isMobileFiltersOpen}
         onClose={() => setIsMobileFiltersOpen(false)}
-        dropdowns={filterDropdowns}
+        dropdowns={mobileFilterDropdowns}
         onClear={handleClearFilters}
         filterNum={allArtworks.length}
       />

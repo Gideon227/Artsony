@@ -9,7 +9,7 @@ const EmptyCartPage = () => {
     const router = useRouter()
     
     return (
-        <div className='pt-[85px] pb-14 flex justify-center items-center max-h-screen bg-white'>
+        <div className='pt-[85px] pb-14 flex justify-center items-center max-h-screen bg-white max-lg:pb-26'>
             
             <div className='w-full max-w-[509px] px-4 lg:h-[590px]'>
                 <div className='flex flex-col justify-center items-center gap-y-12 w-full'>
@@ -34,6 +34,7 @@ const EmptyCartPage = () => {
                             variant='primary'
                             size='lg'
                             rightIcon='/icons/alt-arrow-right-double.svg'
+                            className='max-lg:h-12'
                         >
                             Artsony Shop
                         </Button>

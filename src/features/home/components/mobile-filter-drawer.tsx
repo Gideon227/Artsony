@@ -1,6 +1,6 @@
 'use client'
 
-import React from 'react'
+import React, { useEffect } from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
 import { Button } from '@/components'
 import type { FilterDropdownConfig } from './filter'
@@ -15,6 +15,12 @@ interface MobileFilterDrawerProps {
 }
 
 export function MobileFilterDrawer({ open, onClose, dropdowns, onClear, filterNum }: MobileFilterDrawerProps) {
+  useEffect(() => {
+    if (!open) return
+    document.body.setAttribute('data-hide-mobile-nav', 'true')
+    return () => document.body.removeAttribute('data-hide-mobile-nav')
+  }, [open])
+
   return (
     <AnimatePresence>
       {open && (
@@ -52,7 +58,7 @@ export function MobileFilterDrawer({ open, onClose, dropdowns, onClear, filterNu
             <Button variant="outline" className="flex-1" onClick={() => { onClear(); onClose() }}>
               Reset
             </Button>
-            <Button variant="primary" className="flex-1 active:ring-2 active:ring-primary-500" onClick={onClose}>
+            <Button variant="primary" className="flex-1 ring-2 ring-offset-2 ring-primary-500" onClick={onClose}>
               Apply{filterNum && filterNum > 0 ? ` (${filterNum})` : ''}
             </Button>
           </div>

@@ -7,6 +7,7 @@ import { cancelledByLabel, courierServiceLabel, formatDimensions, formatLongDate
 import { formatMoney } from '../../lib/format'
 import { ArtworkThumb } from './artwork-thumb'
 import { DetailHeader, DetailSection, DetailShell, InlineMeta, OrderCube, ReadOnlyField } from './detail-parts'
+import { useHideMobileNav } from '@/hooks/use-hide-mobile-nav'
 
 type Props = { detail: SellerSaleDetail; actions: React.ReactNode; onClose: () => void }
 
@@ -28,6 +29,8 @@ export function CancelledDetail({ detail, actions, onClose }: Props) {
   const cancellation = detail.cancellation
   const refund = refundPresentation(cancellation?.refund_status ?? null)
 
+  useHideMobileNav()
+  
   return (
     <DetailShell>
       <DetailHeader title="Canceled Order Info" mobileTitle={detail.artwork_title} actions={actions} onClose={onClose} />

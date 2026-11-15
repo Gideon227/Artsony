@@ -76,7 +76,7 @@ export function ResultsGrid({
   return (
     <div className="px-4 md:px-8 py-6">
 
-      <div className='flex items-center justify-between mb-6'>
+      <div className='hidden lg:flex items-center justify-between mb-6'>
         {/* Result count */} 
         {total !== undefined && (
           <p className="font-raleway font-semibold text-h6 lg:text-h5 text-body">

@@ -162,7 +162,7 @@ export function MobileNav({ variant, className }: MobileNavProps) {
       <div
         ref={rootRef}
         className={cn(
-          'pointer-events-none fixed inset-x-0 bottom-[max(1.5rem,env(safe-area-inset-bottom))] z-[350] px-4 md:hidden',
+          'pointer-events-none fixed inset-x-0 bottom-[max(1.5rem,env(safe-area-inset-bottom))] z-[350] px-4 md:hidden [body[data-hide-mobile-nav]_&]:hidden',
           className,
         )}
       >

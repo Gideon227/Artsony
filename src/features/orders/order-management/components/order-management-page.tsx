@@ -260,7 +260,7 @@ export function OrderManagementPage() {
 
   return (
     <Layout sidebar={sidebar}>
-      <section aria-label="Orders" className="flex min-w-0 flex-col gap-12 rounded-2xl bg-secondary-50 p-4 lg:col-span-3 lg:gap-12">
+      <section aria-label="Orders" className="flex min-w-0 flex-col gap-12 rounded-2xl lg:bg-secondary-50 lg:p-4 lg:col-span-3 lg:gap-12">
         <OrdersFilterBar
           filters={filters}
           heading={heading}

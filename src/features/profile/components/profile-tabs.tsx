@@ -28,22 +28,22 @@ export function ProfileTabs({ tabs, defaultTab, className }: ProfileTabsProps) {
     <div className={cn("w-full flex flex-col bg-white", className)}>
       <div className="w-full relative flex-1 border-b border-gray-50 bg-white">
         <div 
-          className="flex justify-between items-center gap-4 overflow-x-auto py-6 px-8 no-scrollbar scroll-smooth"
+          className="flex justify-between items-center gap-4 overflow-x-auto py-6 px-4 lg:px-8 no-scrollbar scroll-smooth"
           style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
         >
           {tabs.map((tab) => {
             const isActive = activeTabId === tab.id
 
             return (
-                <Button
-                  key={tab.id}
-                  onClick={() => setActiveTabId(tab.id)}
-                  leftIcon={tab.icon}
-                  className={`shrink-0 whitespace-nowrap flex-1 text-body h-12 ${isActive && 'bg-primary-50 border-primary-500'}`}
-                  variant='outline'
-                >
-                  {tab.label}
-                </Button>
+              <Button
+                key={tab.id}
+                onClick={() => setActiveTabId(tab.id)}
+                leftIcon={tab.icon}
+                className={`shrink-0 whitespace-nowrap flex-1 text-body border-gray-50 h-12 ${isActive && 'bg-primary-50 ring-2 ring-offset-2 ring-primary-500'}`}
+                variant='outline'
+              >
+                {tab.label}
+              </Button>
             )
           })}
         </div>
