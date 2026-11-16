@@ -47,7 +47,7 @@ function Layout({
   return (
     <div className="min-h-screen bg-white max-lg:pb-4 scrollbar-hide">
       <Navbar />
-      <main className="grid grid-cols-1 gap-4 px-4 py-6 lg:px-8 lg:grid-cols-4 scrollbar-hide">
+      <main className="grid grid-cols-1 gap-4 px-4 py-6 lg:px-8 lg:grid-cols-4 scrollbar-hide max-lg:pb-24">
         <div className={cn('min-w-0 lg:sticky lg:top-24 lg:self-start', hideSidebarOnMobile && 'hidden lg:block')}>
           {sidebar}
         </div>

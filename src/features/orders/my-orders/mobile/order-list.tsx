@@ -4,14 +4,14 @@ import { useEffect, useRef } from 'react'
 import { ArrowLeft, ListFilter, Loader2, Search } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import { Input } from '@/components'
+import { Dropdown, type DropdownOption } from '@/components/ui/dropdown'
 import { useIntersectionObserver } from '@/hooks'
 import { describeOrdersLoadError } from '@/lib/orders/errors'
-import { SortByMenu } from '@/features/orders/order-management/components/sort-by-menu'
 import { MobileOrderCard } from './order-card'
 import { NonPhysicalOrderCard } from '../components/non-physical-order-card'
 import { isPhysicalArtwork } from '../utils'
 import { EMPTY_COPY, MOBILE_ORDER_TABS } from './constants'
-import type { OrderSort } from '../constant'
+import { ORDER_SORT_OPTIONS, type OrderSort } from '../constant'
 import type { BuyerOrderView, OrderItemPhysicalListEntry } from '@/types/physical-order'
 import { cn } from '@/lib/utils'
 
@@ -36,6 +36,11 @@ interface Props {
 // Module-level so the observer isn't torn down and rebuilt on every render.
 const SENTINEL_OPTIONS: IntersectionObserverInit = { rootMargin: '240px' }
 
+const SORT_OPTIONS: DropdownOption[] = ORDER_SORT_OPTIONS.map((o) => ({
+  id: o.value,
+  label: o.label,
+}))
+
 export function MobileOrderList({
   view,
   orders,
@@ -58,6 +63,7 @@ export function MobileOrderList({
   const sentinelVisible = useIntersectionObserver(sentinelRef, SENTINEL_OPTIONS)
   const hasOrders = orders.length > 0
   const loadError = isError ? describeOrdersLoadError(error) : null
+  const activeSort = SORT_OPTIONS.find((o) => o.id === sort)
 
   useEffect(() => {
     if (sentinelVisible && hasNextPage && !isFetchingNextPage && !isError) onLoadMore()
@@ -89,11 +95,19 @@ export function MobileOrderList({
               aria-label="Search orders"
             />
           </div>
-          <SortByMenu value={sort} onChange={onSortChange}>
-            <span className="flex h-10 w-10 items-center justify-center rounded-full border border-gray-50">
-              <ListFilter size={18} className="text-body" aria-hidden="true" />
-            </span>
-          </SortByMenu>
+
+          <div className="w-10 shrink-0">
+            <Dropdown
+              options={SORT_OPTIONS}
+              value={activeSort}
+              onChange={(opt) => onSortChange(opt.id as OrderSort)}
+              multiple={false}
+              indicator="highlight"
+              mobileVariant="menu"
+              placeholder="Sort by"
+              triggerIcon={<ListFilter size={18} className="text-body" aria-hidden="true" />}
+            />
+          </div>
         </div>
 
         <div className="flex items-center gap-2" role="group" aria-label="Order status">

@@ -71,6 +71,12 @@ interface DropdownProps {
    * "menu": compact, title-less list anchored under the trigger.
    */
   mobileVariant?: DropdownMobileVariant;
+  /**
+   * When provided, the trigger renders as a compact 40px icon button instead of
+   * the full pill. The menu keeps a minimum width and aligns to the trigger's
+   * right edge.
+   */
+  triggerIcon?: React.ReactNode;
 }
 
 const MOBILE_BREAKPOINT = 640;
@@ -121,6 +127,7 @@ const Dropdown = ({
   hideChips,
   inline = false,
   mobileVariant = "sheet",
+  triggerIcon,
 }: DropdownProps) => {
   const [isOpen, setIsOpen] = React.useState(false);
   const [mounted, setMounted] = React.useState(false);
@@ -134,6 +141,7 @@ const Dropdown = ({
   const resolvedIndicator: DropdownIndicator = indicator ?? "checkbox";
   const sheetTitle = title ?? placeholder;
   const isMenuVariant = mobileVariant === "menu";
+  const hasTriggerIcon = Boolean(triggerIcon);
 
   const query = searchValue !== undefined ? searchValue : internalSearch;
 
@@ -155,15 +163,18 @@ const Dropdown = ({
     const mobile = window.innerWidth < MOBILE_BREAKPOINT;
     const below = rect.bottom + MENU_OFFSET;
 
-    // Compact menu: anchored under the trigger, kept inside the viewport.
-    if (mobile && mobileVariant === "menu") {
+    // Compact menu (mobile "menu" variant, or any icon-only trigger): anchored
+    // under the trigger, kept inside the viewport. Icon triggers are tiny, so
+    // the menu is right-aligned to the trigger's right edge.
+    if ((mobile && mobileVariant === "menu") || hasTriggerIcon) {
       const width = Math.min(
         Math.max(rect.width, MOBILE_MENU_MIN_WIDTH),
         window.innerWidth - MOBILE_MARGIN * 2
       );
+      const preferredLeft = hasTriggerIcon ? rect.right - width : rect.left;
       const left = Math.max(
         MOBILE_MARGIN,
-        Math.min(rect.left, window.innerWidth - width - MOBILE_MARGIN)
+        Math.min(preferredLeft, window.innerWidth - width - MOBILE_MARGIN)
       );
       setMenuPos({ top: below, left, width });
       return;
@@ -180,7 +191,7 @@ const Dropdown = ({
       left: mobile ? MOBILE_MARGIN : rect.left,
       width: mobile ? window.innerWidth - MOBILE_MARGIN * 2 : rect.width,
     });
-  }, [mobileVariant]);
+  }, [mobileVariant, hasTriggerIcon]);
 
   React.useLayoutEffect(() => {
     if (!isOpen) return;
@@ -380,7 +391,7 @@ const Dropdown = ({
           className="shrink-0 w-11 h-11 rounded-full bg-primary-500 hover:bg-primary-600 flex items-center justify-center transition-colors"
         >
           <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <path d="M21.7883 21.7883C22.0706 21.506 22.0706 21.0483 21.7883 20.7659L18.1224 17.1002C19.4884 15.5007 20.3133 13.425 20.3133 11.1566C20.3133 6.09956 16.2137 2 11.1566 2C6.09956 2 2 6.09956 2 11.1566C2 16.2137 6.09956 20.3133 11.1566 20.3133C13.4249 20.3133 15.5006 19.4885 17.1 18.1225L20.7659 21.7883C21.0483 22.0706 21.506 22.0706 21.7883 21.7883Z" fill-rule="evenodd" clip-rule="evenodd" fill="white"/>
+            <path d="M21.7883 21.7883C22.0706 21.506 22.0706 21.0483 21.7883 20.7659L18.1224 17.1002C19.4884 15.5007 20.3133 13.425 20.3133 11.1566C20.3133 6.09956 16.2137 2 11.1566 2C6.09956 2 2 6.09956 2 11.1566C2 16.2137 6.09956 20.3133 11.1566 20.3133C13.4249 20.3133 15.5006 19.4885 17.1 18.1225L20.7659 21.7883C21.0483 22.0706 21.506 22.0706 21.7883 21.7883Z" fillRule="evenodd" clipRule="evenodd" fill="white"/>
           </svg>
         </button>
       )}
@@ -687,54 +698,74 @@ const Dropdown = ({
   return (
     <div className={cn("relative w-full", className)} ref={containerRef}>
       {/* TRIGGER BUTTON */}
-      <button
-        ref={triggerRef}
-        type="button"
-        disabled={disabled}
-        aria-haspopup="listbox"
-        aria-expanded={isOpen}
-        onClick={() => setIsOpen(!isOpen)}
-        className={cn(
-          "cursor-pointer flex items-center w-full h-12 px-6 rounded-full border bg-white transition-all outline-none",
-          "text-sm font-medium text-neutral-800",
-          "hover:border-neutral-300",
-          "focus:ring-2 focus:ring-offset-2 focus:ring-offset-white",
-          variantStyles[variant],
-          disabled && "bg-neutral-100 border-neutral-200 text-neutral-400 cursor-not-allowed opacity-100",
-          isOpen && "border-neutral-300 ring-2 ring-offset-2 ring-[#F15A2B]/20"
-        )}
-      >
-        {leftIcon && (
-          <span className="mr-3 shrink-0">
-            <Image width={20} height={20} src={leftIcon} alt="icon" className="w-auto h-auto " />
-          </span>
-        )}
+      {hasTriggerIcon ? (
+        <button
+          ref={triggerRef}
+          type="button"
+          disabled={disabled}
+          aria-haspopup="listbox"
+          aria-expanded={isOpen}
+          aria-label={sheetTitle}
+          onClick={() => setIsOpen(!isOpen)}
+          className={cn(
+            "flex h-10 w-10 cursor-pointer items-center justify-center rounded-full border border-gray-50 bg-white outline-none transition-all active:scale-95",
+            "focus-visible:ring-2 focus-visible:ring-primary-500",
+            disabled && "cursor-not-allowed opacity-50",
+            isOpen && "border-neutral-300"
+          )}
+        >
+          {triggerIcon}
+        </button>
+      ) : (
+        <button
+          ref={triggerRef}
+          type="button"
+          disabled={disabled}
+          aria-haspopup="listbox"
+          aria-expanded={isOpen}
+          onClick={() => setIsOpen(!isOpen)}
+          className={cn(
+            "cursor-pointer flex items-center w-full h-12 px-6 rounded-full border bg-white transition-all outline-none",
+            "text-sm font-medium text-neutral-800",
+            "hover:border-neutral-300",
+            "focus:ring-2 focus:ring-offset-2 focus:ring-offset-white",
+            variantStyles[variant],
+            disabled && "bg-neutral-100 border-neutral-200 text-neutral-400 cursor-not-allowed opacity-100",
+            isOpen && "border-neutral-300 ring-2 ring-offset-2 ring-[#F15A2B]/20"
+          )}
+        >
+          {leftIcon && (
+            <span className="mr-3 shrink-0">
+              <Image width={20} height={20} src={leftIcon} alt="icon" className="w-auto h-auto " />
+            </span>
+          )}
 
-        <span className={cn("flex-1 text-left truncate", !hasCustomValue && !value && selectedValues.length === 0 && "text-neutral-400")}>
-          {triggerLabel}
-        </span>
-
-        {rightIcon ? (
-          <Image src={rightIcon} width={16} height={16} alt="icon" />
-        ) : arrow === "triangle" ? (
-          <span className="ml-2 flex h-5 w-6 shrink-0 items-center justify-center">
-            <svg
-              width="14"
-              height="7"
-              viewBox="0 0 14 7"
-              fill="#525965"
-              aria-hidden="true"
-              className={cn("transition-transform duration-200", isOpen && "rotate-180")}
-            >
-              <path d="M0 0h14L7 7z" />
-            </svg>
+          <span className={cn("flex-1 text-left truncate", !hasCustomValue && !value && selectedValues.length === 0 && "text-neutral-400")}>
+            {triggerLabel}
           </span>
-        ) : (
-          <ChevronDown
-            className={cn("ml-2 h-5 w-5 text-neutral-400 transition-transform duration-200 shrink-0", isOpen && "rotate-180")}
-          />
-        )}
-      </button>
+
+          {rightIcon ? (
+            <Image src={rightIcon} width={16} height={16} alt="icon" />
+          ) : arrow === "triangle" ? (
+            <span className="ml-2 flex h-5 w-6 shrink-0 items-center justify-center">
+              <svg
+                width="14"
+                height="7"
+                viewBox="0 0 14 7"
+                fill="#525965"
+                aria-hidden="true"
+                className={cn("transition-transform duration-200", isOpen && "rotate-180")}
+              >
+                <path d="M0 0h14L7 7z" />
+              </svg>
+            </span>
+          ) : (
+            <ChevronDown
+              className={cn("ml-2 h-5 w-5 text-neutral-400 transition-transform duration-200 shrink-0", isOpen && "rotate-180")}
+            />
+          )}
+        </button>
+      )}
 
       {/* DROPDOWN MENU */}
       {mounted &&

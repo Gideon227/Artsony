@@ -48,8 +48,8 @@ export function OrderCard({ line, selected, onSelect, onMessage, isMessaging }: 
   return (
     <li
       className={cn(
-        'rounded-[24px] border bg-white transition-shadow',
-        selected ? 'border-primary-500 shadow-sm ring-1 ring-primary-500' : 'border-gray-50 hover:border-gray-100',
+        'rounded-2xl border bg-white',
+        selected ? 'border-primary-500' : 'border-gray-50 hover:border-gray-100',
       )}
     >
       <button

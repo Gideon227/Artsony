@@ -125,7 +125,7 @@ export function StudioLeftSidebar({
                 className={cn(
                   'flex h-14 w-full items-center gap-4 rounded-m p-4 text-left font-poppins text-body-s transition-colors',
                   isActive
-                    ? 'cursor-pointer border border-gray-50 bg-primary-50 text-primary-500 ring-2 ring-offset-2 ring-primary-500'
+                    ? 'cursor-pointer lg:border lg:border-gray-50 lg:bg-primary-50 lg:text-primary-500 lg:ring-2 lg:ring-offset-2 lg:ring-primary-500'
                     : disabled
                       ? 'cursor-not-allowed bg-gray-50 text-gray-400'
                       : 'cursor-pointer text-body hover:bg-neutral-50',
