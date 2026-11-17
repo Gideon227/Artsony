@@ -40,11 +40,14 @@ const PrivacySafety = ({ goBack }: { goBack?: () => void }) => {
     if (settings) setFormData(settings)
   }, [settings])
 
+  // Only dirty once the saved values have actually loaded — otherwise a Save
+  // clicked while loading (or after a failed load) would overwrite the real
+  // settings with the EVERYONE defaults.
   const isDirty =
-    !settings ||
-    formData.who_can_message !== settings.who_can_message ||
-    formData.who_can_comment !== settings.who_can_comment ||
-    formData.who_can_purchase !== settings.who_can_purchase
+    !!settings &&
+    (formData.who_can_message !== settings.who_can_message ||
+      formData.who_can_comment !== settings.who_can_comment ||
+      formData.who_can_purchase !== settings.who_can_purchase)
 
   const setField = (field: keyof PrivacySettings) => (option: DropdownOption) =>
     setFormData((prev) => ({ ...prev, [field]: option.id as PrivacyLevel }))
@@ -78,7 +81,7 @@ const PrivacySafety = ({ goBack }: { goBack?: () => void }) => {
           </button>
           <h5 className='max-lg:font-poppins lg:font-raleway font-medium lg:font-semibold max-lg:text-body-s lg:text-h5 text-body lg:text-primary-500 leading-10 tracking-wide'>Privacy & Safety</h5>
         </div>
-        <Button size='sm' className='rounded-2xl max-lg:w-20 max-lg:h-10 max-lg:text-body-xs' onClick={handleSave} isLoading={isPending} loadingText='Saving…'>
+        <Button size='sm' className='rounded-2xl max-lg:w-20 max-lg:h-10 max-lg:text-body-xs' onClick={handleSave} isLoading={isPending} loadingText='Saving…' disabled={!isDirty || isPending}>
           Save
         </Button>
       </div>

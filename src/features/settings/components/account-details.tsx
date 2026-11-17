@@ -1,45 +1,107 @@
 'use client'
 
-import { useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { parsePhoneNumberFromString, type CountryCode } from 'libphonenumber-js'
 import { Button } from '@/components'
 import ContactSection from '../sections/contact-section'
 import { useAuthStore } from '@/store'
 import ConnectedAccount from '../sections/connected-accounts'
 import { useUpdateProfile } from '@/hooks/use-auth-mutations'
+import { usePrivateDetails, useUpdatePrivateDetails } from '@/hooks/use-private-details'
+import type { UpdateProfileInput } from '@/services/auth.service'
 
 export type AccountDraft = {
-  country: string
+  country: string // ISO 3166-1 alpha-2
   state: string
-  city: string
 }
 
 const AccountDetails = ({ goBack }: { goBack?: () => void }) => {
   const { user } = useAuthStore()
-  const { mutate: save, isPending } = useUpdateProfile()
+  const { mutateAsync: saveProfile, isPending: isSavingProfile } = useUpdateProfile()
+  const { data: details, isLoading: isLoadingDetails } = usePrivateDetails()
+  const { mutateAsync: saveDetails, isPending: isSavingDetails } = useUpdatePrivateDetails()
 
-  const initialDraft = useMemo<AccountDraft>(() => ({
+  // ── Region (country / state) → profiles, via PATCH /users/me ──────────────
+  const [region, setRegion] = useState<AccountDraft>(() => ({
     country: user?.country ?? '',
     state: user?.state ?? '',
-    city: user?.city ?? '',
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }), [user?.id])
+  }))
+  const syncedUserId = useRef<string | null>(user?.id ?? null)
+  useEffect(() => {
+    if (user && syncedUserId.current !== user.id) {
+      syncedUserId.current = user.id
+      setRegion({ country: user.country ?? '', state: user.state ?? '' })
+    }
+  }, [user])
 
-  const [draft, setDraft] = useState<AccountDraft>(initialDraft)
+  const handleLocationChange = useCallback(
+    (patch: { country?: string; state?: string }) => setRegion((r) => ({ ...r, ...patch })),
+    [],
+  )
 
-  const setField = <K extends keyof AccountDraft>(key: K, value: AccountDraft[K]) =>
-    setDraft((d) => ({ ...d, [key]: value }))
+  // ── Phone → user_private_details, via PATCH /users/me/private-details ─────
+  // What the user types is a local number ("0801 234 5678"); it is stored as
+  // E.164 ("+2348012345678"), parsed with the country picked in the input.
+  const savedPhone = details?.phone_number ?? null
+  const savedParsed = useMemo(
+    () => (savedPhone ? parsePhoneNumberFromString(savedPhone) : undefined),
+    [savedPhone],
+  )
+  const [phoneInput, setPhoneInput] = useState('')
+  const [phoneCountry, setPhoneCountry] = useState<CountryCode | undefined>()
+  const [phoneError, setPhoneError] = useState<string | undefined>()
 
-  const handleSave = () => {
-    if (!user) return
-    const payload: Partial<Record<keyof AccountDraft, string | null>> = {}
-    if (draft.country !== (user.country ?? '')) payload.country = draft.country || null
-    if (draft.state.trim() !== (user.state ?? '')) payload.state = draft.state.trim() || null
-    if (draft.city.trim() !== (user.city ?? '')) payload.city = draft.city.trim() || null
-    if (Object.keys(payload).length === 0) return
-    save(payload)
+  // Show the stored number once it loads (and again after each save).
+  useEffect(() => {
+    setPhoneInput(savedParsed?.nationalNumber ?? '')
+    setPhoneError(undefined)
+  }, [savedParsed])
+
+  const handlePhoneChange = useCallback((value: string) => {
+    setPhoneInput(value)
+    setPhoneError(undefined)
+  }, [])
+  const handlePhoneCountry = useCallback((iso: CountryCode) => setPhoneCountry(iso), [])
+
+  const phoneResult = useMemo(() => {
+    const raw = phoneInput.trim()
+    if (!raw) return { valid: true, value: null as string | null }
+    const parsed = parsePhoneNumberFromString(raw, phoneCountry)
+    return parsed?.isValid() ? { valid: true, value: parsed.number as string } : { valid: false, value: null }
+  }, [phoneInput, phoneCountry])
+
+  const regionDirty = !!user && (region.country !== (user.country ?? '') || region.state !== (user.state ?? ''))
+  // Not dirty until the saved value has loaded, so an empty form can never overwrite it.
+  const phoneDirty = !isLoadingDetails && (!phoneResult.valid || phoneResult.value !== savedPhone)
+  const isDirty = regionDirty || phoneDirty
+  const isSaving = isSavingProfile || isSavingDetails
+
+  const handleSave = async () => {
+    if (!user || !isDirty || isSaving) return
+
+    if (phoneDirty && !phoneResult.valid) {
+      setPhoneError('Enter a valid phone number for the selected country.')
+      return
+    }
+
+    const tasks: Promise<unknown>[] = []
+
+    if (regionDirty) {
+      const payload: UpdateProfileInput = {}
+      if (region.country !== (user.country ?? '')) {
+        payload.country = region.country || null
+        // The stored city belongs to the old country — don't leave "Ashburn, Nigeria".
+        payload.city = null
+      }
+      if (region.state !== (user.state ?? '')) payload.state = region.state.trim() || null
+      tasks.push(saveProfile(payload))
+    }
+
+    if (phoneDirty) tasks.push(saveDetails({ phone_number: phoneResult.value }))
+
+    // Each mutation reports its own success/failure toast.
+    await Promise.allSettled(tasks)
   }
-
-  if (!user) return null
 
   return (
     <div className='flex w-full flex-col bg-white lg:h-full lg:min-h-0 lg:overflow-hidden lg:rounded-2xl lg:border lg:border-gray-50'>
@@ -57,14 +119,28 @@ const AccountDetails = ({ goBack }: { goBack?: () => void }) => {
           </button>
           <h5 className='max-lg:font-poppins lg:font-raleway font-medium lg:font-semibold max-lg:text-body-s lg:text-h5 text-body lg:text-primary-500 leading-10 tracking-wide'>Account Details</h5>
         </div>
-        <Button size='sm' className='rounded-2xl max-lg:w-20 max-lg:h-10 max-lg:text-body-xs' onClick={handleSave} isLoading={isPending} loadingText='Saving…'>
+        <Button size='sm' className='rounded-2xl max-lg:w-20 max-lg:h-10 max-lg:text-body-xs' onClick={handleSave} isLoading={isSaving} loadingText='Saving…' disabled={!isDirty || isSaving}>
           Save
         </Button>
       </div>
 
       <div className='flex flex-col gap-y-16 px-4 pb-16 pt-8 lg:min-h-0 lg:flex-1 lg:overflow-y-auto lg:px-8 lg:pb-8 scrollbar-hide'>
-        <ContactSection user={user} />
-        <ConnectedAccount user={user} />
+        <ContactSection
+          email={user!.email}
+          country={region.country}
+          state={region.state}
+          onLocationChange={handleLocationChange}
+          phone={{
+            value: phoneInput,
+            onChange: handlePhoneChange,
+            onCountryChange: handlePhoneCountry,
+            defaultCountry: savedParsed?.country,
+            remountKey: savedParsed?.country ?? 'none',
+            error: phoneError,
+            disabled: isLoadingDetails,
+          }}
+        />
+        <ConnectedAccount user={user!} />
       </div>
     </div>
   )

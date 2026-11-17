@@ -20,6 +20,7 @@ const SocialSection = ({ draft, setField }: Props) => {
             className='w-full flex-1'
             value={draft.website}
             onChange={(e) => setField('website', e.target.value)}
+            rightIconFn={() => setField('website', '')}
           />
         </div>
 
@@ -32,7 +33,7 @@ const SocialSection = ({ draft, setField }: Props) => {
               rightIcon='/icons/cancel.svg'
               value={draft.behanceLink}
               onChange={(e) => setField('behanceLink', e.target.value)}
-              rightIconFn={(e) => setField('behanceLink', '')}
+              rightIconFn={() => setField('behanceLink', '')}
             />
           </div>
 
@@ -44,6 +45,7 @@ const SocialSection = ({ draft, setField }: Props) => {
               rightIcon='/icons/cancel.svg'
               value={draft.pinterestLink}
               onChange={(e) => setField('pinterestLink', e.target.value)}
+              rightIconFn={() => setField('pinterestLink', '')}
             />
           </div>
 
@@ -55,6 +57,7 @@ const SocialSection = ({ draft, setField }: Props) => {
               rightIcon='/icons/cancel.svg'
               value={draft.twitterLink}
               onChange={(e) => setField('twitterLink', e.target.value)}
+              rightIconFn={() => setField('twitterLink', '')}
             />
           </div>
 
@@ -66,6 +69,7 @@ const SocialSection = ({ draft, setField }: Props) => {
               rightIcon='/icons/cancel.svg'
               value={draft.linkedinLink}
               onChange={(e) => setField('linkedinLink', e.target.value)}
+              rightIconFn={() => setField('linkedinLink', '')}
             />
           </div>
         </div>

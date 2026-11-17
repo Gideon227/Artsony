@@ -1,0 +1,88 @@
+import { apiClient } from '@/lib/api-client'
+import type { User, Artwork, PaginatedResponse, ApiResponse, PrivacySettings, InteractionPermissions } from '@/types'
+import type { EditProfileInput } from '@/schemas'
+
+export interface PublicProfileSummary {
+  id: string
+  username: string
+  role: string
+  profile: { display_name: string | null; avatar_url: string | null } | null
+}
+
+// Private to the account owner — phone number + billing address. Stored in its
+// own table and fetched only through this endpoint, never via the public profile.
+export type PrivateDetails = {
+  phone_number: string | null
+  billing_address: string | null
+  billing_city: string | null
+  billing_state: string | null
+  billing_postal_code: string | null
+  billing_country_code: string | null
+}
+
+export const userService = {
+  getProfile: (username: string) =>
+    apiClient.get<ApiResponse<User>>(`/api/users/${username}`),
+
+  updateProfile: (body: EditProfileInput) =>
+    apiClient.patch<ApiResponse<User>>('/api/users/me', body),
+
+  getPrivacySettings: () =>
+    apiClient.get<ApiResponse<PrivacySettings>>('/api/users/me/privacy'),
+
+  updatePrivacySettings: (body: Partial<PrivacySettings>) =>
+    apiClient.patch<ApiResponse<PrivacySettings>>('/api/users/me/privacy', body),
+
+  getPrivateDetails: () =>
+    apiClient.get<ApiResponse<PrivateDetails>>('/api/users/me/private-details'),
+
+  updatePrivateDetails: (body: Partial<PrivateDetails>) =>
+    apiClient.patch<ApiResponse<PrivateDetails>>('/api/users/me/private-details', body),
+
+  reportUser: (userId: string, body: { reason: string; notes?: string; conversation_id?: string }) =>
+    apiClient.post<ApiResponse<void>>(`/api/users/${userId}/report`, body),
+
+  // Viewer-relative preview of another user's message/comment/purchase
+  // privacy settings — used to show/disable the message button, comment
+  // box, and buy button on someone else's profile or artwork ahead of time.
+  getInteractionPermissions: (userId: string) =>
+    apiClient.get<ApiResponse<InteractionPermissions>>(`/api/users/${userId}/permissions`),
+
+  getArtworks: (username: string, params?: { page?: number }) =>
+    apiClient.get<PaginatedResponse<Artwork>>(`/api/users/${username}/artworks`, { params }),
+
+  getSaved: (params?: { page?: number }) =>
+    apiClient.get<PaginatedResponse<Artwork>>('/api/users/me/saved', { params }),
+
+  follow: (userId: string) =>
+    apiClient.post(`/api/users/${userId}/follow`),
+
+  unfollow: (userId: string) =>
+    apiClient.delete(`/api/users/${userId}/follow`),
+
+  getFollowers: (username: string) =>
+    apiClient.get<PaginatedResponse<User>>(`/api/users/${username}/followers`),
+
+  getFollowing: (username: string) =>
+    apiClient.get<PaginatedResponse<User>>(`/api/users/${username}/following`),
+
+  getSuggested: () =>
+    apiClient.get<ApiResponse<User[]>>('/api/users/suggested'),
+
+  // Public-safe user search (username or display name, excludes the caller).
+  // Backed by GET /api/users/search/public — never returns email.
+  searchPublic: (q: string, limit = 8) =>
+    apiClient.get<ApiResponse<PublicProfileSummary[]>>('/api/users/search/public', {
+      params: { q, limit },
+    }),
+
+  // Batch-resolves user ids to public profile summaries (id/username/role/
+  // display_name/avatar_url). Backed by the real GET /api/users/by-ids route.
+  getByIds: (ids: string[]) => {
+    const unique = Array.from(new Set(ids.filter(Boolean)))
+    if (unique.length === 0) return Promise.resolve({ success: true as const, data: [] as PublicProfileSummary[] })
+    return apiClient.get<ApiResponse<PublicProfileSummary[]>>('/api/users/by-ids', {
+      params: { ids: unique.join(',') },
+    })
+  },
+}

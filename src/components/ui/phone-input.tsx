@@ -33,6 +33,8 @@ const ALL_COUNTRIES: CountryOption[] = getCountries()
 
 type PhoneInputProps = React.InputHTMLAttributes<HTMLInputElement> & {
   onDialCodeChange?: (dialCode: string) => void;
+  /** Fires with the ISO 3166-1 alpha-2 code whenever the selected country changes. */
+  onCountryChange?: (iso: CountryCode) => void;
   defaultDialCode?: string;
   /** ISO 3166-1 alpha-2 code, e.g. "NG", "US". Takes priority over defaultDialCode. */
   defaultCountry?: CountryCode;
@@ -43,6 +45,7 @@ const PhoneInput = React.forwardRef<HTMLInputElement, PhoneInputProps>(
     {
       className,
       onDialCodeChange,
+      onCountryChange,
       defaultDialCode = "+234",
       defaultCountry,
       ...props
@@ -67,6 +70,10 @@ const PhoneInput = React.forwardRef<HTMLInputElement, PhoneInputProps>(
     React.useEffect(() => {
       onDialCodeChange?.(selectedCountry.code);
     }, [selectedCountry, onDialCodeChange]);
+
+    React.useEffect(() => {
+      onCountryChange?.(selectedCountry.iso);
+    }, [selectedCountry, onCountryChange]);
 
     // Close dropdown when clicking outside
     React.useEffect(() => {

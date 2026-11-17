@@ -280,6 +280,33 @@ export function useUpdateProfile() {
   })
 }
 
+// ─── Change password (settings → security) ────────────────────────────────────
+// The backend revokes every session on success (token_version bump), this one
+// included — so the client signs out and sends the user to /login, same as
+// logout does, instead of carrying on with a token that no longer works.
+
+export function useChangePassword() {
+  const clearAuth = useAuthStore((s) => s.clearAuth)
+  const router = useRouter()
+  const queryClient = useQueryClient()
+  const { success } = useToast()
+
+  return useMutation({
+    mutationFn: (body: { currentPassword: string; newPassword: string }) =>
+      authService.changePassword(body),
+
+    onSuccess: () => {
+      success('Password changed', 'Please sign in again with your new password.')
+      clearAuth()
+      queryClient.clear()
+      clearClientCookie('artsony_session')
+      clearClientCookie('artsony_onboarded')
+      router.replace('/login')
+    },
+    // Errors are shown inline by the form (field-level), not as a toast.
+  })
+}
+
 // ─── Privacy settings (who can message/comment/purchase) ──────────────────────
 // Server truth lives behind /api/users/me/privacy (separate from GET /me — see
 // PrivacySettings). Kept in sync with auth.store.privacySettings on every

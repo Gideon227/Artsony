@@ -2,102 +2,126 @@
 
 import { Button, Input } from '@/components'
 import { Dropdown, DropdownOption } from '@/components/ui/dropdown'
+import { useToast } from '@/components/ui/toaster'
+import { usePrivateDetails, useUpdatePrivateDetails } from '@/hooks/use-private-details'
+import { getCountryName, useCountryOptions, useStateOptions } from '@/hooks/use-location-data'
 import Link from 'next/link'
 import React, { useEffect, useMemo, useState } from 'react'
 
+type BillingDraft = {
+    address: string
+    country: string // ISO 3166-1 alpha-2
+    city: string
+    state: string
+    postalCode: string
+}
+
+type BillingErrors = Partial<Record<keyof BillingDraft, string>>
+
+const EMPTY_BILLING: BillingDraft = { address: '', country: '', city: '', state: '', postalCode: '' }
+
 const BillingPayment = ({ goBack }: { goBack?: () => void }) => {
-    const [countryQuery, setCountryQuery] = useState('')
-    const [selectedCountry, setSelectedCountry] = useState<DropdownOption | null>(null)
-    const [countries, setCountries] = useState<DropdownOption[]>([])
-    const [isLoadingCountries, setIsLoadingCountries] = useState(false)
+    const { error: toastError } = useToast()
+    const { data: details, isLoading: isLoadingDetails } = usePrivateDetails()
+    const { mutateAsync: saveDetails, isPending: isSaving } = useUpdatePrivateDetails()
+    const { countries, isLoading: isLoadingCountries } = useCountryOptions()
 
-    // State / Province state variables
-    const [stateQuery, setStateQuery] = useState('')
-    const [selectedState, setSelectedState] = useState<DropdownOption | null>(null)
-    const [states, setStates] = useState<DropdownOption[]>([])
-    const [isLoadingStates, setIsLoadingStates] = useState(false)
+    // What's stored. The form edits a local draft on top of it; the draft is
+    // dropped as soon as it matches the server again (e.g. right after a save).
+    const server = useMemo<BillingDraft>(
+        () =>
+            details
+                ? {
+                      address: details.billing_address ?? '',
+                      country: details.billing_country_code ?? '',
+                      city: details.billing_city ?? '',
+                      state: details.billing_state ?? '',
+                      postalCode: details.billing_postal_code ?? '',
+                  }
+                : EMPTY_BILLING,
+        [details],
+    )
+    const [draft, setDraft] = useState<BillingDraft | null>(null)
+    const [errors, setErrors] = useState<BillingErrors>({})
 
-    // Fetch Countries
+    const value = draft ?? server
+    const isDirty = draft !== null && (Object.keys(server) as Array<keyof BillingDraft>).some((k) => draft[k] !== server[k])
+
     useEffect(() => {
-        const fetchCountries = async () => {
-            setIsLoadingCountries(true)
-            try {
-                const response = await fetch('https://countriesnow.space/api/v0.1/countries')
-                if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`)
-                const resData = await response.json()
+        if (draft && !isDirty) setDraft(null)
+    }, [draft, isDirty])
 
-                if (!resData.error && Array.isArray(resData.data)) {
-                    const formattedCountries: DropdownOption[] = resData.data.map((item: { country: string }) => ({
-                        id: item.country,
-                        label: item.country,
-                    }))
-                    setCountries(formattedCountries)
-                }
-            } catch (error) {
-                console.error('Failed to load countries selection table:', error)
-            } finally {
-                setIsLoadingCountries(false)
-            }
+    const update = (patch: Partial<BillingDraft>) => {
+        setDraft((prev) => ({ ...(prev ?? server), ...patch }))
+        setErrors((prev) => {
+            const next = { ...prev }
+            for (const key of Object.keys(patch) as Array<keyof BillingDraft>) delete next[key]
+            return next
+        })
+    }
+
+    const countryName = value.country
+        ? (countries.find((c) => c.code === value.country)?.name ?? getCountryName(value.country))
+        : undefined
+    const { states, isLoading: isLoadingStates } = useStateOptions(countryName)
+
+    const countryOptions = useMemo<DropdownOption[]>(
+        () => countries.map((c) => ({ id: c.code, label: c.name })),
+        [countries],
+    )
+    const stateOptions = useMemo<DropdownOption[]>(
+        () => states.map((name) => ({ id: name, label: name })),
+        [states],
+    )
+    const selectedCountry = useMemo<DropdownOption | undefined>(() => {
+        if (!value.country) return undefined
+        return countryOptions.find((o) => o.id === value.country) ?? { id: value.country, label: getCountryName(value.country) ?? value.country }
+    }, [countryOptions, value.country])
+    const selectedState = useMemo<DropdownOption | undefined>(
+        () => (value.state ? { id: value.state, label: value.state } : undefined),
+        [value.state],
+    )
+
+    const handleSave = async () => {
+        if (!isDirty || isSaving) return
+
+        const next = {
+            address: value.address.trim(),
+            country: value.country,
+            city: value.city.trim(),
+            state: value.state.trim(),
+            postalCode: value.postalCode.trim(),
         }
 
-        fetchCountries()
-    }, [])
-
-    // Fetch States when Selected Country Changes
-    useEffect(() => {
-        if (!selectedCountry) {
-            setStates([])
-            setSelectedState(null)
-            setStateQuery('')
+        // A fully blank form means "remove my billing address". Otherwise the
+        // core fields must all be present — a half-saved address is useless.
+        const isBlank = Object.values(next).every((v) => v === '')
+        const found: BillingErrors = {}
+        if (!isBlank) {
+            if (!next.address) found.address = 'Address is required'
+            if (!next.country) found.country = 'Country is required'
+            if (!next.city) found.city = 'City/Town is required'
+            if (!next.postalCode) found.postalCode = 'Postal code is required'
+        }
+        setErrors(found)
+        if (Object.keys(found).length > 0) {
+            toastError('Check the highlighted fields', 'Some required details are missing.')
             return
         }
 
-        const fetchStates = async () => {
-            setIsLoadingStates(true)
-            setSelectedState(null)
-            setStateQuery('')
-            try {
-                const response = await fetch('https://countriesnow.space/api/v0.1/countries/states', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({ country: selectedCountry.label }),
-                })
-                if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`)
-                const resData = await response.json()
-
-                if (!resData.error && resData.data?.states && Array.isArray(resData.data.states)) {
-                    const formattedStates: DropdownOption[] = resData.data.states.map((item: { name: string }) => ({
-                        id: item.name,
-                        label: item.name,
-                    }))
-                    setStates(formattedStates)
-                } else {
-                    setStates([])
-                }
-            } catch (error) {
-                console.error('Failed to load states:', error)
-                setStates([])
-            } finally {
-                setIsLoadingStates(false)
-            }
+        try {
+            await saveDetails({
+                billing_address: next.address || null,
+                billing_country_code: next.country || null,
+                billing_city: next.city || null,
+                billing_state: next.state || null,
+                billing_postal_code: next.postalCode || null,
+            })
+            setDraft(null)
+        } catch {
+            // The mutation already showed its own error toast; keep the draft so nothing is lost.
         }
-
-        fetchStates()
-    }, [selectedCountry])
-
-    const countryOptions = useMemo(() => {
-        if (!countryQuery.trim()) return countries
-        const q = countryQuery.trim().toLowerCase()
-        return countries.filter((c) => c.label.toLowerCase().includes(q))
-    }, [countries, countryQuery])
-
-    const stateOptions = useMemo(() => {
-        if (!stateQuery.trim()) return states
-        const q = stateQuery.trim().toLowerCase()
-        return states.filter((s) => s.label.toLowerCase().includes(q))
-    }, [states, stateQuery])
+    }
 
     return (
         <div className='flex w-full flex-col bg-white lg:h-full lg:min-h-0 lg:overflow-hidden lg:rounded-2xl lg:border lg:border-gray-50'>
@@ -114,12 +138,13 @@ const BillingPayment = ({ goBack }: { goBack?: () => void }) => {
                     </button>
                     <h5 className='max-lg:font-poppins lg:font-raleway font-medium lg:font-semibold max-lg:text-body-s lg:text-h5 text-body lg:text-primary-500 leading-10 tracking-wide'>Billings & Payments</h5>
                 </div>
-                <Button 
-                    size='sm' 
+                <Button
+                    size='sm'
                     className='rounded-2xl max-lg:w-20 max-lg:h-10 max-lg:text-body-xs'
-                    // onClick={handleSave} 
-                    // isLoading={isPending} 
+                    onClick={handleSave}
+                    isLoading={isSaving}
                     loadingText='Saving…'
+                    disabled={!isDirty || isSaving}
                 >
                     Save
                 </Button>
@@ -150,43 +175,74 @@ const BillingPayment = ({ goBack }: { goBack?: () => void }) => {
                     <p className='font-poppins font-semibold text-body-m text-primary-500 leading-8 tracking-wide'>Billing Address</p>
 
                     <div className='bg-secondary-50 p-6 gap-y-4 flex flex-col rounded-xl w-full'>
-                        <Input placeholder='Address' className='w-full' />
-                        
-                        {/* Country Dropdown */}
-                        <Dropdown
-                            options={countryOptions}
-                            value={selectedCountry as DropdownOption}
-                            onChange={(opt) => setSelectedCountry(opt)}
-                            indicator='checkmark'
-                            searchable={true}
-                            searchPlaceholder='Search country'
-                            searchValue={countryQuery}
-                            onSearchChange={setCountryQuery}
-                            isLoading={isLoadingCountries}
-                            emptyMessage='No matching countries'
-                            placeholder='Country'
+                        <Input
+                            placeholder='Address'
+                            aria-label='Address'
+                            autoComplete='street-address'
+                            className='w-full'
+                            maxLength={300}
+                            value={value.address}
+                            onChange={(e) => update({ address: e.target.value })}
+                            error={errors.address}
+                            disabled={isLoadingDetails}
                         />
 
-                        <Input placeholder='City/Town' className='w-full' />
+                        {/* Country Dropdown */}
+                        <div className='flex flex-col gap-y-1.5'>
+                            <Dropdown
+                                options={countryOptions}
+                                value={selectedCountry}
+                                onChange={(opt) => update({ country: String(opt.id), state: '' })}
+                                indicator='checkmark'
+                                searchable={true}
+                                searchPlaceholder='Search country'
+                                isLoading={isLoadingCountries}
+                                disabled={isLoadingDetails}
+                                variant={errors.country ? 'error' : 'default'}
+                                emptyMessage='No matching countries'
+                                placeholder='Country'
+                            />
+                            {errors.country && <p className='pl-4 text-xs font-semibold text-error-500'>{errors.country}</p>}
+                        </div>
+
+                        <Input
+                            placeholder='City/Town'
+                            aria-label='City or town'
+                            autoComplete='address-level2'
+                            className='w-full'
+                            maxLength={100}
+                            value={value.city}
+                            onChange={(e) => update({ city: e.target.value })}
+                            error={errors.city}
+                            disabled={isLoadingDetails}
+                        />
 
                         {/* State & Postal Code Row */}
-                        <div className="w-full grid grid-cols-1 lg:grid-cols-[1fr_192px] gap-4 items-center">
+                        <div className="w-full grid grid-cols-1 lg:grid-cols-[1fr_192px] gap-4 items-start">
                             <Dropdown
                                 options={stateOptions}
-                                value={selectedState as DropdownOption}
-                                onChange={(opt) => setSelectedState(opt)}
+                                value={selectedState}
+                                onChange={(opt) => update({ state: String(opt.id) })}
                                 indicator="checkmark"
                                 searchable={true}
                                 searchPlaceholder="Search state/province"
-                                searchValue={stateQuery}
-                                onSearchChange={setStateQuery}
                                 isLoading={isLoadingStates}
-                                disabled={!selectedCountry}
-                                emptyMessage={selectedCountry ? "No matching states found" : "Select a country first"}
-                                placeholder={selectedCountry ? "State/Province" : "State/Province (Select country first)"}
+                                disabled={!value.country || isLoadingDetails}
+                                emptyMessage={value.country ? "No matching states found" : "Select a country first"}
+                                placeholder={value.country ? "State/Province" : "State/Province (Select country first)"}
                                 className="w-full min-w-0"
                             />
-                            <Input placeholder="Postal Code" className="w-full" />
+                            <Input
+                                placeholder="Postal Code"
+                                aria-label='Postal code'
+                                autoComplete='postal-code'
+                                className="w-full"
+                                maxLength={20}
+                                value={value.postalCode}
+                                onChange={(e) => update({ postalCode: e.target.value })}
+                                error={errors.postalCode}
+                                disabled={isLoadingDetails}
+                            />
                         </div>
                     </div>
                 </div>

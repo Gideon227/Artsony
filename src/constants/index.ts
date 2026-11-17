@@ -135,6 +135,7 @@ export const QUERY_KEYS = {
   profile: (username: string) => ['profile', username] as const,
   me: ['me'] as const,
   privacySettings: ['privacySettings'] as const,
+  privateDetails: ['privateDetails'] as const,
   notifications: ['notifications'] as const,
   cart: ['cart'] as const,
   orders: ['orders'] as const,

@@ -9,6 +9,17 @@ export interface PublicProfileSummary {
   profile: { display_name: string | null; avatar_url: string | null } | null
 }
 
+// Private to the account owner — phone number + billing address. Stored in its
+// own table and fetched only through this endpoint, never via the public profile.
+export type PrivateDetails = {
+  phone_number: string | null
+  billing_address: string | null
+  billing_city: string | null
+  billing_state: string | null
+  billing_postal_code: string | null
+  billing_country_code: string | null
+}
+
 export const userService = {
   getProfile: (username: string) =>
     apiClient.get<ApiResponse<User>>(`/api/users/${username}`),
@@ -21,6 +32,12 @@ export const userService = {
 
   updatePrivacySettings: (body: Partial<PrivacySettings>) =>
     apiClient.patch<ApiResponse<PrivacySettings>>('/api/users/me/privacy', body),
+
+  getPrivateDetails: () =>
+    apiClient.get<ApiResponse<PrivateDetails>>('/api/users/me/private-details'),
+
+  updatePrivateDetails: (body: Partial<PrivateDetails>) =>
+    apiClient.patch<ApiResponse<PrivateDetails>>('/api/users/me/private-details', body),
 
   reportUser: (userId: string, body: { reason: string; notes?: string; conversation_id?: string }) =>
     apiClient.post<ApiResponse<void>>(`/api/users/${userId}/report`, body),

@@ -301,7 +301,7 @@ const SectionDescription = ({ children }: { children: ReactNode }) => (
 
 export default function ShippingLocation({ goBack }: { goBack?: () => void }) {
   const { user } = useAuthStore()
-  const { error: toastError } = useToast()
+  const { error: toastError, info } = useToast()
 
   const { mutateAsync: updateProfile, isPending: isUpdatingProfile } = useUpdateProfile()
   const {
@@ -446,6 +446,11 @@ export default function ShippingLocation({ goBack }: { goBack?: () => void }) {
           state: location.value.state || null,
         }),
       )
+    }
+
+    if (delivery.isDirty && isBlank(delivery.value)) {
+      // Emptying every field isn't a save — removing an address is the delete button's job.
+      info('Delivery address unchanged', 'Use the delete button to remove your saved delivery address.')
     }
 
     if (delivery.isDirty && !isBlank(delivery.value)) {

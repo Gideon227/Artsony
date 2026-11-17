@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { Button } from '@/components'
 import InfoSection from '../sections/info-section'
 import { useAuthStore } from '@/store'
@@ -8,6 +8,7 @@ import ImageSection from '../sections/image-section'
 import SocialSection from '../sections/social-section'
 import { useUpdateProfile } from '@/hooks/use-auth-mutations'
 import type { UpdateProfileInput } from '@/services/auth.service'
+import type { User } from '@/types'
 
 export type ProfileDraft = {
   username: string
@@ -27,11 +28,8 @@ function arraysEqual(a: string[], b: string[]): boolean {
   return a.length === b.length && [...a].sort().every((v, i) => v === [...b].sort()[i])
 }
 
-const ProfileCustomization = ({ goBack }: { goBack?: () => void }) => {
-  const { user } = useAuthStore()
-  const { mutate: save, isPending } = useUpdateProfile()
-
-  const initialDraft = useMemo<ProfileDraft>(() => ({
+function toDraft(user: User | null): ProfileDraft {
+  return {
     username: user?.username ?? '',
     displayName: user?.displayName ?? '',
     bio: user?.bio ?? '',
@@ -43,39 +41,57 @@ const ProfileCustomization = ({ goBack }: { goBack?: () => void }) => {
     pinterestLink: user?.pinterestLink ?? '',
     twitterLink: user?.twitterLink ?? '',
     linkedinLink: user?.linkedinLink ?? '',
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }), [user?.id])
+  }
+}
 
-  const [draft, setDraft] = useState<ProfileDraft>(initialDraft)
+// Only the fields that actually differ from what's stored — the PATCH is a partial update.
+function buildPayload(draft: ProfileDraft, user: User | null): UpdateProfileInput {
+  const payload: UpdateProfileInput = {}
+  if (!user) return payload
 
+  if (draft.username.trim() !== user.username) payload.username = draft.username.trim()
+  if (draft.displayName.trim() !== (user.displayName ?? '')) payload.display_name = draft.displayName.trim() || null
+  if (draft.bio.trim() !== (user.bio ?? '')) payload.bio = draft.bio.trim() || null
+  if (!arraysEqual(draft.interests, user.interests ?? [])) payload.interests = draft.interests
+  if (draft.avatar_url !== user.avatar_url) payload.avatar_url = draft.avatar_url
+  if (draft.background_url !== user.background_url) payload.background_url = draft.background_url
+  if (draft.website.trim() !== (user.website ?? '')) payload.website_url = draft.website.trim() || null
+  if (draft.behanceLink.trim() !== (user.behanceLink ?? '')) payload.behance_url = draft.behanceLink.trim() || null
+  if (draft.pinterestLink.trim() !== (user.pinterestLink ?? '')) payload.pinterest_url = draft.pinterestLink.trim() || null
+  if (draft.twitterLink.trim() !== (user.twitterLink ?? '')) payload.twitter_url = draft.twitterLink.trim() || null
+  if (draft.linkedinLink.trim() !== (user.linkedinLink ?? '')) payload.linkedin_url = draft.linkedinLink.trim() || null
+  return payload
+}
+
+const ProfileCustomization = ({ goBack }: { goBack?: () => void }) => {
+  const { user } = useAuthStore()
+  const { mutate: save, isPending } = useUpdateProfile()
+
+  const [draft, setDraft] = useState<ProfileDraft>(() => toDraft(user))
+
+  // Load the form once per signed-in user. It used to re-run on every change
+  // to `user` using a draft memoised on user.id — so right after a successful
+  // save the store updated, the effect fired, and the form snapped back to the
+  // PRE-save values (and the next Save would then have sent those old values
+  // back to the server). Now the draft is only replaced when the account
+  // changes, or explicitly from the server's response after a save.
+  const syncedUserId = useRef<string | null>(user?.id ?? null)
   useEffect(() => {
-    if (user) {
-      setDraft(initialDraft);
+    if (user && syncedUserId.current !== user.id) {
+      syncedUserId.current = user.id
+      setDraft(toDraft(user))
     }
-  }, [initialDraft, user]);
+  }, [user])
 
   const setField = <K extends keyof ProfileDraft>(key: K, value: ProfileDraft[K]) =>
     setDraft((d) => ({ ...d, [key]: value }))
 
+  const payload = useMemo(() => buildPayload(draft, user), [draft, user])
+  const isDirty = Object.keys(payload).length > 0
+
   const handleSave = () => {
-    if (!user) return
-
-    const payload: UpdateProfileInput = {}
-
-    if (draft.username.trim() !== user.username) payload.username = draft.username.trim()
-    if (draft.displayName.trim() !== (user.displayName ?? '')) payload.display_name = draft.displayName.trim() || null
-    if (draft.bio.trim() !== (user.bio ?? '')) payload.bio = draft.bio.trim() || null
-    if (!arraysEqual(draft.interests, user.interests ?? [])) payload.interests = draft.interests
-    if (draft.avatar_url !== user.avatar_url) payload.avatar_url = draft.avatar_url
-    if (draft.background_url !== user.background_url) payload.background_url = draft.background_url
-    if (draft.website.trim() !== (user.website ?? '')) payload.website_url = draft.website.trim() || null
-    if (draft.behanceLink.trim() !== (user.behanceLink ?? '')) payload.behance_url = draft.behanceLink.trim() || null
-    if (draft.pinterestLink.trim() !== (user.pinterestLink ?? '')) payload.pinterest_url = draft.pinterestLink.trim() || null
-    if (draft.twitterLink.trim() !== (user.twitterLink ?? '')) payload.twitter_url = draft.twitterLink.trim() || null
-    if (draft.linkedinLink.trim() !== (user.linkedinLink ?? '')) payload.linkedin_url = draft.linkedinLink.trim() || null
-
-    if (Object.keys(payload).length === 0) return
-    save(payload)
+    if (!user || !isDirty || isPending) return
+    save(payload, { onSuccess: ({ data }) => setDraft(toDraft(data)) })
   }
 
   if (!user) return null
@@ -96,7 +112,7 @@ const ProfileCustomization = ({ goBack }: { goBack?: () => void }) => {
           </button>
           <h5 className='max-lg:font-poppins lg:font-raleway font-medium lg:font-semibold max-lg:text-body-s lg:text-h5 text-body lg:text-primary-500 leading-10 tracking-wide'>Profile Customization</h5>
         </div>
-        <Button size='sm' className='rounded-2xl max-lg:w-20 max-lg:h-10 max-lg:text-body-xs' onClick={handleSave} isLoading={isPending} loadingText='Saving…'>
+        <Button size='sm' className='rounded-2xl max-lg:w-20 max-lg:h-10 max-lg:text-body-xs' onClick={handleSave} isLoading={isPending} loadingText='Saving…' disabled={!isDirty || isPending}>
           Save
         </Button>
       </div>

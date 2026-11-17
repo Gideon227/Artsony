@@ -1,22 +1,105 @@
+'use client'
+
 import { Button, Input } from '@/components'
 import Image from 'next/image'
 import Link from 'next/link'
-import React, { useState } from 'react'
+import React, { useState, type ChangeEvent, type FormEvent } from 'react'
 import ConfirmDeactivation from '../ui/confirm-deactivation'
 import ConfirmDeletion from '../ui/confirm-deletion'
-import { useUpdatePrivacySettings } from '@/hooks/use-auth-mutations'
+import { useChangePassword } from '@/hooks/use-auth-mutations'
+import { useAuthStore } from '@/store'
+import { useToast } from '@/components/ui/toaster'
+import { HttpError } from '@/lib/api-client'
+
+type PasswordForm = { current: string; next: string; confirm: string }
+type PasswordErrors = Partial<Record<keyof PasswordForm, string>>
+
+const EMPTY_FORM: PasswordForm = { current: '', next: '', confirm: '' }
+
+// Mirrors the server's rules (password.service.ts) so the user sees what is
+// wrong before submitting. The server still re-checks all of it.
+function validate(form: PasswordForm): PasswordErrors {
+    const errors: PasswordErrors = {}
+    const pw = form.next
+
+    if (!form.current) errors.current = 'Enter your current password'
+
+    if (!pw) errors.next = 'Enter a new password'
+    else if (pw.length < 8) errors.next = 'Use at least 8 characters'
+    else if (pw.length > 128) errors.next = 'Password is too long (128 characters max)'
+    else if (!/[A-Z]/.test(pw)) errors.next = 'Add at least one uppercase letter'
+    else if (!/[a-z]/.test(pw)) errors.next = 'Add at least one lowercase letter'
+    else if (!/[0-9]/.test(pw)) errors.next = 'Add at least one number'
+    else if (!/[^A-Za-z0-9]/.test(pw)) errors.next = 'Add at least one special character'
+    else if (pw === form.current) errors.next = 'New password must be different from your current one'
+
+    if (!form.confirm) errors.confirm = 'Confirm your new password'
+    else if (form.confirm !== pw) errors.confirm = 'Passwords do not match'
+
+    return errors
+}
 
 const Security = ({ goBack }: { goBack?: () => void }) => {
-    const { mutate: save, isPending } = useUpdatePrivacySettings()
-    
+    const { user } = useAuthStore()
+    const { mutate: changePassword, isPending } = useChangePassword()
+    const { error: toastError } = useToast()
+
+    const [form, setForm] = useState<PasswordForm>(EMPTY_FORM)
+    const [errors, setErrors] = useState<PasswordErrors>({})
+
     // State to manage modal visibility
     const [isDeactivateOpen, setIsDeactivateOpen] = useState(false)
     const [isDeleteOpen, setIsDeleteOpen] = useState(false)
 
-    // const handleSave = () => {
-    //     if (!isDirty || isPending) return
-    //     save(formData)
-    // }
+    // Accounts created through Google/Facebook have no password to change.
+    const hasPassword = user?.provider === 'local'
+
+    const setField = (key: keyof PasswordForm) => (e: ChangeEvent<HTMLInputElement>) => {
+        const value = e.target.value
+        setForm((f) => ({ ...f, [key]: value }))
+        setErrors((prev) => {
+            const next = { ...prev }
+            delete next[key]
+            return next
+        })
+    }
+
+    const handleSave = () => {
+        if (!hasPassword || isPending) return
+
+        const found = validate(form)
+        setErrors(found)
+        if (Object.keys(found).length > 0) return
+
+        changePassword(
+            { currentPassword: form.current, newPassword: form.next },
+            {
+                // Success signs the user out (the server revokes every session) — see useChangePassword.
+                onError: (err) => {
+                    if (err instanceof HttpError && err.fields && !Array.isArray(err.fields)) {
+                        const fields = err.fields
+                        const fromServer: PasswordErrors = {}
+                        if (fields['currentPassword']) fromServer.current = fields['currentPassword']
+                        if (fields['password']) fromServer.next = fields['password']
+                        if (fields['newPassword']) fromServer.next = fields['newPassword']
+                        if (Object.keys(fromServer).length > 0) {
+                            setErrors(fromServer)
+                            return
+                        }
+                    }
+                    toastError(
+                        'Could not change password',
+                        err instanceof HttpError ? err.message : 'Something went wrong. Please try again.',
+                    )
+                },
+            },
+        )
+    }
+
+    const handleSubmit = (e: FormEvent) => {
+        e.preventDefault()
+        handleSave()
+    }
 
     return (
         <div className='flex w-full flex-col bg-white lg:h-full lg:min-h-0 lg:overflow-hidden lg:rounded-2xl lg:border lg:border-gray-50'>
@@ -33,12 +116,13 @@ const Security = ({ goBack }: { goBack?: () => void }) => {
                     </button>
                     <h5 className='max-lg:font-poppins lg:font-raleway font-medium lg:font-semibold max-lg:text-body-s lg:text-h5 text-body lg:text-primary-500 leading-10 tracking-wide'>Security</h5>
                 </div>
-                <Button 
-                    size='sm' 
+                <Button
+                    size='sm'
                     className='rounded-2xl max-lg:w-20 max-lg:h-10 max-lg:text-body-xs'
-                    // onClick={handleSave} 
-                    isLoading={isPending} 
+                    onClick={handleSave}
+                    isLoading={isPending}
                     loadingText='Saving…'
+                    disabled={!hasPassword || isPending}
                 >
                     Save
                 </Button>
@@ -48,29 +132,51 @@ const Security = ({ goBack }: { goBack?: () => void }) => {
                 <div className='flex flex-col gap-y-6'>
                     <p className='font-poppins font-semibold text-body-m text-primary-500 leading-8 tracking-wide'>Change Password</p>
 
-                    <div className='bg-secondary-50 p-6 gap-y-4 flex flex-col border-secondary-50 rounded-xl'>
+                    <form
+                        onSubmit={handleSubmit}
+                        noValidate
+                        className='bg-secondary-50 p-6 gap-y-4 flex flex-col border-secondary-50 rounded-xl'
+                    >
+                        {!hasPassword && (
+                            <p className='font-poppins text-body-xs leading-5 tracking-wide text-text-disabled'>
+                                You signed in with {user?.provider === 'facebook' ? 'Facebook' : 'Google'}, so this account has no
+                                password to change.
+                            </p>
+                        )}
                         <Input
                             type="password"
                             placeholder="Enter Password"
                             autoComplete="current-password"
                             className="h-12"
+                            value={form.current}
+                            onChange={setField('current')}
+                            error={errors.current}
+                            disabled={!hasPassword || isPending}
                         />
                         <Input
                             type="password"
                             placeholder="Enter New Password"
-                            autoComplete="current-password"
+                            autoComplete="new-password"
                             className="h-12"
+                            value={form.next}
+                            onChange={setField('next')}
+                            error={errors.next}
+                            disabled={!hasPassword || isPending}
                         />
                         <Input
                             type="password"
                             placeholder="Confirm New Password"
-                            autoComplete="current-password"
+                            autoComplete="new-password"
                             className="h-12"
+                            value={form.confirm}
+                            onChange={setField('confirm')}
+                            error={errors.confirm}
+                            disabled={!hasPassword || isPending}
                         />
-                        <Link href='/' className='flex mx-auto w-full'>
+                        <Link href='/forgot-password' className='flex mx-auto w-full'>
                             <p className='font-poppins font-medium text-body-s text-primary-500 leading-6 tracking-wide'>Forgot Password? Reset</p>
                         </Link>
-                    </div>
+                    </form>
                 </div>
 
                 <div className='bg-secondary-50 p-6 flex flex-col gap-y-8 rounded-xl mt-6'>

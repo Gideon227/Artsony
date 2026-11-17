@@ -1,136 +1,82 @@
+import { useMemo, useState, type ChangeEvent } from 'react'
+import type { CountryCode } from 'libphonenumber-js'
 import { Input } from '@/components'
 import { Dropdown, DropdownOption } from '@/components/ui/dropdown'
 import { PhoneInput } from '@/components/ui/phone-input'
-import { User } from '@/types'
-import React, { useState, useEffect } from 'react'
+import { useToast } from '@/components/ui/toaster'
+import { getCountryName, useCountryOptions, useStateOptions } from '@/hooks/use-location-data'
 
-const ContactSection = ({ user }: { user: User }) => {
-    // Form field state initialized with user prop fallbacks
-    const [formData, setFormData] = useState({
-        email: user?.email || '',
-        phone: '', // Handled by PhoneInput component
-        country: null as DropdownOption | null,
-        state: null as DropdownOption | null,
-        isAutoLocation: false,
-    })
+const IP_LOOKUP_URL = 'https://ipapi.co/json/'
 
-    // Dropdown list data states
-    const [countries, setCountries] = useState<DropdownOption[]>([])
-    const [states, setStates] = useState<DropdownOption[]>([])
-    
-    // Loading and asynchronous UI states
-    const [isLoadingCountries, setIsLoadingCountries] = useState(false)
-    const [isLoadingStates, setIsLoadingStates] = useState(false)
+export type ContactSectionProps = {
+    /** Sign-in email. Shown read-only — there is no verified email-change flow yet. */
+    email: string
+    /** ISO 3166-1 alpha-2 code ('NG') — the same format the backend stores. */
+    country: string
+    state: string
+    onLocationChange: (patch: { country?: string; state?: string }) => void
+    phone: {
+        value: string
+        onChange: (value: string) => void
+        onCountryChange: (iso: CountryCode) => void
+        defaultCountry: CountryCode | undefined
+        /** Remounts the input when the saved number's country changes so its dial code follows. */
+        remountKey: string
+        error?: string
+        disabled?: boolean
+    }
+}
+
+const ContactSection = ({ email, country, state, onLocationChange, phone }: ContactSectionProps) => {
+    const { error: toastError } = useToast()
+    const { countries, isLoading: isLoadingCountries } = useCountryOptions()
+
+    const countryName = country
+        ? (countries.find((c) => c.code === country)?.name ?? getCountryName(country))
+        : undefined
+    const { states, isLoading: isLoadingStates } = useStateOptions(countryName)
+
+    const [isAutoLocation, setIsAutoLocation] = useState(false)
     const [isDetectingLocation, setIsDetectingLocation] = useState(false)
 
-    // 1. Fetch all countries on mount
-    useEffect(() => {
-        const fetchCountries = async () => {
-            setIsLoadingCountries(true)
-            try {
-                const response = await fetch('https://countriesnow.space/api/v0.1/countries')
-                const resData = await response.json()
-                
-                if (!resData.error) {
-                    const formattedCountries: DropdownOption[] = resData.data.map((item: any) => ({
-                        id: item.country, 
-                        label: item.country,
-                    }))
-                    setCountries(formattedCountries)
-                }
-            } catch (error) {
-                console.error('Failed to load countries selection table:', error)
-            } finally {
-                setIsLoadingCountries(false)
-            }
-        }
+    const countryOptions = useMemo<DropdownOption[]>(
+        () => countries.map((c) => ({ id: c.code, label: c.name })),
+        [countries],
+    )
+    const stateOptions = useMemo<DropdownOption[]>(
+        () => states.map((name) => ({ id: name, label: name })),
+        [states],
+    )
+    const selectedCountry = useMemo<DropdownOption | undefined>(() => {
+        if (!country) return undefined
+        return countryOptions.find((o) => o.id === country) ?? { id: country, label: getCountryName(country) ?? country }
+    }, [countryOptions, country])
+    const selectedState = useMemo<DropdownOption | undefined>(
+        () => (state ? { id: state, label: state } : undefined),
+        [state],
+    )
 
-        fetchCountries()
-    }, [])
-
-    // 2. Fetch specific states dynamically when the selected country changes
-    useEffect(() => {
-        if (!formData.country) {
-            setStates([])
+    // Fills country + state from the visitor's connection. The country is kept
+    // as an ISO code (not a display name) because that is what the API stores.
+    const handleToggleLocation = async () => {
+        if (isAutoLocation) {
+            setIsAutoLocation(false)
             return
         }
 
-        const fetchStates = async () => {
-            setIsLoadingStates(true)
-            try {
-                const response = await fetch('https://countriesnow.space/api/v0.1/countries/states', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ country: formData?.country?.label }) 
-                })
-                const resData = await response.json()
+        setIsDetectingLocation(true)
+        try {
+            const res = await fetch(IP_LOOKUP_URL)
+            if (!res.ok) throw new Error(`Lookup failed (${res.status})`)
+            const data = (await res.json()) as { error?: boolean; country_code?: string; region?: string }
+            if (data.error || !data.country_code) throw new Error('Location could not be determined')
 
-                if (!resData.error && resData.data?.states) {
-                    const formattedStates: DropdownOption[] = resData.data.states.map((state: any, index: number) => ({
-                        id: state.state_code || `${state.name}-${index}`, 
-                        label: state.name
-                    }))
-                    setStates(formattedStates)
-                } else {
-                    setStates([])
-                }
-            } catch (error) {
-                console.error('Failed to resolve regional states:', error)
-                setStates([])
-            } finally {
-                setIsLoadingStates(false)
-            }
-        }
-
-        fetchStates()
-    }, [formData.country])
-
-    // State structural event handlers
-    const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        const { name, value } = e.target
-        setFormData((prev) => ({ ...prev, [name]: value }))
-    }
-
-    const handleDropdownChange = (name: 'country' | 'state', option: DropdownOption) => {
-        setFormData((prev) => {
-            const updated = { ...prev, [name]: option }
-            if (name === 'country') {
-                updated.state = null // Wipe state if country resets
-            }
-            return updated
-        })
-    }
-
-    // Geolocation IP parser routine
-    const handleToggleLocation = async () => {
-        const nextValue = !formData.isAutoLocation
-
-        if (nextValue) {
-            setIsDetectingLocation(true)
-            try {
-                const response = await fetch('https://ipapi.co/json/')
-                const data = await response.json()
-                
-                if (data && !data.error) {
-                    setFormData((prev) => ({
-                        ...prev,
-                        isAutoLocation: nextValue,
-                        country: data.country_name ? { id: data.country_name, label: data.country_name } : null,
-                        state: data.region ? { id: data.region_code || data.region, label: data.region } : null,
-                    }))
-                }
-            } catch (error) {
-                console.error('IP location mapping failure:', error)
-            } finally {
-                setIsDetectingLocation(false)
-            }
-        } else {
-            setFormData((prev) => ({ 
-                ...prev, 
-                isAutoLocation: nextValue, 
-                country: null, 
-                state: null 
-            }))
+            onLocationChange({ country: data.country_code.toUpperCase(), state: data.region ?? '' })
+            setIsAutoLocation(true)
+        } catch {
+            toastError('Could not detect location', 'Select your country and state manually or try again.')
+        } finally {
+            setIsDetectingLocation(false)
         }
     }
 
@@ -141,15 +87,17 @@ const ContactSection = ({ user }: { user: User }) => {
             </p>
 
             <form className='bg-secondary-50 p-6 flex flex-col gap-y-4 rounded-xl' onSubmit={(e) => e.preventDefault()}>
-                
+
                 {/* Email Field */}
                 <div className='gap-y-2 flex flex-col w-full'>
                     <label className='font-poppins font-medium text-body-s text-heading leading-6 tracking-wide'>Email</label>
                     <Input
                         name="email"
-                        value={formData.email}
+                        type="email"
+                        value={email}
+                        readOnly
+                        disabled
                         placeholder='forexample@gmail.com'
-                        onChange={handleInputChange}
                         className='h-12'
                     />
                 </div>
@@ -157,14 +105,17 @@ const ContactSection = ({ user }: { user: User }) => {
                 {/* Phone Number Field */}
                 <div className='gap-y-2 flex flex-col w-full'>
                     <label className='font-poppins font-medium text-body-s text-heading leading-6 tracking-wide'>Phone Number</label>
-                    <PhoneInput 
-                        value={formData.phone}
-                        onChange={(e: React.ChangeEvent<HTMLInputElement>) => 
-                            setFormData(prev => ({ ...prev, phone: e.target.value }))
-                        }
+                    <PhoneInput
+                        key={phone.remountKey}
+                        defaultCountry={phone.defaultCountry}
+                        value={phone.value}
+                        onChange={(e: ChangeEvent<HTMLInputElement>) => phone.onChange(e.target.value)}
+                        onCountryChange={phone.onCountryChange}
                         placeholder='08012345678'
-                        disabled={isDetectingLocation}
+                        disabled={phone.disabled || isDetectingLocation}
+                        aria-invalid={Boolean(phone.error)}
                     />
+                    {phone.error && <p className='pl-4 text-xs font-semibold text-error-500'>{phone.error}</p>}
                 </div>
 
                 {/* Country Dropdown */}
@@ -172,41 +123,41 @@ const ContactSection = ({ user }: { user: User }) => {
                     <label className='font-poppins font-medium text-body-s text-heading leading-6 tracking-wide'>
                         Country
                     </label>
-                    <Dropdown 
-                        options={countries}
-                        value={formData.country || undefined}
-                        onChange={(option) => handleDropdownChange('country', option)}
+                    <Dropdown
+                        options={countryOptions}
+                        value={selectedCountry}
+                        onChange={(option) => onLocationChange({ country: String(option.id), state: '' })}
                         placeholder={isLoadingCountries ? 'Loading countries...' : 'Select Country'}
-                        disabled={formData.isAutoLocation || isLoadingCountries || isDetectingLocation}
+                        disabled={isAutoLocation || isLoadingCountries || isDetectingLocation}
                         searchable={true}
                         searchPlaceholder="Search country..."
                         isLoading={isLoadingCountries}
                         emptyMessage="No countries found"
                     />
-                    </div>
+                </div>
 
                 {/* State Dropdown */}
                 <div className='gap-y-2 flex flex-col w-full'>
                     <label className='font-poppins font-medium text-body-s text-heading leading-6 tracking-wide'>State / Province</label>
-                    <Dropdown 
-                        options={states}
-                        value={formData.state || undefined}
-                        onChange={(option) => handleDropdownChange('state', option)}
+                    <Dropdown
+                        options={stateOptions}
+                        value={selectedState}
+                        onChange={(option) => onLocationChange({ state: String(option.id) })}
                         placeholder={
-                            isLoadingStates 
-                                ? 'Loading regions...' 
-                                : !formData.country 
-                                ? 'Select country first' 
+                            isLoadingStates
+                                ? 'Loading regions...'
+                                : !country
+                                ? 'Select country first'
                                 : 'Select State/Province'
                         }
-                        disabled={formData.isAutoLocation || isLoadingStates || !formData.country || isDetectingLocation}
+                        disabled={isAutoLocation || isLoadingStates || !country || isDetectingLocation}
                         searchable={true}
                         searchPlaceholder="Searching states..."
                         isLoading={isLoadingStates}
                         emptyMessage="No States Found In This Region"
                     />
                 </div>
-                
+
                 {/* Auto Location Toggle Switch */}
                 <div className='flex justify-between items-center w-full pt-2'>
                     <p className='font-poppins font-medium text-body-xs lg:text-body-s leading-6 text-heading tracking-wide'>
@@ -214,15 +165,18 @@ const ContactSection = ({ user }: { user: User }) => {
                     </p>
                     <button
                       type="button"
+                      role="switch"
+                      aria-checked={isAutoLocation}
+                      aria-label="Set location automatically"
                       onClick={handleToggleLocation}
                       disabled={isDetectingLocation}
                       className={`relative inline-flex h-6 w-11 cursor-pointer items-center rounded-2xl transition-colors duration-200 focus:outline-none border border-primary-500 ${
-                          formData.isAutoLocation ? 'bg-primary-500' : 'bg-white'
+                          isAutoLocation ? 'bg-primary-500' : 'bg-white'
                       } ${isDetectingLocation ? 'opacity-50 cursor-wait' : ''}`}
                     >
                       <span
                         className={`inline-block transform rounded-full transition-transform duration-300 ease-in-out ${
-                          formData.isAutoLocation ? 'translate-x-6 bg-white' : 'translate-x-0.5 bg-primary-500'
+                          isAutoLocation ? 'translate-x-6 bg-white' : 'translate-x-0.5 bg-primary-500'
                         }`}
                         style={{ width: 18, height: 18 }}
                       />
