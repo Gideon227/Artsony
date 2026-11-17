@@ -13,7 +13,7 @@ export function OrdersEmptyState(props: Props) {
     return (
       <section
         aria-labelledby="orders-empty-title"
-        className="flex relative min-h-[560px] flex-1 flex-col items-center justify-center gap-8 rounded-[32px] border border-gray-50 bg-white pt-12 pb-24 text-center lg:min-h-[calc(100vh-232px)]"
+        className="flex overflow-hidden relative min-h-[560px] flex-1 flex-col items-center justify-center gap-8 rounded-[32px] border border-gray-50 bg-white pt-12 pb-24 text-center lg:min-h-[calc(100vh-232px)]"
       >
         <div className='absolute top-10 md:rotate-90' style={{ right: '-60px' }}>
           <Image src='/upload/vector.svg' width={248} height={248} className='max-md:w-8 w-62 h-auto'  alt='vector element' />
